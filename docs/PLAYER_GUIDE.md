@@ -181,3 +181,4 @@ The **Wardens' feats** panel lists milestones of your journey. Alongside the cha
 - **Seawall Sentinel** — defeat Gloomfin, the optional Saltmere Coast trial described above.
 - **Packbreaker** — defeat Frostmane, the optional Highwatch Pass trial described above.
 - **Vault Keeper** — defeat the Lenswarden, the optional Observatory Ruins trial described above.
+- **Trial Warden** — overcome all four optional field trials (Old Tusk, Gloomfin, Frostmane and the Lenswarden).

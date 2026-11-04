@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { FEATS, WANDERERS, featStatus, featsEarned, featsScene } from '../src/scenes/feats.js';
+import { FEATS, WANDERERS, FIELD_TRIALS, featStatus, featsEarned, featsScene } from '../src/scenes/feats.js';
 import { ENEMIES } from '../src/data/enemies.js';
 import { createInitialState } from '../src/state.js';
 import { DRILL_FOES } from '../src/scenes/drills.js';
@@ -161,5 +161,22 @@ test('Vault Keeper feat needs a Lenswarden defeat in the bestiary', () => {
   s.bestiary = null;
   assert.equal(done(), false, 'missing bestiary is safe');
   const row = FEATS.find(f => f.id === 'lenswarden');
+  assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
+});
+
+test('Trial Warden feat needs all four field trials in the bestiary', () => {
+  const s = createInitialState();
+  const done = () => featStatus(s).find(f => f.id === 'trials').done;
+  for (const id of FIELD_TRIALS) assert.ok(ENEMIES[id] && ENEMIES[id].boss === true && ENEMIES[id].drill === false, id);
+  assert.equal(done(), false);
+  s.bestiary = { old_tusk: 1, gloomfin: 2, frostmane: 1, lenswarden: 0 };
+  assert.equal(done(), false, 'three trials are not enough');
+  s.bestiary.lenswarden = 1;
+  assert.equal(done(), true);
+  s.bestiary = null;
+  assert.equal(done(), false, 'missing bestiary is safe');
+  const ids = FEATS.map(f => f.id);
+  assert.equal(ids.indexOf('trials'), ids.indexOf('lenswarden') + 1);
+  const row = FEATS.find(f => f.id === 'trials');
   assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
 });
