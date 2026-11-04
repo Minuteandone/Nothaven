@@ -25,7 +25,7 @@ export const ZONES = {
       '#########',
       '#..,....#',
       '#..,..,.#',
-      '#.......,+',
+      '#......,+',
       '#.,..#..#',
       '#.......#',
       '#########',
@@ -278,10 +278,10 @@ export const ZONES = {
       '~~~~~~~~~',
       '~~#####~~',
       '~~#...#~~',
-      '~~#.*.#~~',
+      '~~#.*.+~~',
       '~~#...#~~',
       '~~##+##~~',
-      '~~~~+~~~~',
+      '~~~~~~~~~',
     ],
     spawns: {
       default: { x: 4, y: 4 },
@@ -296,8 +296,8 @@ export const ZONES = {
         label: 'Descend → Observatory Ruins',
       },
       {
-        x: 4,
-        y: 6,
+        x: 6,
+        y: 3,
         toZone: 'greyhaven',
         toSpawn: 'default',
         label: 'Signal Lift → Greyhaven',
@@ -314,18 +314,8 @@ export const ZONES = {
         y: 3,
         symbol: '✦',
         once: false,
-        choices: [
-          {
-            choiceId: 'protect_town',
-            label: 'Focus Shield on Greyhaven (Town-Only Protection)',
-          },
-          {
-            choiceId: 'share_signal',
-            label: 'Broadcast Shared Signal to Distant Settlements',
-          },
-        ],
         description:
-          'The central lens cradle and reflector array. Once the observatory lens is recovered, choose how to align the beacon.',
+          'The central lens cradle and reflector array. Once the council in Greyhaven has been heard, use the Beacon panel below to align the light.',
       },
     ],
     encounters: [],

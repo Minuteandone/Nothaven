@@ -10,6 +10,7 @@ export {
   getVisitedZones,
   getZone,
   interactWith,
+  isAdjacentOrOn,
   isWalkable,
   movePlayer,
   recordEncounterVictory,

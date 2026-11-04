@@ -1,14 +1,14 @@
 import { saveGame } from '../state.js';
 import { createStoryState, getDialogue } from '../story/index.js';
 import { createStoryUI } from '../story/view.js';
-import { TILE_TYPES, ZONES, ZONE_ORDER } from './zones.js';
+import { ZONES } from './zones.js';
 import {
   ensureMapState,
   getAvailableActions,
   getEntityAt,
   getTileInfo,
   getVisitedZones,
-   getZone,
+  getZone,
   interactWith,
   movePlayer,
   recordEncounterVictory,
@@ -162,9 +162,6 @@ export const exploreScene = {
         if (act.kind === 'interact') {
           return `<button data-action="mapInteract" data-arg="${escapeHtml(act.id)}">${escapeHtml(act.label)}</button>`;
         }
-        if (act.kind === 'choose') {
-          return `<button data-action="mapChoose" data-arg="${escapeHtml(act.id)}">${escapeHtml(act.label)}</button>`;
-        }
         if (act.kind === 'exit') {
           return `<button data-action="mapTravel" data-arg="${escapeHtml(act.id)}">${escapeHtml(act.label)}</button>`;
         }
@@ -270,11 +267,6 @@ export const exploreScene = {
       if (!intId) return;
       handleActionResult(game, interactWith(game.state, 'interact', intId));
     },
-    mapChoose(game, el) {
-      const choiceId = el?.dataset?.arg;
-      if (!choiceId) return;
-      handleActionResult(game, interactWith(game.state, 'choose', choiceId));
-    },
     mapTravel(game, el) {
       const toZone = el?.dataset?.arg;
       if (!toZone) return;
@@ -286,6 +278,12 @@ export const exploreScene = {
       mapState.log = [...(mapState.log || []).slice(-19), 'Game saved.'];
     },
     toTownScene(game) {
+      const mapState = ensureMapState(game.state);
+      if (mapState.zoneId !== 'greyhaven') {
+        handleActionResult(game, travelToZone(game.state, 'greyhaven', 'default'));
+      } else {
+        game.state.location = 'greyhaven';
+      }
       game.setScene('town', { message: 'Returned to Greyhaven overview.' });
     },
   },

@@ -52,6 +52,10 @@ export function isWalkable(zone, mapState, x, y) {
   return true;
 }
 
+export function isAdjacentOrOn(x1, y1, x2, y2) {
+  return Math.abs(x1 - x2) + Math.abs(y1 - y2) <= 1;
+}
+
 export function getEntityAt(zone, mapState, x, y) {
   const npc = (zone.npcs || []).find((n) => n.x === x && n.y === y);
   if (npc) return { type: 'npc', entity: npc };
@@ -80,7 +84,7 @@ export function getAvailableActions(gameState) {
   const actions = [];
   const { x, y } = mapState;
 
-  const isNear = (tx, ty) => Math.abs(tx - x) + Math.abs(ty - y) <= 1;
+  const isNear = (tx, ty) => isAdjacentOrOn(x, y, tx, ty);
 
   for (const npc of zone.npcs || []) {
     if (isNear(npc.x, npc.y)) {
@@ -113,19 +117,12 @@ export function getAvailableActions(gameState) {
       actions.push({
         kind: 'interact',
         id: intId,
-        label: inter.kind === 'inn' ? `Rest at ${inter.name} (${inter.costGold || 5}g)` : `Inspect ${inter.name}`,
+        label:
+          inter.kind === 'inn'
+            ? `Rest at ${inter.name} (${inter.costGold || 5}g)`
+            : `Inspect ${inter.name}`,
         entity: inter,
       });
-      if (Array.isArray(inter.choices)) {
-        for (const ch of inter.choices) {
-          actions.push({
-            kind: 'choose',
-            id: ch.choiceId,
-            label: ch.label,
-            entity: inter,
-          });
-        }
-      }
     }
   }
 
@@ -258,15 +255,23 @@ export function movePlayer(gameState, dx, dy, options = {}) {
   return { state: gameState, moved: true, events, log: logs, triggerCombat: null };
 }
 
-export function interactWith(gameState, kind, targetId) {
+/**
+ * Perform a map interaction.
+ * - `talk`: allowed anywhere within the NPC's zone (matches shared town-wide conversation buttons).
+ * - `interact` and `encounter`: require tile proximity (Manhattan distance <= 1) unless `options.ignoreProximity` is true.
+ * - `exit`: requires adjacency to the exit tile OR `targetId` being an already-visited zone (fast travel).
+ */
+export function interactWith(gameState, kind, targetId, options = {}) {
   const mapState = ensureMapState(gameState);
   const zone = getZone(mapState.zoneId);
   const events = [];
   const logs = [];
+  const checkNear = (tx, ty) =>
+    Boolean(options.ignoreProximity) || isAdjacentOrOn(mapState.x, mapState.y, tx, ty);
 
   if (kind === 'talk') {
     const npc = (zone.npcs || []).find((n) => n.id === targetId);
-    if (!npc) return { state: gameState, events: [], log: ['No one by that name is nearby.'] };
+    if (!npc) return { state: gameState, events: [], log: ['No one by that name is in this area.'] };
     const line = `${npc.name} (${npc.role}): "${npc.defaultLine}"`;
     appendLog(mapState, line);
     logs.push(line);
@@ -277,11 +282,15 @@ export function interactWith(gameState, kind, targetId) {
   if (kind === 'encounter') {
     const enc = (zone.encounters || []).find((e) => (e.encounterId || e.id) === targetId);
     if (!enc) return { state: gameState, events: [], log: ['Encounter not found.'] };
+    if (!checkNear(enc.x, enc.y)) {
+      const msg = `Move closer to ${enc.name} before engaging.`;
+      appendLog(mapState, msg);
+      return { state: gameState, events: [], log: [msg], triggerCombat: null };
+    }
     const encId = enc.encounterId || enc.id;
     if (mapState.clearedEncounters[encId]) {
       const msg = `${enc.name} has already been cleared.`;
       appendLog(mapState, msg);
-      // Emit victory fact again to prevent any story softlock if needed
       events.push({ type: 'victory', encounterId: encId, enemyId: enc.enemyId });
       return { state: gameState, events, log: [msg], triggerCombat: null };
     }
@@ -299,6 +308,11 @@ export function interactWith(gameState, kind, targetId) {
   if (kind === 'interact') {
     const inter = (zone.interactables || []).find((i) => (i.interactionId || i.id) === targetId);
     if (!inter) return { state: gameState, events: [], log: ['Nothing to inspect here.'] };
+    if (!checkNear(inter.x, inter.y)) {
+      const msg = `Move closer to ${inter.name} to inspect it.`;
+      appendLog(mapState, msg);
+      return { state: gameState, events: [], log: [msg], triggerCombat: null };
+    }
     const intId = inter.interactionId || inter.id;
 
     if (
@@ -337,17 +351,15 @@ export function interactWith(gameState, kind, targetId) {
     return { state: gameState, events, log: logs, triggerCombat: null };
   }
 
-  if (kind === 'choose') {
-    mapState.lastChoiceId = targetId;
-    const msg = `Beacon alignment choice selected: ${targetId}.`;
-    appendLog(mapState, msg);
-    logs.push(msg);
-    events.push({ type: 'choose', choiceId: targetId });
-    return { state: gameState, events, log: logs, triggerCombat: null };
-  }
-
   if (kind === 'exit') {
     const ex = (zone.exits || []).find((e) => e.toZone === targetId);
+    const canUseExit = ex && checkNear(ex.x, ex.y);
+    const canFastTravel = Boolean(mapState.visitedZones?.[targetId]);
+    if (!canUseExit && !canFastTravel) {
+      const msg = 'You must reach the route gate before traveling to an undiscovered area.';
+      appendLog(mapState, msg);
+      return { state: gameState, events: [], log: [msg], triggerCombat: null };
+    }
     return travelToZone(gameState, targetId, ex?.toSpawn || 'default');
   }
 

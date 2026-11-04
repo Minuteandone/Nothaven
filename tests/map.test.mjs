@@ -5,17 +5,13 @@ import { installStory } from '../src/story/integration.js';
 import {
   ZONES,
   ZONE_ORDER,
-  createMapState,
   ensureMapState,
   exploreScene,
-  getAvailableActions,
   getClearedEncounters,
   getVisitedZones,
   installMap,
   interactWith,
   movePlayer,
-  recordEncounterVictory,
-  travelToZone,
 } from '../src/map/index.js';
 
 function makeMockGame() {
@@ -80,109 +76,12 @@ test('zones match required story location, NPC, interaction, and encounter IDs',
   assert.equal(ZONES.observatory_ruins.interactables[0].interactionId, 'dispatch_observatory');
 });
 
-test('movePlayer respects walls and triggers talk/exit/encounter', () => {
-  const state = createInitialState();
-  ensureMapState(state);
-  // Start at greyhaven default (2, 3). Move North to (2, 2), then East onto Mara at (3, 2)
-  const step1 = movePlayer(state, 0, -1, { disableRandomEncounters: true });
-  assert.equal(step1.moved, true);
-  assert.equal(state.map.x, 2);
-  assert.equal(state.map.y, 2);
-
-  // Step onto Mara (3, 2) -> emits talk event without moving onto NPC tile
-  const stepMara = movePlayer(state, 1, 0, { disableRandomEncounters: true });
-  assert.deepEqual(stepMara.events, [{ type: 'talk', npcId: 'mara' }]);
-  assert.equal(state.map.x, 2);
-  assert.equal(state.map.y, 2);
-
-  // Travel to ridge_road via East Gate at (8, 3)
-  state.map.x = 7;
-  state.map.y = 3;
-  const exitStep = movePlayer(state, 1, 0, { disableRandomEncounters: true });
-  assert.equal(exitStep.transitioned, true);
-  assert.equal(state.map.zoneId, 'ridge_road');
-  assert.equal(state.location, 'ridge_road');
-  assert.deepEqual(exitStep.events, [{ type: 'visit', locationId: 'ridge_road' }]);
-});
-
-test('full campaign progression through map and story integration', () => {
-  const game = makeMockGame();
-  installStory(game);
-  installMap(game, { enableKeyboard: false });
-
-  game.setScene('explore', { zoneId: 'greyhaven' });
-  assert.ok(game.lastHtml.includes('Greyhaven'));
-
-  // 1. Talk to Mara in Greyhaven -> stage becomes road
-  const talkMara = interactWith(game.state, 'talk', 'mara');
-  for (const e of talkMara.events) game.bus.emit('story:event', e);
-  assert.equal(game.state.story.stage, 'road');
-
-  // Talk to Tamsin as well
-  const talkTamsin = interactWith(game.state, 'talk', 'tamsin');
-  for (const e of talkTamsin.events) game.bus.emit('story:event', e);
-  assert.equal(game.state.story.flags.met_tamsin, true);
-
-  // 2. Travel to ridge_road, collect dispatch_ridge, defeat ridge_patrol
-  game.setScene('explore', { zoneId: 'ridge_road' });
-  assert.equal(game.state.story.flags.visit_ridge_road, true);
-
-  const dispRidge = interactWith(game.state, 'interact', 'dispatch_ridge');
-  for (const e of dispRidge.events) game.bus.emit('story:event', e);
-  assert.equal(game.state.story.flags.dispatch_ridge, true);
-
-  const encRidge = interactWith(game.state, 'encounter', 'ridge_patrol');
-  assert.equal(encRidge.triggerCombat.encounterId, 'ridge_patrol');
-  game.bus.emit('combat:victory', { enemyId: 'storm_rat', encounterId: 'ridge_patrol' });
-  assert.ok(getClearedEncounters(game.state).includes('ridge_patrol'));
-  assert.equal(game.state.story.stage, 'road_report');
-
-  // 3. Return to Greyhaven, report to Mara, speak to Iven
-  game.setScene('explore', { zoneId: 'greyhaven' });
-  for (const e of interactWith(game.state, 'talk', 'mara').events) game.bus.emit('story:event', e);
-  assert.equal(game.state.story.stage, 'lens_briefing');
-  for (const e of interactWith(game.state, 'talk', 'iven').events) game.bus.emit('story:event', e);
-  assert.equal(game.state.story.stage, 'lens');
-
-  // 4. Travel to observatory_ruins, collect dispatch_observatory, defeat observatory_sentinel
-  game.setScene('explore', { zoneId: 'observatory_ruins' });
-  for (const e of interactWith(game.state, 'interact', 'dispatch_observatory').events) {
-    game.bus.emit('story:event', e);
-  }
-  assert.equal(game.state.story.flags.dispatch_observatory, true);
-
-  game.bus.emit('combat:victory', { enemyId: 'storm_rat', encounterId: 'observatory_sentinel' });
-  assert.equal(game.state.story.stage, 'lens_report');
-
-  // 5. Return to Greyhaven, turn in dispatches to Tamsin, report lens to Iven, hear council
-  game.setScene('explore', { zoneId: 'greyhaven' });
-  for (const e of interactWith(game.state, 'talk', 'tamsin').events) game.bus.emit('story:event', e);
-  assert.equal(game.state.story.flags.dispatch_reward, true);
-
-  for (const e of interactWith(game.state, 'talk', 'iven').events) game.bus.emit('story:event', e);
-  assert.equal(game.state.story.stage, 'council');
-
-  for (const e of interactWith(game.state, 'talk', 'mara').events) game.bus.emit('story:event', e);
-  for (const e of interactWith(game.state, 'talk', 'tamsin').events) game.bus.emit('story:event', e);
-
-  // 6. Visit beacon_tower and choose share_signal
-  game.setScene('explore', { zoneId: 'beacon_tower' });
-  assert.equal(game.state.story.stage, 'decision');
-  for (const e of interactWith(game.state, 'choose', 'share_signal').events) {
-    game.bus.emit('story:event', e);
-  }
-  assert.equal(game.state.story.stage, 'complete');
-  assert.equal(game.state.story.ending, 'share_signal');
-  assert.deepEqual(getVisitedZones(game.state), [
-    'greyhaven',
-    'ridge_road',
-    'observatory_ruins',
-    'beacon_tower',
-  ]);
-});
-
-test('every zone spawn, exit, NPC, interactable, and encounter sits on a walkable tile', () => {
+test('every zone grid matches declared width/height and every entity sits on a walkable tile', () => {
   for (const zone of Object.values(ZONES)) {
+    assert.equal(zone.grid.length, zone.height, `${zone.id} grid height matches`);
+    for (let y = 0; y < zone.height; y++) {
+      assert.equal(zone.grid[y].length, zone.width, `${zone.id} row ${y} width matches`);
+    }
     for (const [key, pos] of Object.entries(zone.spawns || {})) {
       const ch = zone.grid[pos.y]?.[pos.x];
       assert.ok(['.', ',', '+', '*'].includes(ch), `${zone.id} spawn ${key} at (${pos.x},${pos.y}) has tile '${ch}'`);
@@ -202,6 +101,140 @@ test('every zone spawn, exit, NPC, interactable, and encounter sits on a walkabl
     for (const enc of zone.encounters || []) {
       const ch = zone.grid[enc.y]?.[enc.x];
       assert.ok(['.', ',', '+', '*'].includes(ch), `${zone.id} encounter ${enc.id} at (${enc.x},${enc.y}) has tile '${ch}'`);
+    }
+  }
+});
+
+test('movePlayer respects walls, enforces proximity on interact/encounter, and supports Signal Lift', () => {
+  const state = createInitialState();
+  ensureMapState(state);
+  const step1 = movePlayer(state, 0, -1, { disableRandomEncounters: true });
+  assert.equal(step1.moved, true);
+  assert.equal(state.map.x, 2);
+  assert.equal(state.map.y, 2);
+
+  // Step onto Mara (3, 2) -> emits talk event without moving onto NPC tile
+  const stepMara = movePlayer(state, 1, 0, { disableRandomEncounters: true });
+  assert.deepEqual(stepMara.events, [{ type: 'talk', npcId: 'mara' }]);
+  assert.equal(state.map.x, 2);
+  assert.equal(state.map.y, 2);
+
+  // Travel to ridge_road via East Gate at (8, 3)
+  state.map.x = 7;
+  state.map.y = 3;
+  const exitStep = movePlayer(state, 1, 0, { disableRandomEncounters: true });
+  assert.equal(exitStep.transitioned, true);
+  assert.equal(state.map.zoneId, 'ridge_road');
+  assert.equal(state.location, 'ridge_road');
+
+  // Out-of-range dispatch_ridge (5,5) from spawn (1,3) is rejected by proximity guard
+  const farDispatch = interactWith(state, 'interact', 'dispatch_ridge');
+  assert.deepEqual(farDispatch.events, []);
+  const farEncounter = interactWith(state, 'encounter', 'ridge_patrol');
+  assert.equal(farEncounter.triggerCombat, null);
+
+  // Beacon Tower Signal Lift at (6, 3) is directly reachable from spawn (4, 4) without hitting (4, 5)
+  state.map.zoneId = 'beacon_tower';
+  state.map.x = 4;
+  state.map.y = 4;
+  movePlayer(state, 1, 0, { disableRandomEncounters: true }); // (5, 4)
+  movePlayer(state, 0, -1, { disableRandomEncounters: true }); // (5, 3)
+  const liftStep = movePlayer(state, 1, 0, { disableRandomEncounters: true }); // (6, 3) -> greyhaven
+  assert.equal(liftStep.transitioned, true);
+  assert.equal(state.map.zoneId, 'greyhaven');
+});
+
+test('full campaign progression through map and story integration + toTownScene sync', () => {
+  const game = makeMockGame();
+  installStory(game);
+  installMap(game, { enableKeyboard: false });
+
+  game.setScene('explore', { zoneId: 'greyhaven' });
+  assert.ok(game.lastHtml.includes('Greyhaven'));
+
+  // 1. Talk to Mara and Tamsin in Greyhaven
+  exploreScene.actions.mapTalk(game, { dataset: { arg: 'mara' } });
+  assert.equal(game.state.story.stage, 'road');
+  exploreScene.actions.mapTalk(game, { dataset: { arg: 'tamsin' } });
+  assert.equal(game.state.story.flags.met_tamsin, true);
+
+  // 2. Travel to ridge_road, move adjacent to dispatch_ridge (5,5) and ridge_patrol (5,3)
+  game.setScene('explore', { zoneId: 'ridge_road' });
+  game.state.map.x = 5;
+  game.state.map.y = 4;
+  exploreScene.actions.mapInteract(game, { dataset: { arg: 'dispatch_ridge' } });
+  assert.equal(game.state.story.flags.dispatch_ridge, true);
+
+  exploreScene.actions.mapEncounter(game, { dataset: { arg: 'ridge_patrol' } });
+  assert.equal(game.lastCombatData.encounterId, 'ridge_patrol');
+  game.bus.emit('combat:victory', { enemyId: 'storm_rat', encounterId: 'ridge_patrol' });
+  assert.ok(getClearedEncounters(game.state).includes('ridge_patrol'));
+  assert.equal(game.state.story.stage, 'road_report');
+
+  // Verify toTownScene from wilderness resets location and zoneId to greyhaven
+  exploreScene.actions.toTownScene(game);
+  assert.equal(game.state.scene, 'town');
+  assert.equal(game.state.location, 'greyhaven');
+  assert.equal(game.state.map.zoneId, 'greyhaven');
+
+  // 3. Report to Mara, speak to Iven
+  game.setScene('explore', { zoneId: 'greyhaven' });
+  exploreScene.actions.mapTalk(game, { dataset: { arg: 'mara' } });
+  assert.equal(game.state.story.stage, 'lens_briefing');
+  exploreScene.actions.mapTalk(game, { dataset: { arg: 'iven' } });
+  assert.equal(game.state.story.stage, 'lens');
+
+  // 4. Travel to observatory_ruins, move adjacent to dispatch_observatory (1,3), defeat sentinel (4,2)
+  game.setScene('explore', { zoneId: 'observatory_ruins' });
+  game.state.map.x = 2;
+  game.state.map.y = 3;
+  exploreScene.actions.mapInteract(game, { dataset: { arg: 'dispatch_observatory' } });
+  assert.equal(game.state.story.flags.dispatch_observatory, true);
+
+  game.state.map.x = 4;
+  game.state.map.y = 3;
+  exploreScene.actions.mapEncounter(game, { dataset: { arg: 'observatory_sentinel' } });
+  game.bus.emit('combat:victory', { enemyId: 'storm_rat', encounterId: 'observatory_sentinel' });
+  assert.equal(game.state.story.stage, 'lens_report');
+
+  // 5. Return to Greyhaven, turn in dispatches to Tamsin, report lens to Iven, hear council
+  game.setScene('explore', { zoneId: 'greyhaven' });
+  exploreScene.actions.mapTalk(game, { dataset: { arg: 'tamsin' } });
+  assert.equal(game.state.story.flags.dispatch_reward, true);
+
+  exploreScene.actions.mapTalk(game, { dataset: { arg: 'iven' } });
+  assert.equal(game.state.story.stage, 'council');
+
+  exploreScene.actions.mapTalk(game, { dataset: { arg: 'mara' } });
+  exploreScene.actions.mapTalk(game, { dataset: { arg: 'tamsin' } });
+
+  // 6. Visit beacon_tower and choose share_signal via guarded storyChoose action
+  game.setScene('explore', { zoneId: 'beacon_tower' });
+  assert.equal(game.state.story.stage, 'decision');
+  exploreScene.actions.storyChoose(game, { dataset: { arg: 'share_signal' } });
+  assert.equal(game.state.story.stage, 'complete');
+  assert.equal(game.state.story.ending, 'share_signal');
+  assert.deepEqual(getVisitedZones(game.state), [
+    'greyhaven',
+    'ridge_road',
+    'observatory_ruins',
+    'beacon_tower',
+  ]);
+});
+
+test('zone hygiene: all zone names, descriptions, NPCs, interactables, and encounters are on-theme', () => {
+  const banned = /\b(eggs?|nests?|nest(ed|ing)?|hatch(ed|ing|es|lings?)?|yolk|chickens?|roosters?|hen|easter|scrambl(e|ed|ing)|omelet(te)?s?|peep(s|ing)?|shells?|shell(ed|ing)?|albumen|oval|ovoid|quiche|meringue|custard|poach(ed|ing)?|frittata)\b/i;
+  for (const [id, zone] of Object.entries(ZONES)) {
+    assert.equal(id, zone.id);
+    assert.ok(!banned.test(zone.name) && !banned.test(zone.subtitle) && !banned.test(zone.description), `${id} zone text on-theme`);
+    for (const npc of zone.npcs || []) {
+      assert.ok(!banned.test(npc.name) && !banned.test(npc.role) && !banned.test(npc.defaultLine), `npc ${npc.id} on-theme`);
+    }
+    for (const inter of zone.interactables || []) {
+      assert.ok(!banned.test(inter.name) && !banned.test(inter.description), `interactable ${inter.id} on-theme`);
+    }
+    for (const enc of zone.encounters || []) {
+      assert.ok(!banned.test(enc.name) && !banned.test(enc.description || ''), `encounter ${enc.id} on-theme`);
     }
   }
 });
