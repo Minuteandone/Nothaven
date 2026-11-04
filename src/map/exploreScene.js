@@ -88,6 +88,7 @@ export const exploreScene = {
       nearbyActions: getAvailableActions(game.state),
       visitedZones: getVisitedZones(game.state),
       storyHtml: storyUI.render(game),
+      hasQuestJournal: Boolean(game.scenes?.quests),
     })}`;
   },
 
@@ -149,6 +150,7 @@ export const exploreScene = {
         game.setScene('bag', { returnScene: 'explore' });
       }
     },
+    openQuests(game) { if (game.scenes?.quests) game.setScene('quests', { returnScene: 'explore' }); },
     openJournal(game) {
       if (game.scenes?.bestiary) {
         game.setScene('bestiary', { returnScene: 'explore' });

@@ -11,6 +11,7 @@ import { installCompanions } from './scenes/muster.js';
 import { installBestiary } from './scenes/bestiary.js';
 import { endingScene, installEnding } from './scenes/ending.js';
 import { installAudio } from './audio/controls.js';
+import { installQuestJournal } from './scenes/quests.js';
 import { guideScene } from './scenes/guide.js';
 
 const game = new Game(document.getElementById('app'));
@@ -25,6 +26,7 @@ installMap(game); // registers the 'explore' scene
 installShop(game); // registers the 'shop' scene (Hesta's Goods)
 installBag(game); // registers the 'bag' scene (inventory screen)
 installCompanions(game); // registers the 'muster' scene (recruit companions)
+installQuestJournal(game);
 installBestiary(game); // registers the 'bestiary' scene + records defeated foes
 installEnding(game); // after installStory so the story state is already updated
 installAudio(game); // creates no AudioContext until the player explicitly enables sound

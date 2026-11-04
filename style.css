@@ -829,3 +829,12 @@ em.enraged {
 
 /* Post-battle recap (src/ui/combat.js summaryLine) */
 .battle-summary { margin: .25rem 0 0; font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+/* Read-only Journey Journal. Long objectives wrap without hiding controls. */
+.quest-journal .quest-list { list-style: none; padding: 0; margin: 1rem 0; }
+.quest-journal .quest-entry { border-top: 1px solid var(--line); padding: 1rem 0; overflow-wrap: anywhere; }
+.quest-journal .quest-entry__heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem 1rem; }
+.quest-journal .quest-entry h2 { margin: 0; min-width: 0; }
+.quest-journal .quest-entry__status { color: var(--muted); font-size: .85rem; }
+.quest-journal__filters { display: flex; flex-wrap: wrap; gap: .5rem; }
+.quest-journal__filters [aria-pressed="true"] { border-color: var(--accent); background: var(--panel); font-weight: 700; }
+.quest-journal > .action-list { margin-top: 1rem; }
