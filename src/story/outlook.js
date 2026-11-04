@@ -1,3 +1,5 @@
+import { getSpireJournal, spireAftermath } from './spire.js';
+import { getExpeditionJournal } from './expeditions.js';
 import { getRelayJournal, relayAftermath } from './relay.js';
 import { RESCUE_ROUTES, routeRescued } from './rescue.js';
 
@@ -17,10 +19,20 @@ export function getTownOutlook(story) {
   const light = story.ending === 'protect_town'
     ? 'A steady blue shield holds over Greyhaven.'
     : 'Silver light marks the roads beyond Greyhaven, while watch crews tend the thinner town shield.';
+  if (flags.spire_reward) return {
+    title: 'A shared forecast, an open road',
+    text: spireAftermath(story),
+    hint: getExpeditionJournal(story)[0].objective,
+  };
+  if (flags.spire_accepted && getSpireJournal(story).length) return {
+    title: 'Above the gathering storm',
+    text: `${light} The relay has traced the violent weather to Stormcrown Spire. The summit survey will turn an enemy’s weapon into knowledge shared by every settlement.`,
+    hint: getSpireJournal(story)[0].objective,
+  };
   if (flags.relay_choice) return {
     title: 'The inland lights answer',
     text: relayAftermath(story),
-    hint: flags.relief_reward ? 'The network is running. Rest, regroup, and explore the dangers still beyond the cleared roads.' : 'Mara still welcomes the First Light Relief supplies listed in your journal.',
+    hint: flags.relief_reward ? 'Accept Mara’s summit survey in Greyhaven when your party is ready for Stormcrown Spire.' : 'Mara still welcomes the First Light Relief supplies listed in your journal.',
   };
   if (flags.relay_accepted && flags.rescue_reward) return {
     title: 'An inland signal to restore',

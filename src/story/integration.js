@@ -19,8 +19,8 @@ export function installStory(game) {
   game.state.story ||= createStoryState();
   const onStory = event => dispatchStoryEvent(game, event);
   const onVictory = event => {
-    // Encounter identity is not enemy species; ordinary rematches must not clear quests.
-    if (event?.encounterId) dispatchStoryEvent(game, { type: 'victory', encounterId: event.encounterId });
+    // Fixed objectives require encounterId; repeatable patrols deliberately count enemyId.
+    if (event?.encounterId || event?.enemyId) dispatchStoryEvent(game, { type: 'victory', encounterId: event.encounterId, enemyId: event.enemyId });
   };
   game.bus.on('story:event', onStory);
   game.bus.on('combat:victory', onVictory);
