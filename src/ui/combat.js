@@ -1,4 +1,4 @@
-import { BEACON_CHARGE_MAX, chargeReady } from '../combat/rules.js';
+import { BEACON_CHARGE_MAX, chargeReady, battleSummary } from '../combat/rules.js';
 import { heroStats, knownSkills } from '../combat/rules.js';
 import { getItem, TYPES } from '../items/items.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
@@ -61,7 +61,7 @@ function commandCard({ action, arg, name, meta, description, iconName = 'focus',
 
 function commands({ combat, hero, inventory, menu }) {
   if (combat.over) {
-    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p></div></div>${uiButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue' })}</div>`;
+    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat) : ''}</div></div>${uiButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue' })}</div>`;
   }
   if (menu === 'skills') {
     const skills = knownSkills(hero).map(skill => commandCard({
@@ -144,4 +144,14 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main' }) {
       </section>
     </div>
   </div>`;
+}
+
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+/** Short post-battle recap shown under the Victory heading. */
+export function summaryLine(combat) {
+  const sm = battleSummary(combat);
+  const parts = [plural(sm.rounds, 'round'), `${sm.dealt} damage dealt`, `${sm.taken} damage taken`];
+  if (sm.bursts > 0) parts.push(plural(sm.bursts, 'Beacon Burst'));
+  return `<p class="battle-summary">${parts.join(' · ')}</p>`;
 }
