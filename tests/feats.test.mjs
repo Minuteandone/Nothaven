@@ -21,6 +21,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.party = [{ ...s.party[0], level: 20 }, { id: 'bram' }, { id: 'iven' }];
   s.bestiary = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`foe_${i}`, 1]));
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
+  s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
   assert.equal(featsEarned(s), FEATS.length);
 });
 
@@ -64,4 +65,18 @@ test('Yard Champion needs a drill win against every boss', () => {
   assert.equal(yard(), true);
   const row = FEATS.find(f => f.id === 'yard');
   assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
+});
+
+test('Unbroken Run feat needs a full-length gauntlet best', () => {
+  const s = createInitialState();
+  const done = () => featStatus(s).find(f => f.id === 'gauntlet').done;
+  assert.equal(done(), false);
+  s.drillGauntlet = { runs: 4, best: DRILL_FOES.length - 1 };
+  assert.equal(done(), false, 'one bout short does not count');
+  s.drillGauntlet = { runs: 'x', best: 'all' };
+  assert.equal(done(), false, 'malformed record does not count');
+  s.drillGauntlet = { runs: 5, best: DRILL_FOES.length };
+  assert.equal(done(), true);
+  const row = FEATS.find(f => f.id === 'gauntlet');
+  assert.doesNotMatch(`${row.title} ${row.detail}`, /egg|yolk|shell|hatch|nest|chick|omelet|scramble|cluck|hen\b/i);
 });
