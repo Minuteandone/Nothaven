@@ -12,11 +12,13 @@ Provides 9×7 tile-grid exploration, multi-zone navigation, NPC/object proximity
 - `ridge_road` (**Ridge Road — Wind-Lashed Cliffside Ascent**):
   - Story Encounter: `ridge_patrol` (`ridge_bandit`) at `(5, 3)`.
   - Optional Encounter: `ridge_hound_den` (`gale_hound`) at `(2, 1)`.
+  - Random Encounters (12%): `ridge_bandit`, `storm_rat`, `gale_hound`, `briar_boar`.
   - Interactables: `dispatch_ridge` at `(5, 5)`, `ridge_supply_cache` at `(1, 5)`.
   - Exits: West Trail `(0, 3)` → `greyhaven`; North Ascent `(7, 0)` → `observatory_ruins`; North Trail `(8, 3)` → `highwatch_pass`.
 - `observatory_ruins` (**Observatory Ruins — Shattered Astral Dome**):
   - Story Encounter: `observatory_sentinel` (`gale_hound`) at `(4, 2)`.
   - Optional Encounter: `observatory_construct` (`rust_sentinel`) at `(7, 3)`.
+  - Random Encounters (12%): `gale_hound`, `storm_rat`, `rust_sentinel`, `lens_wisp`.
   - Interactables: `dispatch_observatory` at `(1, 3)`, `observatory_lens_pedestal` at `(4, 1)` (requires `observatory_sentinel` cleared), `observatory_forecast_stand` at `(3, 1)` (repeatable Long Watch reading, requires `observatory_sentinel` cleared), `observatory_supply_cache` at `(7, 5)`.
   - Exits: South Steps `(4, 6)` → `ridge_road`; North Causeway `(4, 0)` → `beacon_tower`.
 - `beacon_tower` (**Beacon Tower — High Spire of the Stormwatch**):
@@ -29,12 +31,14 @@ Provides 9×7 tile-grid exploration, multi-zone navigation, NPC/object proximity
   - NPCs: `ona` (Ona Vell, Harbor Elder at `(6, 3)`).
   - Story Rescue Encounter: `saltmere_rescue` (`reef_crawler`) at `(4, 3)`.
   - Optional Encounters: `saltmere_squall_revenant` (`squall_revenant`) at `(1, 1)`, `saltmere_tide_wraith` (`drowned_harbormaster` boss) at `(1, 5)`.
+  - Random Encounters (12%): `reef_crawler`, `squall_revenant`, `gale_hound`, `wrack_eel`.
   - Interactables: `saltmere_post` (`Saltmere Trading Post` shop at `(2, 3)`), `saltmere_supply_cache` at `(7, 5)`, `saltmere_harbor_lamp` at `(4, 5)`.
   - Exits: North Causeway `(4, 0)` → `greyhaven`.
 - `highwatch_pass` (**Highwatch Pass — Wind-Scoured Mountain Outpost**):
   - NPCs: `rusk` (Captain Rusk, Watch Commander at `(3, 5)`).
   - Story Rescue Encounter: `highwatch_rescue` (`frost_wolf`) at `(5, 3)`.
   - Optional Encounters: `highwatch_construct` (`rockslide_golem`) at `(7, 1)`, `highwatch_warlord` (`pass_warlord` boss) at `(1, 1)`.
+  - Random Encounters (12%): `frost_wolf`, `rockslide_golem`, `ridge_bandit`, `rime_wight`.
   - Interactables: `highwatch_supply_cache` at `(7, 5)`, `highwatch_cairn` at `(4, 1)`.
   - Exits: West Switchback `(0, 3)` → `ridge_road`; East Gate `(8, 3)` → `sunscar_relay`.
 
