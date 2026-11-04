@@ -117,7 +117,7 @@ export const ENEMIES = {
     ],
   },
   dust_marauder: {
-    id: 'dust_marauder', name: 'Dust Marauder', hp: 46, atk: 13, def: 5, spd: 7, xp: 30, gold: 18,
+    id: 'dust_marauder', name: 'Dust Marauder', hp: 64, atk: 18, def: 5, spd: 7, xp: 30, gold: 18,
     ability: { name: 'Sandblind Slash', chance: 0.3, mult: 1.25, status: 'bleeding', turns: 3 },
     loot: [
       { id: 'bandage', chance: 0.5, minQty: 1, maxQty: 1 },
@@ -125,7 +125,7 @@ export const ENEMIES = {
     ],
   },
   relay_drone: {
-    id: 'relay_drone', name: 'Relay Drone', hp: 52, atk: 12, def: 7, spd: 6, xp: 34, gold: 20,
+    id: 'relay_drone', name: 'Relay Drone', hp: 72, atk: 17, def: 7, spd: 6, xp: 34, gold: 20,
     tags: ['construct'],
     ability: { name: 'Static Pulse', chance: 0.3, mult: 1.1, status: 'shocked', turns: 2 },
     loot: [
@@ -134,7 +134,7 @@ export const ENEMIES = {
     ],
   },
   relay_warden: {
-    id: 'relay_warden', name: 'Relay Warden', hp: 170, atk: 16, def: 7, spd: 5, xp: 95, gold: 60,
+    id: 'relay_warden', name: 'Relay Warden', hp: 220, atk: 22, def: 7, spd: 5, xp: 95, gold: 60,
     tags: ['construct'], boss: true,
     intro: 'The relay station shudders awake. A towering brass Warden unfolds from its cradle, coils humming with stolen storm-charge!',
     defeat: 'The Relay Warden folds back into its cradle with a long mechanical sigh. Its coils cool from blue to dull copper, and the console beyond flickers to life.',
