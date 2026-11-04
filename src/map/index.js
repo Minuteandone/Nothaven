@@ -12,6 +12,7 @@ export {
   getAvailableActions,
   travelToZone,
   movePlayer,
+  patrolZone,
   interactWith,
   useFieldConsumable,
   craftInField,

@@ -51,3 +51,11 @@ Provides 9×7 tile-grid exploration, multi-zone navigation, NPC/object proximity
   - **Relay Choice Effects (`state.story.flags.relay_choice`)**:
     - `shelter_network`: reduces map inn rest cost (`greyhaven_inn`) from `5g` to `2g` via `getInnCost`.
     - `route_network`: halves `zone.randomEncounterChance` in `movePlayer` via `getEffectiveRandomEncounterChance` while leaving fixed encounters unchanged.
+
+- **`stormcrown_spire`** (*Stormcrown Spire — Summit of the Storm*, 9×7, danger 4):
+  - Exits: `Lower Switchback → Sunscar Relay` at `(0, 5)` (`toSpawn: 'from_stormcrown_spire'` at `(8, 2)`) and `Signal Lift → Greyhaven` at `(8, 5)`.
+  - Survey & Summit Interactables: `survey_records_a` at `(1, 1)`, `survey_records_b` at `(7, 3)`, and `spire_summit` at `(4, 0)` (`requiresEncounterCleared: 'stormcrown_tyrant'`).
+  - Cache & Shop: `spire_supply_cache` (`once: true`) at `(2, 5)` and `stormcrown_post` (`kind: 'shop'`, `shopId: 'stormcrown_post'`) at `(4, 5)`.
+  - Encounters: `stormcrown_tyrant` boss at `(4, 1)`, `spire_sentry_post` (`spire_sentry`) at `(3, 3)`, `spire_raider_camp` (`ashen_raider`) at `(6, 5)`, and repeatable random/patrol encounters (`ashen_raider`, `spire_sentry`).
+- **`patrolZone(gameState, options)` / `mapPatrol`**:
+  - Available in any zone with `randomEncounters` to deterministically launch a repeatable encounter (`encounterId: null`) for patrol contracts.

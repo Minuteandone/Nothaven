@@ -37,6 +37,7 @@ function makeMockGame() {
   const scenes = {};
   const game = {
     state: createInitialState(),
+    mapRng: () => 0.99,
     bus,
     scenes,
     renderCount: 0,
@@ -74,7 +75,7 @@ function makeMockGame() {
 }
 
 test('zones match required story location, NPC, interaction, and encounter IDs', () => {
-  assert.deepEqual(ZONE_ORDER, ['greyhaven', 'ridge_road', 'observatory_ruins', 'beacon_tower', 'saltmere_coast', 'highwatch_pass', 'sunscar_relay']);
+  assert.deepEqual(ZONE_ORDER, ['greyhaven', 'ridge_road', 'observatory_ruins', 'beacon_tower', 'saltmere_coast', 'highwatch_pass', 'sunscar_relay', 'stormcrown_spire']);
   const npcIds = ZONES.greyhaven.npcs.map((n) => n.id);
   assert.deepEqual(npcIds, ['mara', 'iven', 'tamsin']);
   assert.equal(ZONES.ridge_road.encounters[0].encounterId, 'ridge_patrol');
@@ -522,4 +523,135 @@ test('relay_choice flags apply shelter_network (2g map inn cost) and route_netwo
   game.state.map.y = 3;
   const fixedStep = movePlayer(game.state, 1, 0, { rng: () => 0.99 });
   assert.equal(fixedStep.triggerCombat?.encounterId, 'relay_warden');
+});
+
+test('Chapter 4 stormcrown_spire zone supports survey records, boss-gated spire_summit, cache, and stormcrown_post shop', () => {
+  const game = makeMockGame();
+  installMap(game, { enableKeyboard: false });
+
+  // Travel to sunscar_relay and take Spire Switchback exit at (8, 1) -> stormcrown_spire
+  travelToZone(game.state, 'sunscar_relay', 'default');
+  game.state.map.x = 8;
+  game.state.map.y = 2;
+  const toSpire = movePlayer(game.state, 0, -1, { disableRandomEncounters: true });
+  assert.equal(toSpire.transitioned, true);
+  assert.equal(game.state.map.zoneId, 'stormcrown_spire');
+  assert.deepEqual({ x: game.state.map.x, y: game.state.map.y }, { x: 1, y: 5 });
+
+  // Inspect survey_records_a at (1, 1) and survey_records_b at (7, 3)
+  game.state.map.x = 1;
+  game.state.map.y = 1;
+  assert.deepEqual(interactWith(game.state, 'interact', 'survey_records_a').events, [
+    { type: 'interact', interactionId: 'survey_records_a' },
+  ]);
+  game.state.map.x = 7;
+  game.state.map.y = 3;
+  assert.deepEqual(interactWith(game.state, 'interact', 'survey_records_b').events, [
+    { type: 'interact', interactionId: 'survey_records_b' },
+  ]);
+
+  // spire_summit at (4, 0) is gated behind stormcrown_tyrant
+  game.state.map.x = 4;
+  game.state.map.y = 0;
+  const blockedSummit = interactWith(game.state, 'interact', 'spire_summit');
+  assert.deepEqual(blockedSummit.events, []);
+  assert.match(game.state.map.log.at(-1), /defeat the guardian before approaching the Stormcrown Summit Cradle/i);
+
+  // Trigger and clear stormcrown_tyrant at (4, 1)
+  const tyrantFight = interactWith(game.state, 'encounter', 'stormcrown_tyrant');
+  assert.deepEqual(tyrantFight.triggerCombat, {
+    encounterId: 'stormcrown_tyrant',
+    enemyId: 'stormcrown_tyrant',
+    name: 'Stormcrown Tyrant',
+  });
+  recordEncounterVictory(game.state, 'stormcrown_tyrant', 'stormcrown_tyrant');
+
+  // Now spire_summit at (4, 0) unlocks
+  const unlockedSummit = interactWith(game.state, 'interact', 'spire_summit');
+  assert.deepEqual(unlockedSummit.events, [{ type: 'interact', interactionId: 'spire_summit' }]);
+
+  // Open spire_supply_cache at (2, 5) and visit stormcrown_post shop at (4, 5)
+  game.state.map.x = 2;
+  game.state.map.y = 5;
+  const cacheRes = interactWith(game.state, 'interact', 'spire_supply_cache');
+  assert.deepEqual(cacheRes.events, [{ type: 'interact', interactionId: 'spire_supply_cache' }]);
+  assert.equal(game.state.map.completedInteractions.spire_supply_cache, true);
+
+  game.state.map.x = 4;
+  game.state.map.y = 5;
+  const shopRes = interactWith(game.state, 'interact', 'stormcrown_post');
+  assert.equal(shopRes.triggerShop?.shopId, 'stormcrown_post');
+});
+
+test('exploreScene supports companion-targeted useFieldItem and openBag/openJournal navigation', () => {
+  const game = makeMockGame();
+  let lastSceneData = null;
+  game.scenes.bag = { onEnter(g, d) { lastSceneData = { scene: 'bag', data: d }; }, render() { return ''; } };
+  game.scenes.bestiary = { onEnter(g, d) { lastSceneData = { scene: 'bestiary', data: d }; }, render() { return ''; } };
+  installMap(game, { enableKeyboard: false });
+
+  game.state.party.push({
+    id: 'tamsin',
+    name: 'Tamsin',
+    hp: 8,
+    maxHp: 24,
+    mp: 10,
+    maxMp: 10,
+    atk: 5,
+    def: 3,
+    spd: 5,
+    statuses: [],
+    equipment: { weapon: null, armor: null, trinket: null },
+  });
+  game.state.inventory = [{ id: 'rations', qty: 1 }];
+  game.setScene('explore');
+
+  const html = exploreScene.render(game);
+  assert.match(html, /data-action="useFieldItem" data-arg="rations:1"/);
+  assert.match(html, /Use Trail Rations → Tamsin/);
+
+  exploreScene.actions.useFieldItem(game, { dataset: { arg: 'rations:1' } });
+  assert.equal(game.state.party[1].hp, 18);
+  assert.equal(game.state.inventory.length, 0);
+
+  exploreScene.actions.openBag(game);
+  assert.equal(game.state.scene, 'bag');
+  assert.equal(lastSceneData?.data?.returnScene, 'explore');
+
+  game.setScene('explore');
+  exploreScene.actions.openJournal(game);
+  assert.equal(game.state.scene, 'bestiary');
+  assert.equal(lastSceneData?.data?.returnScene, 'explore');
+});
+
+test('normal movement in exploreScene respects route_network (.10 roll triggers at .14 base but not .07) and mapPatrol triggers repeatable fights', () => {
+  const game = makeMockGame();
+  installMap(game, { enableKeyboard: false });
+  travelToZone(game.state, 'stormcrown_spire', 'default');
+
+  // At base 0.14 chance in stormcrown_spire, a 0.10 roll triggers a random encounter on moveEast
+  const rolls = [0.10, 0.9];
+  game.mapRng = () => rolls.shift() ?? 0.9;
+  exploreScene.actions.moveEast(game);
+  assert.equal(game.state.scene, 'combat');
+  assert.equal(game.lastCombatData?.enemyId, 'spire_sentry');
+
+  // With route_network (halved to 0.07), the same 0.10 roll does NOT trigger a random encounter
+  game.setScene('explore', { combatResult: 'fled' });
+  game.state.story = { flags: { relay_choice: 'route_network' } };
+  game.lastCombatData = null;
+  const rollsRoute = [0.10, 0.9];
+  game.mapRng = () => rollsRoute.shift() ?? 0.9;
+  exploreScene.actions.moveWest(game);
+  assert.equal(game.state.scene, 'explore');
+  assert.equal(game.lastCombatData, null);
+
+  // Explicit mapPatrol action renders in encounter-bearing zones and launches repeatable fights
+  const html = exploreScene.render(game);
+  assert.match(html, /data-action="mapPatrol"/);
+  game.mapRng = () => 0.1;
+  exploreScene.actions.mapPatrol(game);
+  assert.equal(game.state.scene, 'combat');
+  assert.equal(game.lastCombatData?.enemyId, 'ashen_raider');
+  assert.equal(game.lastCombatData?.encounterId, null);
 });
