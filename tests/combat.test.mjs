@@ -210,3 +210,41 @@ test('chapter two bosses are valid, and flagged as bosses', async () => {
     assert.equal(c.enemy.id, id);
   }
 });
+
+test('advanced skills unlock at levels 4 and 5', async () => {
+  const { knownSkills } = await import('../src/combat/rules.js');
+  const ids = (lvl) => knownSkills({ level: lvl }).map((s) => s.id);
+  assert.ok(!ids(3).includes('rallying_light'));
+  assert.ok(ids(4).includes('rallying_light'));
+  assert.ok(!ids(4).includes('stormbreaker'));
+  assert.ok(ids(5).includes('stormbreaker'));
+});
+
+test('Rallying Light heals every standing ally and stops bleeding', async () => {
+  const { createCombat, heroAction } = await import('../src/combat/rules.js');
+  const hero = { id: 'hero', name: 'Wren', hp: 10, maxHp: 50, mp: 20, maxMp: 20, atk: 6, def: 3, spd: 9, level: 4, statuses: ['bleeding'] };
+  const ally = { id: 'tamsin', name: 'Tamsin', hp: 5, maxHp: 30, mp: 0, maxMp: 0, atk: 5, def: 2, spd: 1, level: 4, statuses: ['bleeding'] };
+  const down = { id: 'iven', name: 'Iven', hp: 0, maxHp: 30, mp: 0, maxMp: 0, atk: 1, def: 1, spd: 1, level: 4, statuses: [] };
+  const party = [hero, ally, down];
+  const c = createCombat({ enemyId: 'storm_rat' });
+  c.heroTimers.bleeding = 3;
+  c.allyTimers = { tamsin: { bleeding: 2 } };
+  const res = heroAction(c, hero, { type: 'skill', skillId: 'rallying_light' }, () => 0.99, party);
+  assert.ok(res.ok);
+  assert.equal(hero.mp, 14);
+  assert.ok(!hero.statuses.includes('bleeding'));
+  assert.ok(!ally.statuses.includes('bleeding'));
+  assert.equal(down.hp, 0, 'knocked-out allies are not revived');
+  assert.ok(ally.hp >= 5 + 14 - 20, 'ally healed (before any enemy hit)');
+  assert.match(res.lines.join('\n'), /Rallying Light/);
+});
+
+test('Stormbreaker deals heavy damage', async () => {
+  const { createCombat, heroAction } = await import('../src/combat/rules.js');
+  const hero = { id: 'hero', name: 'Wren', hp: 50, maxHp: 50, mp: 20, maxMp: 20, atk: 20, def: 3, spd: 9, level: 5, statuses: [] };
+  const c = createCombat({ enemyId: 'rockslide_golem' });
+  const before = c.enemy.hp;
+  heroAction(c, hero, { type: 'skill', skillId: 'stormbreaker' }, () => 0.5, [hero]);
+  assert.equal(hero.mp, 13);
+  assert.ok(before - c.enemy.hp >= Math.floor(20 * 2.2) - c.enemy.def - 1);
+});
