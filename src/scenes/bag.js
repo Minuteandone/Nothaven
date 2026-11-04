@@ -176,7 +176,7 @@ export const bagScene = {
       ${equippedSection}
       ${sections || '<p class="bag-empty">Your bag is empty.</p>'}
       ${craftSection(s.inventory)}
-      <button data-action="leave">Back</button>
+      <div class="actions"><button data-action="recipes">Recipe book</button><button data-action="leave">Back</button></div>
     </main>`;
   },
 
@@ -231,6 +231,8 @@ export const bagScene = {
       const res = craftInField(game.state, recipeId);
       game.bagMessage = res?.log?.[0] || (res?.ok ? 'Crafted.' : 'Crafting failed.');
     },
+
+    recipes(game) { game.setScene('recipes', { returnScene: 'bag' }); },
 
     leave(game) {
       game.setScene(game.bagReturnScene || 'town');

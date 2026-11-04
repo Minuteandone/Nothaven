@@ -39,6 +39,7 @@ export const townScene = {
             ${game.scenes?.quests ? uiButton({ action: 'questJournal', label: 'Journey journal', iconName: 'journal', variant: 'ghost' }) : ''}
             ${game.scenes?.bestiary ? uiButton({ action: 'bestiary', label: "Warden's field journal", iconName: 'journal', variant: 'ghost' }) : ''}
             ${game.scenes?.character ? uiButton({ action: 'character', label: "Wren's character sheet", iconName: 'sword', variant: 'ghost' }) : ''}
+            ${game.scenes?.recipes ? uiButton({ action: 'recipes', label: 'Field recipe book', iconName: 'focus', variant: 'ghost' }) : ''}
             ${game.scenes?.ending && s.flags?.endingShown ? uiButton({ action: 'chronicle', label: 'Read the chronicle', iconName: 'journal', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'explore', label: 'Explore the wilds', iconName: 'map', variant: 'primary' })}
             ${uiButton({ action: 'save', label: 'Save journey', iconName: 'save', variant: 'ghost' })}
@@ -61,6 +62,7 @@ export const townScene = {
     questJournal(game) { if (game.scenes?.quests) game.setScene('quests', { returnScene: 'town' }); },
     bestiary(game) { if (game.scenes?.bestiary) game.setScene('bestiary', { returnScene: 'town' }); },
     character(game) { if (game.scenes?.character) game.setScene('character', { returnScene: 'town' }); },
+    recipes(game) { if (game.scenes?.recipes) game.setScene('recipes', { returnScene: 'town' }); },
     chronicle(game) { if (game.scenes?.ending && game.state.flags?.endingShown) game.setScene('ending', { returnScene: 'town' }); },
     explore(game) { game.setScene('explore'); },
     save(game) { saveGame(game.state); game.message = 'Game saved.'; },
