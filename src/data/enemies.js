@@ -127,6 +127,20 @@ export const ENEMIES = {
       { id: 'highland_flask', chance: 0.15, minQty: 1, maxQty: 1 },
     ],
   },
+  old_tusk: {
+    id: 'old_tusk', name: 'Old Tusk', hp: 130, atk: 15, def: 6, spd: 5, xp: 85, gold: 55,
+    boss: true,
+    drill: false,
+    intro: 'The gorse parts like a curtain. Old Tusk, scarred grey king of the briar boars, paws the switchback and lowers a pair of storm-split tusks!',
+    defeat: 'Old Tusk staggers, snorts once at the wind, and lumbers back into the thorns. The ridge feels a little quieter without his thunder.',
+    enrage: { threshold: 0.5, atk: 3, chance: 0.5, line: 'Old Tusk shakes off the thorns in his hide and bellows down the ridge. His charges hit harder!' },
+    ability: { name: 'Bramble Charge', chance: 0.35, mult: 1.5, status: 'bleeding', turns: 3 },
+    loot: [
+      { id: 'gale_charm', chance: 0.35, minQty: 1, maxQty: 1 },
+      { id: 'hearty_chowder', chance: 1, minQty: 1, maxQty: 2 },
+      { id: 'field_dressing', chance: 0.6, minQty: 1, maxQty: 2 },
+    ],
+  },
   pass_warlord: {
     id: 'pass_warlord', name: 'Highwatch Warlord', hp: 96, atk: 13, def: 6, spd: 5, xp: 70, gold: 45,
     boss: true,
