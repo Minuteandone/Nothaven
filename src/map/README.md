@@ -32,6 +32,7 @@ Provides 9×7 tile-grid exploration, multi-zone navigation, NPC/object proximity
   - NPCs: `ona` (Ona Vell, Harbor Elder at `(6, 3)`).
   - Story Rescue Encounter: `saltmere_rescue` (`reef_crawler`) at `(4, 3)`.
   - Optional Encounters: `saltmere_squall_revenant` (`squall_revenant`) at `(1, 1)`, `saltmere_tide_wraith` (`drowned_harbormaster` boss) at `(1, 5)`.
+  - Optional Boss Encounter: `saltmere_gloomfin` (`gloomfin`) at `(7, 1)`, requires story flag `rescue_reward`.
   - Random Encounters (12%): `reef_crawler`, `squall_revenant`, `gale_hound`, `wrack_eel`.
   - Interactables: `saltmere_post` (`Saltmere Trading Post` shop at `(2, 3)`), `saltmere_supply_cache` at `(7, 5)`, `saltmere_harbor_lamp` at `(4, 5)`.
   - Exits: North Causeway `(4, 0)` → `greyhaven`.

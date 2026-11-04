@@ -29,7 +29,7 @@ export const FEATS = Object.freeze([
     check: s => flagsOf(s).watch_reward === true }),
   Object.freeze({ id: 'yard', title: 'Yard Champion', detail: 'Win a Sparring Drill against every boss in the Watch House yard.',
     check: s => DRILL_FOES.length > 0 && DRILL_FOES.every(id => drillRecord(s, id).wins >= 1) }),
-  Object.freeze({ id: 'gauntlet', title: 'Unbroken Run', detail: 'Clear the full Yard Gauntlet against every boss without a single loss.',
+  Object.freeze({ id: 'gauntlet', title: 'Unbroken Run', detail: 'Clear the full Yard Gauntlet against every yard boss without a single loss.',
     check: s => DRILL_FOES.length > 0 && gauntletRecord(s).best >= DRILL_FOES.length }),
   Object.freeze({ id: 'muster', title: 'Full Muster', detail: 'March with a full party of three.',
     check: s => Array.isArray(s?.party) && s.party.length >= MAX_PARTY }),

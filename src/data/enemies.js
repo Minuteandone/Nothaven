@@ -141,6 +141,20 @@ export const ENEMIES = {
       { id: 'field_dressing', chance: 0.6, minQty: 1, maxQty: 2 },
     ],
   },
+  gloomfin: {
+    id: 'gloomfin', name: 'Gloomfin', hp: 150, atk: 16, def: 6, spd: 7, xp: 95, gold: 60,
+    boss: true,
+    drill: false,
+    intro: 'The tide pulls back all at once. Gloomfin, a wrack eel as long as a fishing boat, rears out of the dark water off the breakwater, sparking with stolen storm light!',
+    defeat: 'Gloomfin sags against the pilings, sparks fading along its fins, and slides back into the deep water. The cove settles into an ordinary swell.',
+    enrage: { threshold: 0.5, atk: 3, chance: 0.5, line: 'Gloomfin thrashes the shallows white and lights up from fin to tail. Its strikes land harder!' },
+    ability: { name: 'Riptide Shock', chance: 0.35, mult: 1.4, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'tidebound_cutlass', chance: 0.3, minQty: 1, maxQty: 1 },
+      { id: 'storm_glass', chance: 1, minQty: 1, maxQty: 2 },
+      { id: 'storm_tonic', chance: 0.6, minQty: 1, maxQty: 2 },
+    ],
+  },
   pass_warlord: {
     id: 'pass_warlord', name: 'Highwatch Warlord', hp: 96, atk: 13, def: 6, spd: 5, xp: 70, gold: 45,
     boss: true,
