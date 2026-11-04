@@ -9,6 +9,7 @@ const heroOf = state => (Array.isArray(state?.party) ? state.party[0] : null) ||
 const COMMISSION_IDS = ['tamsin', 'iven', 'bram', 'sela'];
 
 export const WANDERERS = Object.freeze(['briar_boar', 'lens_wisp', 'wrack_eel', 'rime_wight']);
+export const FIELD_TRIALS = Object.freeze(['old_tusk', 'gloomfin', 'frostmane', 'lenswarden']);
 
 export const FEATS = Object.freeze([
   Object.freeze({ id: 'first_light', title: 'First Light', detail: 'Relight the Greyhaven beacon and choose how its light is used.',
@@ -49,6 +50,8 @@ export const FEATS = Object.freeze([
     check: s => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary.frostmane : 0) > 0 }),
   Object.freeze({ id: 'lenswarden', title: 'Vault Keeper', detail: 'Still the Lenswarden, the old opticians’ brass guardian, in the northeast vault of the Observatory Ruins.',
     check: s => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary.lenswarden : 0) > 0 }),
+  Object.freeze({ id: 'trials', title: 'Trial Warden', detail: 'Overcome all four optional field trials: Old Tusk, Gloomfin, Frostmane and the Lenswarden.',
+    check: s => FIELD_TRIALS.every(id => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary[id] : 0) > 0) }),
   Object.freeze({ id: 'veteran', title: 'Veteran Warden', detail: 'Bring Wren to level 10.',
     check: s => Number(heroOf(s)?.level) >= 10 }),
   Object.freeze({ id: 'legend', title: 'Legend of Stormhaven', detail: 'Bring Wren to level 20.',
