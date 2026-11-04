@@ -50,3 +50,16 @@ test('relay choice remarks take priority once the relay is restored', async () =
     assert.equal(companionRemark(id, { ...base, flags: { ...base.flags, relay_choice: 'bogus' } }), rescued);
   }
 });
+
+test('chapter-4 summit remarks take priority over relay lines', async () => {
+  const { companionRemark } = await import('../src/party/remarks.js');
+  for (const id of ['tamsin', 'iven', 'bram', 'sela']) {
+    for (const flag of ['spire_summit', 'spire_victory', 'victory_stormcrown_tyrant']) {
+      const line = companionRemark(id, { flags: { relay_choice: 'route_network', rescue_reward: true, [flag]: true } });
+      const relay = companionRemark(id, { flags: { relay_choice: 'route_network' } });
+      assert.ok(line.length > 20);
+      assert.notEqual(line, relay);
+      assert.doesNotMatch(line, /egg|yolk|shell|hatch|nest|chick|\bhen\b|boil|crack|pearl|golden|feather/i);
+    }
+  }
+});
