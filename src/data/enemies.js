@@ -51,4 +51,41 @@ export const ENEMIES = {
       { id: 'storm_glass', chance: 1, minQty: 2, maxQty: 3 },
     ],
   },
+  reef_crawler: {
+    id: 'reef_crawler', name: 'Reef Crawler', hp: 26, atk: 8, def: 4, spd: 4, xp: 18, gold: 10,
+    intro: 'A barnacled Reef Crawler drags itself over the drowned pier, pincers snapping.',
+    ability: { name: 'Pincer Grip', chance: 0.3, mult: 1.2, status: 'bleeding', turns: 2 },
+    loot: [
+      { id: 'scrap_metal', chance: 0.5, minQty: 1, maxQty: 2 },
+      { id: 'healing_herb', chance: 0.3, minQty: 1, maxQty: 1 },
+    ],
+  },
+  squall_revenant: {
+    id: 'squall_revenant', name: 'Squall Revenant', hp: 32, atk: 9, def: 3, spd: 7, xp: 24, gold: 14,
+    intro: 'Rain gathers into the outline of a drowned harbor guard, lantern still lit.',
+    ability: { name: 'Lashing Rain', chance: 0.3, mult: 1.1, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'storm_glass', chance: 0.6, minQty: 1, maxQty: 2 },
+      { id: 'storm_tonic', chance: 0.25, minQty: 1, maxQty: 1 },
+    ],
+  },
+  frost_wolf: {
+    id: 'frost_wolf', name: 'Frost Wolf', hp: 24, atk: 9, def: 2, spd: 9, xp: 18, gold: 6,
+    intro: 'A Frost Wolf pads out of the sleet, breath steaming in the thin mountain air.',
+    ability: { name: 'Rending Fangs', chance: 0.3, mult: 1.3, status: 'bleeding', turns: 2 },
+    loot: [
+      { id: 'healing_herb', chance: 0.4, minQty: 1, maxQty: 1 },
+      { id: 'rations', chance: 0.3, minQty: 1, maxQty: 1 },
+    ],
+  },
+  rockslide_golem: {
+    id: 'rockslide_golem', name: 'Rockslide Golem', hp: 44, atk: 10, def: 6, spd: 2, xp: 32, gold: 18,
+    tags: ['construct'],
+    intro: 'Boulders lock together around a ruined signal engine and rise as a Rockslide Golem!',
+    ability: { name: 'Landslide', chance: 0.25, mult: 1.5 },
+    loot: [
+      { id: 'salvaged_wiring', chance: 0.7, minQty: 1, maxQty: 2 },
+      { id: 'scrap_metal', chance: 0.7, minQty: 1, maxQty: 3 },
+    ],
+  },
 };
