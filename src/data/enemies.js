@@ -164,7 +164,7 @@ export const ENEMIES = {
     ],
   },
   stormcrown_tyrant: {
-    id: 'stormcrown_tyrant', name: 'Stormcrown Tyrant', hp: 300, atk: 21, def: 8, spd: 6, xp: 160, gold: 120,
+    id: 'stormcrown_tyrant', name: 'Stormcrown Tyrant', hp: 460, atk: 27, def: 8, spd: 6, xp: 160, gold: 120,
     boss: true,
     intro: 'Atop the spire, a figure in a crown of living lightning turns from the gathering clouds. "So the little beacon-keepers finally climbed this high."',
     defeat: 'The crown of lightning gutters and goes dark. The Tyrant sinks to one knee as the clouds above the spire finally begin to thin.',
