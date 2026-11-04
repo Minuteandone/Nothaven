@@ -1,3 +1,5 @@
+import { applySpireEvent, getSpireJournal, getSpireDialogue } from './spire.js';
+import { applyExpeditionEvent, getExpeditionJournal } from './expeditions.js';
 import { applyRelayEvent, getRelayJournal, getRelayDialogue } from './relay.js';
 import { applyRescueEvent, getRescueJournal, getRescueDialogue } from './rescue.js';
 import { getReliefQuest } from './relief.js';
@@ -92,7 +94,9 @@ export function applyStoryEvent(previous = createStoryState(), event) {
   reconcile();
   const rescue = applyRescueEvent(state, event);
   const relay = applyRelayEvent(rescue.state, event);
-  return { state: relay.state, rewards: [...rewards, ...rescue.rewards, ...relay.rewards], log: [...log, ...rescue.log, ...relay.log] };
+  const spire = applySpireEvent(relay.state, event);
+  const expedition = applyExpeditionEvent(spire.state, event);
+  return { state: expedition.state, rewards: [...rewards, ...rescue.rewards, ...relay.rewards, ...spire.rewards, ...expedition.rewards], log: [...log, ...rescue.log, ...relay.log, ...spire.log, ...expedition.log] };
 }
 
 const OBJECTIVES = {
@@ -131,6 +135,8 @@ export function getJournal(state = createStoryState()) {
   if (relief) journal.push(relief);
   journal.push(...getRescueJournal(state));
   journal.push(...getRelayJournal(state));
+  journal.push(...getSpireJournal(state));
+  journal.push(...getExpeditionJournal(state));
   return journal;
 }
 
@@ -148,6 +154,8 @@ export function getEndingSummary(state) {
 }
 
 export function getDialogue(state = createStoryState(), npcId) {
+  const spire = getSpireDialogue(state, npcId);
+  if (spire) return spire;
   const relay = getRelayDialogue(state, npcId);
   if (relay) return relay;
   const rescue = getRescueDialogue(state, npcId);

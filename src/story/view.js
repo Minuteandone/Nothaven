@@ -1,3 +1,5 @@
+import { getSpireJournal, spireReady, SPIRE_GOLD } from './spire.js';
+import { EXPEDITIONS, activeExpedition, getExpeditionJournal } from './expeditions.js';
 import { getRelayJournal, getRelayChoices } from './relay.js';
 import { getRescueJournal, rescueReady, RESCUE_GOLD } from './rescue.js';
 import { createStoryState, getDialogue, getEndingChoices, getJournal } from './index.js';
@@ -23,6 +25,9 @@ export function createStoryUI(getLocation = game => game.state.location) {
       const relief = getReliefQuest(state);
       const rescue = getRescueJournal(state)[0];
       const relay = getRelayJournal(state)[0];
+      const spire = getSpireJournal(state)[0];
+      const expedition = getExpeditionJournal(state)[0];
+      const active = activeExpedition(state);
       const relayChoices = atRelayConsole(game, location) ? getRelayChoices(state) : [];
       const choices = location === 'beacon_tower' ? getEndingChoices(state) : [];
       return `<section class="panel story-panel" aria-labelledby="story-heading">
@@ -31,6 +36,8 @@ export function createStoryUI(getLocation = game => game.state.location) {
         ${location === 'greyhaven' && relief?.status === 'active' ? `<section aria-label="First Light Relief"><h3>First Light Relief</h3><p>${escape(relief.objective)}</p><p>${escape(reliefSupplies(game.state.inventory))}</p><button data-action="storyRelief">Hand over 2 rations + 1 bandage for 30 gold</button></section>` : ''}
         ${location === 'greyhaven' && rescue?.status === 'active' ? `<section aria-label="Roads to Our Neighbors"><h3>Roads to Our Neighbors</h3><p>${escape(rescue.objective)}</p>${!state.flags.rescue_accepted ? '<button data-action="storyRescue" data-arg="accept">Accept Mara’s relief expedition</button>' : rescueReady(state) ? `<button data-action="storyRescue" data-arg="report">Report both routes to Mara for ${RESCUE_GOLD} gold</button>` : ''}</section>` : ''}
         ${location === 'greyhaven' && relay?.status === 'active' ? `<section aria-label="A Signal of Our Own"><h3>A Signal of Our Own</h3><p>${escape(relay.objective)}</p>${!state.flags.relay_accepted ? '<button data-action="storyRelayAccept">Accept the council’s relay commission</button>' : ''}</section>` : ''}
+        ${location === 'greyhaven' && spire?.status === 'active' ? `<section aria-label="Above the Gathering Storm"><h3>Above the Gathering Storm</h3><p>${escape(spire.objective)}</p>${!state.flags.spire_accepted ? '<button data-action="storySpire" data-arg="accept">Accept Mara’s summit survey</button>' : spireReady(state) ? `<button data-action="storySpire" data-arg="report">Report the summit survey for ${SPIRE_GOLD} gold</button>` : ''}</section>` : ''}
+        ${location === 'greyhaven' && expedition ? `<section aria-label="Greyhaven Expedition Board"><h3>Greyhaven Expedition Board</h3><p>${escape(expedition.objective)}</p>${active ? `${active.progress === active.goal ? `<button data-action="storyExpedition" data-arg="claim">Claim ${active.gold} gold for ${escape(active.title)}</button>` : ''}<button data-action="storyExpedition" data-arg="cancel">Cancel patrol — discard progress without payment</button>` : EXPEDITIONS.map(c => `<button data-action="storyExpedition" data-arg="${c.id}">Accept ${escape(c.title)} — ${c.goal} ${escape(c.enemyName)} for ${c.gold} gold</button>`).join('')}</section>` : ''}
         ${relayChoices.length ? `<section aria-labelledby="relay-choice-heading"><h3 id="relay-choice-heading">Who will the inland relay serve?</h3><p>Choose one permanent benefit and receive 100 gold. This cannot be changed in this save. Your original beacon decision remains unchanged.</p>${relayChoices.map(choice => `<div class="story-choice"><p>${escape(choice.description)}</p><button data-action="storyRelayChoose" data-arg="${escape(choice.id)}">${escape(choice.label)}</button></div>`).join('')}</section>` : ''}
         ${dialogue ? `<div class="story-dialogue" aria-live="polite"><h3>${escape(dialogue.speaker)}</h3><p>${escape(dialogue.text)}</p><button data-action="storyDismiss">Close conversation</button></div>` : ''}
         ${game.storyMessage ? `<p class="story-update" role="status">${escape(game.storyMessage)}</p>` : ''}
@@ -54,6 +61,21 @@ export function createStoryUI(getLocation = game => game.state.location) {
         if (!['accept', 'report'].includes(action)) return;
         game.storyDialogue = null;
         dispatchStoryEvent(game, { type: `rescue-${action}` });
+      },
+      storySpire(game, element) {
+        if (getLocation(game) !== 'greyhaven') return;
+        const action = element?.dataset?.arg;
+        if (!['accept', 'report'].includes(action)) return;
+        game.storyDialogue = null;
+        dispatchStoryEvent(game, { type: `spire-${action}` });
+      },
+      storyExpedition(game, element) {
+        if (getLocation(game) !== 'greyhaven') return;
+        const arg = element?.dataset?.arg;
+        const isContract = EXPEDITIONS.some(c => c.id === arg);
+        if (!isContract && !['claim', 'cancel'].includes(arg)) return;
+        game.storyDialogue = null;
+        dispatchStoryEvent(game, isContract ? { type: 'expedition-accept', contractId: arg } : { type: `expedition-${arg}` });
       },
       storyRelayAccept(game) {
         if (getLocation(game) !== 'greyhaven') return;
