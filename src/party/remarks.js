@@ -5,6 +5,7 @@
 const LINES = {
   tamsin: {
     squall: 'I watched the Last Squall roll off over the mountains from the ridge. First time I ever cheered at weather.',
+    watch: 'Mara pinned the Long Watch readings by the door. Three calm marks in a row, and she still checks them every morning.',
     heart: 'With the great storm over Stormcrown broken, I can see the far mountains from the ridge. I did not know they were there.',
     spire: 'The Spire’s crown is dark at last. From the summit I could see every road we ever cleared, all at once.',
     shelter_network: 'Sheltered waystations every half day of walking. My feet thank you; my scouting pride is wounded.',
@@ -16,6 +17,7 @@ const LINES = {
   },
   iven: {
     squall: 'My barometer has not twitched since the Last Squall broke. I tapped it twice to be sure it still works.',
+    watch: 'The forecast stand at the observatory finally agrees with my notebook. I have decided the stand is the one that was wrong all along.',
     heart: 'The anchors still hum where we grounded them. I wrote down every reading; someday someone will want to know how a storm’s core was calmed.',
     spire: 'I kept a sliver of the Stormcrown Shard under glass. It still flickers when thunder rolls far out at sea.',
     shelter_network: 'The relay feeds warmth to every waystation now. I added a little dial to each one. Nobody asked, but they all use it.',
@@ -27,6 +29,7 @@ const LINES = {
   },
   bram: {
     squall: 'Saltmere has a new saying now: calm as the day the Last Squall fell. The children use it for everything.',
+    watch: 'The harbor lamp reading came back steady for the Long Watch. Ona had it painted on the lamp post so nobody forgets.',
     heart: 'The harbor bell has rung for fair weather three days running. The old fishers swear they have never heard that before.',
     spire: 'Saltmere fishers sailed past the headland today without once looking up at the sky. That is what peace looks like.',
     shelter_network: 'Saltmere runners rest at the waystations now. A roof and a fire for two coins is a fair trade on a long road.',
@@ -38,6 +41,7 @@ const LINES = {
   },
   sela: {
     squall: 'The runners asked me what the Last Squall was like. I told them it was loud, and then it was quiet.',
+    watch: 'The cairn at Highwatch read clear for the Long Watch. I carved the date into the stone beside the old storm marks.',
     heart: 'I lit every cairn from the pass to the summit last night. Not as a warning this time, just to show the sky we are still here.',
     spire: 'I ran the Spire switchbacks again this morning just to prove I could. The wind was only wind.',
     shelter_network: 'The cairn runners sleep in the relay shelters between legs. I have never seen them so rested, or so smug.',
@@ -54,6 +58,7 @@ export function companionRemark(id, story = {}) {
   const set = LINES[id];
   const f = story?.flags || {};
   if (f.victory_last_squall === true && set.squall) return set.squall;
+  if (f.watch_reward === true && set.watch) return set.watch;
   if (f.victory_storm_heart === true && set.heart) return set.heart;
   if ((f.spire_summit || f.spire_victory || f.victory_stormcrown_tyrant) && set.spire) return set.spire;
   const relay = story?.flags?.relay_choice;
