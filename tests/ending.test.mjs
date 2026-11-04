@@ -88,8 +88,8 @@ test('finale shows once after spire report with chapter epilogues', async () => 
   const html = endingScene.render(g);
   assert.match(html, /Stormhaven Endures/);
   assert.match(html, /Lanterns on the Horizon/);
-  assert.match(html, /trade roads clear/);
-  assert.match(html, /Tyrant has fallen/);
+  assert.match(html, /guides patrols/);
+  assert.match(html, /forecast dangerous weather together/);
   g.state.scene = 'town';
   g.bus.emit('story:updated', {});
   assert.equal(g.state.scene, 'town');
