@@ -1,3 +1,4 @@
+import { getHeartJournal, heartAftermath, heartAvailable } from './heart.js';
 import { getSpireJournal, spireAftermath } from './spire.js';
 import { getExpeditionJournal } from './expeditions.js';
 import { getRelayJournal, relayAftermath } from './relay.js';
@@ -19,6 +20,13 @@ export function getTownOutlook(story) {
   const light = story.ending === 'protect_town'
     ? 'A steady blue shield holds over Greyhaven.'
     : 'Silver light marks the roads beyond Greyhaven, while watch crews tend the thinner town shield.';
+  if (heartAvailable(story) && (flags.heart_accepted || flags.victory_storm_heart)) return {
+    title: flags.victory_storm_heart ? 'A quieter sky over Stormcrown' : 'Beyond the summit',
+    text: flags.heart_reward ? heartAftermath(story) : flags.victory_storm_heart
+      ? `${light} The great storm over Stormcrown has broken. Fewer wandering threats trouble the spire and the Storm’s Eye, but fixed foes and ordinary weather remain.`
+      : `${light} The summit instruments are quiet, yet the shared forecasts trace a lingering storm beyond them. Your company has chosen to investigate the Storm’s Eye.`,
+    hint: getHeartJournal(story)[0].objective,
+  };
   if (flags.spire_reward) return {
     title: 'A shared forecast, an open road',
     text: spireAftermath(story),

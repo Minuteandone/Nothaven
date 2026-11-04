@@ -1,3 +1,4 @@
+import { getHeartJournal, heartReady, HEART_GOLD } from './heart.js';
 import { COMMISSIONS, getCommission, commissionProgress, commissionObjective } from './commissions.js';
 import { getSpireJournal, spireReady, SPIRE_GOLD } from './spire.js';
 import { EXPEDITIONS, activeExpedition, getExpeditionJournal } from './expeditions.js';
@@ -27,6 +28,7 @@ export function createStoryUI(getLocation = game => game.state.location) {
       const rescue = getRescueJournal(state)[0];
       const relay = getRelayJournal(state)[0];
       const spire = getSpireJournal(state)[0];
+      const heart = getHeartJournal(state)[0];
       const expedition = getExpeditionJournal(state)[0];
       const active = activeExpedition(state);
       const commissions = COMMISSIONS.map(c => commissionProgress(state, c.id)).filter(c => c.available);
@@ -39,6 +41,7 @@ export function createStoryUI(getLocation = game => game.state.location) {
         ${location === 'greyhaven' && rescue?.status === 'active' ? `<section aria-label="Roads to Our Neighbors"><h3>Roads to Our Neighbors</h3><p>${escape(rescue.objective)}</p>${!state.flags.rescue_accepted ? '<button data-action="storyRescue" data-arg="accept">Accept Mara’s relief expedition</button>' : rescueReady(state) ? `<button data-action="storyRescue" data-arg="report">Report both routes to Mara for ${RESCUE_GOLD} gold</button>` : ''}</section>` : ''}
         ${location === 'greyhaven' && relay?.status === 'active' ? `<section aria-label="A Signal of Our Own"><h3>A Signal of Our Own</h3><p>${escape(relay.objective)}</p>${!state.flags.relay_accepted ? '<button data-action="storyRelayAccept">Accept the council’s relay commission</button>' : ''}</section>` : ''}
         ${location === 'greyhaven' && spire?.status === 'active' ? `<section aria-label="Above the Gathering Storm"><h3>Above the Gathering Storm</h3><p>${escape(spire.objective)}</p>${!state.flags.spire_accepted ? '<button data-action="storySpire" data-arg="accept">Accept Mara’s summit survey</button>' : spireReady(state) ? `<button data-action="storySpire" data-arg="report">Report the summit survey for ${SPIRE_GOLD} gold</button>` : ''}</section>` : ''}
+        ${location === 'greyhaven' && heart?.status === 'active' ? `<section aria-label="The Storm’s Heart"><h3>The Storm’s Heart</h3><p>${escape(heart.objective)}</p>${!state.flags.heart_accepted ? '<button data-action="storyHeart" data-arg="accept">Accept Mara’s Storm’s Eye expedition</button>' : heartReady(state) ? `<button data-action="storyHeart" data-arg="report">Report the Storm’s Eye expedition for ${HEART_GOLD} gold</button>` : ''}</section>` : ''}
         ${location === 'greyhaven' && expedition ? `<section aria-label="Greyhaven Expedition Board"><h3>Greyhaven Expedition Board</h3><p>${escape(expedition.objective)}</p>${active ? `${active.progress === active.goal ? `<button data-action="storyExpedition" data-arg="claim">Claim ${active.gold} gold for ${escape(active.title)}</button>` : ''}<button data-action="storyExpedition" data-arg="cancel">Cancel patrol — discard progress without payment</button>` : EXPEDITIONS.map(c => `<button data-action="storyExpedition" data-arg="${c.id}">Accept ${escape(c.title)} — ${c.goal} ${escape(c.enemyName)} for ${c.gold} gold</button>`).join('')}</section>` : ''}
         ${location === 'greyhaven' && commissions.length ? `<details class="companion-commissions"><summary>Companion commissions</summary><p>Optional personal requests. Earlier accomplishments count; no companion must occupy a party slot.</p>${commissions.map(c => `<section aria-label="${escape(c.title)}"><h3>${escape(c.name)}: ${escape(c.title)}${c.complete ? ' (complete)' : ''}</h3><p>${escape(commissionObjective(state, c.id))}</p>${!c.accepted && !c.complete ? `<button data-action="storyCommissionAccept" data-arg="${c.id}">Accept ${escape(c.name)}’s request — ${c.gold} gold</button>` : c.ready ? `<button data-action="storyCommissionReport" data-arg="${c.id}">Report to ${escape(c.name)} for ${c.gold} gold</button>` : ''}</section>`).join('')}</details>` : ''}
         ${relayChoices.length ? `<section aria-labelledby="relay-choice-heading"><h3 id="relay-choice-heading">Who will the inland relay serve?</h3><p>Choose one permanent benefit and receive 100 gold. This cannot be changed in this save. Your original beacon decision remains unchanged.</p>${relayChoices.map(choice => `<div class="story-choice"><p>${escape(choice.description)}</p><button data-action="storyRelayChoose" data-arg="${escape(choice.id)}">${escape(choice.label)}</button></div>`).join('')}</section>` : ''}
@@ -64,6 +67,13 @@ export function createStoryUI(getLocation = game => game.state.location) {
         if (!['accept', 'report'].includes(action)) return;
         game.storyDialogue = null;
         dispatchStoryEvent(game, { type: `rescue-${action}` });
+      },
+      storyHeart(game, element) {
+        if (getLocation(game) !== 'greyhaven') return;
+        const action = element?.dataset?.arg;
+        if (!['accept', 'report'].includes(action)) return;
+        game.storyDialogue = null;
+        dispatchStoryEvent(game, { type: `heart-${action}` });
       },
       storySpire(game, element) {
         if (getLocation(game) !== 'greyhaven') return;
