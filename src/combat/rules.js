@@ -27,10 +27,14 @@ export const SKILLS = Object.freeze({
     description: 'Fire a blazing signal flare straight into the foe. Ignores armour and is half again as effective on constructs.' },
   tempest_cleave: { id: 'tempest_cleave', name: 'Tempest Cleave', mp: 11, kind: 'damage', mult: 2.8,
     description: 'Ride the last gust of the broken storm into one sweeping strike for 280% damage.' },
+  rekindle: { id: 'rekindle', name: 'Rekindle', mp: 12, kind: 'revive', share: 0.4,
+    description: 'Relight the lantern for the fallen: every knocked-out ally rises with 40% of their health and no lingering conditions.' },
+  skyfire_lance: { id: 'skyfire_lance', name: 'Skyfire Lance', mp: 14, kind: 'pierce', mult: 2.6,
+    description: 'Gather the whole beacon into one blinding spear for 260% damage that ignores armour.' },
 });
 
 /** Skills unlock by level. */
-export const SKILL_UNLOCKS = Object.freeze({ power_strike: 1, mend: 1, spark: 2, warding_stance: 3, rallying_light: 4, stormbreaker: 5, steady_signal: 6, beacon_lance: 7, beacon_aegis: 9, signal_flare: 11, tempest_cleave: 13 });
+export const SKILL_UNLOCKS = Object.freeze({ power_strike: 1, mend: 1, spark: 2, warding_stance: 3, rallying_light: 4, stormbreaker: 5, steady_signal: 6, beacon_lance: 7, beacon_aegis: 9, signal_flare: 11, tempest_cleave: 13, rekindle: 15, skyfire_lance: 17 });
 
 export function knownSkills(member) {
   const lvl = member?.level || 1;
@@ -295,6 +299,7 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
       const sk = SKILLS[action.skillId];
       if (!sk || !knownSkills(hero).some((s) => s.id === sk.id)) return { ok: false, lines: ['You do not know that skill.'] };
       if (shocked && sk.kind !== 'damage' && sk.kind !== 'cleanse' && sk.kind !== 'pierce') return { ok: false, lines: ['Too shocked to focus on that.'] };
+      if (sk.kind === 'revive' && !party.some((m) => m && m !== hero && (m.hp || 0) <= 0)) return { ok: false, lines: ['No fallen ally needs the light.'] };
       if ((hero.mp || 0) < sk.mp) return { ok: false, lines: [`Not enough MP for ${sk.name}.`] };
       hero.mp -= sk.mp;
       if (sk.kind === 'damage') {
@@ -337,6 +342,15 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
           if (had) lines.push(`${m.name} steadies.`);
         }
         if (c.heroTimers) { delete c.heroTimers.bleeding; delete c.heroTimers.shocked; }
+      } else if (sk.kind === 'revive') {
+        lines.push(`${hero.name} lifts the lantern to Rekindle the fallen!`);
+        for (const m of party) {
+          if (!m || m === hero || (m.hp || 0) > 0) continue;
+          m.hp = Math.max(1, Math.ceil(heroStats(m).maxHp * (sk.share || 0.4)));
+          m.statuses = [];
+          if (c.allyTimers?.[m.id]) delete c.allyTimers[m.id];
+          lines.push(`${m.name} rises with ${m.hp} HP.`);
+        }
       } else if (sk.kind === 'party_ward') {
         c.aegisTurns = sk.turns || 3;
         lines.push(`${hero.name} raises a Beacon Aegis over the party!`);

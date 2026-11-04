@@ -13,7 +13,7 @@ test('skill roadmap lists every unlock in level order', () => {
   const rows = skillRoadmap();
   assert.equal(rows.length, Object.keys(SKILL_UNLOCKS).length);
   for (let i = 1; i < rows.length; i++) assert.ok(rows[i].level >= rows[i - 1].level);
-  assert.equal(rows.at(-1).name, 'Tempest Cleave');
+  assert.equal(rows.at(-1).name, 'Skyfire Lance');
 });
 
 test('guide renders every section and returns to its caller', () => {
