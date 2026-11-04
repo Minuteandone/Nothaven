@@ -35,6 +35,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'The Journey Journal lists every active task, the Character Sheet shows gear and effective stats, and Wardens’ Feats records the milestones of your journey — all open from Greyhaven or the expedition screen.',
     'Sparring Drills in Greyhaven let you refight any boss you have already beaten for half its experience. Drills pay no gold or spoils, and losing one costs nothing.',
     'Each drill keeps a record of your wins and your fewest rounds, so you can try to beat your best time. Winning a drill against every boss earns the Yard Champion feat.',
+    'Once three drills are unlocked, the Yard Gauntlet sends you through every unlocked drill back to back. HP and MP carry over between bouts, and your longest run is recorded.',
   ] }),
 ]);
 
