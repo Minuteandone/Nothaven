@@ -11,12 +11,14 @@ import { installCompanions } from './scenes/muster.js';
 import { installBestiary } from './scenes/bestiary.js';
 import { endingScene, installEnding } from './scenes/ending.js';
 import { installAudio } from './audio/controls.js';
+import { guideScene } from './scenes/guide.js';
 
 const game = new Game(document.getElementById('app'));
 game.registerScene('title', titleScene);
 game.registerScene('town', townScene);
 game.registerScene('combat', combatScene);
 game.registerScene('ending', endingScene);
+game.registerScene('guide', guideScene);
 installStory(game);
 installProgression(game);
 installMap(game); // registers the 'explore' scene
