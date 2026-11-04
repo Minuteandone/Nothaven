@@ -6,7 +6,7 @@ function cueForAction(action) {
   if (action === 'attack' || action === 'flee') return 'attack';
   if (action === 'skill') return 'skill';
   if (action === 'defend') return 'defend';
-  if (['item', 'useItem', 'useFieldItem', 'buyItem', 'sellItem', 'craftItem', 'craftFieldItem'].includes(action)) return 'item';
+  if (['item', 'useItem', 'useFieldItem', 'buyItem', 'sellItem', 'craftItem', 'craftFieldItem', 'use', 'buy', 'buy5', 'sell', 'sellAll', 'craft'].includes(action)) return 'item';
   return 'ui';
 }
 
