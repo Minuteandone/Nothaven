@@ -27,7 +27,7 @@ export const RECIPES = Object.freeze([
   {
     id: 'distill_tonic',
     name: 'Distill Storm Tonic',
-    description: 'Steep healing herbs in a shard of storm glass for a crackling draught.',
+    description: 'Steep healing herbs in a shard of storm glass for a sparking draught.',
     inputs: [{ id: 'healing_herb', qty: 1 }, { id: 'storm_glass', qty: 1 }],
     outputs: [{ id: 'storm_tonic', qty: 1 }],
   },
