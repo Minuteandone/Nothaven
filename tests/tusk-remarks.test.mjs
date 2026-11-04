@@ -31,3 +31,16 @@ test('Gloomfin remarks come after the rescues and take priority over Old Tusk', 
     assert.equal(companionRemark(id, { flags: {} }, { gloomfin: 1 }), companionRemark(id, { flags: {} }), `${id} needs rescue_reward`);
   }
 });
+
+test('Frostmane remarks come after the rescues and take priority over Gloomfin and Old Tusk', () => {
+  for (const id of IDS) {
+    const story = { flags: { rescue_reward: true } };
+    const fin = companionRemark(id, story, { old_tusk: 1, gloomfin: 1 });
+    const mane = companionRemark(id, story, { old_tusk: 1, gloomfin: 1, frostmane: 1 });
+    assert.notEqual(mane, fin, id);
+    assert.equal(companionRemark(id, story, { frostmane: 1 }), mane, id);
+    assert.doesNotMatch(mane, EGG_RE, id);
+    assert.equal(companionRemark(id, { flags: {} }, { frostmane: 1 }), companionRemark(id, { flags: {} }), `${id} needs rescue_reward`);
+    assert.notEqual(companionRemark(id, { flags: { rescue_reward: true, relay_choice: 'shelter_network' } }, { frostmane: 1 }), mane, `${id} relay outranks`);
+  }
+});
