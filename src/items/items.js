@@ -36,12 +36,12 @@ export const ITEMS = Object.freeze({
   bandage: {
     id: 'bandage', name: 'Linen Bandage', type: TYPES.CONSUMABLE,
     use: { hp: 15, cure: 'bleeding' }, price: 10, sellPrice: 5,
-    description: 'Boiled linen strips. Stops bleeding and covers the ugliest wounds.',
+    description: 'Brine-washed linen strips. Stops bleeding and covers the ugliest wounds.',
   },
   storm_tonic: {
     id: 'storm_tonic', name: 'Storm Tonic', type: TYPES.CONSUMABLE,
     use: { mp: 20, cure: 'shocked' }, price: 22, sellPrice: 11,
-    description: 'A crackling draught distilled from storm-charged salts. Restores focus.',
+    description: 'A sparking draught distilled from storm-charged salts. Restores focus.',
   },
   field_dressing: {
     id: 'field_dressing', name: 'Field Dressing', type: TYPES.CONSUMABLE,
@@ -110,7 +110,7 @@ export const ITEMS = Object.freeze({
   saltweather_jerkin: {
     id: 'saltweather_jerkin', name: 'Saltweather Jerkin', type: TYPES.EQUIPMENT, slot: 'armor',
     stats: { def: 6, hp: 5 }, price: 70, sellPrice: 33,
-    description: 'Tarred canvas layered over boiled hide. Salt-stiff, storm-ready, faintly smelling of the docks.',
+    description: 'Tarred canvas layered over cured hide. Salt-stiff, storm-ready, faintly smelling of the docks.',
   },
   frostward_cloak: {
     id: 'frostward_cloak', name: 'Frostward Cloak', type: TYPES.EQUIPMENT, slot: 'armor',
@@ -145,9 +145,9 @@ export const ITEMS = Object.freeze({
     description: 'A lens shard wound in fine signal wire. It tugs gently toward the open wind.',
   },
   pearl_focus: {
-    id: 'pearl_focus', name: 'Pearl Focus', type: TYPES.EQUIPMENT, slot: 'trinket',
+    id: 'pearl_focus', name: 'Tide Glass Focus', type: TYPES.EQUIPMENT, slot: 'trinket',
     stats: { mp: 8 }, price: 50, sellPrice: 24,
-    description: 'A grey pearl from the Saltmere beds. Rest the eyes on it and the storm quiets.',
+    description: 'A disc of sea-worn storm glass, polished smooth by the tide. Rest the eyes on it and the storm quiets.',
   },
 
   // ---- Key items ----
