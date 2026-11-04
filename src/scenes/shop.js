@@ -7,6 +7,7 @@ import { GREYHAVEN_SHOP, shopCatalog, buyItem, sellItem } from '../items/shop.js
 import { getItem, isKnownItem, canEquip } from '../items/items.js';
 import { countItem } from '../items/inventory.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment } from '../items/equipment.js';
+import { listRecipes, recipeInputsMet, recipeSummary, craft } from '../items/crafting.js';
 
 const esc = (v) =>
   String(v ?? '').replace(/[&<>"']/g, (c) =>
@@ -40,9 +41,13 @@ function sellableStacks(inv) {
     .filter(({ item }) => item.type !== 'key' && sellPriceOf(item) > 0);
 }
 
+function getRecipeSafe(id) {
+  return listRecipes().find((r) => r.id === id) || null;
+}
+
 export const shopScene = {
   onEnter(game, data) {
-    game.shopMode = data?.mode === 'sell' ? 'sell' : 'buy';
+    game.shopMode = ['sell', 'craft'].includes(data?.mode) ? data.mode : 'buy';
     game.shopMessage = data?.message || '';
     game.shopReturnScene = data?.returnScene || 'town';
   },
@@ -51,7 +56,7 @@ export const shopScene = {
     const s = game.state;
     const hero = s.party[0];
     const shop = GREYHAVEN_SHOP;
-    const mode = game.shopMode === 'sell' ? 'sell' : 'buy';
+    const mode = ['sell', 'craft'].includes(game.shopMode) ? game.shopMode : 'buy';
     const gold = s.gold ?? 0;
     const eff = effectiveStats(hero);
     const eq = hero.equipment || createEquipment();
@@ -106,6 +111,37 @@ export const shopScene = {
       })
       .join('');
 
+
+    const craftRows = listRecipes()
+      .map((recipe) => {
+        const { ok: met, missing } = recipeInputsMet(s.inventory, recipe);
+        const checklist = recipe.inputs
+          .map(({ id, qty }) => {
+            const have = Math.min(qty, countItem(s.inventory, id));
+            const it = isKnownItem(id) ? getItem(id) : null;
+            const label = it ? it.name : id;
+            return `<li class="${have >= qty ? 'have' : 'need'}">${esc(label)} ×${qty} <small>(have ${have})</small></li>`;
+          })
+          .join('');
+        const outputs = recipe.outputs
+          .map(({ id, qty }) => {
+            const it = isKnownItem(id) ? getItem(id) : null;
+            const label = it ? it.name : id;
+            const stats = it?.stats ? ` <small>(${esc(statSummary(it.stats))})</small>` : '';
+            return `${esc(label)} ×${qty}${stats}`;
+          })
+          .join(', ');
+        return `<tr>
+          <td><strong>${esc(recipe.name)}</strong><br>
+            <small>${esc(recipe.description)}</small><br>
+            <small>Needs: ${esc(recipeSummary(recipe))}</small></td>
+          <td><ul class="craft-checklist">${checklist}</ul></td>
+          <td><strong>${outputs}</strong></td>
+          <td><button data-action="craft" data-arg="${esc(recipe.id)}" ${met ? '' : 'disabled'}>Craft</button></td>
+        </tr>`;
+      })
+      .join('');
+
     return `
       <div class="panel">
         <h2>${esc(shop.name)}</h2>
@@ -121,13 +157,16 @@ export const shopScene = {
         <div>
           <button data-action="setMode" data-arg="buy" ${mode === 'buy' ? 'disabled' : ''}>Buy</button>
           <button data-action="setMode" data-arg="sell" ${mode === 'sell' ? 'disabled' : ''}>Sell</button>
+          <button data-action="setMode" data-arg="craft" ${mode === 'craft' ? 'disabled' : ''}>Craft</button>
         </div>
         ${
           mode === 'buy'
             ? `<table>${buyRows}</table>`
-            : sellRows
-              ? `<table>${sellRows}</table>`
-              : '<p>You carry nothing Hesta would pay for.</p>'
+            : mode === 'sell'
+              ? sellRows
+                ? `<table>${sellRows}</table>`
+                : '<p>You carry nothing Hesta would pay for.</p>'
+              : `<table>${craftRows}</table>`
         }
         <h3>Wardrobe</h3>
         <table>${gearRows}</table>
@@ -139,7 +178,8 @@ export const shopScene = {
 
   actions: {
     setMode(game, el) {
-      game.shopMode = el?.dataset?.arg === 'sell' ? 'sell' : 'buy';
+      const arg = el?.dataset?.arg;
+      game.shopMode = ['sell', 'craft'].includes(arg) ? arg : 'buy';
     },
     buy(game, el) {
       const id = el?.dataset?.arg;
@@ -194,6 +234,21 @@ export const shopScene = {
       if (res.ok) {
         game.state.party[0] = res.actor;
         game.state.inventory = res.inv;
+      }
+    },
+    craft(game, el) {
+      const recipeId = el?.dataset?.arg;
+      if (!recipeId) return;
+      const recipe = getRecipeSafe(recipeId);
+      const res = craft(game.state.inventory, recipeId);
+      if (res.ok) {
+        game.state.inventory = res.inv;
+        const made = recipe
+          ? recipe.outputs.map(({ id, qty }) => `${qty} ${(isKnownItem(id) ? getItem(id).name : id)}`).join(', ')
+          : 'something';
+        game.shopMessage = `Hesta works the hearth: crafted ${made}.`;
+      } else {
+        game.shopMessage = res.messages.join(' ');
       }
     },
     leave(game) {
