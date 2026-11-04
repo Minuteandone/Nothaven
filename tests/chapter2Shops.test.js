@@ -127,3 +127,20 @@ test('new chapter-two content carries no egg vocabulary', () => {
   ].join(' ');
   assert.ok(!EGG_RE.test(blob), 'no egg references in new items, recipes, or shops');
 });
+
+test('shop buy action uses the displayed shop stock, including safe fallback', () => {
+  const game = fakeGame();
+  game.state.gold = 200;
+  shopScene.onEnter(game, { shopId: 'saltmere_post' });
+  shopScene.actions.buy(game, { dataset: { arg: 'tidebound_cutlass' } });
+  assert.equal(game.state.gold, 200 - getItem('tidebound_cutlass').price);
+  assert.equal(countOf(game.state.inventory, 'tidebound_cutlass'), 1);
+  const after = structuredClone(game.state);
+  shopScene.actions.buy(game, { dataset: { arg: 'rusted_pipe' } });
+  assert.deepEqual(game.state, after, 'coastal shop cannot sell Greyhaven-only stock');
+  assert.match(game.shopMessage, /does not stock/);
+  shopScene.onEnter(game, { shopId: 'constructor' });
+  shopScene.actions.buy(game, { dataset: { arg: 'rusted_pipe' } });
+  assert.equal(game.state.gold, after.gold - getItem('rusted_pipe').price);
+  assert.equal(countOf(game.state.inventory, 'rusted_pipe'), 1);
+});
