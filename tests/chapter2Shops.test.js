@@ -144,3 +144,9 @@ test('shop buy action uses the displayed shop stock, including safe fallback', (
   assert.equal(game.state.gold, after.gold - getItem('rusted_pipe').price);
   assert.equal(countOf(game.state.inventory, 'rusted_pipe'), 1);
 });
+
+test('saltmere post stocks an MP item and a shocked cure for squall revenants', () => {
+  const stock = SHOPS.saltmere_post.stock.map(getItem);
+  assert.ok(stock.some((it) => it.use && it.use.mp > 0), 'MP consumable in stock');
+  assert.ok(stock.some((it) => it.use && it.use.cure === 'shocked'), 'shocked cure in stock');
+});
