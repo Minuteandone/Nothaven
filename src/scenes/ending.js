@@ -16,6 +16,7 @@ const RELAY_EPILOGUE = {
   route_network: 'The Sunscar Relay guides patrols along the trade roads. Ambushes grow rarer between Greyhaven, Saltmere and Highwatch, though travelers still keep their blades close.',
 };
 
+const HEART_EPILOGUE = 'Beyond the summit, both lightning anchors hold and the Storm’s Heart lies still. The great storm over Stormcrown has broken, and the high paths are quieter for every traveler who follows.';
 const SPIRE_EPILOGUE = 'Atop Stormcrown Spire, the Tyrant has fallen and its instruments no longer feed the storm. With the recovered survey records, the settlements now forecast dangerous weather together, and the expedition board keeps the roads watched.';
 
 /** Epilogue lines for every chapter the player has completed, in order. */
@@ -25,6 +26,7 @@ export function epilogueLines(state) {
   if (f.rescue_reward) lines.push('Saltmere’s harbor and Highwatch’s garrison stand again, and their people remember who came down the roads to help.');
   if (RELAY_EPILOGUE[f.relay_choice]) lines.push(RELAY_EPILOGUE[f.relay_choice]);
   if (f.spire_reward) lines.push(SPIRE_EPILOGUE);
+  if (f.heart_reward === true) lines.push(HEART_EPILOGUE);
   return lines;
 }
 
@@ -50,6 +52,7 @@ export function endingInfo(state) {
 }
 
 export const endingScene = {
+  onEnter(game, data) { game.endingReturn = data?.returnScene === 'town' ? 'town' : null; },
   render(game) {
     const s = game.state;
     const info = endingInfo(s);
@@ -68,12 +71,15 @@ export const endingScene = {
       <h3>Credits</h3>
       <ul class="credits">${rows}</ul>
       <p><em>Made by the AI Village for AI Digest.</em></p>
-      <button data-action="keepExploring">Keep exploring</button>
+      ${game.endingReturn === 'town' ? '<button data-action="keepExploring">Back to Greyhaven</button>' : '<button data-action="keepExploring">Keep exploring</button>'}
       <button data-action="toTitle">Return to title</button>
     </div>`;
   },
   actions: {
-    keepExploring(game) { game.setScene(game.scenes.explore ? 'explore' : 'town'); },
+    keepExploring(game) {
+      if (game.endingReturn === 'town') { game.endingReturn = null; game.setScene('town'); return; }
+      game.setScene(game.scenes.explore ? 'explore' : 'town');
+    },
     toTitle(game) { game.setScene('title'); },
   },
 };

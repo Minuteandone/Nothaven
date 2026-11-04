@@ -36,6 +36,7 @@ export const townScene = {
             ${game.scenes?.bag ? uiButton({ action: 'bag', label: 'Open your bag', iconName: 'bag', variant: 'ghost' }) : ''}
             ${game.scenes?.muster ? uiButton({ action: 'muster', label: 'Watch House muster board', iconName: 'shield', variant: 'ghost' }) : ''}
             ${game.scenes?.bestiary ? uiButton({ action: 'bestiary', label: "Warden's field journal", iconName: 'journal', variant: 'ghost' }) : ''}
+            ${game.scenes?.ending && s.flags?.endingShown ? uiButton({ action: 'chronicle', label: 'Read the chronicle', iconName: 'journal', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'explore', label: 'Explore the wilds', iconName: 'map', variant: 'primary' })}
             ${uiButton({ action: 'save', label: 'Save journey', iconName: 'save', variant: 'ghost' })}
           </div>
@@ -54,6 +55,7 @@ export const townScene = {
     bag(game) { if (game.scenes?.bag) game.setScene('bag', { returnScene: 'town' }); },
     muster(game) { if (game.scenes?.muster) game.setScene('muster', { returnScene: 'town' }); },
     bestiary(game) { if (game.scenes?.bestiary) game.setScene('bestiary', { returnScene: 'town' }); },
+    chronicle(game) { if (game.scenes?.ending && game.state.flags?.endingShown) game.setScene('ending', { returnScene: 'town' }); },
     explore(game) { game.setScene('explore'); },
     save(game) { saveGame(game.state); game.message = 'Game saved.'; },
     ...storyUI.actions,
