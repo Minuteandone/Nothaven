@@ -34,7 +34,7 @@ export const MONSTER_ABILITIES = {
   },
   'm:corrosive_slime': {
     id: 'm:corrosive_slime', name: 'Corrosive Slime',
-    desc: 'Flings sticky gold that slows its target.',
+    desc: 'Flings caustic residue that slows its target.',
     fx: 'debuff', stat: 'spd', amount: 2, turns: 2,
   },
   'm:overcharge': {

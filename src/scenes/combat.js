@@ -55,9 +55,16 @@ export const combatScene = {
       const c = game.state.combat;
       const over = c.over;
       const returnScene = c.returnScene || 'town';
+      const encounterId = c.encounterId;
+      const enemyId = c.enemy?.id ?? null;
       game.state.combat = null;
       if (over === 'defeat') game.setScene('title');
-      else game.setScene(returnScene, { message: over === 'victory' ? 'You return victorious.' : 'You slip back to town.' });
+      else game.setScene(returnScene, {
+        message: over === 'victory' ? 'You return victorious.' : 'You slip back to town.',
+        combatResult: over,
+        encounterId,
+        enemyId,
+      });
     },
   },
 };

@@ -44,7 +44,7 @@ export const ENEMIES = {
   beacon_imp: {
     id: 'beacon_imp',
     name: 'Beacon Imp',
-    desc: 'A cackling creature drawn to the dying beacon fire like a moth.',
+    desc: 'A chittering creature drawn to the dying beacon fire like a moth.',
     hp: 15, mp: 8, atk: 6, def: 3, spd: 7,
     xp: 10, gold: 7,
     abilities: [{ id: 'm:ember_burst' }],

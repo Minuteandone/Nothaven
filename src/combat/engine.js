@@ -13,13 +13,13 @@ const CRIT_QUIPS = [
   () => 'Critical hit!',
   () => 'A devastating blow!',
   () => 'A devastating blow!',
-  () => 'You find a crack in their guard!',
+  () => 'You exploit an opening in their guard!',
 ];
 
 const FLEE_QUIPS = [
   () => 'You escape!',
   () => 'You slip away into the storm.',
-  () => 'You scramble away before things get worse!',
+  () => 'You slip away before things get worse!',
 ];
 
 export function bestCombatant(state) {
@@ -77,11 +77,25 @@ function applyStatus(state, whose, effect) {
   const label = effect.label || (effect.fx === 'burn' ? 'burn' : effect.stat);
   if (effect.buff) {
     char[effect.stat] = (char[effect.stat] || 0) + effect.amount;
+    // Accumulate: if already buffed on this stat, add to existing amount
+    const existing = st[label];
+    if (existing && existing.buff) {
+      existing.amount += effect.amount;
+      existing.turns = Math.max(existing.turns, effect.turns);
+      return `${char.name}'s ${effect.stat} rises further.`;
+    }
     st[label] = { buff: true, stat: effect.stat, amount: effect.amount, turns: effect.turns, label };
     return `${char.name}'s ${effect.stat} rises.`;
   }
   if (effect.debuff) {
     char[effect.stat] = Math.max(0, (char[effect.stat] || 0) - effect.amount);
+    // Accumulate: if already debuffed on this stat, add to existing amount
+    const existing = st[label];
+    if (existing && existing.debuff) {
+      existing.amount += effect.amount;
+      existing.turns = Math.max(existing.turns, effect.turns);
+      return `${char.name}'s ${effect.stat} falls further.`;
+    }
     st[label] = { debuff: true, stat: effect.stat, amount: effect.amount, turns: effect.turns, label };
     return `${char.name}'s ${effect.stat} falls.`;
   }
@@ -108,6 +122,7 @@ function rollDamage(attacker, defender, power, defending) {
 function heroTurn(state, abilityId) {
   const c = state.combat;
   const hero = bestCombatant(state);
+  tickStatuses(state, 'hero');
   const a = HERO_ABILITIES[abilityId];
   if (!a) return;
   if (a.mp > hero.mp) { c.log.push('Not enough MP!'); return; }
@@ -144,7 +159,6 @@ function enemyTurn(state) {
   const hero = bestCombatant(state);
   if (!c || c.over) return;
   tickStatuses(state, 'enemy');
-  c.defending = false;
 
   const enemy = c.enemy;
   // Simple AI: 45% chance to use a special ability if it has MP; otherwise a basic attack.
@@ -177,8 +191,10 @@ function enemyTurn(state) {
   if (hero.hp <= 0) {
     c.log.push('You collapse...');
     c.over = 'defeat';
+    c.defending = false;
     return;
   }
+  c.defending = false;
   c.turn = 'hero';
 }
 
@@ -202,24 +218,13 @@ function resolveVictory(state) {
     else state.inventory.push({ id: drop.id, qty });
     c.log.push(`You found ${qty} ${drop.id.replace(/_/g, ' ')}.`);
   }
-  gainXp(state, 0); // no-op; xp already added. Kept for clarity/symmetry.
+  // Level-ups are handled by core/progression.js via the combat:victory event.
   bus.emit('combat:victory', { enemyId: c.enemy.id, encounterId: c.encounterId });
 }
 
-// Level up while any party member has enough XP (threshold grows per level).
-export function gainXp(state, amount) {
-  const hero = bestCombatant(state);
-  hero.xp += amount;
-  while (hero.xp >= xpToNext(hero.level)) {
-    hero.xp -= xpToNext(hero.level);
-    hero.level += 1;
-    hero.maxHp += 4; hero.hp = hero.maxHp;
-    hero.maxMp += 2; hero.mp = hero.maxMp;
-    hero.atk += 1; hero.def += 1; hero.spd += 1;
-    if (state.combat) state.combat.log.push(`<span class="crit">${hero.name} reached level ${hero.level}!</span>`);
-  }
-}
 
+// Deprecated: use core/progression.js xpForLevel/xpToNext instead.
+// Kept for test compatibility during migration.
 export function xpToNext(level) { return 20 + level * 10; }
 
 export function heroAct(state, abilityId) {
