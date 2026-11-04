@@ -52,3 +52,14 @@ test('bestiary text for all enemies has no egg references', () => {
   const text = bestiaryScene.render(g).replace(/<[^>]+>/g, ' ');
   assert.ok(!/\b(eggs?|yolks?|hatch\w*|nests?|omelet\w*|hens?|chicks?|shells?)\b/i.test(text));
 });
+
+test('defeated bosses show their second-phase warning; regular foes do not', () => {
+  const state = createInitialState();
+  recordDefeat(state, 'relay_warden');
+  recordDefeat(state, 'storm_rat');
+  const html = bestiaryScene.render({ state });
+  assert.match(html, /Second phase: grows enraged below 50% HP \(\+3 ATK\)/);
+  const ratStart = html.indexOf('Storm Rat');
+  const ratChunk = html.slice(ratStart, html.indexOf('</li>', ratStart));
+  assert.doesNotMatch(ratChunk, /Second phase/);
+});

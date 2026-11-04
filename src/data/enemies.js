@@ -113,4 +113,33 @@ export const ENEMIES = {
       { id: 'healing_herb', chance: 0.7, minQty: 1, maxQty: 2 },
     ],
   },
+  dust_marauder: {
+    id: 'dust_marauder', name: 'Dust Marauder', hp: 34, atk: 11, def: 4, spd: 7, xp: 30, gold: 18,
+    ability: { name: 'Sandblind Slash', chance: 0.3, mult: 1.25, status: 'bleeding', turns: 3 },
+    loot: [
+      { id: 'bandage', chance: 0.5, minQty: 1, maxQty: 1 },
+      { id: 'sunscar_glass', chance: 0.45, minQty: 1, maxQty: 1 },
+    ],
+  },
+  relay_drone: {
+    id: 'relay_drone', name: 'Relay Drone', hp: 38, atk: 10, def: 6, spd: 6, xp: 34, gold: 20,
+    tags: ['construct'],
+    ability: { name: 'Static Pulse', chance: 0.3, mult: 1.1, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'relay_brass', chance: 0.6, minQty: 1, maxQty: 2 },
+      { id: 'salvaged_wiring', chance: 0.4, minQty: 1, maxQty: 1 },
+    ],
+  },
+  relay_warden: {
+    id: 'relay_warden', name: 'Relay Warden', hp: 80, atk: 13, def: 6, spd: 5, xp: 95, gold: 60,
+    tags: ['construct'], boss: true,
+    intro: 'The relay station shudders awake. A towering brass Warden unfolds from its cradle, coils humming with stolen storm-charge!',
+    enrage: { threshold: 0.5, atk: 3, chance: 0.5, line: 'The Relay Warden vents a gout of blue sparks and overclocks its coils. Its strikes come harder!' },
+    ability: { name: 'Overcharge Beam', chance: 0.35, mult: 1.4, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'relay_brass', chance: 1, minQty: 2, maxQty: 3 },
+      { id: 'sunscar_glass', chance: 0.8, minQty: 1, maxQty: 2 },
+      { id: 'storm_tonic', chance: 1, minQty: 1, maxQty: 2 },
+    ],
+  },
 };

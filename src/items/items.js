@@ -184,6 +184,16 @@ export const ITEMS = Object.freeze({
     price: 25, sellPrice: 12,
     description: 'Thick glass panes that survived the storm unbroken. Clear as mountain air.',
   },
+  relay_brass: {
+    id: 'relay_brass', name: 'Relay Brass', type: TYPES.MATERIAL,
+    price: 30, sellPrice: 15,
+    description: 'Heavy brass fittings from the inland signal relays. Still warm with residual charge.',
+  },
+  sunscar_glass: {
+    id: 'sunscar_glass', name: 'Sunscar Glass', type: TYPES.MATERIAL,
+    price: 34, sellPrice: 17,
+    description: 'Amber glass fused by lightning on the Sunscar flats. Prized by lens-grinders.',
+  },
 });
 
 /**
