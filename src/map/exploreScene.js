@@ -89,6 +89,7 @@ export const exploreScene = {
       visitedZones: getVisitedZones(game.state),
       storyHtml: storyUI.render(game),
       hasQuestJournal: Boolean(game.scenes?.quests),
+      hasCharacter: Boolean(game.scenes?.character),
     })}`;
   },
 
@@ -144,6 +145,11 @@ export const exploreScene = {
       const [itemId, idxStr] = String(raw).split(':');
       const targetIndex = idxStr !== undefined ? Number.parseInt(idxStr, 10) : 0;
       useFieldConsumable(game.state, itemId, Number.isInteger(targetIndex) ? targetIndex : 0);
+    },
+    openCharacter(game) {
+      if (game.scenes?.character) {
+        game.setScene('character', { returnScene: 'explore' });
+      }
     },
     openBag(game) {
       if (game.scenes?.bag) {
