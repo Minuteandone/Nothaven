@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCombat, heroAction, physicalDamage, knownSkills, enemyTurn, SKILLS } from '../src/combat/rules.js';
 import { ENEMIES } from '../src/data/enemies.js';
-import { combatScene } from '../src/scenes/combat.js';
+import { combatScene, recoverFromDefeat } from '../src/scenes/combat.js';
 import { createInitialState } from '../src/state.js';
 import { isKnownItem } from '../src/items/items.js';
 
@@ -128,11 +128,45 @@ test('scene item use consumes the turn and the item', () => {
   assert.ok(combatScene.render(g).includes('Round 2'));
 });
 
-test('defeat returns to title', () => {
+test('defeat recovers the party in Greyhaven with half gold lost', () => {
   const g = fakeGame();
+  g.state.gold = 21;
   g.state.party[0].hp = 1; g.state.party[0].def = 0;
-  combatScene.onEnter(g, { enemyId: 'gale_hound' }); // faster, strikes first
+  combatScene.onEnter(g, { enemyId: 'gale_hound', encounterId: 'ridge_patrol' }); // faster, strikes first
   assert.equal(g.state.combat.over, 'defeat');
+  combatScene.actions.finish(g);
+  assert.equal(g.last.name, 'town');
+  assert.equal(g.last.data.combatResult, 'defeat');
+  assert.equal(g.last.data.encounterId, 'ridge_patrol');
+  assert.match(g.last.data.message, /infirmary/);
+  assert.equal(g.state.gold, 11);
+  assert.equal(g.state.party[0].hp, Math.ceil(g.state.party[0].maxHp / 2));
+  assert.equal(g.state.location, 'greyhaven');
+  assert.equal(g.state.combat, null);
+});
+
+test('recoverFromDefeat resets map position, statuses and mp', () => {
+  const s = createInitialState();
+  s.gold = 7;
+  s.location = 'ridge_road';
+  s.map = { zoneId: 'ridge_road', x: 5, y: 5, activeEncounterId: 'ridge_patrol' };
+  s.party[0].hp = 0; s.party[0].mp = 0; s.party[0].statuses = [{ id: 'bleeding', turns: 2 }];
+  const msg = recoverFromDefeat(s);
+  assert.equal(s.gold, 4);
+  assert.ok(s.party[0].hp >= 1);
+  assert.equal(s.party[0].mp, s.party[0].maxMp);
+  assert.deepEqual(s.party[0].statuses, []);
+  assert.equal(s.map.zoneId, 'greyhaven');
+  assert.equal(s.map.activeEncounterId, null);
+  assert.equal(s.location, 'greyhaven');
+  assert.match(msg, /3 gold/);
+});
+
+test('defeat falls back to title when no town scene exists', () => {
+  const g = fakeGame();
+  delete g.scenes.town;
+  g.state.party[0].hp = 1; g.state.party[0].def = 0;
+  combatScene.onEnter(g, { enemyId: 'gale_hound' });
   combatScene.actions.finish(g);
   assert.equal(g.last.name, 'title');
 });
