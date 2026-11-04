@@ -393,17 +393,81 @@ button:disabled, .action-button:disabled { opacity: .42; cursor: not-allowed; }
 }
 .field-pack__label { margin: .25rem 0 .1rem; color: var(--accent); font-size: .75rem; }
 
-/* Warden's Field Journal (bestiary) and Watch House muster board */
-.bestiary-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .9rem; margin: 1rem 0; }
-.bestiary-entry { background: var(--panel-strong); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: .8rem 1rem; }
-.bestiary-entry h3 { margin: 0 0 .35rem; color: var(--accent-bright); }
-.bestiary-entry p { margin: .25rem 0; font-size: .9rem; }
-.bestiary-entry.unknown { border-left-color: var(--line); color: var(--muted); opacity: .75; }
-.bestiary-entry.unknown h3 { color: var(--muted); letter-spacing: .2em; }
+/* Warden's Field Journal */
+.bestiary-screen > .scene-header { max-width: 850px; margin-bottom: 1.6rem; }
+.bestiary-screen .scene-header h1 { margin-bottom: .65rem; }
+.bestiary-overview { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, .8fr); gap: 2rem; align-items: center; margin-bottom: 2rem; }
+.bestiary-overview h2, .bestiary-catalogue-heading h2 { margin: .15rem 0 .45rem; }
+.bestiary-overview p { margin: .3rem 0; }
+.bestiary-completion { padding-left: 1.5rem; border-left: 1px solid var(--line); }
+.bestiary-totals { display: flex; flex-wrap: wrap; gap: .55rem 1.25rem; margin-top: 1rem; color: var(--muted); font-size: .85rem; }
+.bestiary-totals strong { display: block; color: var(--accent-bright); font-size: 1.25rem; }
+.bestiary-catalogue-heading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1rem; }
+.bestiary-catalogue-heading > p { margin: 0 0 .45rem; color: var(--muted); font-size: .85rem; }
+.bestiary-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0 0 1.5rem; padding: 0; list-style: none; }
+.bestiary-entry { min-width: 0; overflow: hidden; background: var(--panel-strong); border: 1px solid var(--line); border-radius: 12px; }
+.bestiary-entry--known { display: grid; grid-template-columns: minmax(130px, .72fr) minmax(0, 1.5fr); border-top: 2px solid var(--accent); }
+.bestiary-entry h3 { margin: 0; color: var(--accent-bright); overflow-wrap: anywhere; }
+.bestiary-entry p { margin: .45rem 0; font-size: .9rem; }
+.foe-artwork { position: relative; min-height: 100%; background: #172b3c; border-right: 1px solid var(--line); }
+.foe-art { display: block; width: 100%; height: 100%; min-height: 220px; object-fit: cover; }
+.foe-recorded { position: absolute; top: .65rem; left: .65rem; display: inline-flex; align-items: center; gap: .3rem; padding: .3rem .45rem; border: 1px solid #7895a6; border-radius: 4px; background: #101c31e8; color: #dce9e9; font-size: .68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.foe-recorded .icon { width: .85rem; height: .85rem; }
+.foe-entry-body { min-width: 0; padding: 1rem; }
+.foe-heading { display: flex; align-items: start; justify-content: space-between; gap: .6rem; }
+.foe-heading .eyebrow { margin: 0 0 .25rem; font-size: .65rem; }
+.foe-kind { flex: none; padding: .2rem .4rem; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); font-size: .65rem; text-transform: capitalize; }
+.foe-tags, .foe-spoils ul { display: flex; flex-wrap: wrap; gap: .35rem; margin: .65rem 0; padding: 0; list-style: none; }
+.foe-tags li, .foe-spoils li { padding: .2rem .4rem; border: 1px solid var(--line-soft); border-radius: 4px; background: #172636; color: #c8d8df; font-size: .7rem; overflow-wrap: anywhere; }
+.foe-intro { color: var(--muted); line-height: 1.5; }
+.foe-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: .85rem 0; overflow: hidden; border: 1px solid var(--line-soft); border-radius: 6px; background: var(--line-soft); }
+.foe-stats div { display: flex; justify-content: space-between; gap: .3rem; padding: .4rem .5rem; background: #111f2d; }
+.foe-stats dt { color: var(--muted); font-size: .65rem; }
+.foe-stats dd { margin: 0; color: var(--text); font-size: .75rem; font-weight: 700; }
+.foe-tactic { margin: .75rem 0; padding: .65rem .75rem; border-left: 2px solid #94c7d4; background: #142535; }
+.foe-tactic > span { display: flex; align-items: center; gap: .3rem; color: #a8d3d9; font-size: .65rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.foe-tactic .icon { width: .85rem; height: .85rem; }
+.foe-tactic h4 { margin: .3rem 0; color: var(--text); overflow-wrap: anywhere; }
+.foe-tactic p { margin: 0; color: var(--muted); font-size: .78rem; }
+.foe-phase { padding: .55rem .65rem; border: 1px solid #916a5c; border-radius: 5px; color: #f2c5a9; line-height: 1.45; }
+.bestiary .field-tip { margin: .8rem 0; padding: .6rem .7rem; background: #172636; color: #d8e2e6; line-height: 1.5; }
+.bestiary .field-tip strong { color: var(--accent-bright); }
+.foe-defeats { display: flex; align-items: center; gap: .45rem; padding-top: .65rem; border-top: 1px solid var(--line-soft); color: var(--muted); }
+.foe-defeats .icon { flex: none; width: 1rem; height: 1rem; color: var(--good); }
+.foe-defeats strong { color: var(--text); }
+.bestiary-entry.unknown { display: flex; align-items: center; gap: 1rem; min-height: 120px; padding: 1rem; border-left: 3px solid var(--line); color: var(--muted); }
+.bestiary-entry.unknown h3 { color: var(--muted); letter-spacing: .15em; }
+.bestiary-entry.unknown small { letter-spacing: normal; }
+.unknown-mark { display: grid; place-items: center; flex: none; width: 52px; height: 64px; border: 1px dashed var(--line); border-radius: 6px; color: var(--muted); font: 700 1.6rem Georgia, serif; }
 .bestiary .hint, .muster .hint { color: var(--muted); font-size: .88rem; }
+.bestiary-footer { display: flex; justify-content: flex-end; padding-top: .5rem; }
+.bestiary-footer .action-button { min-height: 44px; }
 .muster .companion { border-left: 3px solid var(--good); margin: .75rem 0; }
 .muster .message { color: var(--accent-bright); font-weight: 600; }
-.muster .actions button, .bestiary .actions button { margin-right: .5rem; }
+.muster .actions button { margin-right: .5rem; }
+@media (max-width: 1100px) {
+  .bestiary-list { grid-template-columns: 1fr; }
+  .bestiary-entry--known { grid-template-columns: minmax(180px, .6fr) minmax(0, 1.4fr); }
+}
+@media (max-width: 700px) {
+  .bestiary-overview { grid-template-columns: 1fr; gap: 1rem; }
+  .bestiary-completion { padding: 1rem 0 0; border-top: 1px solid var(--line); border-left: 0; }
+  .bestiary-catalogue-heading { align-items: start; flex-direction: column; gap: 0; }
+}
+@media (max-width: 520px) {
+  .bestiary-entry--known { grid-template-columns: 1fr; }
+  .foe-artwork { min-height: 0; border-right: 0; border-bottom: 1px solid var(--line); }
+  .foe-art { height: 150px; min-height: 0; }
+  .foe-entry-body { padding: .85rem; }
+}
+@media (max-width: 360px) {
+  .bestiary-overview { padding: .85rem; }
+  .foe-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .foe-heading { flex-wrap: wrap; }
+  .bestiary-entry.unknown { align-items: start; padding: .8rem; }
+  .unknown-mark { width: 38px; height: 48px; }
+  .bestiary-footer .action-button { width: 100%; justify-content: center; }
+}
 
 /* Companion remarks on the muster board */
 blockquote.remark {
