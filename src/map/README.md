@@ -40,3 +40,14 @@ Provides 9×7 tile-grid exploration, multi-zone navigation, NPC/object proximity
 - `installMap(game, options)`: Registers the `'explore'` scene, initializes `game.state.map`, listens to `combat:victory` to record cleared encounters, and wires optional keyboard navigation (WASD / Arrow keys).
 - `exploreScene`: Scene implementation (`onEnter`, `render`, `actions`) compatible with `Game` and `createStoryUI`.
 - Pure state helpers: `createMapState`, `ensureMapState`, `movePlayer`, `interactWith`, `travelToZone`, `recordEncounterVictory`, `getAvailableActions`, `getClearedEncounters`, `getVisitedZones`, `pickRandomEncounter`, `useFieldConsumable(gameState, itemId, targetIndex = 0)`, `craftInField(gameState, recipeId)`.
+
+### Chapter 3: Sunscar Relay (`sunscar_relay`)
+- **`sunscar_relay`** (Sunscar Relay — Inland Signal Station, 9×7):
+  - Connected via `highwatch_pass` East Gate `(8, 3)` <-> `sunscar_relay` West Trail `(0, 3)`, plus `Signal Lift → Greyhaven` at `(6, 5)`.
+  - Quest Interactables: `relay_junction` at `(3, 1)` and `relay_console` at `(7, 3)`.
+  - Main Encounter: `relay_warden` (`enemyId: 'relay_warden'`) at `(5, 3)`.
+  - Optional Encounter: `sunscar_drone_patrol` (`enemyId: 'relay_drone'`) at `(7, 1)`.
+  - Shop & Supply Cache: `relay_outpost` (`kind: 'shop'`, `shopId: 'relay_outpost'`) at `(6, 4)` and one-time `relay_supply_cache` at `(2, 5)`.
+  - **Relay Choice Effects (`state.story.flags.relay_choice`)**:
+    - `shelter_network`: reduces map inn rest cost (`greyhaven_inn`) from `5g` to `2g` via `getInnCost`.
+    - `route_network`: halves `zone.randomEncounterChance` in `movePlayer` via `getEffectiveRandomEncounterChance` while leaving fixed encounters unchanged.

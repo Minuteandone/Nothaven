@@ -8,12 +8,15 @@ import {
   ensureMapState,
   exploreScene,
   getClearedEncounters,
+  getEffectiveRandomEncounterChance,
+  getInnCost,
   getVisitedZones,
   installMap,
   interactWith,
   getAvailableActions,
   movePlayer,
   pickRandomEncounter,
+  recordEncounterVictory,
   travelToZone,
   useFieldConsumable,
 } from '../src/map/index.js';
@@ -71,7 +74,7 @@ function makeMockGame() {
 }
 
 test('zones match required story location, NPC, interaction, and encounter IDs', () => {
-  assert.deepEqual(ZONE_ORDER, ['greyhaven', 'ridge_road', 'observatory_ruins', 'beacon_tower', 'saltmere_coast', 'highwatch_pass']);
+  assert.deepEqual(ZONE_ORDER, ['greyhaven', 'ridge_road', 'observatory_ruins', 'beacon_tower', 'saltmere_coast', 'highwatch_pass', 'sunscar_relay']);
   const npcIds = ZONES.greyhaven.npcs.map((n) => n.id);
   assert.deepEqual(npcIds, ['mara', 'iven', 'tamsin']);
   assert.equal(ZONES.ridge_road.encounters[0].encounterId, 'ridge_patrol');
@@ -421,4 +424,102 @@ test('useFieldConsumable supports targeting companions by party index and greyha
   assert.equal(state.gold, 5);
   assert.equal(state.party[1].hp, 34);
   assert.deepEqual(state.party[1].statuses, []);
+});
+
+test('Chapter 3 sunscar_relay zone has walkable exits, relay_junction, relay_warden, relay_console, relay_outpost, and relay_supply_cache', () => {
+  const game = makeMockGame();
+  installMap(game, { enableKeyboard: false });
+
+  // Travel from highwatch_pass East Gate (8, 3) to sunscar_relay
+  travelToZone(game.state, 'highwatch_pass', 'default');
+  game.state.map.x = 7;
+  game.state.map.y = 3;
+  const toRelay = movePlayer(game.state, 1, 0);
+  assert.equal(toRelay.transitioned, true);
+  assert.equal(game.state.map.zoneId, 'sunscar_relay');
+  assert.deepEqual({ x: game.state.map.x, y: game.state.map.y }, { x: 1, y: 3 });
+
+  // Inspect relay_junction at (3, 1)
+  game.state.map.x = 3;
+  game.state.map.y = 1;
+  const juncRes = interactWith(game.state, 'interact', 'relay_junction');
+  assert.deepEqual(juncRes.events, [{ type: 'interact', interactionId: 'relay_junction' }]);
+
+  // relay_console at (7, 3) requires relay_warden cleared first
+  game.state.map.x = 7;
+  game.state.map.y = 3;
+  const blockedConsole = interactWith(game.state, 'interact', 'relay_console');
+  assert.deepEqual(blockedConsole.events, []);
+
+  // Engage relay_warden at (5, 3)
+  game.state.map.x = 4;
+  game.state.map.y = 3;
+  const wardenRes = interactWith(game.state, 'encounter', 'relay_warden');
+  assert.equal(wardenRes.triggerCombat?.encounterId, 'relay_warden');
+  assert.equal(wardenRes.triggerCombat?.enemyId, 'relay_warden');
+  recordEncounterVictory(game.state, 'relay_warden', 'relay_warden');
+
+  // Inspect relay_console at (7, 3)
+  game.state.map.x = 7;
+  game.state.map.y = 3;
+  const consoleRes = interactWith(game.state, 'interact', 'relay_console');
+  assert.deepEqual(consoleRes.events, [{ type: 'interact', interactionId: 'relay_console' }]);
+
+  // Open relay_supply_cache at (2, 5)
+  game.state.map.x = 2;
+  game.state.map.y = 5;
+  const cacheRes = interactWith(game.state, 'interact', 'relay_supply_cache');
+  assert.deepEqual(cacheRes.events, [{ type: 'interact', interactionId: 'relay_supply_cache' }]);
+  assert.equal(game.state.map.completedInteractions.relay_supply_cache, true);
+
+  // Visit relay_outpost shop at (6, 4)
+  game.state.map.x = 6;
+  game.state.map.y = 4;
+  const shopRes = interactWith(game.state, 'interact', 'relay_outpost');
+  assert.equal(shopRes.triggerShop?.shopId, 'relay_outpost');
+
+  // Signal Lift at (6, 5) returns to greyhaven
+  const liftRes = movePlayer(game.state, 0, 1);
+  assert.equal(liftRes.transitioned, true);
+  assert.equal(game.state.map.zoneId, 'greyhaven');
+});
+
+test('relay_choice flags apply shelter_network (2g map inn cost) and route_network (halved random-encounter chance)', () => {
+  const game = makeMockGame();
+  installMap(game, { enableKeyboard: false });
+
+  // Default inn cost is 5g
+  installStory(game);
+  game.state.map.x = 1;
+  game.state.map.y = 2;
+  assert.equal(getInnCost(game.state, { costGold: 5 }), 5);
+  let actions = getAvailableActions(game.state);
+  assert.ok(actions.some((a) => a.id === 'greyhaven_inn' && a.label.includes('(5g)')));
+
+  // With shelter_network, inn cost is 2g
+  game.state.story.flags.relay_choice = 'shelter_network';
+  assert.equal(getInnCost(game.state, { costGold: 5 }), 2);
+  actions = getAvailableActions(game.state);
+  assert.ok(actions.some((a) => a.id === 'greyhaven_inn' && a.label.includes('(2g)')));
+  game.state.gold = 10;
+  game.state.party[0].hp = 5;
+  interactWith(game.state, 'interact', 'greyhaven_inn');
+  assert.equal(game.state.gold, 8);
+  assert.equal(game.state.party[0].hp, 30);
+
+  // With route_network, random encounter chance is halved while fixed encounters still trigger
+  const sunscar = ZONES.sunscar_relay;
+  assert.equal(getEffectiveRandomEncounterChance(game.state, sunscar), 0.14);
+  game.state.story.flags.relay_choice = 'route_network';
+  assert.equal(getEffectiveRandomEncounterChance(game.state, sunscar), 0.07);
+
+  travelToZone(game.state, 'sunscar_relay', 'default');
+  // Roll of 0.10 (> 0.07 halved threshold, < 0.14 base threshold) does not trigger random encounter under route_network
+  const safeStep = movePlayer(game.state, 1, 0, { rng: () => 0.10 });
+  assert.equal(safeStep.triggerCombat, null);
+  // Fixed encounter at (5, 3) still triggers normally
+  game.state.map.x = 4;
+  game.state.map.y = 3;
+  const fixedStep = movePlayer(game.state, 1, 0, { rng: () => 0.99 });
+  assert.equal(fixedStep.triggerCombat?.encounterId, 'relay_warden');
 });
