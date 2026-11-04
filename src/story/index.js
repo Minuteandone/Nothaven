@@ -1,3 +1,4 @@
+import { getSettlerDialogue } from './settlers.js';
 import { applySpireEvent, getSpireJournal, getSpireDialogue } from './spire.js';
 import { applyExpeditionEvent, getExpeditionJournal } from './expeditions.js';
 import { applyRelayEvent, getRelayJournal, getRelayDialogue } from './relay.js';
@@ -154,6 +155,8 @@ export function getEndingSummary(state) {
 }
 
 export function getDialogue(state = createStoryState(), npcId) {
+  const settler = getSettlerDialogue(state, npcId);
+  if (settler) return settler;
   const spire = getSpireDialogue(state, npcId);
   if (spire) return spire;
   const relay = getRelayDialogue(state, npcId);

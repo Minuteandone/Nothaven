@@ -468,7 +468,18 @@ export const ZONES = {
         label: 'North Causeway → Greyhaven',
       },
     ],
-    npcs: [],
+    npcs: [
+      {
+        id: 'ona',
+        name: 'Ona Vell',
+        role: 'Saltmere Harbormaster',
+        x: 6,
+        y: 3,
+        symbol: 'O',
+        defaultLine:
+          'Saltmere has weathered storms for a hundred years, but never one that walked ashore.',
+      },
+    ],
     interactables: [
       {
         id: 'saltmere_supply_cache',
@@ -593,7 +604,18 @@ export const ZONES = {
         label: 'East Gate → Sunscar Relay',
       },
     ],
-    npcs: [],
+    npcs: [
+      {
+        id: 'rusk',
+        name: 'Captain Rusk',
+        role: 'Highwatch Garrison Captain',
+        x: 3,
+        y: 5,
+        symbol: 'R',
+        defaultLine:
+          'The warlord holds the upper pass. My sentries are frozen, outnumbered, and too proud to admit either.',
+      },
+    ],
     interactables: [
       {
         id: 'highwatch_supply_cache',
