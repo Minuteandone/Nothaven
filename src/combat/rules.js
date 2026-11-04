@@ -20,10 +20,12 @@ export const SKILLS = Object.freeze({
     description: 'Sound a calm, steady note on the signal whistle: every standing ally shakes off bleeding and shock. Usable while shocked.' },
   beacon_lance: { id: 'beacon_lance', name: 'Beacon Lance', mp: 9, kind: 'pierce', mult: 1.8,
     description: 'Focus the beacon light into a single piercing spear for 180% damage that ignores armour.' },
+  beacon_aegis: { id: 'beacon_aegis', name: 'Beacon Aegis', mp: 8, kind: 'party_ward', turns: 3,
+    description: 'Spread a dome of steady beacon light over the whole party: all damage taken is halved for three enemy turns.' },
 });
 
 /** Skills unlock by level. */
-export const SKILL_UNLOCKS = Object.freeze({ power_strike: 1, mend: 1, spark: 2, warding_stance: 3, rallying_light: 4, stormbreaker: 5, steady_signal: 6, beacon_lance: 7 });
+export const SKILL_UNLOCKS = Object.freeze({ power_strike: 1, mend: 1, spark: 2, warding_stance: 3, rallying_light: 4, stormbreaker: 5, steady_signal: 6, beacon_lance: 7, beacon_aegis: 9 });
 
 export function knownSkills(member) {
   const lvl = member?.level || 1;
@@ -71,7 +73,7 @@ export function createCombat({ enemyId, encounterId = null, returnScene = 'town'
   const enemy = { ...base, maxHp: base.hp, statuses: [], loot: base.loot ? base.loot.map((l) => ({ ...l })) : [] };
   return {
     enemy, encounterId, returnScene, turn: 1, over: null,
-    defending: false, wardTurns: 0, heroTimers: {}, enemyTimers: {},
+    defending: false, wardTurns: 0, aegisTurns: 0, heroTimers: {}, enemyTimers: {},
     log: [enemy.intro || `A ${enemy.name} appears!`],
     rewards: null,
   };
@@ -119,7 +121,7 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   if (target !== hero) {
     const ts = heroStats(target);
     const special = e.ability && rng() < (e.ability.chance ?? 0);
-    const d = physicalDamage(e.atk, ts.def, rng, { mult: special ? (e.ability.mult ?? 1) : 1 });
+    const d = physicalDamage(e.atk, ts.def, rng, { mult: special ? (e.ability.mult ?? 1) : 1, warded: (c.aegisTurns || 0) > 0 });
     target.hp = Math.max(0, target.hp - d);
     lines.push(special ? `${e.name} uses ${e.ability.name}! ${target.name} takes ${d}.` : `${e.name} hits ${target.name} for ${d}.`);
     if (target.hp <= 0) lines.push(`${target.name} is knocked out!`);
@@ -129,10 +131,11 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
     }
     c.defending = false;
     if (c.wardTurns > 0) c.wardTurns -= 1;
+    if (c.aegisTurns > 0) c.aegisTurns -= 1;
     return lines;
   }
   const hs = heroStats(hero);
-  const warded = c.defending || c.wardTurns > 0;
+  const warded = c.defending || c.wardTurns > 0 || (c.aegisTurns || 0) > 0;
   const special = e.ability && rng() < (e.ability.chance ?? 0);
   if (special) {
     const ab = e.ability;
@@ -151,6 +154,7 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   // Defend lasts exactly one enemy action; ward counts down per enemy action.
   c.defending = false;
   if (c.wardTurns > 0) c.wardTurns -= 1;
+  if (c.aegisTurns > 0) c.aegisTurns -= 1;
   if (hero.hp <= 0) { c.over = 'defeat'; lines.push(`${hero.name} collapses...`); }
   return lines;
 }
@@ -261,6 +265,9 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
           if (had) lines.push(`${m.name} steadies.`);
         }
         if (c.heroTimers) { delete c.heroTimers.bleeding; delete c.heroTimers.shocked; }
+      } else if (sk.kind === 'party_ward') {
+        c.aegisTurns = sk.turns || 3;
+        lines.push(`${hero.name} raises a Beacon Aegis over the party!`);
       } else if (sk.kind === 'ward') {
         c.wardTurns = 2;
         lines.push(`${hero.name} settles into a Warding Stance.`);
