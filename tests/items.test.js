@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { ITEMS, getItem, GOLD_ID, TYPES, SLOTS } from '../src/items/items.js';
+import { ITEMS, getItem, isKnownItem, canEquip, GOLD_ID, TYPES, SLOTS } from '../src/items/items.js';
 import {
   createInventory, addItem, removeItem, countItem, hasItems,
   grantRewards, takeRewards, serializeInventory, deserializeInventory,
@@ -11,6 +11,7 @@ import {
   createEquipment, equipItem, unequipItem, totalStats, effectiveStats, canActorEquip,
 } from '../src/items/equipment.js';
 import { rollLoot, rollLootForEnemies } from '../src/items/loot.js';
+import { shopCatalog } from '../src/items/shop.js';
 
 const makeActor = () => ({
   id: 'hero', name: 'Wren', hp: 30, maxHp: 30, mp: 10, maxMp: 10, atk: 6, def: 3, spd: 5,
@@ -150,4 +151,58 @@ test('catalog hygiene: valid ids, types, slots and no off-theme words', () => {
   }
   assert.ok(getItem('healing_herb'));
   assert.throws(() => getItem('nope'));
+});
+
+// --- Hardening regressions (post-!4 review) ---
+test('getItem rejects inherited Object keys like constructor/toString', () => {
+  assert.throws(() => getItem('constructor'), /Unknown item id/);
+  assert.throws(() => getItem('toString'), /Unknown item id/);
+  assert.equal(isKnownItem('constructor'), false);
+  assert.equal(isKnownItem('toString'), false);
+  assert.equal(isKnownItem('healing_herb'), true);
+});
+
+test('canEquip rejects inherited keys', () => {
+  assert.equal(canEquip('constructor'), false);
+});
+
+test('addItem rejects inherited-key ids', () => {
+  const res = addItem(createInventory(), 'constructor', 1);
+  assert.equal(res.ok, false);
+});
+
+test('deserializeInventory rejects crafted constructor-id stacks', () => {
+  const res = deserializeInventory('[{"id":"constructor","qty":2}]');
+  assert.equal(res.ok, false);
+  const res2 = deserializeInventory('[{"id":"valueOf","qty":1}]');
+  assert.equal(res2.ok, false);
+});
+
+test('takeRewards rejects non-positive quantities atomically', () => {
+  const inv = grantRewards(createInventory(), [
+    { id: 'scrap_metal', qty: 5 },
+    { id: 'storm_glass', qty: 5 },
+  ]).inv;
+  // GPT-6's bug report: {scrap_metal:1, storm_glass:-1} used to strip scrap_metal and report success
+  const res = takeRewards(inv, { scrap_metal: 1, storm_glass: -1 });
+  assert.equal(res.ok, false);
+  assert.deepEqual(res.inv, inv);
+  const res0 = takeRewards(inv, { scrap_metal: 0 });
+  assert.equal(res0.ok, false);
+  assert.deepEqual(res0.inv, inv);
+  const res2 = takeRewards(inv, { scrap_metal: 1.5 });
+  assert.equal(res2.ok, false);
+  assert.deepEqual(res2.inv, inv);
+});
+
+test('grantRewards stays atomic on bad quantities', () => {
+  const inv = createInventory();
+  const res = grantRewards(inv, { scrap_metal: 2, storm_glass: -3 });
+  assert.equal(res.ok, false);
+  assert.deepEqual(res.inv, inv);
+});
+
+test('shopCatalog filters inherited-key ids', () => {
+  const rows = shopCatalog({ stock: ['rations', 'constructor', 'toString'] });
+  assert.deepEqual(rows.map((r) => r.id), ['rations']);
 });

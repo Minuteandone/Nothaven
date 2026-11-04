@@ -2,7 +2,7 @@
 // A shop is plain data: `{ id, name, greeting, stock: [itemId...] }`. Buying spends
 // state.gold, selling earns sellPrice. All functions are pure and JSON-safe.
 
-import { ITEMS, getItem, GOLD_ID } from './items.js';
+import { ITEMS, getItem, GOLD_ID, isKnownItem } from './items.js';
 import { addItem } from './inventory.js';
 
 /** The Greyhaven general trader's starting stock. */
@@ -92,7 +92,7 @@ export function sellItem(state, itemId, qty = 1) {
  */
 export function shopCatalog(shop) {
   return (shop.stock || []).map((id) => {
-    const it = ITEMS[id];
+    const it = isKnownItem(id) ? ITEMS[id] : null;
     return it ? { id, name: it.name, price: it.price ?? 0, sellPrice: it.sellPrice ?? 0, type: it.type, description: it.description } : null;
   }).filter(Boolean);
 }
