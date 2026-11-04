@@ -178,3 +178,10 @@ test('new chapter-three content carries no egg vocabulary', () => {
   const blob = parts.join(' ');
   assert.ok(!EGG_RE.test(blob), `egg reference found in chapter-three content: ${blob.match(EGG_RE)}`);
 });
+
+test('relay outpost stocks cures and MP sustain for relay hazards', () => {
+  const stock = SHOPS.relay_outpost.stock.map(getItem);
+  assert.ok(stock.some((it) => it.use && it.use.cure === 'bleeding'), 'bleeding cure in stock');
+  assert.ok(stock.some((it) => it.use && it.use.cure === 'shocked'), 'shocked cure in stock');
+  assert.ok(stock.some((it) => it.use && it.use.mp > 0), 'MP consumable in stock');
+});
