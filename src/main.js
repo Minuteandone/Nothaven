@@ -13,6 +13,7 @@ import { endingScene, installEnding } from './scenes/ending.js';
 import { installAudio } from './audio/controls.js';
 import { installQuestJournal } from './scenes/quests.js';
 import { guideScene } from './scenes/guide.js';
+import { installCharacter } from './scenes/character.js';
 
 const game = new Game(document.getElementById('app'));
 game.registerScene('title', titleScene);
@@ -28,6 +29,7 @@ installBag(game); // registers the 'bag' scene (inventory screen)
 installCompanions(game); // registers the 'muster' scene (recruit companions)
 installQuestJournal(game);
 installBestiary(game); // registers the 'bestiary' scene + records defeated foes
+installCharacter(game); // registers Wren's read-only character sheet
 installEnding(game); // after installStory so the story state is already updated
 installAudio(game); // creates no AudioContext until the player explicitly enables sound
 game.setScene('title');
