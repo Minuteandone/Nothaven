@@ -18,7 +18,7 @@ export const townScene = {
       s.gold -= 5; s.party.forEach(p => { p.hp = p.maxHp; p.mp = p.maxMp; });
       game.message = 'You rest at the inn and wake refreshed.';
     },
-    explore(game) { game.setScene('combat', { enemyId: 'storm_rat' }); },
+    explore(game) { game.setScene(game.scenes.explore ? 'explore' : 'combat', game.scenes.explore ? undefined : { enemyId: 'storm_rat' }); },
     save(game) { saveGame(game.state); game.message = 'Game saved.'; },
   },
 };
