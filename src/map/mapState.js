@@ -193,12 +193,28 @@ function appendLog(mapState, line) {
   mapState.log = [...(mapState.log || []).slice(-19), line];
 }
 
+// Shared locks cover direct helpers, action buttons, and walking onto tiles.
+function zoneLockReason(gameState, zone) {
+  return zone?.requiresStoryFlag && gameState.story?.flags?.[zone.requiresStoryFlag] !== true
+    ? zone.travelRequirementMessage || 'Complete the required expedition before entering this area.' : null;
+}
+function encounterLockReason(mapState, encounter) {
+  return encounter?.requiresInteractions?.some(id => mapState.completedInteractions[id] !== true)
+    ? encounter.requirementMessage || 'Complete the required inspections before engaging.' : null;
+}
+function lockedResult(gameState, message) {
+  appendLog(gameState.map, message);
+  return { state: gameState, moved: false, transitioned: false, events: [], log: [message], triggerCombat: null };
+}
+
 export function travelToZone(gameState, toZoneId, spawnKey = 'default') {
   const mapState = ensureMapState(gameState);
   const targetZone = ZONES[toZoneId];
   if (!targetZone) {
     return { state: gameState, events: [], log: [`Unknown destination: ${toZoneId}`] };
   }
+  const lock = zoneLockReason(gameState, targetZone);
+  if (lock) return lockedResult(gameState, lock);
   const spawn = targetZone.spawns?.[spawnKey] || targetZone.spawns?.default || { x: 1, y: 1 };
   mapState.zoneId = targetZone.id;
   mapState.x = spawn.x;
@@ -231,6 +247,11 @@ export function movePlayer(gameState, dx, dy, options = {}) {
     return interactWith(gameState, 'talk', npc.id);
   }
 
+  const nextExit = (zone.exits || []).find(ex => ex.x === nx && ex.y === ny);
+  const nextEncounter = (zone.encounters || []).find(e => e.x === nx && e.y === ny && !mapState.clearedEncounters[e.encounterId || e.id]);
+  const lock = zoneLockReason(gameState, ZONES[nextExit?.toZone]) || encounterLockReason(mapState, nextEncounter);
+  if (lock) return lockedResult(gameState, lock);
+
   mapState.x = nx;
   mapState.y = ny;
   mapState.steps = (mapState.steps || 0) + 1;
@@ -244,7 +265,7 @@ export function movePlayer(gameState, dx, dy, options = {}) {
     return {
       state: gameState,
       moved: true,
-      transitioned: true,
+      transitioned: Boolean(res.transitioned),
       events: res.events,
       log: res.log,
       triggerCombat: null,
@@ -345,6 +366,8 @@ export function interactWith(gameState, kind, targetId, options = {}) {
       events.push({ type: 'victory', encounterId: encId, enemyId: enc.enemyId });
       return { state: gameState, events, log: [msg], triggerCombat: null };
     }
+    const lock = encounterLockReason(mapState, enc);
+    if (lock) return lockedResult(gameState, lock);
     mapState.activeEncounterId = encId;
     const msg = `Engaging ${enc.name}!`;
     appendLog(mapState, msg);

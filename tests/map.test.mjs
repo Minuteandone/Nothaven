@@ -75,7 +75,7 @@ function makeMockGame() {
 }
 
 test('zones match required story location, NPC, interaction, and encounter IDs', () => {
-  assert.deepEqual(ZONE_ORDER, ['greyhaven', 'ridge_road', 'observatory_ruins', 'beacon_tower', 'saltmere_coast', 'highwatch_pass', 'sunscar_relay', 'stormcrown_spire']);
+  assert.deepEqual(ZONE_ORDER, ['greyhaven', 'ridge_road', 'observatory_ruins', 'beacon_tower', 'saltmere_coast', 'highwatch_pass', 'sunscar_relay', 'stormcrown_spire', 'storms_eye']);
   const npcIds = ZONES.greyhaven.npcs.map((n) => n.id);
   assert.deepEqual(npcIds, ['mara', 'iven', 'tamsin']);
   assert.equal(ZONES.ridge_road.encounters[0].encounterId, 'ridge_patrol');
