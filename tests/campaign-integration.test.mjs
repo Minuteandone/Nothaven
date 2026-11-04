@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { Game } from '../src/engine.js';
 import { saveGame, loadGame } from '../src/state.js';
 import { combatScene } from '../src/scenes/combat.js';
+import { installBag } from '../src/scenes/bag.js';
+import { getJournal } from '../src/story/index.js';
 import { installBestiary } from '../src/scenes/bestiary.js';
 import { getItem } from '../src/items/items.js';
 import { installCompanions } from '../src/scenes/muster.js';
@@ -43,6 +45,7 @@ function harness(t) {
   t.after(installEnding(game));
   installProgression(game);
   installShop(game);
+  installBag(game);
   installCompanions(game);
   t.after(installBestiary(game));
   t.after(installMap(game, { enableKeyboard: false }));
@@ -680,6 +683,113 @@ function heartJourney(game, early, first) {
   assert.deepEqual(game.state.flags, endingFlags);
 }
 
+function squallJourney(game) {
+  const prior = structuredClone(game.state.story);
+  const endingFlags = structuredClone(game.state.flags);
+  const restPrice = prior.flags.relay_choice === 'shelter_network' ? 2 : 5;
+  const rest = () => {
+    act(game, 'toTownScene');
+    const gold = game.state.gold;
+    act(game, 'rest');
+    assert.equal(game.state.gold, gold - restPrice);
+    act(game, 'explore');
+  };
+  const reachEye = () => {
+    for (const zone of ['ridge_road', 'highwatch_pass', 'sunscar_relay', 'stormcrown_spire', 'storms_eye']) walkExit(game, zone);
+  };
+  assert.equal(game.state.map.zoneId, 'greyhaven');
+  act(game, 'openBag');
+  const materials = structuredClone(game.state.inventory);
+  act(game, 'craft', 'string_heartward_charm');
+  for (const [id, qty] of [['stormcrown_shard', 1], ['salvaged_wiring', 2], ['storm_glass', 1]]) {
+    assert.equal(countItem(game.state.inventory, id), countItem(materials, id) - qty);
+  }
+  act(game, 'equip', 'heartward_charm');
+  assert.equal(game.state.party[0].equipment.trinket, 'heartward_charm');
+  act(game, 'selectMember', '1'); act(game, 'equip', 'relay_glaive');
+  assert.equal(game.state.party[1].equipment.weapon, 'relay_glaive');
+  act(game, 'leave'); rest(); reachEye();
+  walkTo(game, 4, 5); act(game, 'mapInteract', 'storms_eye_post');
+  const shoppingGold = game.state.gold;
+  act(game, 'buy', 'maelstrom_plate');
+  assert.equal(game.state.gold, shoppingGold - getItem('maelstrom_plate').price);
+  act(game, 'leave'); act(game, 'openBag');
+  act(game, 'selectMember', '1'); act(game, 'equip', 'maelstrom_plate');
+  assert.equal(game.state.party[1].equipment.armor, 'maelstrom_plate');
+  act(game, 'leave'); walkExit(game, 'greyhaven'); rest();
+  // Six ordinary earned patrol wins, with explicit contracts and paid recovery.
+  for (let contract = 0; contract < 3; contract++) {
+    act(game, 'storyExpedition', 'eye_sweep'); reachEye();
+    for (let kill = 1; kill <= 2; kill++) {
+      game.mapRng = () => 0.25; act(game, 'mapPatrol'); delete game.mapRng;
+      assert.equal(game.state.combat.enemy.id, 'tempest_shade');
+      assert.equal(game.state.combat.encounterId, null);
+      for (let turn = 0; !game.state.combat.over && turn < 100; turn++) act(game, 'attack');
+      assert.equal(game.state.combat.over, 'victory');
+      assert.equal(game.state.story.expedition.active.progress, kill);
+      act(game, 'finish');
+    }
+    walkExit(game, 'greyhaven');
+    const gold = game.state.gold;
+    act(game, 'storyExpedition', 'claim');
+    assert.equal(game.state.gold, gold + 90);
+    rest(); checkpoint(game, 'complete');
+  }
+  assert.ok(game.state.party.every(member => member.level >= 15), 'levels earned through actual encounters');
+  assert.equal(game.state.story.flags.victory_last_squall, undefined);
+  assert.equal(getJournal(game.state.story).find(entry => entry.id === 'last_squall').status, 'active');
+  reachEye(); walkTo(game, 4, 2);
+  game.combatRng = () => 0.4;
+  act(game, 'mapEncounter', 'eye_last_squall');
+  assert.equal(game.state.combat.enemy.id, 'last_squall');
+  assert.equal(game.state.combat.enemy.maxHp, 1500);
+  const beforeFight = game.state.gold;
+  const beforeLoot = structuredClone(game.state.inventory);
+  const beforeXp = game.state.party.map(member => member.xp);
+  for (let turn = 0; !game.state.combat.over && turn < 100; turn++) {
+    const combat = game.state.combat, hero = game.state.party[0];
+    if (hero.mp < 8) {
+      assert.ok(countItem(game.state.inventory, 'storm_tonic') > 0);
+      act(game, 'item', 'storm_tonic');
+    } else if (game.state.party.some(member => member.hp > 0 && member.hp < member.maxHp * 0.55)) {
+      act(game, 'skill', 'rallying_light');
+    } else if (!(combat.aegisTurns > 0)) {
+      act(game, 'skill', 'beacon_aegis');
+    } else act(game, 'attack');
+  }
+  delete game.combatRng;
+  assert.equal(game.state.combat.over, 'victory');
+  assert.equal(game.state.combat.enraged, true);
+  assert.match(game.state.combat.log.join(' '), /Rolling Thunder/);
+  assert.equal(game.state.gold, beforeFight + 320, 'only combat spoils, no extra quest payment');
+  for (const [id, qty] of [['thunder_iron', 4], ['stormcrown_shard', 2], ['ember_broth', 2]]) {
+    assert.equal(countItem(game.state.inventory, id), countItem(beforeLoot, id) + qty);
+  }
+  game.state.party.forEach((member, index) => assert.equal(member.xp, beforeXp[index] + 420));
+  const rewardedInventory = structuredClone(game.state.inventory);
+  act(game, 'finish');
+  assert.deepEqual(game.state.inventory, rewardedInventory, 'Finish does not duplicate loot');
+  assert.equal(game.state.gold, beforeFight + 320, 'Finish does not duplicate gold');
+  assert.equal(game.state.map.clearedEncounters.eye_last_squall, true);
+  assert.equal(game.state.story.flags.victory_last_squall, true);
+  assert.equal(game.state.bestiary.last_squall, 1);
+  checkpoint(game, 'complete');
+  assert.doesNotMatch(game.root.innerHTML, /data-action="mapEncounter" data-arg="eye_last_squall"/);
+  act(game, 'mapEncounter', 'eye_last_squall');
+  assert.equal(game.state.scene, 'explore', 'cleared superboss cannot restart');
+  assert.equal(game.state.bestiary.last_squall, 1);
+  assert.equal(getJournal(game.state.story).find(entry => entry.id === 'last_squall').status, 'complete');
+  walkExit(game, 'greyhaven');
+  const finalGold = game.state.gold;
+  act(game, 'storyHeart', 'report');
+  assert.equal(game.state.gold, finalGold, 'no second Heart payment after superboss');
+  assert.doesNotMatch(game.root.innerHTML, /data-action="storyHeart" data-arg="report"/);
+  for (const [key, value] of Object.entries(prior.flags)) assert.deepEqual(game.state.story.flags[key], value, `Squall preserves ${key}`);
+  assert.equal(game.state.story.ending, prior.ending);
+  assert.deepEqual(game.state.flags, endingFlags);
+  checkpoint(game, 'complete');
+}
+
 for (const ending of ['protect_town', 'share_signal']) {
   for (const early of [false, true]) {
     for (const first of ['coast', 'heights']) for (const relayChoice of ['shelter_network', 'route_network']) {
@@ -790,6 +900,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         spireJourney(game, relayChoice, early);
         companionJourney(game, early, first);
         heartJourney(game, early, first);
+        squallJourney(game);
       });
     }
   }
