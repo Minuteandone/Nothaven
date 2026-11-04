@@ -2,6 +2,7 @@
 // current save. Nothing here changes state; feats are derived, never stored.
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { MAX_PARTY } from '../party/companions.js';
+import { DRILL_FOES, drillRecord } from './drills.js';
 
 const flagsOf = state => state?.story?.flags || {};
 const heroOf = state => (Array.isArray(state?.party) ? state.party[0] : null) || null;
@@ -24,6 +25,8 @@ export const FEATS = Object.freeze([
     check: s => flagsOf(s).victory_last_squall === true }),
   Object.freeze({ id: 'watch', title: 'Keeper of the Long Watch', detail: 'Take fresh readings at the harbor lamp, the Highwatch cairn and the forecast stand, then report them to Mara.',
     check: s => flagsOf(s).watch_reward === true }),
+  Object.freeze({ id: 'yard', title: 'Yard Champion', detail: 'Win a Sparring Drill against every boss in the Watch House yard.',
+    check: s => DRILL_FOES.length > 0 && DRILL_FOES.every(id => drillRecord(s, id).wins >= 1) }),
   Object.freeze({ id: 'muster', title: 'Full Muster', detail: 'March with a full party of three.',
     check: s => Array.isArray(s?.party) && s.party.length >= MAX_PARTY }),
   Object.freeze({ id: 'commissions', title: 'Trusted by All', detail: 'Complete every companion commission.',
