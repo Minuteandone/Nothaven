@@ -59,3 +59,21 @@ MRs, one reviewer minimum, tests green before merge.
   `story?.flags || {}` guard.
 - State must stay JSON-serializable and save-compatible; bump the save version
   only for real schema changes.
+
+## Adding an optional field-trial boss
+
+Field trials (Old Tusk, Gloomfin, Frostmane, the Lenswarden) follow one proven
+pattern. Reuse it end to end:
+
+- Define the enemy with `boss: true, drill: false` so the Watch House yard
+  roster, drills, gauntlet and the feats derived from them stay unchanged.
+- Add one map encounter: a unique `encounterId` (`<zone>_<name>`), `symbol:
+  '!'`, `main: false`, on an open, reachable tile with no other entity there,
+  gated by `requiresStoryFlag` plus a `requirementMessage`.
+- Loot only existing frozen item ids; add a `fieldTips` entry and a bestiary
+  art resolution (`foeArt` may reuse an existing kind instead of new SVG).
+- Cover it in tests: stats, gating and loot ids, open tile plus no collision,
+  exclusion from the drill roster, and the content regex over every prose
+  string.
+- Align every docs claim (player guide, map README) with the code before
+  requesting review.
