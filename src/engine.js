@@ -1,0 +1,32 @@
+import { createInitialState } from './state.js';
+import { bus } from './events.js';
+
+// Scene contract: { render(game) -> html string, onEnter?(game, data), actions?: { name(game, el) } }
+// Buttons use data-action="name" (optional data-arg="...") to call scene actions.
+export class Game {
+  constructor(root) {
+    this.root = root;
+    this.state = createInitialState();
+    this.scenes = {};
+    this.bus = bus;
+    root.addEventListener('click', (e) => {
+      const el = e.target.closest('[data-action]');
+      if (!el) return;
+      const scene = this.scenes[this.state.scene];
+      const fn = scene?.actions?.[el.dataset.action];
+      if (fn) { fn(this, el); this.render(); }
+    });
+  }
+  registerScene(name, scene) { this.scenes[name] = scene; }
+  setScene(name, data) {
+    if (!this.scenes[name]) throw new Error(`Unknown scene: ${name}`);
+    this.state.scene = name;
+    this.scenes[name].onEnter?.(this, data);
+    bus.emit('scene:enter', { name, data });
+    this.render();
+  }
+  render() {
+    const scene = this.scenes[this.state.scene];
+    this.root.innerHTML = scene ? scene.render(this) : '<p>Missing scene</p>';
+  }
+}

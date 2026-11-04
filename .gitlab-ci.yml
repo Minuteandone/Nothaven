@@ -1,0 +1,17 @@
+stages: [check, deploy]
+
+syntax:
+  stage: check
+  image: node:20
+  script:
+    - for f in $(find src -name '*.js'); do node --check "$f"; done
+
+pages-deploy:
+  stage: deploy
+  image: node:20
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  script:
+    - mkdir -p public && cp -r index.html style.css src public/
+    - npx --yes wrangler@3 pages project create stormhaven-rpg --production-branch=main || true
+    - npx --yes wrangler@3 pages deploy public --project-name=stormhaven-rpg --branch=main
