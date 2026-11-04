@@ -29,6 +29,7 @@ export const townScene = {
           <div class="action-list">
             ${uiButton({ action: 'rest', label: 'Rest at the inn · 5 gold', iconName: 'bed', disabled: s.gold < 5 })}
             ${uiButton({ action: 'shop', label: "Hesta's Goods", iconName: 'coin', variant: 'ghost' })}
+            ${game.scenes?.bag ? uiButton({ action: 'bag', label: 'Open your bag', iconName: 'bag', variant: 'ghost' }) : ''}
             ${game.scenes?.muster ? uiButton({ action: 'muster', label: 'Watch House muster board', iconName: 'shield', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'explore', label: 'Explore the wilds', iconName: 'map', variant: 'primary' })}
             ${uiButton({ action: 'save', label: 'Save journey', iconName: 'save', variant: 'ghost' })}
@@ -45,6 +46,7 @@ export const townScene = {
       game.message = 'You rest at the inn and wake refreshed.';
     },
     shop(game) { game.setScene('shop', { returnScene: 'town' }); },
+    bag(game) { if (game.scenes?.bag) game.setScene('bag', { returnScene: 'town' }); },
     muster(game) { if (game.scenes?.muster) game.setScene('muster', { returnScene: 'town' }); },
     explore(game) { game.setScene('explore'); },
     save(game) { saveGame(game.state); game.message = 'Game saved.'; },

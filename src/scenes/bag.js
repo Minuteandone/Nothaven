@@ -1,0 +1,184 @@
+// Bag scene — full inventory screen for Beacon of Stormhaven.
+// Thin UI over the pure item helpers in src/items/. Mirrors the shop
+// scene's rules: every rendered string is escaped, every mutation goes
+// through the pure helpers, and results are written back to state.
+
+import { getItem, isKnownItem, canEquip, TYPES, SLOTS } from '../items/items.js';
+import { equipItem, unequipItem, effectiveStats, createEquipment } from '../items/equipment.js';
+import { useConsumable } from '../items/consumables.js';
+
+const esc = (v) =>
+  String(v ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const SLOT_LABELS = { weapon: 'Weapon', armor: 'Armor', trinket: 'Trinket' };
+
+const TYPE_ORDER = [TYPES.CONSUMABLE, TYPES.EQUIPMENT, TYPES.MATERIAL, TYPES.KEY];
+const TYPE_TITLES = {
+  [TYPES.CONSUMABLE]: 'Consumables',
+  [TYPES.EQUIPMENT]: 'Gear',
+  [TYPES.MATERIAL]: 'Materials',
+  [TYPES.KEY]: 'Key items',
+};
+
+function statSummary(stats) {
+  if (!stats) return '';
+  const parts = [];
+  if (stats.atk) parts.push(`ATK+${stats.atk}`);
+  if (stats.def) parts.push(`DEF+${stats.def}`);
+  if (stats.hp) parts.push(`HP+${stats.hp}`);
+  if (stats.mp) parts.push(`MP+${stats.mp}`);
+  if (stats.spd) parts.push(`SPD+${stats.spd}`);
+  return parts.join(' · ');
+}
+
+/** Active party member for bag operations, clamped into range (hero default). */
+function activeMember(game) {
+  const party = game.state?.party || [];
+  let index = Number.isInteger(game.bagMemberIndex) ? game.bagMemberIndex : 0;
+  if (index < 0 || index >= party.length) index = 0;
+  const member = party[index] || party[0] || null;
+  if (member && !member.equipment) member.equipment = createEquipment();
+  return { member, index, party };
+}
+
+function memberTabs(party, index) {
+  if (party.length <= 1) return '';
+  const tabs = party
+    .map((m, i) =>
+      `<button data-action="selectMember" data-arg="${i}"${i === index ? ' disabled' : ''}>${esc(m.name || `Member ${i + 1}`)}${m.companion ? ' (ally)' : ''}</button>`)
+    .join('');
+  return `<div class="bag-members" role="tablist" aria-label="Choose whose bag to use">${tabs}</div>`;
+}
+
+function bagRow(item, stack, member) {
+  const sum = statSummary(item.stats);
+  let controls = '';
+  if (item.type === TYPES.CONSUMABLE) {
+    controls = `<button data-action="use" data-arg="${esc(item.id)}">Use</button>`;
+  } else if (item.type === TYPES.EQUIPMENT && canEquip(item.id)) {
+    const equippedHere = member?.equipment?.[item.slot] === item.id;
+    controls =
+      `<button data-action="equip" data-arg="${esc(item.id)}">Equip</button>` +
+      (equippedHere ? ` <button data-action="unequip" data-arg="${esc(item.slot)}">Unequip ${SLOT_LABELS[item.slot] || esc(item.slot)}</button>` : '');
+  }
+  return (
+    `<li class="bag-row">` +
+    `<span class="bag-name">${esc(item.name)} ×${stack.qty}</span>` +
+    (item.description ? ` <span class="bag-desc">${esc(item.description)}</span>` : '') +
+    (sum ? ` <span class="bag-stats">${esc(sum)}</span>` : '') +
+    (controls ? `<span class="bag-controls">${controls}</span>` : '') +
+    `</li>`
+  );
+}
+
+export const bagScene = {
+  onEnter(game, data = {}) {
+    game.bagReturnScene = data.returnScene ?? 'town';
+    game.bagMemberIndex = 0;
+    game.bagMessage = data.message ?? '';
+  },
+
+  render(game) {
+    const s = game.state || {};
+    const { member, index, party } = activeMember(game);
+    const eff = member ? effectiveStats(member) : null;
+    const statsLine = member && eff
+      ? `HP ${member.hp ?? 0}/${eff.maxHp} · MP ${member.mp ?? 0}/${eff.maxMp} · ATK ${eff.atk} · DEF ${eff.def} · SPD ${eff.spd}`
+      : '';
+
+    const equippedRows = member
+      ? SLOTS.map((slot) => {
+          const id = member.equipment?.[slot];
+          if (!id) return '';
+          const item = isKnownItem(id) ? getItem(id) : null;
+          const label = SLOT_LABELS[slot] || slot;
+          return (
+            `<li class="bag-row">` +
+            `<span class="bag-name">${esc(item?.name ?? id)}</span>` +
+            ` <span class="bag-desc">${esc(label)}</span>` +
+            ` <span class="bag-controls"><button data-action="unequip" data-arg="${esc(slot)}">Unequip ${esc(label)}</button></span>` +
+            `</li>`
+          );
+        }).join('')
+      : '';
+    const equippedSection = equippedRows
+      ? `<section class="bag-group" aria-label="Equipped"><h3>Equipped</h3><ul class="bag-list">${equippedRows}</ul></section>`
+      : '';
+
+    const sections = TYPE_ORDER.map((type) => {
+      const stacks = (s.inventory || []).filter(
+        (st) => isKnownItem(st.id) && getItem(st.id).type === type,
+      );
+      if (!stacks.length) return '';
+      const rows = stacks.map((st) => bagRow(getItem(st.id), st, member)).join('');
+      return `<section class="bag-group" aria-label="${TYPE_TITLES[type]}"><h3>${TYPE_TITLES[type]}</h3><ul class="bag-list">${rows}</ul></section>`;
+    }).join('');
+
+    return `<main class="game-shell bag-screen">
+      <h2>Bag</h2>
+      <p class="bag-gold">Gold: ${esc(s.gold ?? 0)}</p>
+      ${memberTabs(party, index)}
+      ${member ? `<p class="bag-member-stats">${esc(member.name)} — ${esc(statsLine)}</p>` : ''}
+      ${game.bagMessage ? `<p class="bag-message" role="status">${esc(game.bagMessage)}</p>` : ''}
+      ${equippedSection}
+      ${sections || '<p class="bag-empty">Your bag is empty.</p>'}
+      <button data-action="leave">Back</button>
+    </main>`;
+  },
+
+  actions: {
+    selectMember(game, el) {
+      const n = Number.parseInt(el?.dataset?.arg, 10);
+      if (Number.isInteger(n)) game.bagMemberIndex = n;
+    },
+
+    use(game, el) {
+      const id = el?.dataset?.arg;
+      if (!id || !isKnownItem(id)) { game.bagMessage = 'Unknown item.'; return; }
+      const { member, index } = activeMember(game);
+      if (!member) return;
+      const res = useConsumable(member, game.state.inventory, id);
+      game.bagMessage = res.ok ? `${res.actor.name} — ${res.message}` : res.message;
+      if (res.ok) {
+        game.state.party[index] = res.actor;
+        game.state.inventory = res.inv;
+      }
+    },
+
+    equip(game, el) {
+      const id = el?.dataset?.arg;
+      if (!id || !isKnownItem(id)) { game.bagMessage = 'Unknown item.'; return; }
+      const { member, index } = activeMember(game);
+      if (!member) return;
+      const res = equipItem(member, game.state.inventory, id);
+      game.bagMessage = res.message || '';
+      if (res.ok) {
+        game.state.party[index] = res.actor;
+        game.state.inventory = res.inv;
+      }
+    },
+
+    unequip(game, el) {
+      const slot = el?.dataset?.arg;
+      if (!slot) return;
+      const { member, index } = activeMember(game);
+      if (!member) return;
+      const res = unequipItem(member, game.state.inventory, slot);
+      game.bagMessage = res.message || '';
+      if (res.ok) {
+        game.state.party[index] = res.actor;
+        game.state.inventory = res.inv;
+      }
+    },
+
+    leave(game) {
+      game.setScene(game.bagReturnScene || 'town');
+    },
+  },
+};
+
+/** Register the bag scene (call once during boot). */
+export function installBag(game) {
+  game.registerScene('bag', bagScene);
+}
