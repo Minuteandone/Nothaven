@@ -2,8 +2,10 @@ import { saveGame } from '../state.js';
 import { createStoryState, getDialogue } from '../story/index.js';
 import { createStoryUI } from '../story/view.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
+import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
 import { ZONES } from './zones.js';
 import {
+  craftInField,
   ensureMapState,
   getAvailableActions,
   getEntityAt,
@@ -45,6 +47,11 @@ function handleActionResult(game, result) {
   }
   emitMapEvents(game, result.events);
 
+  if (result.triggerShop && game.scenes?.shop) {
+    game.setScene('shop', { returnScene: 'explore' });
+    return;
+  }
+
   if (result.triggerCombat) {
     const { encounterId, enemyId } = result.triggerCombat;
     game.setScene('combat', {
@@ -57,6 +64,13 @@ function handleActionResult(game, result) {
 
 function renderFieldPackHtml(inventory) {
   const stacks = Array.isArray(inventory) ? inventory.filter((s) => s && s.qty > 0) : [];
+  const craftButtons = listRecipes()
+    .filter((r) => recipeInputsMet(stacks, r).ok)
+    .map(
+      (r) =>
+        `<button data-action="craftFieldItem" data-arg="${escapeHtml(r.id)}" title="${escapeHtml(recipeSummary(r))}">Craft: ${escapeHtml(r.name)}</button>`
+    );
+
   if (stacks.length === 0) {
     return `<div style="margin-top:0.5rem;font-size:0.9rem;color:var(--muted);"><strong>Field Pack:</strong> Empty</div>`;
   }
@@ -75,6 +89,7 @@ function renderFieldPackHtml(inventory) {
     <div style="margin-top:0.5rem;font-size:0.9rem;">
       <div><strong>Field Pack:</strong> ${itemsSummary.join(' · ')}</div>
       ${consumableButtons.length ? `<div style="margin-top:0.25rem;">${consumableButtons.join('')}</div>` : ''}
+      ${craftButtons.length ? `<div style="margin-top:0.25rem;"><strong>Craft Ready:</strong> ${craftButtons.join('')}</div>` : ''}
     </div>
   `;
 }
@@ -246,7 +261,7 @@ export const exploreScene = {
           </div>
         </div>
         <div style="margin-top:0.5rem;font-size:0.85rem;color:var(--muted);">
-          Legend: <strong>@</strong> Hero · <strong>M/I/T</strong> NPCs · <strong>!</strong> Encounter · <strong>✉/◈/▣/?/✦</strong> Objects · <strong>╬</strong> Zone Exit · <strong>#</strong> Wall · <strong>≈</strong> Chasm
+          Legend: <strong>@</strong> Hero · <strong>M/I/T</strong> NPCs · <strong>!</strong> Encounter · <strong>✉/◈/▣/$/?/✦</strong> Objects · <strong>╬</strong> Zone Exit · <strong>#</strong> Wall · <strong>≈</strong> Chasm
         </div>
       </div>
       <div class="panel log" aria-live="polite">
@@ -303,6 +318,11 @@ export const exploreScene = {
       const itemId = el?.dataset?.arg;
       if (!itemId) return;
       useFieldConsumable(game.state, itemId);
+    },
+    craftFieldItem(game, el) {
+      const recipeId = el?.dataset?.arg;
+      if (!recipeId) return;
+      craftInField(game.state, recipeId);
     },
     save(game) {
       saveGame(game.state);
