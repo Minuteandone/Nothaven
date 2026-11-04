@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { Game } from '../src/engine.js';
 import { saveGame, loadGame } from '../src/state.js';
 import { combatScene } from '../src/scenes/combat.js';
-import { installDrills } from '../src/scenes/drills.js';
+import { installDrills, DRILL_FOES, gauntletQueue } from '../src/scenes/drills.js';
+import { featStatus } from '../src/scenes/feats.js';
 import { effectiveStats } from '../src/items/equipment.js';
 import { installBag } from '../src/scenes/bag.js';
 import { getJournal } from '../src/story/index.js';
@@ -815,6 +816,121 @@ function drillJourney(game) {
   game.bus.off('combat:victory', countVictory);
 }
 
+// Restore the earned party through player controls, unlock the remaining field
+// boss on foot, then win and lose real gauntlets without injected progression.
+function gauntletJourney(game) {
+  act(game, 'closeDrills'); act(game, 'muster');
+  for (const id of ['bram', 'sela']) act(game, 'recruit', id);
+  act(game, 'leave'); act(game, 'bag');
+  for (const id of ['maelstrom_edge', 'maelstrom_plate', 'heartward_charm']) act(game, 'equip', id);
+  act(game, 'leave'); act(game, 'rest'); act(game, 'explore');
+  for (const zone of ['ridge_road', 'observatory_ruins', 'beacon_tower']) walkExit(game, zone);
+  winEncounter(game, 'beacon_tide_wraith');
+  walkExit(game, 'greyhaven'); act(game, 'toTownScene'); act(game, 'rest');
+  checkpoint(game, 'complete');
+  const queue = gauntletQueue(game.state);
+  assert.deepEqual(queue, DRILL_FOES, 'all boss unlocks came from actual field victories');
+  assert.equal(queue.length, 7);
+  const champion = () => featStatus(game.state).find(feat => feat.id === 'yard').done;
+  const unbroken = () => featStatus(game.state).find(feat => feat.id === 'gauntlet').done;
+  assert.equal(champion(), false); assert.equal(unbroken(), false);
+  const protectedState = () => structuredClone(Object.fromEntries(
+    ['gold', 'bestiary', 'story', 'flags', 'map', 'location'].map(key => [key, game.state[key]])
+  ));
+  const before = protectedState(), inventory = structuredClone(game.state.inventory);
+  const expectedRecords = structuredClone(game.state.drillRecords || {});
+  let tonicsUsed = 0, fieldVictories = 0;
+  const countVictory = () => { fieldVictories++; };
+  game.bus.on('combat:victory', countVictory);
+  act(game, 'drills'); act(game, 'startGauntlet');
+  for (const [index, id] of queue.entries()) {
+    const combat = game.state.combat, beforeXp = game.state.party.map(member => member.xp);
+    assert.equal(combat.enemy.id, id); assert.equal(combat.drill, true); assert.equal(combat.encounterId, null);
+    assert.deepEqual(combat.gauntlet, { queue, index });
+    const xp = Math.floor(combat.enemy.xp / 2);
+    if (id === 'last_squall') game.combatRng = () => 0.4;
+    for (let turn = 0; !combat.over && turn < 100; turn++) {
+      if (id !== 'last_squall') act(game, 'attack');
+      else if (game.state.party[0].mp < 8) {
+        assert.ok(countItem(game.state.inventory, 'storm_tonic') > 0);
+        act(game, 'item', 'storm_tonic'); tonicsUsed++;
+      } else if (game.state.party.some(member => member.hp > 0 && member.hp < member.maxHp * 0.55)) {
+        act(game, 'skill', 'rallying_light');
+      } else if (!(combat.aegisTurns > 0)) act(game, 'skill', 'beacon_aegis');
+      else act(game, 'attack');
+    }
+    delete game.combatRng;
+    assert.equal(combat.over, 'victory', `earned gauntlet victory against ${id}`);
+    assert.deepEqual(combat.rewards, { xp, gold: 0, items: [] });
+    game.state.party.forEach((member, i) => assert.equal(member.xp, beforeXp[i] + xp));
+    const previous = expectedRecords[id];
+    expectedRecords[id] = { wins: (previous?.wins || 0) + 1, best: previous ? Math.min(previous.best, combat.stats.rounds) : combat.stats.rounds };
+    assert.deepEqual(game.state.drillRecords, expectedRecords);
+    assert.deepEqual(protectedState(), before);
+    const partyAfterCleanup = structuredClone(game.state.party);
+    for (const [i, member] of partyAfterCleanup.entries()) {
+      member.statuses = []; if (i > 0 && member.hp <= 0) member.hp = 1;
+    }
+    act(game, 'finish');
+    assert.deepEqual(game.state.party, partyAfterCleanup, 'HP/MP/XP carry over; only ordinary status cleanup and fallen-ally revival apply');
+    assert.deepEqual(game.state.drillRecords, expectedRecords, 'Finish cannot duplicate the drill record');
+    if (index < queue.length - 1) {
+      assert.equal(game.state.scene, 'combat'); assert.equal(game.state.combat.gauntlet.index, index + 1);
+      assert.equal(game.state.drillGauntlet, undefined, 'an unfinished run is not recorded');
+    } else assert.equal(game.state.scene, 'drills');
+  }
+  assert.equal(game.state.combat, null);
+  assert.deepEqual(game.state.drillGauntlet, { runs: 1, best: queue.length });
+  assert.equal(champion(), true); assert.equal(unbroken(), true);
+  assert.deepEqual(protectedState(), before);
+  const expectedInventory = inventory.map(stack => stack.id === 'storm_tonic' ? { ...stack, qty: stack.qty - tonicsUsed } : stack).filter(stack => stack.qty > 0);
+  assert.deepEqual(game.state.inventory, expectedInventory, 'only explicitly used tonics leave inventory; no drill spoils');
+  assert.match(game.drillsMessage, /Gauntlet complete! You beat all 7 foes/);
+  checkpoint(game, 'complete');
+  assert.deepEqual(game.state.drillRecords, expectedRecords);
+  assert.deepEqual(game.state.drillGauntlet, { runs: 1, best: queue.length });
+  assert.equal(champion(), true); assert.equal(unbroken(), true);
+
+  // A weaker second attempt wins the first bout, then actually loses the next.
+  act(game, 'closeDrills'); act(game, 'muster');
+  for (const id of ['bram', 'sela']) act(game, 'dismiss', id);
+  act(game, 'leave'); act(game, 'bag');
+  for (const slot of ['weapon', 'armor', 'trinket']) act(game, 'unequip', slot);
+  act(game, 'leave'); act(game, 'rest');
+  assert.equal(game.state.party.length, 1);
+  const beforeLoss = protectedState(), beforeLossInventory = structuredClone(game.state.inventory);
+  const beforeFirstXp = game.state.party[0].xp;
+  act(game, 'drills'); act(game, 'startGauntlet');
+  for (let turn = 0; !game.state.combat.over && turn < 100; turn++) act(game, 'attack');
+  assert.equal(game.state.combat.over, 'victory');
+  const first = game.state.combat, prior = expectedRecords[queue[0]];
+  const firstXp = Math.floor(first.enemy.xp / 2);
+  assert.deepEqual(first.rewards, { xp: firstXp, gold: 0, items: [] });
+  assert.equal(game.state.party[0].xp, beforeFirstXp + firstXp);
+  expectedRecords[queue[0]] = { wins: prior.wins + 1, best: Math.min(prior.best, first.stats.rounds) };
+  assert.deepEqual(game.state.drillRecords, expectedRecords);
+  const rewardedXp = game.state.party[0].xp;
+  act(game, 'finish'); assert.equal(game.state.combat.gauntlet.index, 1);
+  for (let turn = 0; !game.state.combat.over && turn < 250; turn++) act(game, 'defend');
+  assert.equal(game.state.combat.over, 'defeat'); assert.equal(game.state.party[0].hp, 0);
+  assert.deepEqual(protectedState(), beforeLoss);
+  assert.deepEqual(game.state.drillRecords, expectedRecords, 'a loss cannot create a win record');
+  act(game, 'finish');
+  assert.equal(game.state.scene, 'drills'); assert.equal(game.state.combat, null);
+  assert.deepEqual(game.state.drillGauntlet, { runs: 2, best: queue.length }, 'a shorter run cannot replace the best');
+  const hero = game.state.party[0], stats = effectiveStats(hero);
+  assert.equal(hero.hp, Math.ceil(stats.maxHp / 2)); assert.equal(hero.mp, stats.maxMp);
+  assert.deepEqual(hero.statuses, []); assert.equal(hero.xp, rewardedXp);
+  assert.deepEqual(protectedState(), beforeLoss); assert.deepEqual(game.state.inventory, beforeLossInventory);
+  assert.match(game.drillsMessage, /ends after 1 of 7 foes/);
+  checkpoint(game, 'complete');
+  assert.deepEqual(game.state.drillRecords, expectedRecords);
+  assert.deepEqual(game.state.drillGauntlet, { runs: 2, best: queue.length });
+  assert.deepEqual(protectedState(), beforeLoss);
+  assert.equal(champion(), true); assert.equal(unbroken(), true); assert.equal(fieldVictories, 0);
+  game.bus.off('combat:victory', countVictory);
+}
+
 function squallJourney(game) {
   const prior = structuredClone(game.state.story);
   const endingFlags = structuredClone(game.state.flags);
@@ -1035,6 +1151,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         watchJourney(game, early, first);
         squallJourney(game);
         drillJourney(game);
+        gauntletJourney(game);
       });
     }
   }
