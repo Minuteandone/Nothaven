@@ -50,7 +50,7 @@ export const recipesScene = {
   render(game) {
     const entries = recipeBookEntries(game.state?.inventory);
     const ready = entries.filter((e) => e.ready).length;
-    return `<div class="panel recipes-book"><h2>Field Recipe Book</h2>
+    return `<div class="panel recipes-book" role="region" aria-label="Field Recipe Book"><h2>Field Recipe Book</h2>
       <p>Camp recipes, from the forge to the field kitchen. Ready with what you carry: <strong>${ready}/${entries.length}</strong>.</p>
       <p class="hint">Craft from your bag anywhere on the road, or at any trader's Craft tab.</p>
       <ul class="recipe-list">${entries.map(entryHtml).join('')}</ul>
