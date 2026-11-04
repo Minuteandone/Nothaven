@@ -383,6 +383,85 @@ function gloomfinJourney(game) {
   act(game, 'toTownScene');
 }
 
+function frostmaneLockedJourney(game) {
+  assert.equal(game.state.story.flags.rescue_reward, undefined);
+  walkExit(game, 'ridge_road');
+  walkExit(game, 'highwatch_pass');
+  walkTo(game, 1, 4);
+  const before = structuredClone(game.state);
+  for (const [action, arg] of [['mapEncounter', 'highwatch_frostmane'], ['moveSouth']]) {
+    act(game, action, arg);
+    assert.match(game.state.map.log.at(-1), /report to Mara/);
+    assert.deepEqual({ ...game.state, map: { ...game.state.map, log: before.map.log } }, before,
+      'the unpaid rescue gate changes only its explanatory map log');
+  }
+  walkExit(game, 'ridge_road');
+  walkExit(game, 'greyhaven');
+}
+
+function frostmaneJourney(game) {
+  assert.equal(game.state.scene, 'town');
+  const beforeRest = game.state.gold;
+  act(game, 'rest');
+  assert.equal(game.state.gold, beforeRest - 5);
+  act(game, 'explore');
+  walkExit(game, 'ridge_road');
+  walkExit(game, 'highwatch_pass');
+  walkTo(game, 1, 4);
+  assert.equal(game.state.story.flags.rescue_reward, true);
+  assert.equal(game.state.bestiary?.frostmane, undefined);
+  assert.equal(featStatus(game.state).find(f => f.id === 'frostmane').done, false);
+  assert.equal(DRILL_FOES.includes('frostmane'), false);
+  const before = structuredClone(game.state);
+  const protectedKeys = ['story', 'flags', 'drillRecords', 'drillGauntlet'];
+  act(game, 'mapEncounter', 'highwatch_frostmane');
+  assert.equal(game.state.scene, 'combat');
+  assert.equal(game.state.combat.encounterId, 'highwatch_frostmane');
+  assert.equal(game.state.combat.enemy.id, 'frostmane');
+  assert.equal(game.state.combat.enemy.boss, true);
+  assert.equal(game.state.combat.enemy.maxHp, 160);
+  assert.notEqual(game.state.combat.drill, true);
+  for (let turn = 0; !game.state.combat.over && turn < 100; turn++) act(game, 'attack');
+  assert.equal(game.state.combat.over, 'victory', 'earned Cutlass and recruited allies win the optional Highwatch trial');
+  assert.equal(game.state.gold, before.gold + 65);
+  game.state.party.forEach((m, i) => assert.equal(m.xp, before.party[i].xp + 105));
+  const loot = [{ id: 'highland_flask', qty: 2 }];
+  assert.deepEqual(game.state.combat.rewards.items, loot);
+  const expectedInventory = structuredClone(before.inventory);
+  for (const drop of loot) {
+    const stack = expectedInventory.find(item => item.id === drop.id);
+    if (stack) stack.qty += drop.qty;
+    else expectedInventory.push({ ...drop });
+  }
+  assert.deepEqual(game.state.inventory, expectedInventory);
+  const expectedBook = { ...before.bestiary, frostmane: 1 };
+  assert.deepEqual(game.state.bestiary, expectedBook);
+  for (const key of protectedKeys) assert.deepEqual(game.state[key], before[key], `${key} is untouched by Frostmane`);
+  assert.equal(featStatus(game.state).find(f => f.id === 'frostmane').done, true);
+  act(game, 'finish');
+  assert.equal(game.state.scene, 'explore');
+  assert.equal(game.state.combat, null);
+  assert.equal(game.state.map.activeEncounterId, null);
+  assert.deepEqual(game.state.map.clearedEncounters, { ...before.map.clearedEncounters, highwatch_frostmane: true });
+  assert.deepEqual(game.state.map.completedInteractions, before.map.completedInteractions);
+  assert.deepEqual(game.state.inventory, expectedInventory);
+  assert.deepEqual(game.state.bestiary, expectedBook);
+  assert.equal(game.state.gold, before.gold + 65);
+  game.state.party.forEach((m, i) => assert.equal(m.xp, before.party[i].xp + 105));
+  checkpoint(game, 'complete');
+  const cleared = structuredClone(game.state);
+  act(game, 'mapEncounter', 'highwatch_frostmane');
+  assert.equal(game.state.scene, 'explore');
+  assert.equal(game.state.combat, null);
+  for (const key of [...protectedKeys, 'party', 'inventory', 'gold', 'bestiary']) {
+    assert.deepEqual(game.state[key], cleared[key], `cleared Frostmane cannot change ${key}`);
+  }
+  assert.equal(featStatus(game.state).find(f => f.id === 'frostmane').done, true);
+  walkExit(game, 'ridge_road');
+  walkExit(game, 'greyhaven');
+  act(game, 'toTownScene');
+}
+
 function relayJourney(game, choice, early) {
   const ending = game.state.story.ending;
   assert.equal(game.state.scene, 'town');
@@ -1334,6 +1413,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         if (!early) combatGold += rescueJourney(game, first);
         oldTuskLockedJourney(game);
         gloomfinLockedJourney(game);
+        frostmaneLockedJourney(game);
         const beforeReport = game.state.gold;
         act(game, 'storyTalk', 'mara');
         assert.equal(game.state.gold, beforeReport, 'ordinary talk does not claim the expedition reward');
@@ -1358,6 +1438,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         optionalBossJourney(game, first);
         oldTuskJourney(game);
         gloomfinJourney(game);
+        frostmaneJourney(game);
         relayJourney(game, relayChoice, early);
         spireJourney(game, relayChoice, early);
         companionJourney(game, early, first);
