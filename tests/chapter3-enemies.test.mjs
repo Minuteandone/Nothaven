@@ -27,3 +27,17 @@ test('relay warden is a construct boss that enrages once at half hp', () => {
   assert.equal(c.enemy.atk, baseAtk + 3);
   assert.equal(ENEMIES.relay_warden.atk, 16);
 });
+
+test('bosses log a defeat line on victory', async () => {
+  const { createCombat, heroAction } = await import('../src/combat/rules.js');
+  const { ENEMIES } = await import('../src/data/enemies.js');
+  for (const id of ['tide_wraith', 'pass_warlord', 'drowned_harbormaster', 'relay_warden']) {
+    assert.equal(typeof ENEMIES[id].defeat, 'string', id);
+    const c = createCombat({ enemyId: id });
+    c.enemy.hp = 1;
+    const hero = { id: 'hero', name: 'Wren', hp: 30, maxHp: 30, mp: 10, maxMp: 10, atk: 50, def: 3, spd: 5, level: 5, statuses: [], equipment: {} };
+    const res = heroAction(c, hero, { type: 'attack' }, () => 0.5, [hero]);
+    assert.equal(c.over, 'victory', id);
+    assert.ok([...(res.lines || []), ...c.log].includes(ENEMIES[id].defeat), id);
+  }
+});
