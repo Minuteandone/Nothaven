@@ -57,3 +57,14 @@ story UI actions as well as events forwarded by `installStory`. Scene observers
 `story:event` command. Do not apply its rewards again or forward it back into the
 reducer. The notification also occurs for no-op events; use saved flags to guard
 one-time side effects.
+
+## Optional post-chapter relief
+
+`getReliefQuest(story)` exposes **First Light Relief** only after chapter completion.
+The explicit Greyhaven `storyRelief` action consumes 2 rations + 1 bandage atomically
+and pays 30 gold once; ordinary NPC conversations never consume inventory.
+`handInRelief(state, location)` is pure and returns the original state on failure.
+`dispatchReliefHandIn(game, location)` commits the new state before emitting
+`story:updated`; its reward metadata is informational, already paid (do not reapply).
+Completion lives in `story.flags.relief_reward`, with ending-specific journal prose.
+The scene location getter governs both the button and action, like other story controls.

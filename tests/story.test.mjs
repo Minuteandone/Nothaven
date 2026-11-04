@@ -25,7 +25,8 @@ for (const ending of ['protect_town', 'share_signal']) test(`complete campaign: 
   assert.equal(rewards.reduce((sum, r) => sum + r.gold, 0), 105);
   assert.equal(getEndingChoices(state).length, 0);
   assert.ok(getEndingSummary(state).length > 50);
-  assert.ok(getJournal(state).filter(q => q.id !== 'dispatches').every(q => q.status === 'complete'));
+  assert.ok(getJournal(state).filter(q => ['road', 'lens', 'beacon'].includes(q.id)).every(q => q.status === 'complete'));
+  assert.equal(getJournal(state).find(q => q.id === 'relief').status, 'active');
   assert.equal(applyStoryEvent(state, choose(ending === 'protect_town' ? 'share_signal' : 'protect_town')).state.ending, ending);
 });
 test('duplicate events never duplicate any reward', () => {

@@ -1,3 +1,4 @@
+import { handInRelief, RELIEF_GOLD } from './relief.js';
 import { applyStoryEvent, createStoryState } from './index.js';
 
 /** Apply a gameplay fact and its rewards together; always reads the current save. */
@@ -30,4 +31,18 @@ export function installStory(game) {
   };
   installations.set(game, cleanup);
   return cleanup;
+}
+
+/** Commit supplies, completion, and payment before notifying any observers. */
+export function dispatchReliefHandIn(game, location) {
+  const result = handInRelief(game.state, location);
+  game.storyMessage = result.message;
+  if (!result.ok) return result;
+  game.state = result.state;
+  game.storyDialogue = null;
+  game.bus?.emit('story:updated', {
+    event: { type: 'relief-hand-in' }, state: game.state.story,
+    rewards: [{ id: 'relief_reward', gold: RELIEF_GOLD }], log: [result.message],
+  });
+  return result;
 }
