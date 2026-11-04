@@ -163,7 +163,8 @@ test('real event bus commits survey and repeated patrol payments before notifica
   const oldStorage = globalThis.localStorage; let saved;
   globalThis.localStorage = { setItem: (_, value) => { saved = value; }, getItem: () => saved };
   try {
-    const game = { state: ready(), bus: bus(), setScene() { assert.fail('postgame must not replay ending'); } };
+    const scenes = [];
+    const game = { state: ready(), bus: bus(), setScene(name) { scenes.push(name); } };
     const cleanup = installStory(game); installEnding(game);
     const checkpoint = () => { saveGame(game.state); game.state = loadGame(); };
     const paid = [];
@@ -172,7 +173,9 @@ test('real event bus commits survey and repeated patrol payments before notifica
     });
     game.bus.emit('story:event', accept);
     for (const e of facts) { game.bus.emit(e.type === 'victory' ? 'combat:victory' : 'story:event', e); checkpoint(); }
+    assert.deepEqual(scenes, [], 'postgame must not replay the chapter 1 ending');
     dispatchStoryEvent(game, report); checkpoint();
+    assert.deepEqual(scenes, ['ending'], 'spire report shows the finale once');
     for (const contract of EXPEDITIONS) {
       dispatchStoryEvent(game, { type: 'expedition-accept', contractId: contract.id }); checkpoint();
       for (let n = 1; n <= 2; n++) {
@@ -182,6 +185,7 @@ test('real event bus commits survey and repeated patrol payments before notifica
       dispatchStoryEvent(game, { type: 'expedition-claim' }); checkpoint();
       dispatchStoryEvent(game, { type: 'expedition-claim' });
     }
+    assert.deepEqual(scenes, ['ending'], 'finale never repeats');
     assert.equal(game.state.gold, 265); assert.equal(paid.length, 3);
     assert.equal(game.state.story.expedition.completed, 2);
     assert.equal(game.state.story.flags.victory_ridge_patrol, undefined);

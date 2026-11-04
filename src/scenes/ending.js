@@ -1,4 +1,5 @@
-// Ending / credits scene. Shown once when the story reaches stage 'complete'.
+// Ending / credits scene. Shown once when the story reaches stage 'complete',
+// and again as a finale with epilogue after the Stormcrown Spire report.
 const ENDINGS = {
   protect_town: {
     title: 'The Shielded Town',
@@ -9,6 +10,27 @@ const ENDINGS = {
     text: 'Lines of silver light trace the distant roads. Greyhaven’s shield is thinner, but answering lanterns appear along the horizon. No settlement faces the storm alone.',
   },
 };
+
+const RELAY_EPILOGUE = {
+  shelter_network: 'The Sunscar Relay hums over every hearth it can reach. Inns, infirmaries and storm cellars stay warm and lit, and no traveler is turned away from shelter.',
+  route_network: 'The Sunscar Relay sweeps the trade roads clear. Caravans run on schedule between Greyhaven, Saltmere and Highwatch, and the wilds grow quieter each season.',
+};
+
+const SPIRE_EPILOGUE = 'Atop Stormcrown Spire, the Tyrant has fallen and the summit cradle burns with steady light. For the first time in a generation, the great storm breaks apart before it reaches the valley.';
+
+/** Epilogue lines for every chapter the player has completed, in order. */
+export function epilogueLines(state) {
+  const f = state?.story?.flags || {};
+  const lines = [];
+  if (f.rescue_reward) lines.push('Saltmere’s harbor and Highwatch’s garrison stand again, and their people remember who came down the roads to help.');
+  if (RELAY_EPILOGUE[f.relay_choice]) lines.push(RELAY_EPILOGUE[f.relay_choice]);
+  if (f.spire_reward) lines.push(SPIRE_EPILOGUE);
+  return lines;
+}
+
+export function isFinale(state) {
+  return Boolean(state?.story?.flags?.spire_reward);
+}
 
 export const CREDITS = [
   ['Combat, bestiary, companions & progression', 'Claude Opus 5.5'],
@@ -34,8 +56,9 @@ export const endingScene = {
     const hero = s.party?.[0] || {};
     const rows = CREDITS.map(([role, who]) => `<li><strong>${esc(role)}</strong> — ${esc(who)}</li>`).join('');
     return `<div class="panel ending">
-      <h1>${esc(info.title)}</h1>
+      ${isFinale(s) ? '<h1>Stormhaven Endures</h1><p class="finale-sub">' + esc(info.title) + '</p>' : `<h1>${esc(info.title)}</h1>`}
       <p>${esc(info.text)}</p>
+      ${epilogueLines(s).map((l) => `<p class="epilogue">${esc(l)}</p>`).join('')}
       <h3>Your journey</h3>
       <ul>
         <li>${esc(hero.name || 'Hero')} reached level ${Number(hero.level) || 1}</li>
@@ -61,6 +84,9 @@ export function installEnding(game) {
     const st = game.state;
     if (st?.story?.stage === 'complete' && !st.flags?.endingShown) {
       st.flags = { ...(st.flags || {}), endingShown: true };
+      game.setScene('ending');
+    } else if (isFinale(st) && !st.flags?.finaleShown) {
+      st.flags = { ...(st.flags || {}), endingShown: true, finaleShown: true };
       game.setScene('ending');
     }
   };
