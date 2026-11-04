@@ -94,6 +94,7 @@ export const combatScene = {
   actions: {
     menu(game, el) { game.combatMenu = el?.dataset?.arg || 'main'; },
     attack(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'attack' }, rng(game), game.state.party).lines); },
+    burst(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'burst' }, rng(game), game.state.party).lines); },
     defend(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'defend' }, rng(game), game.state.party).lines); },
     flee(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'flee' }, rng(game), game.state.party).lines); },
     skill(game, el) {

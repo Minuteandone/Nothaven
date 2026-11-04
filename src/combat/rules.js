@@ -147,6 +147,7 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
     const ab = e.ability;
     const d = physicalDamage(e.atk, hs.def, rng, { mult: ab.mult ?? 1, warded });
     hero.hp = Math.max(0, hero.hp - d);
+    chargeFromHit(c, d, hs.maxHp);
     lines.push(`${e.name} uses ${ab.name}! ${hero.name} takes ${d}.`);
     if (ab.status) {
       addStatus(hero, ab.status, ab.turns || 3, c.heroTimers);
@@ -155,6 +156,7 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   } else {
     const d = physicalDamage(e.atk, hs.def, rng, { warded });
     hero.hp = Math.max(0, hero.hp - d);
+    chargeFromHit(c, d, hs.maxHp);
     lines.push(`${e.name} hits ${hero.name} for ${d}.`);
   }
   // Defend lasts exactly one enemy action; ward counts down per enemy action.
@@ -209,6 +211,21 @@ function checkVictory(c, lines) {
  * Item use is handled by the scene (via useConsumable) and then calls `afterHeroAction`.
  * Returns {ok, lines}.
  */
+/** Beacon Charge: fills as Wren acts and takes hits; at full it unleashes a Beacon Burst. */
+export const BEACON_CHARGE_MAX = 100;
+export const BEACON_CHARGE_GAIN = Object.freeze({ attack: 15, skill: 15, defend: 10 });
+export const BEACON_BURST = Object.freeze({ name: 'Beacon Burst', mult: 2.5, perLevel: 3 });
+/** Adds charge (floored, clamped to 0..BEACON_CHARGE_MAX). */
+export function gainCharge(c, amount) {
+  if (!c) return 0;
+  const now = Number.isFinite(c.charge) ? c.charge : 0;
+  c.charge = Math.min(BEACON_CHARGE_MAX, Math.max(0, now + Math.floor(Number(amount) || 0)));
+  return c.charge;
+}
+/** Charge gained when Wren takes damage: 60 points per full max HP lost. */
+function chargeFromHit(c, d, maxHp) { gainCharge(c, (d * 60) / Math.max(1, maxHp || 1)); }
+export function chargeReady(c) { return (c?.charge || 0) >= BEACON_CHARGE_MAX; }
+
 export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
   if (c.over) return { ok: false, lines: ['The battle is over.'] };
   const lines = [];
@@ -280,6 +297,18 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
       }
       break;
     }
+    case 'burst': {
+      if (!chargeReady(c)) return { ok: false, lines: ['The Beacon Charge is not full yet.'] };
+      c.charge = 0;
+      const d = Math.max(1, Math.floor(hs.atk * BEACON_BURST.mult) + (hero.level || 1) * BEACON_BURST.perLevel);
+      c.enemy.hp = Math.max(0, c.enemy.hp - d);
+      lines.push(`${hero.name} unleashes a ${BEACON_BURST.name}! Searing light deals ${d}.`);
+      const hadStatus = Array.isArray(hero.statuses) && hero.statuses.some((st) => st === 'bleeding' || st === 'shocked');
+      if (Array.isArray(hero.statuses)) hero.statuses = hero.statuses.filter((st) => st !== 'bleeding' && st !== 'shocked');
+      if (c.heroTimers) { delete c.heroTimers.bleeding; delete c.heroTimers.shocked; }
+      if (hadStatus) lines.push(`The light clears ${hero.name}’s afflictions.`);
+      break;
+    }
     case 'flee': {
       if (c.enemy.boss) return { ok: false, lines: ['There is no escaping this fight!'] };
       const chance = Math.min(0.9, 0.5 + (hs.spd - (c.enemy.spd || 0)) * 0.1);
@@ -290,6 +319,7 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
     default:
       return { ok: false, lines: ['Unknown action.'] };
   }
+  if (Object.prototype.hasOwnProperty.call(BEACON_CHARGE_GAIN, action.type)) gainCharge(c, BEACON_CHARGE_GAIN[action.type]);
   checkVictory(c, lines);
   lines.push(...afterHeroAction(c, hero, rng, party));
   return { ok: true, lines };
