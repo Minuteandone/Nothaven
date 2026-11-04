@@ -1,4 +1,6 @@
 import { getDifficulty } from '../combat/difficulty.js';
+import { applyLevelUps } from '../core/progression.js';
+import { getItem } from '../items/items.js';
 // Combat scene: Attack / Skills / Items / Defend / Flee against one enemy.
 // setScene('combat', {enemyId, encounterId, returnScene}) — finishing returns to
 // returnScene with {message, combatResult, encounterId}; defeat wakes the party in
@@ -18,6 +20,7 @@ function rng(game) { return game.combatRng || Math.random; }
 
 function resolveVictory(game, lines) {
   const c = game.state.combat, hero = game.state.party[0];
+  if (c.drill === true) { resolveDrillVictory(game, lines); return; }
   const r = victoryRewards(c, rollLoot, rng(game));
   game.state.gold += r.gold;
   for (const m of game.state.party) m.xp = (m.xp || 0) + r.xp;
@@ -37,6 +40,21 @@ function resolveVictory(game, lines) {
   // Progression listens to this and appends level-up lines to c.log.
   game.bus.emit('combat:victory', { enemyId: c.enemy.id, encounterId: c.encounterId });
   void hero;
+}
+
+// Sparring drills: experience only (half the foe's XP). No gold, no loot, and no
+// combat:victory event, so story flags, map encounters and the bestiary stay untouched.
+function resolveDrillVictory(game, lines) {
+  const c = game.state.combat;
+  const xp = Math.floor((Number(c.enemy?.xp) || 0) / 2);
+  for (const m of game.state.party) m.xp = (m.xp || 0) + xp;
+  c.rewards = { xp, gold: 0, items: [] };
+  lines.push(`Drill complete! +${xp} XP.`);
+  const ups = game.state.party.flatMap((m) => applyLevelUps(m));
+  lines.push(...ups);
+  c.log.push(...lines);
+  lines.length = 0;
+  if (ups.length) game.bus.emit('party:levelup', { lines: ups });
 }
 
 function commit(game, lines) {
@@ -75,6 +93,7 @@ export const combatScene = {
     game.state.combat = createCombat({ ...data, difficulty: getDifficulty(game.state) });
     game.combatMenu = 'main';
     const c = game.state.combat, hero = game.state.party[0];
+    if (data.drill === true) { c.drill = true; c.encounterId = null; }
     hero.statuses = Array.isArray(hero.statuses) ? hero.statuses : [];
     if ((c.enemy.spd || 0) > heroStats(hero).spd) {
       c.log.push(`${c.enemy.name} moves first!`, ...enemyTurn(c, hero, rng(game), game.state.party));
@@ -116,10 +135,23 @@ export const combatScene = {
     finish(game) {
       if (game.state.combat && !game.state.combat.over) return; // never abandon an active fight
       const c = game.state.combat || { over: 'fled', returnScene: 'town', encounterId: null };
-      const { over, returnScene, encounterId } = c;
+      const { over, returnScene, encounterId, drill } = c;
       game.state.combat = null;
       game.combatMenu = 'main';
       for (const m of game.state.party) { m.statuses = []; if (m.hp <= 0 && m !== game.state.party[0]) m.hp = 1; }
+      if (drill === true && game.scenes?.drills) {
+        if (over === 'defeat') {
+          for (const m of game.state.party) {
+            const st = heroStats(m);
+            m.hp = Math.max(1, Math.ceil(st.maxHp / 2)); m.mp = st.maxMp; m.statuses = [];
+          }
+        }
+        const message = over === 'victory' ? 'Drill complete. Mara nods and resets the targets.'
+          : over === 'defeat' ? 'The drill is lost. Mara helps you up — nothing is lost but pride.'
+          : 'You step out of the drill ring.';
+        game.setScene('drills', { message, combatResult: over });
+        return;
+      }
       if (over === 'defeat') {
         const message = recoverFromDefeat(game.state);
         game.setScene(game.scenes?.town ? 'town' : 'title', { message, combatResult: 'defeat', encounterId });
