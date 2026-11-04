@@ -7,7 +7,7 @@ import { GREYHAVEN_SHOP, getShop, shopCatalog, buyItem, sellItem } from '../item
 import { getItem, isKnownItem, canEquip } from '../items/items.js';
 import { countItem } from '../items/inventory.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
-import { listRecipes, recipeInputsMet, recipeSummary, craft } from '../items/crafting.js';
+import { listRecipes, recipeInputsMet, recipeSummary, craft, recipesUsingItem } from '../items/crafting.js';
 
 const esc = (v) =>
   String(v ?? '').replace(/[&<>"']/g, (c) =>
@@ -83,10 +83,19 @@ export const shopScene = {
           const delta = statDeltaSummary(curItem, getItem(it.id));
           if (delta) cmpLine = `<br><small>vs ${esc(curItem.name)}: ${esc(delta)}</small>`;
         }
+        let craftLine = '';
+        if (isKnownItem(it.id)) {
+          const uses = recipesUsingItem(it.id);
+          if (uses.length) {
+            const names = uses.slice(0, 2).map((r) => r.name);
+            const rest = uses.length - names.length;
+            craftLine = `<br><small>Used in: ${esc(names.join(' · '))}${rest > 0 ? ` (+${rest} more)` : ''}</small>`;
+          }
+        }
         return `<tr>
           <td><strong>${esc(it.name)}</strong><br>
             <small>${esc(it.description)}</small><br>
-            <small>${esc(typeLabel(it.type))}${stats ? ' · ' + esc(statSummary(stats)) : ''}</small>${cmpLine}</td>
+            <small>${esc(typeLabel(it.type))}${stats ? ' · ' + esc(statSummary(stats)) : ''}</small>${craftLine}${cmpLine}</td>
           <td style="white-space:nowrap;">${it.price}g</td>
           <td><button data-action="buy" data-arg="${esc(it.id)}" ${gold < it.price ? 'disabled' : ''}>Buy</button></td>
         </tr>`;

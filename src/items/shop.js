@@ -86,6 +86,17 @@ export function buyItem(state, shop, itemId, qty = 1) {
 }
 
 /**
+ * Gold earned per unit when selling the item: explicit sellPrice override,
+ * otherwise half the buy price. Shared by sellItem and UI worth hints.
+ * @param {{price?: number, sellPrice?: number}|null|undefined} item
+ * @returns {number}
+ */
+export function sellValueOf(item) {
+  if (!item || typeof item !== 'object') return 0;
+  return item.sellPrice ?? Math.floor((item.price || 0) / 2);
+}
+
+/**
  * Sell one or more of an item from the inventory for its sellPrice.
  * @param {{gold: number, inventory: Array<{id:string,qty:number}>}} state
  * @param {string} itemId
@@ -101,7 +112,7 @@ export function sellItem(state, itemId, qty = 1) {
   if (item.type === 'key') {
     return { ok: false, state, message: 'The trader will not touch that.' };
   }
-  const sellPrice = item.sellPrice ?? Math.floor((item.price || 0) / 2);
+  const sellPrice = sellValueOf(item);
   const have = state.inventory.find((s) => s.id === itemId);
   if (!have || have.qty < qty) {
     return { ok: false, state, message: `You do not have ${qty} x ${item.name}.` };

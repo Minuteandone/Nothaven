@@ -6,6 +6,8 @@
 import { getItem, isKnownItem, canEquip, TYPES, SLOTS } from '../items/items.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
 import { useConsumable } from '../items/consumables.js';
+import { recipesUsingItem } from '../items/crafting.js';
+import { sellValueOf } from '../items/shop.js';
 
 const esc = (v) =>
   String(v ?? '').replace(/[&<>"']/g, (c) =>
@@ -51,6 +53,16 @@ function memberTabs(party, index) {
   return `<div class="bag-members" role="tablist" aria-label="Choose whose bag to use">${tabs}</div>`;
 }
 
+
+/** "Used in:" hint listing the recipes that consume this item (max 2 + more). */
+function craftHint(itemId) {
+  const uses = recipesUsingItem(itemId);
+  if (!uses.length) return '';
+  const names = uses.slice(0, 2).map((r) => r.name);
+  const rest = uses.length - names.length;
+  return 'Used in: ' + names.join(' · ') + (rest > 0 ? ` (+${rest} more)` : '');
+}
+
 function bagRow(item, stack, member) {
   const sum = statSummary(item.stats);
   let controls = '';
@@ -74,6 +86,9 @@ function bagRow(item, stack, member) {
     `<span class="bag-name">${esc(item.name)} ×${stack.qty}</span>` +
     (item.description ? ` <span class="bag-desc">${esc(item.description)}</span>` : '') +
     (sum ? ` <span class="bag-stats">${esc(sum)}</span>` : '') +
+    (craftHint(item.id) ? ` <span class="bag-craft">${esc(craftHint(item.id))}</span>` : '') +
+    (item.type !== TYPES.KEY && sellValueOf(item) > 0
+      ? ` <span class="bag-worth">Sell value: ${sellValueOf(item) * stack.qty}g</span>` : '') +
     (controls ? `<span class="bag-controls">${controls}</span>` : '') +
     `</li>`
   );

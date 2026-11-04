@@ -211,3 +211,24 @@ export function validateRecipes(recipes = RECIPES) {
   }
   return problems;
 }
+
+/**
+ * All recipes that consume the given item as an ingredient, in book order.
+ * Useful for "Used in:" hints so players don't sell crafting fodder.
+ * @param {string} itemId
+ * @returns {Array<Recipe>} deep copies (safe to mutate)
+ */
+export function recipesUsingItem(itemId) {
+  if (typeof itemId !== 'string') return [];
+  return listRecipes().filter((r) => r.inputs.some((inp) => inp.id === itemId));
+}
+
+/**
+ * The first recipe that produces the given item, if any.
+ * @param {string} itemId
+ * @returns {Recipe|null} deep copy, or null when the item is not craftable
+ */
+export function recipeProducingItem(itemId) {
+  if (typeof itemId !== 'string') return null;
+  return listRecipes().find((r) => r.outputs.some((out) => out.id === itemId)) || null;
+}
