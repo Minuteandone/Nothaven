@@ -32,6 +32,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'The Difficulty button in Greyhaven switches between Story, Standard and Veteran foes at any time.',
     'Use Save journey in town to keep your progress on this device, and Continue on the title screen to return.',
     'Sound is muted by default. The audio controls let you turn on the storm ambience and adjust the volume.',
+    'The Journey Journal lists every active task, the Character Sheet shows gear and effective stats, and Wardens’ Feats records the milestones of your journey — all open from Greyhaven or the expedition screen.',
   ] }),
 ]);
 
