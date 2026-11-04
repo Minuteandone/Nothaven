@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { Game } from '../src/engine.js';
 import { saveGame, loadGame } from '../src/state.js';
 import { combatScene } from '../src/scenes/combat.js';
+import { installCompanions } from '../src/scenes/muster.js';
 import { installShop } from '../src/scenes/shop.js';
 import { countItem } from '../src/items/inventory.js';
 import { townScene } from '../src/scenes/town.js';
@@ -39,6 +40,7 @@ function harness(t) {
   t.after(installEnding(game));
   installProgression(game);
   installShop(game);
+  installCompanions(game);
   t.after(installMap(game, { enableKeyboard: false }));
   game.setScene('explore');
   return game;
@@ -95,7 +97,7 @@ function winEncounter(game, id) {
   const reward = game.state.combat.enemy.gold;
   const before = game.state.gold;
   for (let turn = 0; !game.state.combat.over && turn < 100; turn++) act(game, 'attack');
-  assert.equal(game.state.combat.over, 'victory', `win ${id} with starting stats`);
+  assert.equal(game.state.combat.over, 'victory', `win ${id} with legitimately earned stats and recruited allies`);
   assert.equal(game.state.gold, before + reward);
   act(game, 'finish');
   assert.equal(game.state.scene, 'explore');
@@ -118,83 +120,158 @@ function checkpoint(game, stage) {
   assert.equal(game.state.story.stage, stage);
 }
 
+const rescueRoutes = {
+  coast: { zone: 'saltmere_coast', encounter: 'saltmere_rescue', cache: 'saltmere_supply_cache' },
+  heights: { zone: 'highwatch_pass', encounter: 'highwatch_rescue', cache: 'highwatch_supply_cache' },
+};
+
+function rescueJourney(game, first) {
+  let combatGold = 0;
+  for (const routeId of [first, first === 'coast' ? 'heights' : 'coast']) {
+    const route = rescueRoutes[routeId];
+    assert.equal(game.state.map.zoneId, 'greyhaven');
+    act(game, 'mapTravel', route.zone);
+    assert.equal(game.state.map.zoneId, 'greyhaven', 'new rescue routes require physical discovery');
+    if (routeId === 'heights') walkExit(game, 'ridge_road');
+    walkExit(game, route.zone);
+    assert.equal(game.state.story.flags[`rescue_visit_${routeId}`], true);
+    combatGold += winEncounter(game, route.encounter);
+    assert.equal(game.state.story.flags[`rescue_victory_${routeId}`], true);
+    const cache = ZONES[route.zone].interactables.find(i => i.id === route.cache);
+    walkTo(game, cache.x, cache.y);
+    act(game, 'mapInteract', route.cache);
+    assert.equal(game.state.map.completedInteractions[route.cache], true, 'supply cache is physically reachable');
+    const collected = structuredClone(game.state.inventory);
+    act(game, 'mapInteract', route.cache);
+    assert.deepEqual(game.state.inventory, collected, 'collected cache cannot duplicate supplies');
+    checkpoint(game, game.state.story.stage);
+    walkExit(game, routeId === 'coast' ? 'greyhaven' : 'ridge_road');
+    if (routeId === 'heights') walkExit(game, 'greyhaven');
+  }
+  assert.equal(game.state.story.flags.rescue_first, first);
+  assert.equal(game.state.story.flags.rescue_reward, undefined, 'clearing roads does not auto-pay');
+  return combatGold;
+}
+
+function recruitAndRest(game) {
+  act(game, 'toTownScene');
+  act(game, 'muster');
+  act(game, 'recruit', 'tamsin');
+  act(game, 'recruit', 'iven');
+  assert.deepEqual(game.state.party.map(m => m.id), ['hero', 'tamsin', 'iven']);
+  act(game, 'leave');
+  const before = game.state.gold;
+  act(game, 'rest');
+  assert.equal(game.state.gold, before - 5);
+  act(game, 'explore');
+}
+
 for (const ending of ['protect_town', 'share_signal']) {
   for (const early of [false, true]) {
-    test(`walkable campaign: ${ending}, ${early ? 'explore before briefing' : 'normal quest order'}`, t => {
-      const game = harness(t);
-      let combatGold = 0;
-      checkpoint(game, 'briefing');
-      if (!early) { act(game, 'storyTalk', 'mara'); checkpoint(game, 'road'); }
-      // Undiscovered fast travel cannot skip the physical route.
-      act(game, 'mapTravel', 'beacon_tower');
-      assert.equal(game.state.map.zoneId, 'greyhaven');
-      walkExit(game, 'ridge_road');
-      combatGold += winEncounter(game, 'ridge_patrol');
-      walkTo(game, 5, 5);
-      assert.equal(game.state.story.flags.dispatch_ridge, true);
-      if (!early) {
-        checkpoint(game, 'road_report');
+    for (const first of ['coast', 'heights']) {
+      test(`walkable campaign: ${ending}, ${early ? 'explore before briefing' : 'normal quest order'}, ${first} rescue first`, t => {
+        const game = harness(t);
+        let combatGold = 0;
+        checkpoint(game, 'briefing');
+        if (!early) { act(game, 'storyTalk', 'mara'); checkpoint(game, 'road'); }
+        // Undiscovered fast travel cannot skip the physical route.
+        act(game, 'mapTravel', 'beacon_tower');
+        assert.equal(game.state.map.zoneId, 'greyhaven');
+        walkExit(game, 'ridge_road');
+        combatGold += winEncounter(game, 'ridge_patrol');
+        walkTo(game, 5, 5);
+        assert.equal(game.state.story.flags.dispatch_ridge, true);
+        if (!early) {
+          checkpoint(game, 'road_report');
+          act(game, 'mapTravel', 'greyhaven');
+          act(game, 'storyTalk', 'mara'); checkpoint(game, 'lens_briefing');
+          act(game, 'storyTalk', 'iven'); checkpoint(game, 'lens');
+          act(game, 'mapTravel', 'ridge_road');
+        }
+        walkExit(game, 'observatory_ruins');
+        combatGold += winEncounter(game, 'observatory_sentinel');
+        walkTo(game, 1, 3);
+        assert.equal(game.state.story.flags.dispatch_observatory, true);
+        if (!early) checkpoint(game, 'lens_report');
+        // A premature tower visit must not unlock an ending or skip the council.
+        walkExit(game, 'beacon_tower');
+        act(game, 'storyChoose', ending);
+        assert.equal(game.state.story.ending, null);
+        walkExit(game, 'greyhaven'); // physically reachable signal lift
+        recruitAndRest(game);
+        if (early) combatGold += rescueJourney(game, first);
+        if (early) {
+          act(game, 'storyTalk', 'mara'); checkpoint(game, 'road_report');
+          act(game, 'storyTalk', 'mara'); checkpoint(game, 'lens_briefing');
+          act(game, 'storyTalk', 'iven'); checkpoint(game, 'lens_report');
+        }
+        act(game, 'storyTalk', 'iven'); checkpoint(game, 'council');
+        act(game, 'storyTalk', 'mara');
+        act(game, 'storyTalk', 'tamsin');
+        assert.equal(game.state.story.flags.dispatch_reward, true);
+        assert.equal(game.state.story.stage, 'council');
+        act(game, 'mapTravel', 'beacon_tower'); checkpoint(game, 'decision');
+        act(game, 'storyChoose', ending);
+        assert.equal(game.state.scene, 'ending', 'final choice opens the ending scene');
+        checkpoint(game, 'complete');
+        act(game, 'keepExploring');
+        assert.equal(game.state.scene, 'explore');
+        assert.equal(game.state.story.ending, ending);
+        assert.equal(game.state.gold, 20 + combatGold + 120 - 5, 'all four story rewards paid once');
+        const finalGold = game.state.gold;
+        act(game, 'storyChoose', ending === 'protect_town' ? 'share_signal' : 'protect_town');
         act(game, 'mapTravel', 'greyhaven');
-        act(game, 'storyTalk', 'mara'); checkpoint(game, 'lens_briefing');
-        act(game, 'storyTalk', 'iven'); checkpoint(game, 'lens');
-        act(game, 'mapTravel', 'ridge_road');
-      }
-      walkExit(game, 'observatory_ruins');
-      combatGold += winEncounter(game, 'observatory_sentinel');
-      walkTo(game, 1, 3);
-      assert.equal(game.state.story.flags.dispatch_observatory, true);
-      if (!early) checkpoint(game, 'lens_report');
-      // A premature tower visit must not unlock an ending or skip the council.
-      walkExit(game, 'beacon_tower');
-      act(game, 'storyChoose', ending);
-      assert.equal(game.state.story.ending, null);
-      walkExit(game, 'greyhaven'); // physically reachable signal lift
-      if (early) {
-        act(game, 'storyTalk', 'mara'); checkpoint(game, 'road_report');
-        act(game, 'storyTalk', 'mara'); checkpoint(game, 'lens_briefing');
-        act(game, 'storyTalk', 'iven'); checkpoint(game, 'lens_report');
-      }
-      act(game, 'storyTalk', 'iven'); checkpoint(game, 'council');
-      act(game, 'storyTalk', 'mara');
-      act(game, 'storyTalk', 'tamsin');
-      assert.equal(game.state.story.flags.dispatch_reward, true);
-      assert.equal(game.state.story.stage, 'council');
-      act(game, 'mapTravel', 'beacon_tower'); checkpoint(game, 'decision');
-      act(game, 'storyChoose', ending);
-      assert.equal(game.state.scene, 'ending', 'final choice opens the ending scene');
-      checkpoint(game, 'complete');
-      act(game, 'keepExploring');
-      assert.equal(game.state.scene, 'explore');
-      assert.equal(game.state.story.ending, ending);
-      assert.equal(game.state.gold, 20 + combatGold + 120, 'all four story rewards paid once');
-      const finalGold = game.state.gold;
-      act(game, 'storyChoose', ending === 'protect_town' ? 'share_signal' : 'protect_town');
-      act(game, 'mapTravel', 'greyhaven');
-      for (const npc of ['mara', 'iven', 'tamsin']) act(game, 'storyTalk', npc);
-      assert.equal(game.state.gold, finalGold, 'repeated turn-ins and choices cannot duplicate rewards');
-      assert.equal(game.state.story.ending, ending, 'ending remains exclusive after reload');
-      assert.ok(game.state.party[0].hp > 0);
-      // The optional aftermath uses actual shop and scene actions, not granted items.
-      act(game, 'toTownScene');
-      act(game, 'shop');
-      assert.equal(game.state.scene, 'shop');
-      const originalInventory = structuredClone(game.state.inventory);
-      act(game, 'buy', 'rations'); act(game, 'buy', 'rations'); act(game, 'buy', 'bandage');
-      assert.equal(game.state.gold, finalGold - 22, 'relief supplies cost 22 gold');
-      assert.equal(countItem(game.state.inventory, 'rations'), countItem(originalInventory, 'rations') + 2);
-      assert.equal(countItem(game.state.inventory, 'bandage'), countItem(originalInventory, 'bandage') + 1);
-      act(game, 'leave'); act(game, 'explore');
-      act(game, 'storyTalk', 'tamsin');
-      assert.equal(game.state.gold, finalGold - 22, 'ordinary conversation does not exchange supplies');
-      act(game, 'storyRelief');
-      assert.equal(game.state.gold, finalGold + 8, 'optional relief pays exactly 30 gold');
-      assert.equal(game.state.story.flags.relief_reward, true);
-      assert.deepEqual(game.state.inventory, originalInventory, 'only the purchased relief supplies were consumed');
-      checkpoint(game, 'complete');
-      act(game, 'storyRelief');
-      assert.equal(game.state.gold, finalGold + 8, 'reload and stale hand-in do not pay again');
-      assert.equal(game.state.story.ending, ending);
-      assert.equal(game.state.scene, 'explore', 'relief does not replay the ending scene');
-    });
+        for (const npc of ['mara', 'iven', 'tamsin']) act(game, 'storyTalk', npc);
+        assert.equal(game.state.gold, finalGold, 'repeated turn-ins and choices cannot duplicate rewards');
+        assert.equal(game.state.story.ending, ending, 'ending remains exclusive after reload');
+        assert.ok(game.state.party[0].hp > 0);
+        // The optional aftermath uses actual shop and scene actions, not granted items.
+        act(game, 'toTownScene');
+        act(game, 'shop');
+        assert.equal(game.state.scene, 'shop');
+        const originalInventory = structuredClone(game.state.inventory);
+        act(game, 'buy', 'rations'); act(game, 'buy', 'rations'); act(game, 'buy', 'bandage');
+        assert.equal(game.state.gold, finalGold - 22, 'relief supplies cost 22 gold');
+        assert.equal(countItem(game.state.inventory, 'rations'), countItem(originalInventory, 'rations') + 2);
+        assert.equal(countItem(game.state.inventory, 'bandage'), countItem(originalInventory, 'bandage') + 1);
+        act(game, 'leave'); act(game, 'explore');
+        act(game, 'storyTalk', 'tamsin');
+        assert.equal(game.state.gold, finalGold - 22, 'ordinary conversation does not exchange supplies');
+        act(game, 'storyRelief');
+        assert.equal(game.state.gold, finalGold + 8, 'optional relief pays exactly 30 gold');
+        assert.equal(game.state.story.flags.relief_reward, true);
+        assert.deepEqual(game.state.inventory, originalInventory, 'only the purchased relief supplies were consumed');
+        checkpoint(game, 'complete');
+        act(game, 'storyRelief');
+        assert.equal(game.state.gold, finalGold + 8, 'reload and stale hand-in do not pay again');
+        assert.equal(game.state.story.ending, ending);
+        assert.equal(game.state.scene, 'explore', 'relief does not replay the ending scene');
+        act(game, 'storyRescue', 'accept');
+        assert.equal(game.state.story.flags.rescue_accepted, true);
+        checkpoint(game, 'complete');
+        if (!early) combatGold += rescueJourney(game, first);
+        const beforeReport = game.state.gold;
+        act(game, 'storyTalk', 'mara');
+        assert.equal(game.state.gold, beforeReport, 'ordinary talk does not claim the expedition reward');
+        act(game, 'storyRescue', 'report');
+        assert.equal(game.state.gold, beforeReport + 80);
+        assert.equal(game.state.gold, 20 + combatGold + 120 - 5 + 8 + 80, 'exact combined campaign economy');
+        assert.equal(game.state.story.flags.rescue_reward, true);
+        assert.equal(game.state.story.flags.relief_reward, true);
+        assert.equal(game.state.story.ending, ending);
+        checkpoint(game, 'complete');
+        act(game, 'storyRescue', 'report');
+        assert.equal(game.state.gold, beforeReport + 80, 'reloaded expedition cannot pay again');
+        assert.equal(game.state.scene, 'explore', 'rescue does not replay the ending');
+        // Rescuing both settlements unlocks their allies through actual story facts.
+        act(game, 'toTownScene'); act(game, 'muster');
+        act(game, 'dismiss', 'tamsin'); act(game, 'dismiss', 'iven');
+        act(game, 'recruit', 'bram'); act(game, 'recruit', 'sela');
+        assert.deepEqual(game.state.party.map(m => m.id), ['hero', 'bram', 'sela']);
+        assert.ok(game.state.reserve.tamsin && game.state.reserve.iven);
+        checkpoint(game, 'complete');
+        act(game, 'leave'); act(game, 'explore');
+      });
+    }
   }
 }
