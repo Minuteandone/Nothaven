@@ -58,6 +58,11 @@ export const ITEMS = Object.freeze({
     use: { mp: 35, cure: 'shocked' }, price: 34, sellPrice: 16,
     description: "A mountaineer's reserve of juniper and melted snowmelt. Warms the hands, sharpens the mind.",
   },
+  spiced_broth: {
+    id: 'spiced_broth', name: 'Spiced Broth', type: TYPES.CONSUMABLE,
+    use: { hp: 60, cure: 'shocked' }, price: 42, sellPrice: 20,
+    description: 'A rich inland broth served scalding at the relay outpost. Mends the body and steadies rattled nerves.',
+  },
   rations: {
     id: 'rations', name: 'Trail Rations', type: TYPES.CONSUMABLE,
     use: { hp: 10 }, price: 6, sellPrice: 2,
@@ -91,6 +96,11 @@ export const ITEMS = Object.freeze({
     description: 'A short curved blade the Saltmere salvagers keep waxed against the spray. It remembers the sea.',
   },
 
+  relay_glaive: {
+    id: 'relay_glaive', name: 'Relay Glaive', type: TYPES.EQUIPMENT, slot: 'weapon',
+    stats: { atk: 14 }, price: 180, sellPrice: 88,
+    description: 'A fallen signal pole reforged into a long glaive. The brass inlays hum when storms roll over the pass.',
+  },
   // ---- Equipment: armor ----
   padded_vest: {
     id: 'padded_vest', name: 'Padded Vest', type: TYPES.EQUIPMENT, slot: 'armor',
@@ -118,6 +128,11 @@ export const ITEMS = Object.freeze({
     description: 'Highwatch wool lined with panels of storm glass that hold the mountain cold at bay.',
   },
 
+  sunscar_mantle: {
+    id: 'sunscar_mantle', name: 'Sunscar Mantle', type: TYPES.EQUIPMENT, slot: 'armor',
+    stats: { def: 10, hp: 10 }, price: 190, sellPrice: 92,
+    description: 'Layered hides baked stiff under the inland sun and stitched through with brass wire.',
+  },
   // ---- Equipment: trinkets ----
   tin_whistle: {
     id: 'tin_whistle', name: 'Tin Whistle', type: TYPES.EQUIPMENT, slot: 'trinket',
@@ -150,6 +165,11 @@ export const ITEMS = Object.freeze({
     description: 'A disc of sea-worn storm glass, polished smooth by the tide. Rest the eyes on it and the storm quiets.',
   },
 
+  signal_prism: {
+    id: 'signal_prism', name: 'Signal Prism', type: TYPES.EQUIPMENT, slot: 'trinket',
+    stats: { atk: 1, mp: 6, spd: 1 }, price: 85, sellPrice: 40,
+    description: 'A ground-glass prism that throws a signal beam on clear days. It steadies the hand that holds it.',
+  },
   // ---- Key items ----
   observatory_lens: {
     id: 'observatory_lens', name: 'Observatory Lens', type: TYPES.KEY,

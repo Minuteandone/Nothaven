@@ -22,10 +22,20 @@ export const SALTMERE_POST = Object.freeze({
   stock: ['hearty_chowder', 'field_dressing', 'saltweather_jerkin', 'tidebound_cutlass', 'pearl_focus', 'rations'],
 });
 
+/** The Sunscar Relay signal-station post (chapter three). Quartermaster for the
+ * inland leg: coastal gear traded toward relay-grade brass and sun-baked glass. */
+export const RELAY_OUTPOST = Object.freeze({
+  id: 'relay_outpost',
+  name: 'Relay Outpost Stores',
+  greeting: 'The quartermaster sets down a coil of brass wire. "Signal crew eats first, fights second, trades third. Fire up the stove for you?"',
+  stock: ['spiced_broth', 'rations', 'relay_brass', 'sunscar_glass', 'signal_prism', 'relay_glaive', 'sunscar_mantle'],
+});
+
 /** All shops, keyed by the map interaction id that opens them. */
 export const SHOPS = Object.freeze({
   greyhaven_shop: GREYHAVEN_SHOP,
   saltmere_post: SALTMERE_POST,
+  relay_outpost: RELAY_OUTPOST,
 });
 
 /**
