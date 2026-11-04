@@ -11,7 +11,7 @@ export function createInitialState() {
     inventory: [],   // [{ id, qty }] — see src/items/
     flags: {},       // story flags — see src/story/
     questLog: {},    // { questId: stage }
-    location: 'town',
+    location: 'greyhaven',
     story: createStoryState(),
     combat: null,
   };
