@@ -1,6 +1,7 @@
 import { TILE_TYPES, ZONES, ZONE_ORDER } from './zones.js';
 import { grantRewards } from '../items/inventory.js';
 import { useConsumable } from '../items/consumables.js';
+import { craft } from '../items/crafting.js';
 
 export function createMapState(initialZone = 'greyhaven') {
   const zone = ZONES[initialZone] || ZONES.greyhaven;
@@ -134,6 +135,8 @@ export function getAvailableActions(gameState) {
         label:
           inter.kind === 'inn'
             ? `Rest at ${inter.name} (${inter.costGold || 5}g)`
+            : inter.kind === 'shop'
+            ? `Visit ${inter.name}`
             : inter.kind === 'cache'
             ? `Open ${inter.name}`
             : `Inspect ${inter.name}`,
@@ -366,14 +369,29 @@ export function interactWith(gameState, kind, targetId, options = {}) {
       return { state: gameState, events: [], log: [msg], triggerCombat: null };
     }
 
+    if (inter.kind === 'shop') {
+      const msg = `Visiting ${inter.name}.`;
+      appendLog(mapState, msg);
+      return {
+        state: gameState,
+        events: [{ type: 'interact', interactionId: intId }],
+        log: [msg],
+        triggerCombat: null,
+        triggerShop: { shopId: intId },
+      };
+    }
+
     let rewardText = '';
     if (Array.isArray(inter.rewards) && inter.rewards.length > 0) {
       const currentInv = Array.isArray(gameState.inventory) ? gameState.inventory : [];
       const grant = grantRewards(currentInv, inter.rewards);
-      if (grant.ok) {
-        gameState.inventory = grant.inv;
-        rewardText = ` (${grant.messages.join(' ')})`;
+      if (!grant.ok) {
+        const errMsg = `Could not collect ${inter.name}: ${grant.messages.join(' ')}`;
+        appendLog(mapState, errMsg);
+        return { state: gameState, events: [], log: [errMsg], triggerCombat: null };
       }
+      gameState.inventory = grant.inv;
+      rewardText = ` (${grant.messages.join(' ')})`;
     }
 
     if (inter.once) {
@@ -417,6 +435,20 @@ export function useFieldConsumable(gameState, itemId) {
   gameState.inventory = res.inv;
   appendLog(mapState, res.message);
   return { ok: true, state: gameState, effects: res.effects, log: [res.message] };
+}
+
+export function craftInField(gameState, recipeId) {
+  const mapState = ensureMapState(gameState);
+  const inv = Array.isArray(gameState.inventory) ? gameState.inventory : [];
+  const res = craft(inv, recipeId);
+  const msg = (res.messages || []).join(' ');
+  if (!res.ok) {
+    appendLog(mapState, msg);
+    return { ok: false, state: gameState, log: [msg] };
+  }
+  gameState.inventory = res.inv;
+  appendLog(mapState, `Crafted: ${msg}`);
+  return { ok: true, state: gameState, log: [`Crafted: ${msg}`] };
 }
 
 export function recordEncounterVictory(gameState, encounterId, enemyId = null) {

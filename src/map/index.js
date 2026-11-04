@@ -14,6 +14,7 @@ export {
   movePlayer,
   interactWith,
   useFieldConsumable,
+  craftInField,
   recordEncounterVictory,
   getClearedEncounters,
   getVisitedZones,

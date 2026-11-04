@@ -290,3 +290,49 @@ test('useFieldConsumable heals party member in exploration and exploreScene rend
   assert.equal(game.state.party[0].hp, 25);
   assert.equal(game.state.inventory.find((s) => s.id === 'bandage').qty, 1);
 });
+
+test('failed cache grantRewards does not mark completedInteractions or emit interact event', () => {
+  const state = createInitialState();
+  travelToZone(state, 'ridge_road', 'from_greyhaven');
+  state.map.x = 1;
+  state.map.y = 4; // adjacent to ridge_supply_cache at (1, 5)
+
+  const cache = ZONES.ridge_road.interactables.find((i) => i.id === 'ridge_supply_cache');
+  const origRewards = cache.rewards;
+  cache.rewards = [{ id: 'unknown_bad_item_id', qty: 1 }];
+  try {
+    const res = interactWith(state, 'interact', 'ridge_supply_cache');
+    assert.equal(res.events.length, 0);
+    assert.equal(state.map.completedInteractions.ridge_supply_cache, undefined);
+    assert.deepEqual(state.inventory, []);
+  } finally {
+    cache.rewards = origRewards;
+  }
+});
+
+test('greyhaven_shop stall opens shop scene with returnScene explore and field crafting works', () => {
+  const game = makeMockGame();
+  let enteredShopData = null;
+  game.scenes.shop = { onEnter(_g, data) { enteredShopData = data; }, render() { return ""; } };
+  installStory(game);
+  installMap(game, { enableKeyboard: false });
+  game.setScene('explore');
+
+  // Move adjacent to greyhaven_shop at (4, 5)
+  game.state.map.x = 4;
+  game.state.map.y = 4;
+  exploreScene.actions.mapInteract(game, { dataset: { arg: 'greyhaven_shop' } });
+  assert.equal(game.state.scene, 'shop');
+  assert.equal(enteredShopData?.returnScene, 'explore');
+
+  // Test field crafting when materials are held
+  game.setScene('explore');
+  game.state.inventory = [
+    { id: 'healing_herb', qty: 1 },
+    { id: 'storm_glass', qty: 1 },
+  ];
+  const html = exploreScene.render(game);
+  assert.ok(html.includes('data-action="craftFieldItem"'));
+  exploreScene.actions.craftFieldItem(game, { dataset: { arg: 'distill_tonic' } });
+  assert.ok(game.state.inventory.some((s) => s.id === 'storm_tonic' && s.qty === 1));
+});
