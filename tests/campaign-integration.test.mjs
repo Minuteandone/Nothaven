@@ -213,7 +213,7 @@ function optionalBossJourney(game, first) {
     walkExit(game, id === 'coast' ? 'greyhaven' : 'ridge_road');
     if (id === 'heights') walkExit(game, 'greyhaven');
   }
-  assert.deepEqual(game.state.story, originalStory, 'optional bosses do not alter or repay the completed expedition');
+  assert.deepEqual(game.state.story, { ...originalStory, flags: { ...originalStory.flags, commission_bram_victory: true } }, 'optional bosses retain Bram’s early commission fact without altering or repaying the completed expedition');
   assert.equal(game.state.story.ending, originalEnding);
   act(game, 'toTownScene');
   act(game, 'bestiary');
