@@ -176,4 +176,36 @@ export const ENEMIES = {
       { id: 'stormcrown_shard', chance: 1, minQty: 1, maxQty: 1 },
     ],
   },
+  tempest_shade: {
+    id: 'tempest_shade', name: 'Tempest Shade', hp: 170, atk: 31, def: 8, spd: 9, xp: 70, gold: 35,
+    intro: 'A shape of rain and blue static drifts out of the clouds, humming with stolen lightning.',
+    ability: { name: 'Static Lash', chance: 0.3, mult: 1.3, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'thunder_iron', chance: 0.5, minQty: 1, maxQty: 1 },
+      { id: 'storm_tonic', chance: 0.35, minQty: 1, maxQty: 1 },
+    ],
+  },
+  thunderhead_colossus: {
+    id: 'thunderhead_colossus', name: 'Thunderhead Colossus', hp: 190, atk: 30, def: 12, spd: 3, xp: 75, gold: 40,
+    tags: ['construct'],
+    intro: 'Storm-iron plates grind together as a towering weather engine lumbers into the path.',
+    ability: { name: 'Thunderclap', chance: 0.3, mult: 1.4 },
+    loot: [
+      { id: 'thunder_iron', chance: 0.7, minQty: 1, maxQty: 2 },
+      { id: 'stormcrown_shard', chance: 0.15, minQty: 1, maxQty: 1 },
+    ],
+  },
+  storm_heart: {
+    id: 'storm_heart', name: 'The Storm’s Heart', hp: 680, atk: 34, def: 10, spd: 7, xp: 240, gold: 180,
+    boss: true,
+    intro: 'Beyond the summit, the eye of the storm opens: a slow-turning core of wind and lightning that has fed the tempest for generations.',
+    defeat: 'The core flickers, shrinks and finally scatters into a warm, quiet rain. For the first time in living memory, the sky above Stormcrown is clear.',
+    enrage: { threshold: 0.4, atk: 5, chance: 0.5, line: 'The Storm’s Heart spins faster, pulling every cloud on the horizon into its howling core!' },
+    ability: { name: 'Eye of the Tempest', chance: 0.35, mult: 1.5, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'thunder_iron', chance: 1, minQty: 3, maxQty: 4 },
+      { id: 'stormcrown_shard', chance: 1, minQty: 2, maxQty: 2 },
+      { id: 'storm_tonic', chance: 1, minQty: 2, maxQty: 3 },
+    ],
+  },
 };
