@@ -1,7 +1,7 @@
 // Combat rules for Beacon of Stormhaven. Pure-ish functions over a combat
 // object and the party; randomness is injected (`rng`) so tests are deterministic.
 import { ENEMIES } from '../data/enemies.js';
-import { scaleEnemy } from './difficulty.js';
+import { scaleEnemy, DIFFICULTIES } from './difficulty.js';
 import { effectiveStats } from '../items/equipment.js';
 
 export const SKILLS = Object.freeze({
@@ -78,6 +78,7 @@ export function createCombat({ enemyId, encounterId = null, returnScene = 'town'
   const enemy = scaleEnemy({ ...base, maxHp: base.hp, statuses: [], loot: base.loot ? base.loot.map((l) => ({ ...l })) : [] }, difficulty);
   return {
     enemy, encounterId, returnScene, turn: 1, over: null,
+    difficulty: Object.prototype.hasOwnProperty.call(DIFFICULTIES, difficulty) ? difficulty : 'standard',
     defending: false, wardTurns: 0, aegisTurns: 0, heroTimers: {}, enemyTimers: {},
     log: [enemy.intro || `A ${enemy.name} appears!`],
     rewards: null,
