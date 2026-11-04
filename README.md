@@ -59,3 +59,22 @@ combat events. Old once-only dispatch/pedestal inspections therefore still count
 the repeatable harbor lamp and cairn can be inspected again if their earlier use
 was not recorded. Reports and acceptance use the same authoritative location getter
 as board rendering. Rewards are committed before `story:updated`, as with other quests.
+
+## Optional chapter five: The Storm’s Heart
+
+After the summit survey is reported (`spire_reward`), Greyhaven offers an optional
+**200g** expedition. Explicitly accept, visit `storms_eye`, ground both
+`eye_anchor_west` and `eye_anchor_east`, defeat fixed encounter `storm_heart_core`,
+and explicitly report in Greyhaven. Earlier discoveries count. Conversation never
+accepts or reports for the player, and neither the original beacon ending nor the
+Chapter 4 finale is replayed or changed.
+
+`src/story/heart.js` owns the pure reducer, journal, and dialogue. Commands are
+`heart-accept` and `heart-report`; progress flags are `heart_accepted`, `heart_visit`,
+`eye_anchor_west`, `eye_anchor_east`, `victory_storm_heart`, and `heart_reward`.
+Only the exact fixed-core victory sets `victory_storm_heart`, not a species-only
+victory. This flag immediately halves random encounters on Stormcrown Spire and
+in the Storm’s Eye, independent of accepting/reporting the gold commission;
+route-network guidance stacks to one quarter of base chance. Other regions and
+fixed encounters are unchanged. The prose describes a regional storm breaking,
+not the end of all weather or danger. Rewards commit before `story:updated`.
