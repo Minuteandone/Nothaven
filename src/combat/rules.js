@@ -213,7 +213,9 @@ export function afterHeroAction(c, hero, rng = Math.random, party = [hero]) {
 
 /**
  * Automatic companion turn. Scouts attack (30% chance of an Aimed Shot for 140%);
- * keepers mend the most wounded ally below half HP, spark constructs, else attack.
+ * keepers mend the most wounded ally below half HP, spark constructs, else attack;
+ * guardians may Shield Bash (25%, stuns non-bosses); signalers spend 3 MP on a
+ * def-ignoring Signal Flare.
  */
 export function companionTurn(c, m, party = [m], rng = Math.random) {
   const lines = [];
@@ -237,6 +239,23 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
       lines.push(`${m.name} casts Spark for ${d}!`);
       return lines;
     }
+  }
+  if (m.role === 'guardian' && rng() < 0.25) {
+    const d = physicalDamage(ms.atk, e.def, rng);
+    e.hp = Math.max(0, e.hp - d);
+    lines.push(`${m.name} lands a Shield Bash for ${d}!`);
+    if (e.hp > 0 && !e.boss && !hasStatus(e, 'stunned')) {
+      addStatus(e, 'stunned', 1, c.enemyTimers);
+      lines.push(`${e.name} is stunned!`);
+    }
+    return lines;
+  }
+  if (m.role === 'signaler' && (m.mp || 0) >= 3) {
+    m.mp -= 3;
+    const d = 5 + (m.level || 1) * 2 + randInt(rng, 0, 2);
+    e.hp = Math.max(0, e.hp - d);
+    lines.push(`${m.name} hurls a Signal Flare for ${d}!`);
+    return lines;
   }
   if (m.role === 'scout' && rng() < 0.3) {
     const d = physicalDamage(ms.atk, e.def, rng, { mult: 1.4 });
