@@ -12,10 +12,14 @@ export const SKILLS = Object.freeze({
     description: 'Steady breath and practiced hands restore health.' },
   warding_stance: { id: 'warding_stance', name: 'Warding Stance', mp: 2, kind: 'ward',
     description: 'Halve damage for two enemy turns.' },
+  rallying_light: { id: 'rallying_light', name: 'Rallying Light', mp: 6, kind: 'party_heal', power: 6,
+    description: 'Lift the beacon lantern high: every standing ally recovers health and stops bleeding.' },
+  stormbreaker: { id: 'stormbreaker', name: 'Stormbreaker', mp: 7, kind: 'damage', mult: 2.2,
+    description: 'Channel the gale into one devastating swing for 220% damage.' },
 });
 
 /** Skills unlock by level. */
-export const SKILL_UNLOCKS = Object.freeze({ power_strike: 1, mend: 1, spark: 2, warding_stance: 3 });
+export const SKILL_UNLOCKS = Object.freeze({ power_strike: 1, mend: 1, spark: 2, warding_stance: 3, rallying_light: 4, stormbreaker: 5 });
 
 export function knownSkills(member) {
   const lvl = member?.level || 1;
@@ -209,6 +213,18 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
         const before = hero.hp;
         hero.hp = Math.min(hs.maxHp, hero.hp + sk.power + (hero.level || 1) * 2);
         lines.push(`${hero.name} uses ${sk.name} and recovers ${hero.hp - before} HP.`);
+      } else if (sk.kind === 'party_heal') {
+        const amount = sk.power + (hero.level || 1) * 2;
+        for (const m of party) {
+          if (!m || (m.hp || 0) <= 0) continue;
+          const before = m.hp;
+          m.hp = Math.min(heroStats(m).maxHp, m.hp + amount);
+          if (Array.isArray(m.statuses)) m.statuses = m.statuses.filter((st) => st !== 'bleeding');
+          if (m !== hero && c.allyTimers?.[m.id]) delete c.allyTimers[m.id].bleeding;
+          lines.push(`${m.name} recovers ${m.hp - before} HP.`);
+        }
+        if (c.heroTimers) delete c.heroTimers.bleeding;
+        lines.unshift(`${hero.name} raises a Rallying Light!`);
       } else if (sk.kind === 'ward') {
         c.wardTurns = 2;
         lines.push(`${hero.name} settles into a Warding Stance.`);
