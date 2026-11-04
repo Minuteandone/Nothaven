@@ -304,6 +304,150 @@ function relayJourney(game, choice, early) {
   assert.equal(game.state.bestiary.relay_warden, 1);
 }
 
+function spireJourney(game, choice, early) {
+  const ending = game.state.story.ending;
+  act(game, 'leave'); // field journal → town
+  if (!early) act(game, 'storySpire', 'accept');
+  act(game, 'explore');
+  act(game, 'mapTravel', 'stormcrown_spire');
+  assert.equal(game.state.map.zoneId, 'greyhaven', 'summit requires discovery');
+  const reachSpire = () => {
+    walkExit(game, 'ridge_road'); walkExit(game, 'highwatch_pass');
+    walkExit(game, 'sunscar_relay'); walkExit(game, 'stormcrown_spire');
+  };
+  reachSpire();
+  assert.equal(game.state.story.flags.spire_visit, true);
+  for (const id of ['survey_records_a', 'survey_records_b', 'spire_supply_cache']) {
+    const target = ZONES.stormcrown_spire.interactables.find(i => i.id === id);
+    walkTo(game, target.x, target.y); act(game, 'mapInteract', id);
+  }
+  assert.equal(game.state.story.flags.survey_records_a, true);
+  assert.equal(game.state.story.flags.survey_records_b, true);
+  const inventory = structuredClone(game.state.inventory);
+  act(game, 'mapInteract', 'spire_supply_cache');
+  assert.deepEqual(game.state.inventory, inventory, 'summit cache cannot duplicate');
+  // Approach the summit from the western side without stepping on its boss.
+  walkTo(game, 3, 0); act(game, 'mapInteract', 'spire_summit');
+  assert.equal(game.state.story.flags.spire_summit, undefined, 'summit remains boss-gated');
+  winEncounter(game, 'spire_sentry_post');
+  winEncounter(game, 'spire_raider_camp');
+  assert.equal(game.state.story.flags.spire_victory, undefined, 'other spire species cannot clear Tyrant');
+  walkTo(game, 4, 5); act(game, 'mapInteract', 'stormcrown_post');
+  assert.equal(game.shopId, 'stormcrown_post');
+  assert.match(game.root.innerHTML, /Stormcrown Trading Post/);
+  const beforeSale = game.state.gold;
+  act(game, 'sell', 'tidebound_cutlass');
+  assert.equal(game.state.gold, beforeSale + getItem('tidebound_cutlass').sellPrice);
+  const beforePurchase = game.state.gold;
+  act(game, 'buy', 'stormforged_blade');
+  assert.equal(game.state.gold, beforePurchase - 235, 'summit weapon bought with earned gold');
+  act(game, 'equip', 'stormforged_blade');
+  assert.equal(game.state.party[0].equipment.weapon, 'stormforged_blade');
+  act(game, 'leave');
+  // Take the lift home for a real paid rest before the major fight.
+  walkExit(game, 'greyhaven'); act(game, 'toTownScene');
+  const beforeRest = game.state.gold;
+  act(game, 'rest');
+  assert.equal(game.state.gold, beforeRest - (choice === 'shelter_network' ? 2 : 5));
+  act(game, 'explore'); reachSpire();
+  winEncounter(game, 'stormcrown_tyrant');
+  assert.equal(game.state.story.flags.spire_victory, true);
+  assert.equal(game.state.bestiary.stormcrown_tyrant, 1);
+  checkpoint(game, 'complete');
+  walkTo(game, 4, 0); act(game, 'mapInteract', 'spire_summit');
+  assert.equal(game.state.story.flags.spire_summit, true);
+  const beforeReport = game.state.gold;
+  act(game, 'storySpire', 'report');
+  assert.equal(game.state.gold, beforeReport, 'stale report outside town cannot pay');
+  walkExit(game, 'greyhaven');
+  if (early) {
+    assert.equal(game.state.story.flags.spire_accepted, undefined);
+    act(game, 'storySpire', 'accept');
+    checkpoint(game, 'complete');
+  }
+  act(game, 'storyTalk', 'mara');
+  assert.equal(game.state.gold, beforeReport, 'ordinary conversation does not report');
+  act(game, 'storySpire', 'report');
+  assert.equal(game.state.gold, beforeReport + 150);
+  assert.equal(game.state.story.flags.spire_reward, true);
+  assert.equal(game.state.scene, 'ending', 'explicit summit report opens the finale');
+  assert.match(game.root.innerHTML, /Stormhaven Endures/);
+  assert.equal(game.state.flags.finaleShown, true);
+  checkpoint(game, 'complete');
+  act(game, 'keepExploring');
+  assert.equal(game.state.scene, 'explore');
+  checkpoint(game, 'complete');
+  act(game, 'storySpire', 'report');
+  assert.equal(game.state.gold, beforeReport + 150, 'summit report pays once after reload');
+  assert.equal(game.state.story.ending, ending);
+  assert.equal(game.state.story.flags.relay_choice, choice);
+  assert.equal(game.state.story.flags.relief_reward, true);
+  assert.equal(game.state.story.flags.rescue_reward, true);
+
+  const patrolFight = (species, roll) => {
+    // Only the encounter-selection RNG is controlled, never the resulting state.
+    game.mapRng = () => roll;
+    act(game, 'mapPatrol');
+    delete game.mapRng;
+    assert.equal(game.state.scene, 'combat');
+    assert.equal(game.state.combat.encounterId, null, 'patrol is not a fixed encounter');
+    assert.equal(game.state.combat.enemy.id, species);
+    const before = game.state.gold;
+    const reward = game.state.combat.enemy.gold;
+    const priorCount = game.state.bestiary?.[species] || 0;
+    for (let turn = 0; !game.state.combat.over && turn < 100; turn++) act(game, 'attack');
+    assert.equal(game.state.combat.over, 'victory');
+    assert.equal(game.state.gold, before + reward, 'quota never auto-pays');
+    assert.equal(game.state.bestiary[species], priorCount + 1);
+    act(game, 'finish');
+    assert.equal(game.state.bestiary[species], priorCount + 1, 'finish does not double-count');
+  };
+  for (const contract of [
+    { id: 'sunscar_patrol', zone: 'sunscar_relay', species: 'dust_marauder', roll: 0.25, wrong: 'relay_drone', wrongRoll: 0.75, gold: 35 },
+    { id: 'spire_patrol', zone: 'stormcrown_spire', species: 'spire_sentry', roll: 0.75, wrong: 'ashen_raider', wrongRoll: 0.25, gold: 60 },
+  ]) {
+    act(game, 'storyExpedition', contract.id);
+    assert.deepEqual(game.state.story.expedition.active, { id: contract.id, progress: 0 }, 'historical victories do not count');
+    act(game, 'toTownScene'); act(game, 'rest'); act(game, 'explore');
+    walkExit(game, 'ridge_road'); walkExit(game, 'highwatch_pass'); walkExit(game, 'sunscar_relay');
+    if (contract.zone === 'stormcrown_spire') walkExit(game, contract.zone);
+    patrolFight(contract.wrong, contract.wrongRoll);
+    assert.equal(game.state.story.expedition.active.progress, 0, 'wrong species never counts');
+    for (let n = 1; n <= 2; n++) {
+      patrolFight(contract.species, contract.roll);
+      assert.equal(game.state.story.expedition.active.progress, n);
+      checkpoint(game, 'complete');
+    }
+    const beforeClaim = game.state.gold;
+    act(game, 'storyExpedition', 'claim');
+    assert.equal(game.state.gold, beforeClaim, 'patrol payment requires town');
+    walkExit(game, 'greyhaven'); act(game, 'storyExpedition', 'claim');
+    assert.equal(game.state.gold, beforeClaim + contract.gold);
+    assert.equal(game.state.story.expedition.active, null);
+    checkpoint(game, 'complete');
+    act(game, 'storyExpedition', 'claim');
+    assert.equal(game.state.gold, beforeClaim + contract.gold, 'duplicate patrol claim cannot pay');
+    assert.equal(game.state.scene, 'explore', 'later rewards do not replay the finale');
+  }
+  assert.equal(game.state.story.expedition.completed, 2);
+  act(game, 'storyExpedition', 'spire_patrol');
+  assert.equal(game.state.story.expedition.active.progress, 0, 'repeat starts from zero');
+  reachSpire(); patrolFight('spire_sentry', 0.75);
+  assert.equal(game.state.story.expedition.active.progress, 1);
+  checkpoint(game, 'complete'); walkExit(game, 'greyhaven');
+  const beforeCancel = game.state.gold;
+  act(game, 'storyExpedition', 'cancel');
+  assert.equal(game.state.story.expedition.active, null);
+  assert.equal(game.state.gold, beforeCancel, 'cancellation never pays');
+  act(game, 'storyExpedition', 'spire_patrol');
+  assert.equal(game.state.story.expedition.active.progress, 0, 'cancelled partial progress is discarded');
+  act(game, 'storyExpedition', 'cancel');
+  assert.equal(game.state.story.expedition.completed, 2);
+  assert.equal(game.state.story.ending, ending);
+  assert.equal(game.state.story.flags.relay_choice, choice);
+  checkpoint(game, 'complete');
+}
+
 for (const ending of ['protect_town', 'share_signal']) {
   for (const early of [false, true]) {
     for (const first of ['coast', 'heights']) for (const relayChoice of ['shelter_network', 'route_network']) {
@@ -411,6 +555,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         act(game, 'leave'); act(game, 'explore');
         optionalBossJourney(game, first);
         relayJourney(game, relayChoice, early);
+        spireJourney(game, relayChoice, early);
       });
     }
   }
