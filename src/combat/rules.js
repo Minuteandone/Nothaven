@@ -216,6 +216,20 @@ export const BEACON_CHARGE_MAX = 100;
 export const BEACON_CHARGE_GAIN = Object.freeze({ attack: 15, skill: 15, defend: 10 });
 export const BEACON_BURST = Object.freeze({ name: 'Beacon Burst', mult: 2.5, perLevel: 3 });
 /** Adds charge (floored, clamped to 0..BEACON_CHARGE_MAX). */
+/** One line from the first conscious companion when Beacon Burst lands. */
+export const BURST_CHEERS = Object.freeze({
+  scout: 'Tamsin whoops: “Right on target — keep it coming!”',
+  keeper: 'Iven grins: “That’s the beacon’s own light!”',
+  guardian: 'Bram roars: “Now that is a signal!”',
+  signaler: 'Sela laughs: “Brighter than any flare I’ve lit!”',
+});
+
+export function burstCheer(party) {
+  if (!Array.isArray(party)) return '';
+  const ally = party.find((m) => m && (m.hp || 0) > 0 && BURST_CHEERS[m.role]);
+  return ally ? BURST_CHEERS[ally.role] : '';
+}
+
 export function gainCharge(c, amount) {
   if (!c) return 0;
   const now = Number.isFinite(c.charge) ? c.charge : 0;
@@ -307,6 +321,8 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
       if (Array.isArray(hero.statuses)) hero.statuses = hero.statuses.filter((st) => st !== 'bleeding' && st !== 'shocked');
       if (c.heroTimers) { delete c.heroTimers.bleeding; delete c.heroTimers.shocked; }
       if (hadStatus) lines.push(`The light clears ${hero.name}’s afflictions.`);
+      const cheer = burstCheer(party);
+      if (cheer) lines.push(cheer);
       break;
     }
     case 'flee': {
