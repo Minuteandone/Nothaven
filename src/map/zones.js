@@ -567,7 +567,7 @@ export const ZONES = {
       '^^^^^^^^^',
       '#...,...#',
       '#.#...#.#',
-      '+...,...#',
+      '+...,...+',
       '#.#...#.#',
       '#.......#',
       '#########',
@@ -575,6 +575,7 @@ export const ZONES = {
     spawns: {
       default: { x: 1, y: 3 },
       from_ridge_road: { x: 1, y: 3 },
+      from_sunscar_relay: { x: 7, y: 3 },
     },
     exits: [
       {
@@ -583,6 +584,13 @@ export const ZONES = {
         toZone: 'ridge_road',
         toSpawn: 'from_highwatch_pass',
         label: 'West Switchback → Ridge Road',
+      },
+      {
+        x: 8,
+        y: 3,
+        toZone: 'sunscar_relay',
+        toSpawn: 'from_highwatch_pass',
+        label: 'East Gate → Sunscar Relay',
       },
     ],
     npcs: [],
@@ -658,6 +666,131 @@ export const ZONES = {
       { encounterId: 'highwatch_raider_skirmish', enemyId: 'ridge_bandit', name: 'Pass Raider', weight: 1 },
     ],
   },
+  sunscar_relay: {
+    id: 'sunscar_relay',
+    name: 'Sunscar Relay',
+    subtitle: 'Inland Signal Station',
+    dangerLevel: 3,
+    description:
+      'Scorched sandstone terraces and copper-wound signal pylons rise across the inland plateau of Sunscar Relay. Restoring the station’s capacitor junction and master console will link Greyhaven’s beacon to the interior.',
+    width: 9,
+    height: 7,
+    grid: [
+      '^^^^^^^^^',
+      '#...,...#',
+      '#.#...#.#',
+      '+...,...#',
+      '#.#.....#',
+      '#.....+.#',
+      '#########',
+    ],
+    spawns: {
+      default: { x: 1, y: 3 },
+      from_highwatch_pass: { x: 1, y: 3 },
+    },
+    exits: [
+      {
+        x: 0,
+        y: 3,
+        toZone: 'highwatch_pass',
+        toSpawn: 'from_sunscar_relay',
+        label: 'West Trail → Highwatch Pass',
+      },
+      {
+        x: 6,
+        y: 5,
+        toZone: 'greyhaven',
+        toSpawn: 'default',
+        label: 'Signal Lift → Greyhaven',
+      },
+    ],
+    npcs: [],
+    interactables: [
+      {
+        id: 'relay_junction',
+        interactionId: 'relay_junction',
+        name: 'Relay Capacitor Junction',
+        kind: 'quest',
+        x: 3,
+        y: 1,
+        symbol: '⚙',
+        once: false,
+        description:
+          'A copper-wound capacitor bank feeding the inland signal conduit. Its linkages await calibration.',
+      },
+      {
+        id: 'relay_console',
+        interactionId: 'relay_console',
+        name: 'Master Relay Console',
+        kind: 'quest',
+        x: 7,
+        y: 3,
+        symbol: '✦',
+        once: false,
+        requiresEncounterCleared: 'relay_warden',
+        description:
+          'The brass control console governing the Sunscar signal array and inland routing relays.',
+      },
+      {
+        id: 'relay_supply_cache',
+        interactionId: 'relay_supply_cache',
+        name: 'Relay Technician Locker',
+        kind: 'cache',
+        x: 2,
+        y: 5,
+        symbol: '▣',
+        once: true,
+        rewards: [
+          { id: 'storm_tonic', qty: 1 },
+          { id: 'relay_brass', qty: 1 },
+          { id: 'sunscar_glass', qty: 1 },
+        ],
+        description:
+          'A weather-sealed locker holding spare relay fittings and storm-charged tonics.',
+      },
+      {
+        id: 'relay_outpost',
+        interactionId: 'relay_outpost',
+        name: 'Sunscar Relay Outpost',
+        kind: 'shop',
+        x: 6,
+        y: 4,
+        symbol: '$',
+        once: false,
+        description:
+          'An inland quartermaster stall beside the signal lift trading heavy relay gear and sunscar supplies.',
+      },
+    ],
+    encounters: [
+      {
+        id: 'relay_warden',
+        encounterId: 'relay_warden',
+        enemyId: 'relay_warden',
+        name: 'Relay Warden',
+        x: 5,
+        y: 3,
+        symbol: '!',
+        main: true,
+        description: 'A towering brass construct guarding the main approach to the Master Relay Console.',
+      },
+      {
+        id: 'sunscar_drone_patrol',
+        encounterId: 'sunscar_drone_patrol',
+        enemyId: 'relay_drone',
+        name: 'Overcharged Relay Drone',
+        x: 7,
+        y: 1,
+        symbol: '!',
+        main: false,
+        description: 'A rogue signal drone patrolling the northern capacitor terrace.',
+      },
+    ],
+    randomEncounterChance: 0.14,
+    randomEncounters: [
+      { encounterId: 'sunscar_marauder_ambush', enemyId: 'dust_marauder', name: 'Dust Marauder', weight: 2 },
+      { encounterId: 'sunscar_drone_sweep', enemyId: 'relay_drone', name: 'Relay Drone', weight: 2 },
+    ],
+  },
 };
 
 export const ZONE_ORDER = [
@@ -667,4 +800,5 @@ export const ZONE_ORDER = [
   'beacon_tower',
   'saltmere_coast',
   'highwatch_pass',
+  'sunscar_relay',
 ];

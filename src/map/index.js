@@ -17,6 +17,8 @@ export {
   craftInField,
   recordEncounterVictory,
   getClearedEncounters,
+  getEffectiveRandomEncounterChance,
+  getInnCost,
   getVisitedZones,
 } from './mapState.js';
 export { exploreScene, installMap } from './exploreScene.js';
