@@ -29,9 +29,12 @@ function fakeGame() {
 
 test('shop render announces its message as a status region and labels tables', () => {
   const game = fakeGame();
+  game.state.party.push({ name: 'Tamsin', companion: true, hp: 24, maxHp: 24 });
   const html = shopScene.render(game);
   assert.ok(html.includes('<p role="status">Bought Trail Rations x1.</p>'));
-  assert.ok(html.includes('role="tablist" aria-label="Shop sections"'));
+  assert.ok(html.includes('role="group" aria-label="Shop sections"'));
+  assert.ok(html.includes('role="group" aria-label="Choose whose gear to view"'));
+  assert.ok(!html.includes('tablist'));
   assert.ok(html.includes('<table aria-label="Items for sale">'));
   assert.ok(!EGG_RE.test(html));
 });
