@@ -27,6 +27,21 @@ export function migrateSave(raw, createInitialState) {
   let data = { ...raw };
   const from = Number.isInteger(data.saveVersion) ? data.saveVersion : 1;
   if (from > SAVE_VERSION) return null; // save from a newer build; refuse rather than corrupt
+  // Normalize malformed required fields before filling defaults.
+  for (const key of ['story', 'flags', 'questLog']) {
+    if (!isPlainObject(data[key])) delete data[key];
+  }
+  if (!Array.isArray(data.party) || data.party.length === 0 || !data.party.every(isPlainObject)) {
+    delete data.party;
+  }
+  if (typeof data.gold !== 'number' || !Number.isFinite(data.gold) || data.gold < 0) delete data.gold;
+  if (typeof data.location !== 'string') delete data.location;
+  if (typeof data.scene !== 'string') delete data.scene;
+  if (Array.isArray(data.inventory)) {
+    data.inventory = data.inventory.filter(
+      (s) => isPlainObject(s) && typeof s.id === 'string' && Number.isInteger(s.qty) && s.qty > 0,
+    );
+  }
   data = fillDefaults(data, fresh);
   // Party members also get any new stat fields.
   const heroDefaults = fresh.party[0];

@@ -30,3 +30,15 @@ test('migrateSave rejects junk and future versions', () => {
 test('initial state carries current save version', () => {
   assert.equal(createInitialState().saveVersion, SAVE_VERSION);
 });
+
+test('migrateSave normalizes malformed required fields', () => {
+  for (const bad of [{ party: null }, { party: [] }, { party: [null] }, { story: null }, { story: [] }, { gold: 'lots' }, { location: 5 }]) {
+    const m = migrateSave(bad, createInitialState);
+    assert.ok(Array.isArray(m.party) && m.party.length >= 1 && typeof m.party[0].hp === 'number');
+    assert.ok(m.story && typeof m.story === 'object' && !Array.isArray(m.story));
+    assert.equal(typeof m.gold, 'number');
+    assert.equal(typeof m.location, 'string');
+  }
+  const m = migrateSave({ inventory: [{ id: 'bandage', qty: 2 }, null, { id: 'x', qty: -1 }, { qty: 1 }] }, createInitialState);
+  assert.deepEqual(m.inventory, [{ id: 'bandage', qty: 2 }]);
+});
