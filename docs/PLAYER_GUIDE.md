@@ -143,3 +143,16 @@ After the summit report, Greyhaven offers the first two patrol contracts:
 - **Storm’s Eye Sweep:** after claiming the **Heart report reward**, defeat **2 Tempest Shades**, then claim **90 gold** in town. Defeating the core alone does not unlock this contract.
 
 Accept one contract at a time, then use patrols to seek new victories. Earlier kills do not count. Matching victories advance the quota but **do not automatically pay**; return and claim the reward. You may accept the same contract again from zero. Cancelling discards progress and gives no payment.
+
+### Frontier wanderers
+
+Four wandering foes can appear on the early roads in addition to the familiar patrols. They are never required, and the fixed story encounters are unchanged.
+
+| Foe | Where it roams | What to watch for | Counter |
+|---|---|---|---|
+| Briar Boar | Ridge Road | **Thorn Gore** hits about 1.4× harder | Defending halves the next hit; Warding Stance helps too |
+| Lens Wisp | Observatory Ruins | **Prism Glare** can leave you **shocked** | Plain attacks still work; Steady Signal or Burst clears it |
+| Wrack Eel | Saltmere Coast | **Coiling Bite** causes **bleeding** | Rallying Light or a bandage stops the bleed |
+| Rime Wight | Highwatch Pass | **Numbing Frost** can leave you **shocked** | Keep a storm tonic handy and lean on attacks |
+
+Each adds an entry to the bestiary, so they help toward the **catalogue** feat. Their drops are ordinary supplies such as healing herbs, storm glass, field dressings, and tonics.
