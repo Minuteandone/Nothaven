@@ -31,3 +31,20 @@ test('useConsumable refuses non-consumables and missing items', () => {
   assert.equal(useConsumable(mk(), [], 'healing_herb').ok, false, 'not held');
   assert.equal(useConsumable(mk(), inv(), 'nope').ok, false, 'unknown id');
 });
+
+// --- Effective-cap regressions (GPT-6 review) ---
+const keeperEquipped = () => ({ weapon: null, armor: 'keeper_coat', trinket: null });
+
+test('heal caps at effective maxHp (base + equipment), not base maxHp', () => {
+  const actor = mk({ hp: 12, equipment: keeperEquipped() }); // base maxHp 30, effective 40 (keeper_coat hp+10)
+  const res = useConsumable(actor, inv(), 'healing_herb'); // heals 30
+  assert.equal(res.ok, true);
+  assert.equal(res.actor.hp, 40, 'filled to effective cap 30+10, not base 30');
+});
+
+test('healing never reduces HP of a hero above the effective cap', () => {
+  const actor = mk({ hp: 45, equipment: keeperEquipped() }); // hp above effective maxHp 40 (e.g. gear swapped mid-scene)
+  const res = useConsumable(actor, inv(), 'healing_herb');
+  assert.equal(res.ok, true);
+  assert.equal(res.actor.hp, 45, 'unchanged — a potion never drains HP');
+});

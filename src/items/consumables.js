@@ -5,6 +5,7 @@
 
 import { getItem, TYPES } from './items.js';
 import { removeItem } from './inventory.js';
+import { effectiveStats } from './equipment.js';
 
 /**
  * Use a consumable from the inventory on an actor.
@@ -35,13 +36,16 @@ export function useConsumable(actor, inv, itemId) {
   const notes = [];
   if (use.hp) {
     const before = outActor.hp ?? 0;
-    const cap = (outActor.maxHp ?? before) + 0; // pure heal; maxHp bonuses handled by equipment
-    outActor.hp = Math.min(cap, before + use.hp);
+    // Cap at the effective max (base + equipment bonuses) and never reduce HP.
+    const cap = effectiveStats(outActor).maxHp || before;
+    outActor.hp = Math.max(before, Math.min(cap, before + use.hp));
     notes.push(`restored ${outActor.hp - before} hp`);
   }
   if (use.mp) {
     const before = outActor.mp ?? 0;
-    outActor.mp = Math.min(outActor.maxMp ?? before, before + use.mp);
+    // Cap at the effective max (base + equipment bonuses) and never reduce MP.
+    const cap = effectiveStats(outActor).maxMp || before;
+    outActor.mp = Math.max(before, Math.min(cap, before + use.mp));
     notes.push(`restored ${outActor.mp - before} mp`);
   }
   if (use.cure) {
