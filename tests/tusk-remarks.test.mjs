@@ -19,3 +19,15 @@ test('companions remark on Old Tusk after the rescues, before the relay choice',
     assert.equal(companionRemark(id, { flags: { rescue_reward: true, relay_choice: 'route_network' } }, { old_tusk: 2 }), relay, `${id} relay wins`);
   }
 });
+
+test('Gloomfin remarks come after the rescues and take priority over Old Tusk', () => {
+  for (const id of IDS) {
+    const story = { flags: { rescue_reward: true } };
+    const tusk = companionRemark(id, story, { old_tusk: 1 });
+    const fin = companionRemark(id, story, { old_tusk: 1, gloomfin: 1 });
+    assert.notEqual(fin, tusk, id);
+    assert.equal(companionRemark(id, story, { gloomfin: 1 }), fin, id);
+    assert.doesNotMatch(fin, EGG_RE, id);
+    assert.equal(companionRemark(id, { flags: {} }, { gloomfin: 1 }), companionRemark(id, { flags: {} }), `${id} needs rescue_reward`);
+  }
+});
