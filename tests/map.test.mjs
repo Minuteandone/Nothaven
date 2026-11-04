@@ -681,3 +681,59 @@ test("greyhaven_watch_house opens muster scene with returnScene explore when adj
   assert.equal(enteredMusterData?.returnScene, "explore");
   assert.equal(enteredMusterData?.musterId, "greyhaven_watch_house");
 });
+
+
+test('map keyboard opt-out preserves arrows and buttons and respects editing and settings guards', () => {
+  const game = makeMockGame();
+  let enabled = false;
+  let displayOpen = false;
+  const document = {
+    documentElement: { getAttribute: () => enabled ? 'on' : 'off' },
+    querySelector: () => displayOpen ? {} : null,
+  };
+  const listeners = new Map();
+  const window = {
+    addEventListener: (name, fn) => listeners.set(name, fn),
+    removeEventListener: name => listeners.delete(name),
+  };
+  const cleanup = installMap(game, { document, window });
+  game.setScene('explore');
+  const press = (code, overrides = {}) => {
+    const event = { code, target: { tagName: 'DIV' }, preventDefault() { this.prevented = true; }, ...overrides };
+    listeners.get('keydown')(event);
+    return event;
+  };
+  const original = JSON.stringify(game.state);
+  for (const code of ['KeyW', 'KeyA', 'KeyS', 'KeyD']) {
+    assert.equal(press(code).prevented, undefined);
+    assert.equal(JSON.stringify(game.state), original);
+  }
+  assert.equal(press('', { key: 'd' }).prevented, undefined);
+  assert.equal(press('ArrowRight').prevented, true);
+  assert.equal(game.state.map.x, 3);
+  exploreScene.actions.moveWest(game);
+  assert.equal(game.state.map.x, 2, 'native movement action remains available');
+  enabled = true;
+  assert.equal(press('KeyD').prevented, true);
+  assert.equal(game.state.map.x, 3);
+  assert.equal(press('', { key: 'a' }).prevented, true);
+  assert.equal(game.state.map.x, 2);
+  for (const code of ['KeyD', 'ArrowRight']) {
+    const before = JSON.stringify(game.state);
+    for (const guard of ['repeat', 'defaultPrevented', 'altKey', 'ctrlKey', 'metaKey', 'shiftKey']) {
+      assert.equal(press(code, { [guard]: true }).prevented, undefined, guard);
+    }
+    for (const target of [{ tagName: 'INPUT' }, { tagName: 'TEXTAREA' }, { tagName: 'SELECT' },
+      { isContentEditable: true }, { closest: () => ({}) }]) {
+      assert.equal(press(code, { target }).prevented, undefined);
+    }
+    displayOpen = true;
+    assert.equal(press(code).prevented, undefined);
+    displayOpen = false;
+    assert.equal(JSON.stringify(game.state), before);
+  }
+  game.state.scene = 'town';
+  assert.equal(press('ArrowRight').prevented, undefined);
+  cleanup();
+  assert.equal(listeners.size, 0);
+});
