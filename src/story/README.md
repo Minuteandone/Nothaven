@@ -99,3 +99,36 @@ the earlier beacon choice also changes the aftermath and NPC dialogue.
 immutable input, duplicate events, adapter notifications, save/load, and ending
 observer compatibility. Full physical-route campaign coverage should accompany
 the matching zone implementation; these focused tests do not claim map reachability.
+
+## Chapter 4: summit survey and repeatable expedition board
+
+`spire.js` offers **Above the Gathering Storm** after a valid `relay_choice` and
+completed beacon. Greyhaven's explicit `spire-accept` starts the commission;
+`spire-report` pays **150 gold once** only with all five exploration facts:
+
+- visit `stormcrown_spire` → `spire_visit`
+- interact `survey_records_a` and `survey_records_b` → matching flags
+- victory with fixed encounter ID `stormcrown_tyrant` → `spire_victory`
+- interact `spire_summit` → matching flag (map must require Tyrant clearance)
+
+Facts encountered before acceptance or prior chapters are retained. Neither talk
+nor inspection submits the report. The original ending and relay choice remain
+unchanged. `spire_reward` unlocks the Greyhaven expedition board.
+
+`expeditions.js` offers one active repeatable patrol at a time:
+`sunscar_patrol` (2 new `dust_marauder` victories, **35 gold**) or `spire_patrol`
+(2 new `spire_sentry` victories, **60 gold**). The event adapter passes both
+`encounterId` and `enemyId` from `combat:victory`: fixed objectives use only the
+former; patrols deliberately count only the latter. A species-only victory must
+never clear the fixed Tyrant quest. Historical bestiary totals are not consulted.
+
+`expedition-accept {contractId}` resets that new contract to zero;
+`expedition-claim` pays only at quota, clears the active contract, and increments
+`story.expedition.completed`; duplicate claims cannot pay. `expedition-cancel`
+discards progress without reward. The UI guards all three to Greyhaven using its
+authoritative location getter. Patrol progress is stored in
+`story.expedition.active = {id, progress}` and survives normal save/load. The
+normal combat resolver emits each victory once; reducers consume trusted facts,
+not player-supplied requests. No fixed encounter respawns are needed: the patrols
+use their regions' random encounters. All story rewards are committed before
+`story:updated`; its reward list remains informational, not a second payout.
