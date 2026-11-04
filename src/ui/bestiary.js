@@ -2,7 +2,7 @@ import { getItem } from '../items/items.js';
 import { fieldTip } from '../data/fieldTips.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
 
-const BEASTS = new Set(['storm_rat', 'gale_hound', 'frost_wolf', 'briar_boar']);
+const BEASTS = new Set(['storm_rat', 'gale_hound', 'frost_wolf', 'briar_boar', 'old_tusk']);
 const SPECTRES = new Set(['tide_wraith', 'squall_revenant', 'tempest_shade', 'last_squall', 'lens_wisp', 'rime_wight']);
 
 const ART = {

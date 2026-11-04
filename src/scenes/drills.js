@@ -4,7 +4,7 @@
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { ENEMIES } from '../data/enemies.js';
 
-export const DRILL_FOES = Object.freeze(Object.keys(ENEMIES).filter((id) => ENEMIES[id]?.boss === true));
+export const DRILL_FOES = Object.freeze(Object.keys(ENEMIES).filter((id) => ENEMIES[id]?.boss === true && ENEMIES[id]?.drill !== false));
 
 export function drillXp(id) {
   return Math.floor((Number(ENEMIES[id]?.xp) || 0) / 2);

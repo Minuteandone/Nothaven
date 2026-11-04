@@ -19,7 +19,9 @@ function makeGame(state) {
 }
 
 test('drill roster lists every boss and gates on bestiary defeats', () => {
-  assert.deepEqual([...DRILL_FOES], Object.keys(ENEMIES).filter((id) => ENEMIES[id].boss === true));
+  assert.deepEqual([...DRILL_FOES], Object.keys(ENEMIES).filter((id) => ENEMIES[id].boss === true && ENEMIES[id].drill !== false));
+  assert.equal(DRILL_FOES.length, 7);
+  assert.ok(!DRILL_FOES.includes('old_tusk'));
   assert.ok(DRILL_FOES.includes('tide_wraith') && DRILL_FOES.includes('last_squall'));
   const s = createInitialState();
   assert.ok(drillEntries(s).every((r) => !r.unlocked));
