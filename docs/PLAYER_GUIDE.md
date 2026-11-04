@@ -166,7 +166,7 @@ Each adds an entry to the bestiary, so they help toward the **catalogue** feat. 
 
 ### Watch House yard: drills, gauntlet and feats
 
-Greyhaven's **Sparring drills** board lets you refight any boss you have already defeated in the field, one bout at a time. Each drill pays **half that foe's experience to every party member**, but no gold, items, or journal entries — it is pure practice and cannot change the story. Defeating a boss in the field unlocks its drill. Each drill records how many times you have won and your best (fewest) rounds.
+Greyhaven's **Sparring drills** board lets you refight the yard bosses you have already defeated in the field, one bout at a time. Optional field trials (Old Tusk, Gloomfin, Frostmane) are not part of the yard. Each drill pays **half that foe's experience to every party member**, but no gold, items, or journal entries — it is pure practice and cannot change the story. Defeating a boss in the field unlocks its drill. Each drill records how many times you have won and your best (fewest) rounds.
 
 Once **three** drills are unlocked, the **Yard Gauntlet** opens beside them: face every unlocked drill boss back to back, with wounds and spent MP carrying over between bouts. Losing ends the run but costs nothing — no gold is lost and the party stands back up. Your best run (foes beaten in one attempt) is recorded.
 
