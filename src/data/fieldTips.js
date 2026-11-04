@@ -13,6 +13,7 @@ export const FIELD_TIPS = {
   gloomfin: 'An optional coast trial. Riptide Shock blocks most skills: pack storm tonics, keep Steady Signal or Burst ready, and Defend once it enrages at half health.',
   wrack_eel: 'Its bite causes bleeding. Keep bandages handy and heal before the damage stacks up.',
   rime_wight: 'Its frost leaves the party shocked. Spark and tonics both help; Steady Signal clears the chill.',
+  frostmane: 'An optional heights trial. It is quick and its Rime Fang opens bleeding wounds: carry bandages or field dressings, keep Rallying Light ready, and Defend once it enrages at half health.',
   frost_wolf: 'The fastest beast on the heights. Bleeding stacks up quickly, so heal early rather than late.',
   rockslide_golem: 'Slow but heavily armored. Spark and Iven’s sparks work well on constructs.',
   pass_warlord: 'The halberd sweep causes bleeding. Rallying Light keeps the whole party standing.',
