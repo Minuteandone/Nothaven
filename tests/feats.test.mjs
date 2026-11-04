@@ -25,6 +25,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.bestiary.old_tusk = 1;
   s.bestiary.gloomfin = 1;
   s.bestiary.frostmane = 1;
+  s.bestiary.lenswarden = 1;
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
   assert.equal(featsEarned(s), FEATS.length);
@@ -145,5 +146,20 @@ test('Packbreaker feat needs a Frostmane defeat in the bestiary', () => {
   s.bestiary = null;
   assert.equal(done(), false, 'missing bestiary is safe');
   const row = FEATS.find(f => f.id === 'frostmane');
+  assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
+});
+
+test('Vault Keeper feat needs a Lenswarden defeat in the bestiary', () => {
+  const s = createInitialState();
+  const done = () => featStatus(s).find(f => f.id === 'lenswarden').done;
+  assert.ok(ENEMIES.lenswarden && ENEMIES.lenswarden.boss === true);
+  assert.equal(done(), false);
+  s.bestiary = { lenswarden: 0, rust_sentinel: 4 };
+  assert.equal(done(), false, 'zero or ordinary constructs do not count');
+  s.bestiary.lenswarden = 1;
+  assert.equal(done(), true);
+  s.bestiary = null;
+  assert.equal(done(), false, 'missing bestiary is safe');
+  const row = FEATS.find(f => f.id === 'lenswarden');
   assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
 });

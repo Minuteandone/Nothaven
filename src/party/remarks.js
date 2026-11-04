@@ -5,6 +5,7 @@
 const LINES = {
   tamsin: {
     frostmane: 'Frostmane ran faster than any wolf I have ever chased. I still got there first. Mostly.',
+    lenswarden: 'That brass guardian tracked me with every prism it had. Turns out light is easy to dodge if you keep moving.',
     gloomfin: 'I heard Gloomfin was big. Nobody said it was big enough to make the whole cove go quiet. I am counting that one twice.',
     tusk: 'Old Tusk charged me once when I was nine. I finally got to watch him run the other way. Took me long enough.',
     squall: 'I watched the Last Squall roll off over the mountains from the ridge. First time I ever cheered at weather.',
@@ -20,6 +21,7 @@ const LINES = {
   },
   iven: {
     frostmane: 'Frost was still on my sleeves when we came down from the bastion. I wrote the whole fight down before it melted.',
+    lenswarden: 'The Lenswarden kept the old opticians’ vault for a century. I copied their notes before we left; the beacon lens was only one of their ideas.',
     gloomfin: 'I kept a spark from Gloomfin’s fin in a jar of seawater. It glowed for a whole day before it faded.',
     tusk: 'I measured the scrape marks Old Tusk left on the ridge boulders. I would rather not tell you how deep they go.',
     squall: 'My barometer has not twitched since the Last Squall broke. I tapped it twice to be sure it still works.',
@@ -35,6 +37,7 @@ const LINES = {
   },
   bram: {
     frostmane: 'I have braced a shield against winter gales off the harbor. Frostmane hit harder than any of them, and it still went home first.',
+    lenswarden: 'A shield is a fine mirror, it turns out. That brass guardian did not enjoy its own beam coming back at it.',
     gloomfin: 'Saltmere fishers row past the north seawall again since Gloomfin went back to the deep. Ona says the nets come up full.',
     tusk: 'That old boar hit my shield harder than the tide ever did. I have kept the dent as a keepsake.',
     squall: 'Saltmere has a new saying now: calm as the day the Last Squall fell. The children use it for everything.',
@@ -50,6 +53,7 @@ const LINES = {
   },
   sela: {
     frostmane: 'Rusk’s sentries stand their night watches without flinching at every howl now. The packs scattered once Frostmane fled, and the cairn fires burn steady.',
+    lenswarden: 'Every prism in that vault was cut by hand. I would like to study them properly someday, without one of them trying to blind me.',
     gloomfin: 'I have outrun wolves and rockslides, but I never want to race an eel through the shallows again.',
     tusk: 'Highwatch runners used to swing a whole mile wide of the ridge gorse because of Old Tusk. Now they cut straight through.',
     squall: 'The runners asked me what the Last Squall was like. I told them it was loud, and then it was quiet.',
@@ -75,6 +79,7 @@ export function companionRemark(id, story = {}, bestiary = {}) {
   if ((f.spire_summit || f.spire_victory || f.victory_stormcrown_tyrant) && set.spire) return set.spire;
   const relay = story?.flags?.relay_choice;
   if ((relay === 'shelter_network' || relay === 'route_network') && set[relay]) return set[relay];
+  if (story?.flags?.rescue_reward && Number(bestiary?.lenswarden) > 0 && set.lenswarden) return set.lenswarden;
   if (story?.flags?.rescue_reward && Number(bestiary?.frostmane) > 0 && set.frostmane) return set.frostmane;
   if (story?.flags?.rescue_reward && Number(bestiary?.gloomfin) > 0 && set.gloomfin) return set.gloomfin;
   if (story?.flags?.rescue_reward && Number(bestiary?.old_tusk) > 0 && set.tusk) return set.tusk;
