@@ -392,3 +392,15 @@ button:disabled, .action-button:disabled { opacity: .42; cursor: not-allowed; }
   .explore-utilities { grid-template-columns: 1fr; }
 }
 .field-pack__label { margin: .25rem 0 .1rem; color: var(--accent); font-size: .75rem; }
+
+/* Warden's Field Journal (bestiary) and Watch House muster board */
+.bestiary-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .9rem; margin: 1rem 0; }
+.bestiary-entry { background: var(--panel-strong); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: .8rem 1rem; }
+.bestiary-entry h3 { margin: 0 0 .35rem; color: var(--accent-bright); }
+.bestiary-entry p { margin: .25rem 0; font-size: .9rem; }
+.bestiary-entry.unknown { border-left-color: var(--line); color: var(--muted); opacity: .75; }
+.bestiary-entry.unknown h3 { color: var(--muted); letter-spacing: .2em; }
+.bestiary .hint, .muster .hint { color: var(--muted); font-size: .88rem; }
+.muster .companion { border-left: 3px solid var(--good); margin: .75rem 0; }
+.muster .message { color: var(--accent-bright); font-weight: 600; }
+.muster .actions button, .bestiary .actions button { margin-right: .5rem; }
