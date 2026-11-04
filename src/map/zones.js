@@ -244,6 +244,7 @@ export const ZONES = {
       { encounterId: 'ridge_skirmish', enemyId: 'ridge_bandit', name: 'Ridge Bandit Ambush', weight: 2 },
       { encounterId: 'ridge_hound_pack', enemyId: 'gale_hound', name: 'Prowling Gale Hound', weight: 1 },
       { encounterId: 'ridge_rat_pack', enemyId: 'storm_rat', name: 'Cliffside Storm Rat', weight: 2 },
+      { encounterId: 'ridge_boar_charge', enemyId: 'briar_boar', name: 'Briar Boar', weight: 1 },
     ],
   },
 
@@ -373,6 +374,7 @@ export const ZONES = {
       { encounterId: 'ruins_sentinel_patrol', enemyId: 'rust_sentinel', name: 'Rust Sentinel', weight: 1 },
       { encounterId: 'ruins_hound_pack', enemyId: 'gale_hound', name: 'Vault Gale Hound', weight: 2 },
       { encounterId: 'ruins_skirmish', enemyId: 'storm_rat', name: 'Vault Storm Rat', weight: 2 },
+      { encounterId: 'ruins_wisp_drift', enemyId: 'lens_wisp', name: 'Lens Wisp', weight: 1 },
     ],
   },
 
@@ -587,6 +589,7 @@ export const ZONES = {
       { encounterId: 'saltmere_crawler_prowl', enemyId: 'reef_crawler', name: 'Coastal Reef Crawler', weight: 2 },
       { encounterId: 'saltmere_revenant_patrol', enemyId: 'squall_revenant', name: 'Squall Revenant', weight: 1 },
       { encounterId: 'saltmere_hound_prowl', enemyId: 'gale_hound', name: 'Coastal Gale Hound', weight: 1 },
+      { encounterId: 'saltmere_eel_ambush', enemyId: 'wrack_eel', name: 'Wrack Eel', weight: 1 },
     ],
   },
 
@@ -711,6 +714,7 @@ export const ZONES = {
       { encounterId: 'highwatch_wolf_pack', enemyId: 'frost_wolf', name: 'Frost Wolf Pack', weight: 2 },
       { encounterId: 'highwatch_golem_rumble', enemyId: 'rockslide_golem', name: 'Rockslide Golem', weight: 1 },
       { encounterId: 'highwatch_raider_skirmish', enemyId: 'ridge_bandit', name: 'Pass Raider', weight: 1 },
+      { encounterId: 'highwatch_wight_vigil', enemyId: 'rime_wight', name: 'Rime Wight', weight: 1 },
     ],
   },
   sunscar_relay: {

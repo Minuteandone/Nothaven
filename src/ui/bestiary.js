@@ -2,8 +2,8 @@ import { getItem } from '../items/items.js';
 import { fieldTip } from '../data/fieldTips.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
 
-const BEASTS = new Set(['storm_rat', 'gale_hound', 'frost_wolf']);
-const SPECTRES = new Set(['tide_wraith', 'squall_revenant', 'tempest_shade', 'last_squall']);
+const BEASTS = new Set(['storm_rat', 'gale_hound', 'frost_wolf', 'briar_boar']);
+const SPECTRES = new Set(['tide_wraith', 'squall_revenant', 'tempest_shade', 'last_squall', 'lens_wisp', 'rime_wight']);
 
 const ART = {
   beast: {
@@ -44,7 +44,7 @@ function victoryCount(value) {
 
 function kindFor(enemy) {
   if (enemy.id === 'storm_heart') return 'heart';
-  if (enemy.id === 'reef_crawler') return 'crawler';
+  if (enemy.id === 'reef_crawler' || enemy.id === 'wrack_eel') return 'crawler';
   if (BEASTS.has(enemy.id)) return 'beast';
   if (SPECTRES.has(enemy.id)) return 'spectre';
   if (Array.isArray(enemy.tags) && enemy.tags.includes('construct')) return 'construct';
