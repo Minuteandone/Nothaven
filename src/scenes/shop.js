@@ -185,25 +185,25 @@ export const shopScene = {
           <span>Gold ${gold}</span>
         </div>
         <p><em>${esc(shop.greeting)}</em></p>
-        <p>${esc(game.shopMessage || '')}</p>
-        <div class="shop-tabs">
+        <p role="status">${esc(game.shopMessage || '')}</p>
+        <div class="shop-tabs" role="tablist" aria-label="Shop sections">
           <button class="shop-tab${mode === 'buy' ? ' shop-tab--active' : ''}" data-action="setMode" data-arg="buy" ${mode === 'buy' ? 'aria-current="true"' : ''}>Buy</button>
           <button class="shop-tab${mode === 'sell' ? ' shop-tab--active' : ''}" data-action="setMode" data-arg="sell" ${mode === 'sell' ? 'aria-current="true"' : ''}>Sell</button>
           <button class="shop-tab${mode === 'craft' ? ' shop-tab--active' : ''}" data-action="setMode" data-arg="craft" ${mode === 'craft' ? 'aria-current="true"' : ''}>Craft</button>
         </div>
         ${
           mode === 'buy'
-            ? `<table>${buyRows}</table>`
+            ? `<table aria-label="Items for sale">${buyRows}</table>`
             : mode === 'sell'
               ? sellRows
                 ? `<table class="shop-sell" aria-label="Items available to sell">${sellRows}</table>`
                 : '<p>You carry nothing Hesta would pay for.</p>'
-              : `<table class="craft-table">${craftRows}</table>`
+              : `<table class="craft-table" aria-label="Crafting recipes">${craftRows}</table>`
         }
         <h3>Wardrobe${party.length > 1 ? ` — ${esc(member.name)}` : ''}</h3>
         ${
           party.length > 1
-            ? `<div>${party
+            ? `<div role="tablist" aria-label="Choose whose gear to view">${party
                 .map((m, i) =>
                   m
                     ? `<button class="shop-tab${i === index ? ' shop-tab--active' : ''}" data-action="selectMember" data-arg="${i}" ${i === index ? 'aria-current="true"' : ''}>${esc(m.name || `Member ${i + 1}`)}${m.companion ? ' (ally)' : ''}</button>`
