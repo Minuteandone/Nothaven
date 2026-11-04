@@ -16,8 +16,34 @@ export function drillUnlocked(state, id) {
   return Number.isInteger(n) && n >= 1;
 }
 
+// Drill records live in state.drillRecords[id] = {wins, best}; best is the
+// fewest rounds a drill was won in. Malformed values read as no record.
+const posInt = (n) => (Number.isInteger(n) && n > 0 ? n : 0);
+
+export function drillRecord(state, id) {
+  const raw = state?.drillRecords && typeof state.drillRecords === 'object' ? state.drillRecords[id] : null;
+  const wins = posInt(raw?.wins);
+  const best = posInt(raw?.best);
+  return wins ? { wins, best } : { wins: 0, best: 0 };
+}
+
+export function recordDrillWin(state, id, rounds) {
+  if (!state || !DRILL_FOES.includes(id)) return null;
+  if (!state.drillRecords || typeof state.drillRecords !== 'object' || Array.isArray(state.drillRecords)) state.drillRecords = {};
+  const prev = drillRecord(state, id);
+  const r = posInt(Math.floor(Number(rounds))) || 1;
+  const next = { wins: prev.wins + 1, best: prev.best ? Math.min(prev.best, r) : r };
+  state.drillRecords[id] = next;
+  return { ...next, newBest: !prev.best || r < prev.best };
+}
+
 export function drillEntries(state) {
-  return DRILL_FOES.map((id) => ({ id, name: ENEMIES[id].name, xp: drillXp(id), unlocked: drillUnlocked(state, id) }));
+  return DRILL_FOES.map((id) => ({ id, name: ENEMIES[id].name, xp: drillXp(id), unlocked: drillUnlocked(state, id), record: drillRecord(state, id) }));
+}
+
+function recordText(rec) {
+  if (!rec.wins) return 'No drills won yet.';
+  return `Won ${rec.wins} ${rec.wins === 1 ? 'time' : 'times'} · best ${rec.best} ${rec.best === 1 ? 'round' : 'rounds'}`;
 }
 
 export const drillsScene = {
@@ -26,7 +52,7 @@ export const drillsScene = {
   },
   render(game) {
     const rows = drillEntries(game.state).map((r) => `<li class="drill${r.unlocked ? '' : ' drill--locked'}">
-        <div><h2>${escapeHTML(r.name)}</h2><p>${r.unlocked ? `+${r.xp} XP per drill` : 'Defeat this foe in the field first.'}</p></div>
+        <div><h2>${escapeHTML(r.name)}</h2><p>${r.unlocked ? `+${r.xp} XP per drill` : 'Defeat this foe in the field first.'}</p>${r.unlocked ? `<p class="drill__record">${escapeHTML(recordText(r.record))}</p>` : ''}</div>
         ${r.unlocked ? uiButton({ action: 'startDrill', arg: r.id, label: 'Begin drill', iconName: 'sword', variant: 'ghost' }) : ''}
       </li>`).join('');
     const msg = game.drillsMessage ? `<p class="drills__message" role="status">${escapeHTML(game.drillsMessage)}</p>` : '';
