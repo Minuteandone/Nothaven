@@ -934,6 +934,63 @@ function gauntletJourney(game) {
   game.bus.off('combat:victory', countVictory);
 }
 
+// Patrol selection is deterministic; movement, combat, rewards and records are real.
+function wandererJourney(game) {
+  act(game, 'closeDrills'); act(game, 'muster');
+  for (const id of ['bram', 'sela']) act(game, 'recruit', id);
+  assert.deepEqual(game.state.party.map(member => member.id), ['hero', 'bram', 'sela']);
+  act(game, 'leave'); act(game, 'bag');
+  for (const [slot, id] of [['weapon', 'tempest_edge'], ['armor', 'maelstrom_plate'], ['trinket', 'heartward_charm']]) {
+    act(game, 'equip', id); assert.equal(game.state.party[0].equipment[slot], id);
+  }
+  act(game, 'leave'); act(game, 'rest'); act(game, 'explore');
+  const roadwise = () => featStatus(game.state).find(feat => feat.id === 'wanderers').done;
+  const protectedState = () => structuredClone(Object.fromEntries(
+    ['story', 'flags', 'drillRecords', 'drillGauntlet'].map(key => [key, game.state[key]])
+  ));
+  const protectedBefore = protectedState(), expectedBook = structuredClone(game.state.bestiary);
+  const routes = [
+    { zones: ['ridge_road'], id: 'briar_boar' },
+    { zones: ['observatory_ruins'], id: 'lens_wisp' },
+    { zones: ['ridge_road', 'greyhaven', 'saltmere_coast'], id: 'wrack_eel' },
+    { zones: ['greyhaven', 'ridge_road', 'highwatch_pass'], id: 'rime_wight' },
+  ];
+  for (const { id } of routes) assert.equal(expectedBook[id], undefined);
+  assert.equal(roadwise(), false);
+  for (const [index, { zones, id }] of routes.entries()) {
+    for (const zone of zones) walkExit(game, zone);
+    const beforeGold = game.state.gold, beforeXp = game.state.party.map(member => member.xp);
+    const cleared = structuredClone(game.state.map.clearedEncounters);
+    const inspected = structuredClone(game.state.map.completedInteractions);
+    game.mapRng = () => 0.99;
+    act(game, 'mapPatrol'); delete game.mapRng;
+    const combat = game.state.combat;
+    assert.equal(combat.enemy.id, id); assert.equal(combat.encounterId, null); assert.notEqual(combat.drill, true);
+    const xp = combat.enemy.xp;
+    for (let turn = 0; !combat.over && turn < 100; turn++) act(game, 'attack');
+    assert.equal(combat.over, 'victory'); assert.equal(combat.rewards.xp, xp);
+    assert.equal(combat.rewards.gold, combat.enemy.gold);
+    assert.equal(game.state.gold, beforeGold + combat.rewards.gold);
+    game.state.party.forEach((member, i) => assert.equal(member.xp, beforeXp[i] + xp));
+    expectedBook[id] = 1; assert.deepEqual(game.state.bestiary, expectedBook);
+    assert.deepEqual(protectedState(), protectedBefore);
+    assert.deepEqual(game.state.map.clearedEncounters, cleared);
+    assert.deepEqual(game.state.map.completedInteractions, inspected);
+    assert.equal(roadwise(), index === routes.length - 1);
+    const rewardedGold = game.state.gold, rewardedXp = game.state.party.map(member => member.xp);
+    act(game, 'finish');
+    assert.equal(game.state.scene, 'explore'); assert.equal(game.state.combat, null);
+    assert.equal(game.state.map.activeEncounterId, null);
+    assert.deepEqual(game.state.map.clearedEncounters, cleared);
+    assert.deepEqual(game.state.map.completedInteractions, inspected);
+    assert.equal(game.state.gold, rewardedGold); assert.deepEqual(game.state.party.map(member => member.xp), rewardedXp);
+    assert.deepEqual(game.state.bestiary, expectedBook);
+    checkpoint(game, 'complete');
+    assert.deepEqual(game.state.bestiary, expectedBook); assert.deepEqual(protectedState(), protectedBefore);
+    assert.equal(roadwise(), index === routes.length - 1);
+  }
+}
+
 function squallJourney(game) {
   const prior = structuredClone(game.state.story);
   const endingFlags = structuredClone(game.state.flags);
@@ -1155,6 +1212,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         squallJourney(game);
         drillJourney(game);
         gauntletJourney(game);
+        wandererJourney(game);
       });
     }
   }
