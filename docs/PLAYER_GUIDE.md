@@ -156,6 +156,8 @@ Four wandering foes can appear on the early roads in addition to the familiar pa
 | Wrack Eel | Saltmere Coast | **Coiling Bite** causes **bleeding** | Rallying Light or a bandage stops the bleed |
 | Rime Wight | Highwatch Pass | **Numbing Frost** can leave you **shocked** | Keep a storm tonic handy and lean on attacks |
 
+**Old Tusk (optional ridge trial).** Once Saltmere and Highwatch are home and you have reported to Mara, the grey king of the briar boars appears on a Ridge Road ledge. His **Bramble Charge** causes heavy bleeding and he hits harder below half health, so bring bandages or Rallying Light. He is a one-off field challenge: nothing depends on him and he does not join the sparring drills.
+
 Each adds an entry to the bestiary, so they help toward the **catalogue** feat. Their drops are ordinary supplies such as healing herbs, storm glass, field dressings, and tonics.
 
 ### Watch House yard: drills, gauntlet and feats
