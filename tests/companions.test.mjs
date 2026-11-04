@@ -144,7 +144,7 @@ test('companion text contains no egg references', () => {
   for (const w of ['egg', 'yolk', 'hatch', 'nest', 'chick', 'omelet', 'shell', 'hen ']) assert.ok(!text.includes(w), w);
 });
 
-test('enemy specials can target companions (damage only, no status)', () => {
+test('enemy specials can target companions and inflict their status', () => {
   const s = unlockedState();
   recruitCompanion(s, 'tamsin');
   const tamsin = s.party[1];
@@ -155,7 +155,8 @@ test('enemy specials can target companions (damage only, no status)', () => {
   const lines = enemyTurn(c, s.party[0], seq(0.9, 0.0, 0.5), s.party);
   assert.match(lines.join(' '), /uses Gnaw! Tamsin takes/);
   assert.ok(tamsin.hp < before);
-  assert.deepEqual(tamsin.statuses, []);
+  assert.deepEqual(tamsin.statuses, ['bleeding']);
+  assert.equal(c.allyTimers.tamsin.bleeding, 2);
 });
 
 test('rescued settlers unlock from chapter two rescue victories', () => {
@@ -202,4 +203,52 @@ test('muster board lists all four companions', () => {
   const s = createInitialState();
   const html = musterScene.render({ state: s, musterMessage: '' });
   for (const name of ['Tamsin', 'Iven', 'Bram', 'Sela']) assert.ok(html.includes(name), name);
+});
+
+test('enemy specials inflict statuses on companions; bleeding ticks and expires', async () => {
+  const { afterHeroAction, tickAllyStatuses } = await import('../src/combat/rules.js');
+  const hero = createInitialState().party[0];
+  const tam = createCompanionMember('tamsin', 1);
+  const c = createCombat({ enemyId: 'ridge_bandit' });
+  // rng 0.9 -> picks living[1] (tamsin) of 2; 0 -> special fires
+  const seq = [0.9, 0, 0.5];
+  let i = 0; const rng = () => seq[i++] ?? 0.5;
+  const lines = enemyTurn(c, hero, rng, [hero, tam]);
+  assert.ok(tam.statuses.includes('bleeding'), lines.join('|'));
+  assert.ok(lines.some((l) => /Tamsin is bleeding!/.test(l)));
+  const hp = tam.hp;
+  const t1 = tickAllyStatuses(c, [hero, tam], hero);
+  assert.equal(tam.hp, hp - 2);
+  assert.ok(t1.some((l) => /bleeds for 2/.test(l)));
+  for (let k = 0; k < 5; k++) tickAllyStatuses(c, [hero, tam], hero);
+  assert.ok(!tam.statuses.includes('bleeding'), 'bleeding expires');
+  assert.equal(typeof afterHeroAction, 'function');
+});
+
+test('shocked keeper cannot Mend and attacks instead; shocked signaler cannot flare', () => {
+  const hero = createInitialState().party[0];
+  hero.hp = 3;
+  const iven = createCompanionMember('iven', 1);
+  iven.statuses = ['shocked'];
+  const c = createCombat({ enemyId: 'storm_rat' });
+  const mp = iven.mp;
+  const lines = companionTurn(c, iven, [hero, iven], fixed(0.5));
+  assert.equal(iven.mp, mp);
+  assert.ok(lines.some((l) => /strikes for/.test(l)), lines.join('|'));
+  const sela = createCompanionMember('sela', 1);
+  sela.statuses = ['shocked'];
+  const smp = sela.mp;
+  companionTurn(c, sela, [hero, sela], fixed(0.5));
+  assert.equal(sela.mp, smp);
+});
+
+test('combat render shows companion status chips', () => {
+  const g = { state: createInitialState(), scenes: {}, combatMenu: 'main' };
+  const tam = createCompanionMember('tamsin', 1);
+  tam.statuses = ['bleeding'];
+  g.state.party.push(tam);
+  g.state.combat = createCombat({ enemyId: 'storm_rat' });
+  const html = combatScene.render(g);
+  const ally = html.slice(html.indexOf('unit ally'));
+  assert.match(ally, /class="status">bleeding/);
 });
