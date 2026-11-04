@@ -90,7 +90,7 @@ export const ENEMIES = {
     ],
   },
   pass_warlord: {
-    id: 'pass_warlord', name: 'Highwatch Warlord', hp: 64, atk: 12, def: 5, spd: 5, xp: 70, gold: 45,
+    id: 'pass_warlord', name: 'Highwatch Warlord', hp: 96, atk: 13, def: 6, spd: 5, xp: 70, gold: 45,
     boss: true,
     intro: 'Atop the frozen switchbacks, the Highwatch Warlord levels a notched halberd and bars the pass!',
     enrage: { threshold: 0.5, atk: 3, chance: 0.5, line: 'The Highwatch Warlord tears off his frozen helm and roars for the pass to hold. His blows grow heavier!' },
@@ -102,7 +102,7 @@ export const ENEMIES = {
     ],
   },
   drowned_harbormaster: {
-    id: 'drowned_harbormaster', name: 'Drowned Harbormaster', hp: 58, atk: 11, def: 4, spd: 6, xp: 64, gold: 40,
+    id: 'drowned_harbormaster', name: 'Drowned Harbormaster', hp: 88, atk: 12, def: 5, spd: 6, xp: 64, gold: 40,
     boss: true,
     intro: 'Chains rattle under the pier as the Drowned Harbormaster rises, lantern blazing with storm-light!',
     enrage: { threshold: 0.5, atk: 2, chance: 0.55, line: 'The Harbormaster\'s lantern flares white as the tide surges back in. His chains whip faster!' },
