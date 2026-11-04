@@ -199,3 +199,14 @@ test('chapter two enemies are valid and loot uses known items', async () => {
   }
   assert.ok(ENEMIES.rockslide_golem.tags.includes('construct'));
 });
+
+test('chapter two bosses are valid, and flagged as bosses', async () => {
+  const { ITEMS } = await import('../src/items/items.js');
+  for (const id of ['pass_warlord', 'drowned_harbormaster']) {
+    const e = ENEMIES[id];
+    assert.ok(e && e.id === id && e.boss === true && e.hp > 50 && e.intro && e.ability, id);
+    for (const l of e.loot) assert.ok(ITEMS[l.id], `${id} drops unknown ${l.id}`);
+    const c = createCombat({ enemyId: id });
+    assert.equal(c.enemy.id, id);
+  }
+});

@@ -88,4 +88,26 @@ export const ENEMIES = {
       { id: 'scrap_metal', chance: 0.7, minQty: 1, maxQty: 3 },
     ],
   },
+  pass_warlord: {
+    id: 'pass_warlord', name: 'Highwatch Warlord', hp: 64, atk: 12, def: 5, spd: 5, xp: 70, gold: 45,
+    boss: true,
+    intro: 'Atop the frozen switchbacks, the Highwatch Warlord levels a notched halberd and bars the pass!',
+    ability: { name: 'Sweeping Halberd', chance: 0.35, mult: 1.4, status: 'bleeding', turns: 3 },
+    loot: [
+      { id: 'iron_sword', chance: 0.5, minQty: 1, maxQty: 1 },
+      { id: 'bandage', chance: 1, minQty: 1, maxQty: 2 },
+      { id: 'salvaged_wiring', chance: 0.6, minQty: 1, maxQty: 2 },
+    ],
+  },
+  drowned_harbormaster: {
+    id: 'drowned_harbormaster', name: 'Drowned Harbormaster', hp: 58, atk: 11, def: 4, spd: 6, xp: 64, gold: 40,
+    boss: true,
+    intro: 'Chains rattle under the pier as the Drowned Harbormaster rises, lantern blazing with storm-light!',
+    ability: { name: 'Anchor Chain', chance: 0.35, mult: 1.35, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'storm_tonic', chance: 1, minQty: 1, maxQty: 2 },
+      { id: 'storm_glass', chance: 0.8, minQty: 1, maxQty: 3 },
+      { id: 'healing_herb', chance: 0.7, minQty: 1, maxQty: 2 },
+    ],
+  },
 };
