@@ -52,7 +52,7 @@ function memberTabs(party, index) {
     .map((m, i) =>
       `<button data-action="selectMember" data-arg="${i}"${i === index ? ' disabled' : ''}>${esc(m.name || `Member ${i + 1}`)}${m.companion ? ' (ally)' : ''}</button>`)
     .join('');
-  return `<div class="bag-members" role="tablist" aria-label="Choose whose bag to use">${tabs}</div>`;
+  return `<div class="bag-members" role="group" aria-label="Choose whose bag to use">${tabs}</div>`;
 }
 
 

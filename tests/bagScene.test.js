@@ -155,3 +155,12 @@ test('installBag registers the bag scene once during boot', () => {
   installBag(game);
   assert.equal(game.registered.bag, bagScene);
 });
+
+test('bag member selector uses group semantics, not tablist', () => {
+  const game = fakeGame();
+  game.state.party.push({ name: 'Bram', hp: 10, maxHp: 25, companion: true });
+  bagScene.onEnter(game, {});
+  const html = bagScene.render(game);
+  assert.match(html, /class="bag-members" role="group" aria-label="Choose whose bag to use"/);
+  assert.ok(!html.includes('tablist'));
+});
