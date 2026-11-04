@@ -3,7 +3,7 @@ import { fieldTip } from '../data/fieldTips.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
 
 const BEASTS = new Set(['storm_rat', 'gale_hound', 'frost_wolf']);
-const SPECTRES = new Set(['tide_wraith', 'squall_revenant', 'tempest_shade']);
+const SPECTRES = new Set(['tide_wraith', 'squall_revenant', 'tempest_shade', 'last_squall']);
 
 const ART = {
   beast: {

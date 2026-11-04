@@ -209,4 +209,17 @@ export const ENEMIES = {
       { id: 'storm_tonic', chance: 1, minQty: 2, maxQty: 3 },
     ],
   },
+  last_squall: {
+    id: 'last_squall', name: 'The Last Squall', hp: 1500, atk: 44, def: 13, spd: 8, xp: 420, gold: 320,
+    boss: true,
+    intro: 'One squall refuses to scatter. Wind and lightning gather into a towering shape above the northern causeway, howling for a final contest.',
+    defeat: 'The Last Squall unravels into a long, low rumble that rolls away over the mountains and does not return.',
+    enrage: { threshold: 0.35, atk: 6, chance: 0.5, line: 'The Last Squall draws in the remnants of every storm it has ever known!' },
+    ability: { name: 'Rolling Thunder', chance: 0.35, mult: 1.6, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'thunder_iron', chance: 1, minQty: 4, maxQty: 5 },
+      { id: 'stormcrown_shard', chance: 1, minQty: 2, maxQty: 2 },
+      { id: 'ember_broth', chance: 1, minQty: 2, maxQty: 2 },
+    ],
+  },
 };
