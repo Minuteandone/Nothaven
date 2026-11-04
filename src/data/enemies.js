@@ -91,6 +91,42 @@ export const ENEMIES = {
       { id: 'scrap_metal', chance: 0.7, minQty: 1, maxQty: 3 },
     ],
   },
+  briar_boar: {
+    id: 'briar_boar', name: 'Briar Boar', hp: 22, atk: 7, def: 2, spd: 4, xp: 12, gold: 6,
+    intro: 'A Briar Boar crashes out of the gorse, tusks hung with torn thorns.',
+    ability: { name: 'Thorn Gore', chance: 0.3, mult: 1.4 },
+    loot: [
+      { id: 'healing_herb', chance: 0.4, minQty: 1, maxQty: 1 },
+      { id: 'rations', chance: 0.25, minQty: 1, maxQty: 1 },
+    ],
+  },
+  lens_wisp: {
+    id: 'lens_wisp', name: 'Lens Wisp', hp: 16, atk: 7, def: 1, spd: 7, xp: 13, gold: 8,
+    intro: 'Starlight trapped in a broken lens drifts loose as a flickering Lens Wisp.',
+    ability: { name: 'Prism Glare', chance: 0.3, mult: 1, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'storm_glass', chance: 0.5, minQty: 1, maxQty: 1 },
+      { id: 'lens_shard', chance: 0.15, minQty: 1, maxQty: 1 },
+    ],
+  },
+  wrack_eel: {
+    id: 'wrack_eel', name: 'Wrack Eel', hp: 24, atk: 8, def: 3, spd: 6, xp: 17, gold: 9,
+    intro: 'A Wrack Eel uncoils from a tangle of storm-torn kelp along the tideline.',
+    ability: { name: 'Coiling Bite', chance: 0.3, mult: 1.2, status: 'bleeding', turns: 2 },
+    loot: [
+      { id: 'field_dressing', chance: 0.25, minQty: 1, maxQty: 1 },
+      { id: 'storm_glass', chance: 0.35, minQty: 1, maxQty: 1 },
+    ],
+  },
+  rime_wight: {
+    id: 'rime_wight', name: 'Rime Wight', hp: 28, atk: 9, def: 3, spd: 5, xp: 20, gold: 11,
+    intro: 'Frost gathers into the hollow outline of a lost sentry, still keeping its post.',
+    ability: { name: 'Numbing Frost', chance: 0.3, mult: 1.1, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'storm_tonic', chance: 0.25, minQty: 1, maxQty: 1 },
+      { id: 'highland_flask', chance: 0.15, minQty: 1, maxQty: 1 },
+    ],
+  },
   pass_warlord: {
     id: 'pass_warlord', name: 'Highwatch Warlord', hp: 96, atk: 13, def: 6, spd: 5, xp: 70, gold: 45,
     boss: true,
