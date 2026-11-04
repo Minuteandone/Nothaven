@@ -5,6 +5,9 @@ The storms have broken the beacon that shields the frontier town of **Greyhaven*
 
 Play: https://stormhaven-rpg.pages.dev (deployed automatically from `main`).
 
+For controls, preparation tips, and a clearly marked five-chapter walkthrough, see the
+[Player Guide](docs/PLAYER_GUIDE.md).
+
 ## Run locally
 ```
 python3 -m http.server 8123   # then open http://localhost:8123
