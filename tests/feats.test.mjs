@@ -24,6 +24,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   for (const id of WANDERERS) s.bestiary[id] = 1;
   s.bestiary.old_tusk = 1;
   s.bestiary.gloomfin = 1;
+  s.bestiary.frostmane = 1;
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
   assert.equal(featsEarned(s), FEATS.length);
@@ -129,5 +130,20 @@ test('Seawall Sentinel feat needs a Gloomfin defeat in the bestiary', () => {
   s.bestiary = null;
   assert.equal(done(), false, 'missing bestiary is safe');
   const row = FEATS.find(f => f.id === 'gloomfin');
+  assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
+});
+
+test('Packbreaker feat needs a Frostmane defeat in the bestiary', () => {
+  const s = createInitialState();
+  const done = () => featStatus(s).find(f => f.id === 'frostmane').done;
+  assert.ok(ENEMIES.frostmane && ENEMIES.frostmane.boss === true);
+  assert.equal(done(), false);
+  s.bestiary = { frostmane: 0, frost_wolf: 6 };
+  assert.equal(done(), false, 'zero or ordinary wolves do not count');
+  s.bestiary.frostmane = 1;
+  assert.equal(done(), true);
+  s.bestiary = null;
+  assert.equal(done(), false, 'missing bestiary is safe');
+  const row = FEATS.find(f => f.id === 'frostmane');
   assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
 });
