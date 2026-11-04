@@ -58,10 +58,10 @@ export function getRelayJournal(story) {
   const objective = f.relay_choice ? relayAftermath(story)
     : !f.relay_accepted ? 'Accept the council’s inland relay commission in Greyhaven. Restoring Sunscar Relay earns 100 gold and one permanent network benefit.'
     : !f.relay_visit ? 'Take the ridge road’s North Trail to Highwatch Pass, then its East Gate to Sunscar Relay.'
-    : !f.relay_junction ? 'Inspect the Conduit Junction in the north of Sunscar Relay to prime the inland power lines.'
+    : !f.relay_junction ? 'Inspect the Relay Capacitor Junction in the north of Sunscar Relay to prime the inland power lines.'
     : !f.relay_victory ? 'Defeat the Relay Warden guarding the station’s central causeway. Prepare your party at the outpost before the fight.'
-    : !f.relay_console ? 'Inspect the Relay Console east of the warden’s post.'
-    : `Return to the Relay Console and choose the shelter or route network. This choice is permanent and pays ${RELAY_GOLD} gold once.`;
+    : !f.relay_console ? 'Inspect the Master Relay Console east of the warden’s post.'
+    : `Return to the Master Relay Console and choose the shelter or route network. This choice is permanent and pays ${RELAY_GOLD} gold once.`;
   return [{ id: 'relay', title: 'A Signal of Our Own', status: f.relay_choice ? 'complete' : 'active', objective }];
 }
 

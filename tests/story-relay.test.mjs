@@ -91,7 +91,7 @@ test('relay journal guides each stage and town outlook remains read-only', () =>
   let story = freeze(ready().story);
   assert.match(getRelayJournal(story)[0].objective, /Accept/);
   story = advance(story, accept);
-  for (const [i, expected] of [/East Gate/, /Junction/, /Defeat/, /Inspect the Relay Console/].entries()) {
+  for (const [i, expected] of [/East Gate/, /Junction/, /Defeat/, /Inspect the Master Relay Console/].entries()) {
     assert.match(getRelayJournal(freeze(story))[0].objective, expected);
     assert.match(getTownOutlook(story).hint, expected);
     story = advance(story, facts[i]);
