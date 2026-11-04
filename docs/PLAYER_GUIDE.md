@@ -158,6 +158,8 @@ Four wandering foes can appear on the early roads in addition to the familiar pa
 
 **Old Tusk (optional ridge trial).** Once Saltmere and Highwatch are home and you have reported to Mara, the grey king of the briar boars appears on a Ridge Road ledge. His **Bramble Charge** causes heavy bleeding and he hits harder below half health, so bring bandages or Rallying Light. He is a one-off field challenge: nothing depends on him and he does not join the sparring drills.
 
+**Gloomfin (optional coast trial).** After the same report, a giant storm-charged wrack eel starts hunting off Saltmere's north seawall. Its **Riptide Shock** leaves you shocked, which blocks most skills, so carry storm tonics and keep Steady Signal or Burst ready. Like Old Tusk, it is a one-off field challenge that stays out of the sparring drills.
+
 Each adds an entry to the bestiary, so they help toward the **catalogue** feat. Their drops are ordinary supplies such as healing herbs, storm glass, field dressings, and tonics.
 
 ### Watch House yard: drills, gauntlet and feats
@@ -168,7 +170,7 @@ Once **three** drills are unlocked, the **Yard Gauntlet** opens beside them: fac
 
 The **Wardens' feats** panel lists milestones of your journey. Alongside the chapter milestones it tracks three yard-and-road achievements:
 
-- **Yard Champion** — win a Sparring Drill against every boss.
-- **Unbroken Run** — clear the full Yard Gauntlet against every boss without a single loss.
+- **Yard Champion** — win a Sparring Drill against every boss in the Watch House yard.
+- **Unbroken Run** — clear the full Yard Gauntlet against every yard boss without a single loss.
 - **Roadwise** — defeat each of the four frontier wanderers described above.
 - **Tusk Breaker** — defeat Old Tusk, the optional Ridge Road trial described above.
