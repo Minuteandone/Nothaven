@@ -177,3 +177,4 @@ The **Wardens' feats** panel lists milestones of your journey. Alongside the cha
 - **Roadwise** — defeat each of the four frontier wanderers described above.
 - **Tusk Breaker** — defeat Old Tusk, the optional Ridge Road trial described above.
 - **Seawall Sentinel** — defeat Gloomfin, the optional Saltmere Coast trial described above.
+- **Packbreaker** — defeat Frostmane, the optional Highwatch Pass trial described above.
