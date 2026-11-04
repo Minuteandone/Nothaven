@@ -17,6 +17,7 @@ import { installFeats } from './scenes/feats.js';
 import { installDrills } from './scenes/drills.js';
 import { guideScene } from './scenes/guide.js';
 import { installCharacter } from './scenes/character.js';
+import { installDisplayControls } from './ui/displayControls.js';
 
 const game = new Game(document.getElementById('app'));
 game.registerScene('title', titleScene);
@@ -38,5 +39,6 @@ installCharacter(game); // registers Wren's read-only character sheet
 installRecipeBook(game); // registers the 'recipes' scene (Field Recipe Book)
 installEnding(game); // after installStory so the story state is already updated
 installAudio(game); // creates no AudioContext until the player explicitly enables sound
+installDisplayControls(game); // presentation preferences only; no game-state changes
 game.setScene('title');
 window.game = game; // handy for debugging
