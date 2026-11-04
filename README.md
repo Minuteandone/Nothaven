@@ -81,3 +81,28 @@ in the Storm’s Eye, independent of accepting/reporting the gold commission;
 route-network guidance stacks to one quarter of base chance. Other regions and
 fixed encounters are unchanged. The prose describes a regional storm breaking,
 not the end of all weather or danger. Rewards commit before `story:updated`.
+
+## Optional real-browser smoke test
+
+The default `npm test` stays a dependency-free Node suite. To additionally check
+real Chromium navigation, narrow-screen layout, and a short earned combat route:
+
+```sh
+npm ci
+npx playwright install chromium  # add --with-deps if your system needs browser libraries
+npm run test:browser
+```
+
+The smoke test starts its own loopback-only server on a free port and fresh browser
+contexts at **320, 375, and 768px**. It uses actual buttons for the guide, Journey
+Journal filters, bestiary, muster, bag, Buy 5 purchase, save/reload, exploration,
+and a real ridge patrol victory. It checks horizontal overflow, read-only screens,
+actual purchase totals, victory summary, recorded defeat, and saved progress.
+Only randomness is controlled; stats, items, positions, story facts, and victories
+are never injected. This short new-game route is **not** the full campaign,
+postgame, cross-browser, accessibility, or balance test suite.
+
+Screenshots and Playwright traces are written to the ignored `browser-artifacts/`
+folder, including a failure screenshot when possible. View a trace with
+`npx playwright show-trace browser-artifacts/320-trace.zip`. No changes are made to
+CI or the deployment path, and the local server only serves game source/assets.
