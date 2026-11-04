@@ -64,6 +64,6 @@ export function installEnding(game) {
       game.setScene('ending');
     }
   };
-  game.bus.on('story:event', check);
-  return () => game.bus.off('story:event', check);
+  game.bus.on('story:updated', check);
+  return () => game.bus.off('story:updated', check);
 }
