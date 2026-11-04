@@ -111,9 +111,10 @@ These are one-time requests. Their exact fixed enemies matter: defeating the sam
 
 ### Repeatable expedition board
 
-After the summit report, Greyhaven offers two patrol contracts:
+After the summit report, Greyhaven offers the first two patrol contracts:
 
 - **Sunscar Road Patrol:** defeat **2 Dust Marauders**, then claim **35 gold** in town.
 - **Stormcrown Sentry Patrol:** defeat **2 Spire Sentries**, then claim **60 gold** in town.
+- **Storm’s Eye Sweep:** after claiming the **Heart report reward**, defeat **2 Tempest Shades**, then claim **90 gold** in town. Defeating the core alone does not unlock this contract.
 
 Accept one contract at a time, then use patrols to seek new victories. Earlier kills do not count. Matching victories advance the quota but **do not automatically pay**; return and claim the reward. You may accept the same contract again from zero. Cancelling discards progress and gives no payment.

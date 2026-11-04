@@ -630,6 +630,8 @@ function heartJourney(game, early, first) {
   }
   act(game, 'storyTalk', 'mara');
   assert.equal(game.state.gold, beforeReport, 'conversation cannot submit the report');
+  act(game, 'storyExpedition', 'eye_sweep');
+  assert.deepEqual(game.state.story.expedition, prior.expedition, 'even defeating the core does not unlock Sweep before reporting');
   act(game, 'storyHeart', 'report');
   assert.equal(game.state.gold, beforeReport + 200);
   assert.equal(game.state.story.flags.heart_reward, true);
@@ -644,6 +646,38 @@ function heartJourney(game, early, first) {
   assert.deepEqual(game.state.story.expedition, prior.expedition);
   assert.deepEqual(game.state.flags, endingFlags);
   assert.deepEqual(game.state.party.map(m => m.id), ['hero', 'bram', 'sela']);
+
+  act(game, 'storyExpedition', 'eye_sweep');
+  assert.deepEqual(game.state.story.expedition.active, { id: 'eye_sweep', progress: 0 });
+  act(game, 'toTownScene'); act(game, 'rest'); act(game, 'explore');
+  walkExit(game, 'ridge_road'); walkExit(game, 'highwatch_pass'); walkExit(game, 'sunscar_relay');
+  walkExit(game, 'stormcrown_spire'); walkExit(game, 'storms_eye');
+  for (let n = 1; n <= 2; n++) {
+    game.mapRng = () => 0.25; act(game, 'mapPatrol'); delete game.mapRng;
+    assert.equal(game.state.combat.encounterId, null);
+    assert.equal(game.state.combat.enemy.id, 'tempest_shade');
+    const before = game.state.gold, loot = game.state.combat.enemy.gold;
+    const defeated = game.state.bestiary.tempest_shade;
+    for (let turn = 0; !game.state.combat.over && turn < 100; turn++) act(game, 'attack');
+    assert.equal(game.state.combat.over, 'victory');
+    assert.equal(game.state.gold, before + loot, 'Sweep never pays automatically');
+    assert.equal(game.state.story.expedition.active.progress, n);
+    act(game, 'finish');
+    assert.equal(game.state.bestiary.tempest_shade, defeated + 1);
+    checkpoint(game, 'complete');
+  }
+  const beforeSweep = game.state.gold;
+  act(game, 'storyExpedition', 'claim'); assert.equal(game.state.gold, beforeSweep);
+  walkExit(game, 'greyhaven'); act(game, 'storyExpedition', 'claim');
+  assert.equal(game.state.gold, beforeSweep + 90);
+  assert.equal(game.state.story.expedition.completed, prior.expedition.completed + 1);
+  checkpoint(game, 'complete'); act(game, 'storyExpedition', 'claim');
+  assert.equal(game.state.gold, beforeSweep + 90);
+  act(game, 'storyExpedition', 'eye_sweep');
+  assert.equal(game.state.story.expedition.active.progress, 0);
+  act(game, 'storyExpedition', 'cancel');
+  assert.equal(game.state.story.expedition.active, null);
+  assert.deepEqual(game.state.flags, endingFlags);
 }
 
 for (const ending of ['protect_town', 'share_signal']) {
