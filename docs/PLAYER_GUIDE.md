@@ -45,6 +45,8 @@ The three main payments total **105 gold** (20 + 35 + 50). Find the **Lost Ridge
 
 After the beacon choice, **First Light Relief** asks for **2 rations and 1 bandage**. Buy or find them, then explicitly hand them over in Greyhaven for **30 gold once**. Buying all three from Hesta costs 22 gold. This is optional and independent of the settlement expedition.
 
+Hesta’s Goods also sells the **Tin Whistle** trinket for **25 gold** (+5 HP), an affordable first accessory while you save for better weapons and armor.
+
 ### 2. Open both rescue routes
 
 Accept Mara’s relief expedition in Greyhaven. Complete these routes in either order:
@@ -57,6 +59,7 @@ Accept Mara’s relief expedition in Greyhaven. Complete these routes in either 
 Return to Greyhaven and explicitly report both safe routes for **80 gold once**. The first route you cleared is remembered. The Drowned Harbormaster and Pass Warlord are **optional bosses**, not substitutes for the rescue encounters.
 
 Tamsin and Iven unlock through the earlier road and observatory victories; Bram and Sela unlock through the respective settlement rescue victories. Use the muster board to recruit them. Saltmere’s trading post sells coastal equipment if you want an upgrade before pushing inland.
+Its signature weapon is the **Warden’s Blade** (**180 gold**, ATK +12), a solid step up from the iron sword.
 
 ### 3. Restore the inland relay
 
@@ -101,6 +104,10 @@ Your original beacon choice, relay service, and earlier rewards remain unchanged
 #### Optional challenge: The Last Squall
 
 After you claim the **Heart report reward**, a final storm gathers on the northern causeway of **the Storm’s Eye**. **The Last Squall** is an optional trial far stronger than the Storm’s Heart. Level **15 or higher** with your best gear is recommended; keep Beacon Aegis up and save a Beacon Burst for when it draws in every storm. Victory grants experience, gold and materials only. It records a journal entry but pays no report reward and changes no ending, so you can leave it be.
+
+#### Crafting the squall-grade gear
+
+Three **craft-only** upgrades appear in every shop’s **Craft** tab and the town **Field Recipe Book** once you hold their inputs: **Squall Cleaver** (Tempest Edge + 3 Thunder Iron + 1 Stormcrown Shard), **Squall Bulwark** (Maelstrom Plate + 3 Thunder Iron + 1 Stormcrown Shard) and **Squall Sigil** (Stormeye Signet + 2 Thunder Iron + 2 Storm Glass, with no shard required). None of them are ever sold outright. Stormcrown Shards drop from the Stormcrown Tyrant, the Storm’s Heart and The Last Squall, with a rare chance from the Thunderhead Colossus.
 
 ### Optional companion commissions
 
