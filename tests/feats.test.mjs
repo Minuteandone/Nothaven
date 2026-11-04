@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FEATS, featStatus, featsEarned, featsScene } from '../src/scenes/feats.js';
 import { createInitialState } from '../src/state.js';
+import { DRILL_FOES } from '../src/scenes/drills.js';
 
 const EGG_RE = /\b(eggs?|yolks?|shells?|hatch\w*|nests?|chicks?|hens?|omelet\w*|scrambl\w*|clutch|poach\w*|fried|easter|oval|boil\w*|crack\w*|golden|birds?|feathers?|basket)\b/i;
 
@@ -19,6 +20,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.story.expedition = { active: null, completed: 3 };
   s.party = [{ ...s.party[0], level: 20 }, { id: 'bram' }, { id: 'iven' }];
   s.bestiary = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`foe_${i}`, 1]));
+  s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   assert.equal(featsEarned(s), FEATS.length);
 });
 
@@ -48,4 +50,18 @@ test('scene renders a count, returns to the right place, and is egg-free', () =>
   assert.equal(game.featsReturn, 'town');
   const text = FEATS.map(f => `${f.title} ${f.detail}`).join(' ') + html.replace(/<[^>]*>/g, ' ');
   assert.ok(!EGG_RE.test(text), String(text.match(EGG_RE)));
+});
+
+test('Yard Champion needs a drill win against every boss', () => {
+  const s = createInitialState();
+  const yard = () => featStatus(s).find(f => f.id === 'yard').done;
+  assert.equal(yard(), false);
+  s.drillRecords = Object.fromEntries(DRILL_FOES.slice(1).map(id => [id, { wins: 2, best: 5 }]));
+  assert.equal(yard(), false, 'one boss still unbeaten in the yard');
+  s.drillRecords[DRILL_FOES[0]] = { wins: 'lots', best: 3 };
+  assert.equal(yard(), false, 'malformed records do not count');
+  s.drillRecords[DRILL_FOES[0]] = { wins: 1, best: 3 };
+  assert.equal(yard(), true);
+  const row = FEATS.find(f => f.id === 'yard');
+  assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
 });
