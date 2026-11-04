@@ -112,3 +112,26 @@ export function effectiveStats(actor) {
     spd: (actor.spd || 0) + bonus.spd,
   };
 }
+
+/**
+ * Compare a candidate equipment item's stat bonuses against the item
+ * currently equipped in the same slot. Returns a short human-readable
+ * summary of the non-zero differences (e.g. "+4 atk -2 spd"), the string
+ * "same stats" when the bonuses are identical, or '' when there is
+ * nothing to compare against (candidate without stats, or no current item).
+ * Pure: reads only the passed objects.
+ * @param {object|null} currentItem equipped item in the same slot (or null)
+ * @param {object} candidateItem item being considered
+ * @returns {string}
+ */
+export function statDeltaSummary(currentItem, candidateItem) {
+  if (!candidateItem || !candidateItem.stats) return '';
+  if (!currentItem) return '';
+  const cur = currentItem.stats || {};
+  const diffs = [];
+  for (const key of ['atk', 'def', 'hp', 'mp', 'spd']) {
+    const d = (candidateItem.stats[key] || 0) - (cur[key] || 0);
+    if (d !== 0) diffs.push(`${d > 0 ? '+' : '-'}${Math.abs(d)} ${key}`);
+  }
+  return diffs.length === 0 ? 'same stats' : diffs.join(' · ');
+}
