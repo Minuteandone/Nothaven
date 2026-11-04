@@ -2,11 +2,16 @@
 export const EXPEDITIONS = Object.freeze([
   Object.freeze({ id: 'sunscar_patrol', title: 'Sunscar Road Patrol', enemyId: 'dust_marauder', enemyName: 'Dust Marauders', region: 'Sunscar Relay', goal: 2, gold: 35 }),
   Object.freeze({ id: 'spire_patrol', title: 'Stormcrown Sentry Patrol', enemyId: 'spire_sentry', enemyName: 'Spire Sentries', region: 'Stormcrown Spire', goal: 2, gold: 60 }),
+  Object.freeze({ id: 'eye_sweep', title: 'Storm’s Eye Sweep', enemyId: 'tempest_shade', enemyName: 'Tempest Shades', region: 'The Storm’s Eye', goal: 2, gold: 90, requiresFlag: 'heart_reward' }),
 ]);
+export function expeditionAvailable(story, contractId) {
+  const contract = EXPEDITIONS.find(c => c.id === contractId);
+  return Boolean(contract && story?.flags?.spire_reward && (!contract.requiresFlag || story?.flags?.[contract.requiresFlag] === true));
+}
 export function activeExpedition(story) {
   const active = story?.expedition?.active;
   const contract = EXPEDITIONS.find(c => c.id === active?.id);
-  if (!contract) return null;
+  if (!contract || !expeditionAvailable(story, contract.id)) return null;
   const progress = Number.isInteger(active.progress) ? Math.max(0, Math.min(contract.goal, active.progress)) : 0;
   return { ...contract, progress };
 }
@@ -22,7 +27,7 @@ export function applyExpeditionEvent(previous, event) {
   const store = value => { state.expedition = { completed, active: value }; };
   if (event.type === 'expedition-accept' && !active) {
     const contract = EXPEDITIONS.find(c => c.id === event.contractId);
-    if (contract) {
+    if (contract && expeditionAvailable(state, contract.id)) {
       store({ id: contract.id, progress: 0 });
       log.push(`Accepted ${contract.title}: defeat ${contract.goal} ${contract.enemyName} in new battles, then claim ${contract.gold} gold at the Greyhaven expedition board. Earlier victories do not count.`);
     }
