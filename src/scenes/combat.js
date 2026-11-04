@@ -1,12 +1,13 @@
 import { getDifficulty } from '../combat/difficulty.js';
 import { applyLevelUps } from '../core/progression.js';
 import { getItem } from '../items/items.js';
+import { recordDrillWin } from './drills.js';
 // Combat scene: Attack / Skills / Items / Defend / Flee against one enemy.
 // setScene('combat', {enemyId, encounterId, returnScene}) — finishing returns to
 // returnScene with {message, combatResult, encounterId}; defeat wakes the party in
 // Greyhaven (half max HP, lose half gold) via recoverFromDefeat.
 import {
-  createCombat, heroAction, afterHeroAction, enemyTurn, heroStats, victoryRewards,
+  createCombat, heroAction, afterHeroAction, enemyTurn, heroStats, victoryRewards, battleSummary,
 } from '../combat/rules.js';
 import { rollLoot } from '../items/loot.js';
 import { ZONES } from '../map/zones.js';
@@ -50,6 +51,8 @@ function resolveDrillVictory(game, lines) {
   for (const m of game.state.party) m.xp = (m.xp || 0) + xp;
   c.rewards = { xp, gold: 0, items: [] };
   lines.push(`Drill complete! +${xp} XP.`);
+  const rec = recordDrillWin(game.state, c.enemy?.id, battleSummary(c).rounds);
+  if (rec?.newBest && rec.wins > 1) lines.push(`New drill record: ${rec.best} ${rec.best === 1 ? 'round' : 'rounds'}!`);
   const ups = game.state.party.flatMap((m) => applyLevelUps(m));
   lines.push(...ups);
   c.log.push(...lines);
