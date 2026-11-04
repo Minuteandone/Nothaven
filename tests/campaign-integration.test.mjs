@@ -13,7 +13,7 @@ import { endingScene, installEnding } from '../src/scenes/ending.js';
 import { titleScene } from '../src/scenes/title.js';
 import { installStory } from '../src/story/integration.js';
 import { installProgression } from '../src/core/progression.js';
-import { installMap, ZONES, isWalkable } from '../src/map/index.js';
+import { installMap, ZONES, isWalkable, getEffectiveRandomEncounterChance } from '../src/map/index.js';
 
 // Only the DOM, storage, and randomness are replaced. Movement, combat, story,
 // rewards, progression, scene transitions, and save/load use production code.
@@ -225,10 +225,89 @@ function optionalBossJourney(game, first) {
   assert.equal(game.state.scene, 'town');
 }
 
+function relayJourney(game, choice, early) {
+  const ending = game.state.story.ending;
+  assert.equal(game.state.scene, 'town');
+  if (!early) act(game, 'storyRelayAccept');
+  const beforeRest = game.state.gold;
+  act(game, 'rest'); assert.equal(game.state.gold, beforeRest - 5);
+  act(game, 'explore');
+  act(game, 'mapTravel', 'sunscar_relay');
+  assert.equal(game.state.map.zoneId, 'greyhaven', 'relay requires physical discovery');
+  const reachRelay = () => {
+    walkExit(game, 'ridge_road'); walkExit(game, 'highwatch_pass'); walkExit(game, 'sunscar_relay');
+  };
+  reachRelay();
+  assert.equal(game.state.story.flags.relay_visit, true);
+  walkTo(game, 3, 1); act(game, 'mapInteract', 'relay_junction');
+  assert.equal(game.state.story.flags.relay_junction, true);
+  walkTo(game, 2, 5); act(game, 'mapInteract', 'relay_supply_cache');
+  assert.equal(game.state.map.completedInteractions.relay_supply_cache, true);
+  const cached = structuredClone(game.state.inventory);
+  act(game, 'mapInteract', 'relay_supply_cache'); assert.deepEqual(game.state.inventory, cached);
+  walkTo(game, 6, 4); act(game, 'mapInteract', 'relay_outpost');
+  assert.equal(game.state.scene, 'shop'); assert.equal(game.shopId, 'relay_outpost');
+  assert.match(game.root.innerHTML, /Relay Outpost Stores/);
+  const beforePurchase = game.state.gold;
+  act(game, 'buy', 'relay_glaive');
+  assert.equal(game.state.gold, beforePurchase - getItem('relay_glaive').price);
+  act(game, 'equip', 'relay_glaive');
+  assert.equal(game.state.party[0].equipment.weapon, 'relay_glaive');
+  act(game, 'leave'); assert.equal(game.state.map.zoneId, 'sunscar_relay');
+  // Reaching the console by a side path cannot bypass its fixed-encounter lock.
+  walkTo(game, 7, 3); act(game, 'mapInteract', 'relay_console');
+  assert.equal(game.state.story.flags.relay_console, undefined);
+  assert.doesNotMatch(game.root.innerHTML, /data-action="storyRelayChoose"/);
+  winEncounter(game, 'relay_warden');
+  assert.equal(game.state.story.flags.relay_victory, true);
+  assert.equal(game.state.bestiary.relay_warden, 1);
+  checkpoint(game, 'complete');
+  walkTo(game, 7, 3); act(game, 'mapInteract', 'relay_console');
+  assert.equal(game.state.story.flags.relay_console, true);
+  if (early) {
+    assert.equal(game.state.story.flags.relay_accepted, undefined);
+    act(game, 'storyRelayChoose', choice);
+    assert.equal(game.state.story.flags.relay_choice, undefined, 'early facts still need explicit commission');
+    walkExit(game, 'greyhaven'); act(game, 'toTownScene');
+    act(game, 'storyRelayAccept'); checkpoint(game, 'complete');
+    act(game, 'explore'); reachRelay(); walkTo(game, 7, 3);
+  }
+  assert.match(game.root.innerHTML, /data-action="storyRelayChoose"/);
+  walkTo(game, 6, 4); act(game, 'storyRelayChoose', choice);
+  assert.equal(game.state.story.flags.relay_choice, undefined, 'walking away invalidates a stale console button');
+  walkTo(game, 7, 3); checkpoint(game, 'complete');
+  const beforeChoice = game.state.gold;
+  act(game, 'storyRelayChoose', choice);
+  assert.equal(game.state.gold, beforeChoice + 100);
+  assert.equal(game.state.story.flags.relay_choice, choice);
+  assert.equal(game.state.story.flags.relay_reward, true);
+  assert.equal(game.state.story.ending, ending);
+  assert.equal(game.state.scene, 'explore', 'relay choice never replays chapter-one ending');
+  checkpoint(game, 'complete');
+  act(game, 'storyRelayChoose', choice === 'shelter_network' ? 'route_network' : 'shelter_network');
+  assert.equal(game.state.gold, beforeChoice + 100);
+  assert.equal(game.state.story.flags.relay_choice, choice);
+  assert.equal(getEffectiveRandomEncounterChance(game.state, ZONES.sunscar_relay), choice === 'route_network' ? 0.07 : 0.14);
+  walkExit(game, 'greyhaven');
+  const price = choice === 'shelter_network' ? 2 : 5;
+  walkTo(game, 1, 2);
+  assert.match(game.root.innerHTML, new RegExp(`Rest at[^<]+\\(${price}g\\)`));
+  const beforeMapRest = game.state.gold;
+  act(game, 'mapInteract', 'greyhaven_inn');
+  assert.equal(game.state.gold, beforeMapRest - price);
+  act(game, 'toTownScene');
+  assert.match(game.root.innerHTML, new RegExp(`Rest at the inn · ${price} gold`));
+  const beforeTownRest = game.state.gold;
+  act(game, 'rest'); assert.equal(game.state.gold, beforeTownRest - price);
+  checkpoint(game, 'complete');
+  act(game, 'bestiary'); assert.match(game.root.innerHTML, /Relay Warden/);
+  assert.equal(game.state.bestiary.relay_warden, 1);
+}
+
 for (const ending of ['protect_town', 'share_signal']) {
   for (const early of [false, true]) {
-    for (const first of ['coast', 'heights']) {
-      test(`walkable campaign: ${ending}, ${early ? 'explore before briefing' : 'normal quest order'}, ${first} rescue first`, t => {
+    for (const first of ['coast', 'heights']) for (const relayChoice of ['shelter_network', 'route_network']) {
+      test(`walkable campaign: ${ending}, ${early ? 'explore before briefing' : 'normal quest order'}, ${first} rescue first, ${relayChoice}`, t => {
         const game = harness(t);
         let combatGold = 0;
         checkpoint(game, 'briefing');
@@ -331,6 +410,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         checkpoint(game, 'complete');
         act(game, 'leave'); act(game, 'explore');
         optionalBossJourney(game, first);
+        relayJourney(game, relayChoice, early);
       });
     }
   }
