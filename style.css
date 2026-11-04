@@ -404,3 +404,32 @@ button:disabled, .action-button:disabled { opacity: .42; cursor: not-allowed; }
 .muster .companion { border-left: 3px solid var(--good); margin: .75rem 0; }
 .muster .message { color: var(--accent-bright); font-weight: 600; }
 .muster .actions button, .bestiary .actions button { margin-right: .5rem; }
+
+/* Companion remarks on the muster board */
+blockquote.remark {
+  margin: .75rem 0;
+  padding: .6rem .9rem;
+  border-left: 3px solid var(--accent);
+  background: var(--panel-strong);
+  color: var(--text);
+  font-style: italic;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Boss second phase marker in combat */
+em.enraged {
+  color: var(--bad);
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  font-size: .8em;
+  animation: enraged-pulse 1.6s ease-in-out infinite;
+}
+@keyframes enraged-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  em.enraged { animation: none; }
+}
