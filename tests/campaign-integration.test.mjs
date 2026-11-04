@@ -490,6 +490,8 @@ function lenswardenJourney(game) {
   assert.equal(game.state.story.flags.rescue_reward, true);
   assert.equal(game.state.bestiary?.lenswarden, undefined);
   assert.equal(featStatus(game.state).find(f => f.id === 'lenswarden').done, false);
+  for (const id of ['old_tusk', 'gloomfin', 'frostmane']) assert.ok(game.state.bestiary[id] > 0, `${id} was earned earlier`);
+  assert.equal(featStatus(game.state).find(f => f.id === 'trials').done, false);
   assert.equal(DRILL_FOES.includes('lenswarden'), false);
   const before = structuredClone(game.state);
   const protectedKeys = ['story', 'flags', 'drillRecords', 'drillGauntlet'];
@@ -517,6 +519,7 @@ function lenswardenJourney(game) {
   assert.deepEqual(game.state.bestiary, expectedBook);
   for (const key of protectedKeys) assert.deepEqual(game.state[key], before[key], `${key} is untouched by Lenswarden`);
   assert.equal(featStatus(game.state).find(f => f.id === 'lenswarden').done, true);
+  assert.equal(featStatus(game.state).find(f => f.id === 'trials').done, true);
   act(game, 'finish');
   assert.equal(game.state.scene, 'explore');
   assert.equal(game.state.combat, null);
@@ -536,6 +539,7 @@ function lenswardenJourney(game) {
     assert.deepEqual(game.state[key], cleared[key], `cleared Lenswarden cannot change ${key}`);
   }
   assert.equal(featStatus(game.state).find(f => f.id === 'lenswarden').done, true);
+  assert.equal(featStatus(game.state).find(f => f.id === 'trials').done, true);
   walkExit(game, 'ridge_road');
   walkExit(game, 'greyhaven');
   act(game, 'toTownScene');
