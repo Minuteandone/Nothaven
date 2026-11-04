@@ -6,6 +6,7 @@ import { installStory } from './story/integration.js';
 import { installProgression } from './core/progression.js';
 import { installMap } from './map/index.js';
 import { installShop } from './scenes/shop.js';
+import { installBag } from './scenes/bag.js';
 import { installCompanions } from './scenes/muster.js';
 import { endingScene, installEnding } from './scenes/ending.js';
 
@@ -18,6 +19,7 @@ installStory(game);
 installProgression(game);
 installMap(game); // registers the 'explore' scene
 installShop(game); // registers the 'shop' scene (Hesta's Goods)
+installBag(game); // registers the 'bag' scene (inventory screen)
 installCompanions(game); // registers the 'muster' scene (recruit companions)
 installEnding(game); // after installStory so the story state is already updated
 game.setScene('title');
