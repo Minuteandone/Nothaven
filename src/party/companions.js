@@ -36,7 +36,7 @@ export const COMPANIONS = Object.freeze({
     title: 'Highwatch Signal Runner',
     blurb: 'Keeps the mountain cairns lit through any gale. Hurls blinding signal flares that burn straight through armor.',
     unlock: 'rescue_victory_heights',
-    unlockHint: 'Drive the raiders from Highwatch so Sela can rejoin the signal line.',
+    unlockHint: 'Clear the frost wolves from the Highwatch supply crossing so Sela can rejoin the signal line.',
     stats: { hp: 22, mp: 12, atk: 5, def: 2, spd: 6 },
   }),
 });
