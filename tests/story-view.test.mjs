@@ -1,0 +1,54 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createStoryUI } from '../src/story/view.js';
+import { createStoryState } from '../src/story/index.js';
+const makeGame = () => ({ state: { gold: 0, location: 'greyhaven', story: createStoryState() } });
+const el = arg => ({ dataset: { arg } });
+test('town panel exposes NPCs, initial quest, and read-before-action dialogue', () => {
+  const game = makeGame(), ui = createStoryUI();
+  assert.match(ui.render(game), /Speak to Warden Mara/);
+  assert.doesNotMatch(ui.render(game), /data-action="storyChoose"/);
+  ui.actions.storyTalk(game, el('mara'));
+  assert.equal(game.state.story.stage, 'road');
+  assert.match(game.storyDialogue.text, /Clear the ridge road/);
+  assert.match(ui.render(game), /role="status"/);
+  ui.actions.storyDismiss(game);
+  assert.equal(game.storyDialogue, null);
+});
+test('view escapes transient text and hides conversations in other locations', () => {
+  const game = makeGame(), ui = createStoryUI();
+  game.storyMessage = '<img src=x onerror=alert(1)>';
+  game.storyDialogue = { location: 'greyhaven', speaker: '<script>', text: '"<&' };
+  assert.doesNotMatch(ui.render(game), /<img|<script>/);
+  assert.match(ui.render(game), /&lt;img/);
+  game.state.location = 'ridge_road';
+  assert.doesNotMatch(ui.render(game), /story-dialogue|data-action="storyTalk"/);
+});
+test('actions reject stale or invalid buttons and enforce location', () => {
+  const game = makeGame(), ui = createStoryUI();
+  game.state.location = 'ridge_road';
+  ui.actions.storyTalk(game, el('mara'));
+  assert.equal(game.state.story.stage, 'briefing');
+  game.state.location = 'greyhaven';
+  ui.actions.storyTalk(game, el('unknown'));
+  ui.actions.storyTalk(game, null);
+  assert.equal(game.state.story.stage, 'briefing');
+  game.state.story.stage = 'decision';
+  ui.actions.storyChoose(game, el('share_signal'));
+  assert.equal(game.state.story.stage, 'decision');
+  game.state.location = 'beacon_tower';
+  assert.match(ui.render(game), /data-action="storyChoose"/);
+  ui.actions.storyChoose(game, el('invalid'));
+  assert.equal(game.state.story.stage, 'decision');
+  ui.actions.storyChoose(game, el('share_signal'));
+  ui.actions.storyChoose(game, el('protect_town'));
+  assert.equal(game.state.story.ending, 'share_signal');
+  assert.equal(game.state.gold, 50);
+});
+test('custom location getter works for scene-local state shapes', () => {
+  const game = makeGame();
+  game.state.location = 'legacy-town';
+  const ui = createStoryUI(() => 'greyhaven');
+  ui.actions.storyTalk(game, el('mara'));
+  assert.equal(game.state.story.stage, 'road');
+});

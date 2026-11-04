@@ -35,3 +35,15 @@ The council requires talking to both Mara and Tamsin **after** returning the len
 ## Tests
 
 `node --test tests/story.test.mjs` (Node 22). No dependencies. Browser code remains standard ES modules.
+
+## Optional scene panel
+
+`view.js` exports `createStoryUI(getLocation)` for scene owners. The location getter is called both for rendering and action guards. A town-only scene may use `createStoryUI(() => 'greyhaven')`; an exploration scene should return its actual current location ID.
+
+```js
+const storyUI = createStoryUI(game => game.state.location);
+// Inside the scene render: append storyUI.render(game).
+// Inside scene.actions: spread ...storyUI.actions.
+```
+
+Render at most one story panel per scene (heading IDs are fixed). Town panels expose NPC buttons; only the beacon tower exposes ending buttons. Other locations still show the journal. All dynamic text is escaped. Actions dispatch directly to the adapter and preserve the engine's existing render cycle. Temporary dialogue/message properties live on `game`, not in the save; clear `game.storyDialogue` and `game.storyMessage` when starting or loading a game so old conversations do not appear in a new run.
