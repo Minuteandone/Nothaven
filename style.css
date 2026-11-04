@@ -747,11 +747,12 @@ em.enraged {
 /* Companion mastery line on muster cards */
 .companion-mastery { margin: 0.4rem 0; font-size: 0.9rem; opacity: 0.85; }
 .companion-mastery--done { opacity: 1; border-left: 3px solid currentColor; padding-left: 0.5rem; }
-/* Keep long equipment names and spare-gear controls usable on narrow screens. */
+/* Keep inventory names, bulk-sale totals, and spare-gear controls usable on narrow screens. */
 @media (max-width: 560px) {
+  .shop-sell, .shop-sell tbody, .shop-sell tr, .shop-sell td,
   .shop-wardrobe, .shop-wardrobe tbody, .shop-wardrobe tr, .shop-wardrobe td { display: block; }
-  .shop-wardrobe { width: 100%; }
-  .shop-wardrobe tr { border-top: 1px solid var(--line-soft); padding: .6rem 0; }
-  .shop-wardrobe td { padding: .15rem 0; overflow-wrap: anywhere; }
-  .shop-wardrobe button { max-width: 100%; margin-inline: 0; white-space: normal; }
+  .shop-sell, .shop-wardrobe { width: 100%; }
+  .shop-sell tr, .shop-wardrobe tr { border-top: 1px solid var(--line-soft); padding: .6rem 0; }
+  .shop-sell td, .shop-wardrobe td { padding: .15rem 0; overflow-wrap: anywhere; }
+  .shop-sell button, .shop-wardrobe button { max-width: 100%; margin-inline: 0; white-space: normal; }
 }
