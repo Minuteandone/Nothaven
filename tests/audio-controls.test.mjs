@@ -201,3 +201,21 @@ test('unsupported audio disables only the controls and non-DOM installs are safe
   assert.equal(installAudio(null, { document: null }), null);
   await controller.destroy();
 });
+
+test('real shop and bag transaction actions cue the item sound', async () => {
+  FakeAudioContext.instances = [];
+  const f = fixture();
+  const controller = installAudio(f.game, { document: f.document, random: () => 0.5 });
+  const cues = [];
+  controller.audio.playCue = name => { cues.push(name); return true; };
+  await f.button.emit('click');
+  cues.length = 0;
+  for (const action of ['buy', 'buy5', 'sell', 'sellAll', 'craft', 'use']) {
+    f.root.emit('click', actionEvent(action));
+  }
+  assert.deepEqual(cues, ['item', 'item', 'item', 'item', 'item', 'item'],
+    'purchases, sales, crafting, and item use all cue the item sound');
+  f.root.emit('click', actionEvent('leave'));
+  assert.deepEqual(cues.slice(-1), ['ui'], 'navigation stays on the generic cue');
+  await controller.destroy();
+});

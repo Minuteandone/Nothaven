@@ -3,7 +3,7 @@
 // equipment helpers in src/items/equipment.js. All rendered strings
 // are escaped; all state mutations go through the pure helpers.
 
-import { GREYHAVEN_SHOP, getShop, shopCatalog, buyItem, sellItem } from '../items/shop.js';
+import { GREYHAVEN_SHOP, getShop, shopCatalog, buyItem, buyUpTo, sellItem } from '../items/shop.js';
 import { getItem, isKnownItem, canEquip } from '../items/items.js';
 import { countItem } from '../items/inventory.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
@@ -97,7 +97,10 @@ export const shopScene = {
             <small>${esc(it.description)}</small><br>
             <small>${esc(typeLabel(it.type))}${stats ? ' · ' + esc(statSummary(stats)) : ''}</small>${craftLine}${cmpLine}</td>
           <td style="white-space:nowrap;">${it.price}g</td>
-          <td><button data-action="buy" data-arg="${esc(it.id)}" ${gold < it.price ? 'disabled' : ''}>Buy</button></td>
+          <td>
+            <button data-action="buy" data-arg="${esc(it.id)}" ${gold < it.price ? 'disabled' : ''}>Buy</button>
+            <button data-action="buy5" data-arg="${esc(it.id)}" aria-label="Buy 5 ${esc(it.name)}" ${gold < it.price ? 'disabled' : ''}>Buy 5</button>
+          </td>
         </tr>`;
       })
       .join('');
@@ -226,6 +229,17 @@ export const shopScene = {
       if (!id) return;
       const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
       const res = buyItem(game.state, shop, id, 1);
+      game.shopMessage = res.message;
+      if (res.ok) {
+        game.state.gold = res.state.gold;
+        game.state.inventory = res.state.inventory;
+      }
+    },
+    buy5(game, el) {
+      const id = el?.dataset?.arg;
+      if (!id) return;
+      const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
+      const res = buyUpTo(game.state, shop, id, 5);
       game.shopMessage = res.message;
       if (res.ok) {
         game.state.gold = res.state.gold;

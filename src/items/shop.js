@@ -102,6 +102,33 @@ export function buyItem(state, shop, itemId, qty = 1) {
 }
 
 /**
+ * Buy as many of an item as the state's gold affords, up to a cap.
+ * When even one is unaffordable, falls back to a plain single buy so the
+ * caller receives buyItem's canonical "Not enough gold" message.
+ * @param {{gold: number, inventory: Array<{id:string,qty:number}>}} state
+ * @param {object} shop
+ * @param {string} itemId
+ * @param {number} [cap=5]
+ * @returns {{ok: boolean, state: object, message: string, qty?: number}} new state (gold + inventory)
+ */
+export function buyUpTo(state, shop, itemId, cap = 5) {
+  if (!Number.isInteger(cap) || cap <= 0) {
+    return { ok: false, state, message: 'That is not a quantity you can buy.' };
+  }
+  if (!shopSells(shop, itemId)) {
+    return { ok: false, state, message: 'The trader does not stock that.' };
+  }
+  let item;
+  try { item = getItem(itemId); } catch { return { ok: false, state, message: `Unknown item: ${itemId}.` }; }
+  const price = item.price || 0;
+  const affordable = price > 0 ? Math.floor(state.gold / price) : cap;
+  const qty = Math.min(cap, Math.max(0, affordable));
+  if (qty < 1) return buyItem(state, shop, itemId, 1);
+  const res = buyItem(state, shop, itemId, qty);
+  return res.ok ? { ...res, qty } : res;
+}
+
+/**
  * Gold earned per unit when selling the item: explicit sellPrice override,
  * otherwise half the buy price. Shared by sellItem and UI worth hints.
  * @param {{price?: number, sellPrice?: number}|null|undefined} item
