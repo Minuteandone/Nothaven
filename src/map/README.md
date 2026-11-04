@@ -82,4 +82,4 @@ Provides 9×7 tile-grid exploration, multi-zone navigation, NPC/object proximity
   `travelRequirementMessage`; optional fixed-encounter `requiresInteractions`
   array / `requirementMessage`. Blocking emits no visit/victory/interaction facts.
 
-- Optional Postgame Superboss: `last_squall` (`The Last Squall`) at `(4, 1)` in `storms_eye` requires `storm_heart_victory === true`.
+- Optional Postgame Superboss: `eye_last_squall` (`last_squall`, `The Last Squall`) at `(4, 1)` in `storms_eye` requires story flag `heart_reward === true`.
