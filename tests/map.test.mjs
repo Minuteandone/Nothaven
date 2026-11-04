@@ -655,3 +655,29 @@ test('normal movement in exploreScene respects route_network (.10 roll triggers 
   assert.equal(game.lastCombatData?.enemyId, 'ashen_raider');
   assert.equal(game.lastCombatData?.encounterId, null);
 });
+
+test("greyhaven_watch_house opens muster scene with returnScene explore when adjacent", () => {
+  const game = makeMockGame();
+  let enteredMusterData = null;
+  game.scenes.muster = {
+    onEnter(_g, d) {
+      enteredMusterData = d;
+    },
+    render() {
+      return "";
+    },
+  };
+  game.setScene("explore", { zoneId: "greyhaven" });
+  // At default spawn (2, 3), distance to (2, 1) is 2 -> blocked by proximity guard
+  exploreScene.actions.mapInteract(game, { dataset: { arg: "greyhaven_watch_house" } });
+  assert.equal(enteredMusterData, null);
+
+  // Move north to (2, 2), adjacent to greyhaven_watch_house at (2, 1)
+  exploreScene.actions.moveNorth(game);
+  const actions = getAvailableActions(game.state);
+  assert.ok(actions.some((a) => a.id === "greyhaven_watch_house" && a.label === "Visit Watch House Muster Board"));
+  exploreScene.actions.mapInteract(game, { dataset: { arg: "greyhaven_watch_house" } });
+  assert.equal(game.state.scene, "muster");
+  assert.equal(enteredMusterData?.returnScene, "explore");
+  assert.equal(enteredMusterData?.musterId, "greyhaven_watch_house");
+});
