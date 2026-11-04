@@ -59,3 +59,23 @@ Provides 9×7 tile-grid exploration, multi-zone navigation, NPC/object proximity
   - Encounters: `stormcrown_tyrant` boss at `(4, 1)`, `spire_sentry_post` (`spire_sentry`) at `(3, 3)`, `spire_raider_camp` (`ashen_raider`) at `(6, 5)`, and repeatable random/patrol encounters (`ashen_raider`, `spire_sentry`).
 - **`patrolZone(gameState, options)` / `mapPatrol`**:
   - Available in any zone with `randomEncounters` to deterministically launch a repeatable encounter (`encounterId: null`) for patrol contracts.
+
+### Chapter 5: The Storm’s Eye (`storms_eye`)
+- Summit Passage at Stormcrown Spire `(5,0)` leads to the eye; returning lands at
+  Spire `(5,1)`, not on an exit or the Tyrant. The destination requires the exact
+  boolean story flag `spire_reward` for walking, nearby exit controls, direct
+  travel helpers and already-visited fast travel alike.
+- Eye 9×7, danger 5: default/Spire spawn `(1,5)`, west return `(0,5)`, Greyhaven
+  signal lift `(8,5)`. Pre-core `storms_eye_post` shop `(4,5)` and one-time
+  `eye_supply_cache` `(2,5)` are reachable without any new fight.
+- `eye_west_shade` → `tempest_shade` at `(1,2)` guards once-only
+  `eye_anchor_west` at `(1,1)`. `eye_east_colossus` → `thunderhead_colossus` at
+  `(7,2)` guards once-only `eye_anchor_east` at `(7,1)`.
+- `storm_heart_core` → `storm_heart` at `(4,3)` requires both anchor IDs recorded
+  as exact `true` in `map.completedInteractions`. Both walking and encounter
+  controls enforce this before combat or position/step changes.
+- Regular random encounters/patrols contain only the Shade and Colossus. Base
+  random chance `.14` uses the existing regional calming and relay multipliers.
+- Map schema additions: optional zone `requiresStoryFlag` /
+  `travelRequirementMessage`; optional fixed-encounter `requiresInteractions`
+  array / `requirementMessage`. Blocking emits no visit/victory/interaction facts.

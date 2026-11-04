@@ -832,7 +832,7 @@ export const ZONES = {
     width: 9,
     height: 7,
     grid: [
-      '^^^,,,^^^',
+      '^^^,,+^^^',
       '#...,...#',
       '#.#.#.#.#',
       '#...,...#',
@@ -843,8 +843,13 @@ export const ZONES = {
     spawns: {
       default: { x: 1, y: 5 },
       from_sunscar_relay: { x: 1, y: 5 },
+      from_storms_eye: { x: 5, y: 1 },
     },
     exits: [
+      {
+        x: 5, y: 0, toZone: 'storms_eye', toSpawn: 'from_stormcrown_spire',
+        label: 'Summit Passage → The Storm’s Eye (report the summit survey first)',
+      },
       {
         x: 0,
         y: 5,
@@ -970,6 +975,84 @@ export const ZONES = {
       { encounterId: 'spire_sentry_patrol', enemyId: 'spire_sentry', name: 'Spire Sentry', weight: 2 },
     ],
   },
+  storms_eye: {
+    id: 'storms_eye',
+    name: 'The Storm’s Eye',
+    subtitle: 'Lightning Anchors and the Living Core',
+    dangerLevel: 5,
+    requiresStoryFlag: 'spire_reward',
+    travelRequirementMessage: 'Report the summit survey in Greyhaven before entering the Storm’s Eye.',
+    description: 'Beyond the summit, two lightning anchors hold a suspended causeway around a living storm. Ground the western and eastern anchors before challenging the core; the lower platform offers supplies and a signal lift home.',
+    width: 9,
+    height: 7,
+    grid: [
+      '^^^^^^^^^',
+      '#...,...#',
+      '#.#...#.#',
+      '#...,...#',
+      '#.#...#.#',
+      '+.......+',
+      '^^^^^^^^^',
+    ],
+    spawns: {
+      default: { x: 1, y: 5 },
+      from_stormcrown_spire: { x: 1, y: 5 },
+    },
+    exits: [
+      { x: 0, y: 5, toZone: 'stormcrown_spire', toSpawn: 'from_storms_eye', label: 'Summit Passage → Stormcrown Spire' },
+      { x: 8, y: 5, toZone: 'greyhaven', toSpawn: 'default', label: 'Signal Lift → Greyhaven' },
+    ],
+    npcs: [],
+    interactables: [
+      {
+        id: 'eye_anchor_west', interactionId: 'eye_anchor_west', name: 'Western Lightning Anchor',
+        kind: 'quest', x: 1, y: 1, symbol: '✦', once: true,
+        requiresEncounterCleared: 'eye_west_shade',
+        description: 'You lower the western grounding rod into its basalt socket. Lightning drains from the western half of the core’s shield.',
+      },
+      {
+        id: 'eye_anchor_east', interactionId: 'eye_anchor_east', name: 'Eastern Lightning Anchor',
+        kind: 'quest', x: 7, y: 1, symbol: '✦', once: true,
+        requiresEncounterCleared: 'eye_east_colossus',
+        description: 'You secure the eastern grounding chain. Its copper links carry the remaining shield current away from the core.',
+      },
+      {
+        id: 'eye_supply_cache', interactionId: 'eye_supply_cache', name: 'High Expedition Supply Cache',
+        kind: 'cache', x: 2, y: 5, symbol: '▣', once: true,
+        rewards: [{ id: 'storm_tonic', qty: 1 }, { id: 'ember_broth', qty: 1 }, { id: 'thunder_iron', qty: 1 }],
+        description: 'A bolted supply chest holds provisions carried up by the summit survey crews.',
+      },
+      {
+        id: 'storms_eye_post', interactionId: 'storms_eye_post', name: 'Storm’s Eye Trading Post',
+        kind: 'shop', x: 4, y: 5, symbol: '$', once: false,
+        description: 'A sheltered quartermaster platform supplies the expedition before its approach to the lightning anchors.',
+      },
+    ],
+    encounters: [
+      {
+        id: 'eye_west_shade', encounterId: 'eye_west_shade', enemyId: 'tempest_shade', name: 'Western Anchor Tempest Shade',
+        x: 1, y: 2, symbol: '!', main: false,
+        description: 'A Tempest Shade circles the western grounding rod, drawing strength from its unspent current.',
+      },
+      {
+        id: 'eye_east_colossus', encounterId: 'eye_east_colossus', enemyId: 'thunderhead_colossus', name: 'Eastern Anchor Thunderhead Colossus',
+        x: 7, y: 2, symbol: '!', main: false,
+        description: 'A Thunderhead Colossus braces its iron limbs across the eastern grounding chain.',
+      },
+      {
+        id: 'storm_heart_core', encounterId: 'storm_heart_core', enemyId: 'storm_heart', name: 'The Storm’s Heart',
+        x: 4, y: 3, symbol: '!', main: true,
+        requiresInteractions: ['eye_anchor_west', 'eye_anchor_east'],
+        requirementMessage: 'Ground both the western and eastern lightning anchors before approaching the Storm’s Heart.',
+        description: 'The living core sustains the great storm over Stormcrown. Both lightning anchors must be grounded before its shield will fall.',
+      },
+    ],
+    randomEncounterChance: 0.14,
+    randomEncounters: [
+      { encounterId: 'eye_shade_roaming', enemyId: 'tempest_shade', name: 'Tempest Shade', weight: 2 },
+      { encounterId: 'eye_colossus_roaming', enemyId: 'thunderhead_colossus', name: 'Thunderhead Colossus', weight: 2 },
+    ],
+  },
 };
 
 export const ZONE_ORDER = [
@@ -981,4 +1064,5 @@ export const ZONE_ORDER = [
   'highwatch_pass',
   'sunscar_relay',
   'stormcrown_spire',
+  'storms_eye',
 ];
