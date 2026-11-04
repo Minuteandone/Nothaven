@@ -69,7 +69,7 @@ test('skills cost MP, unlock by level, and are rejected without MP', () => {
   const before = c.enemy.hp;
   heroAction(c, h2, { type: 'skill', skillId: 'spark' }, fixed(0));
   assert.equal(h2.mp, 6);
-  assert.equal(before - c.enemy.hp, (8 + 4) * 2, 'spark doubles vs constructs and ignores def');
+  assert.equal(before - c.enemy.hp, Math.floor((8 + 4) * 1.5), 'spark deals x1.5 vs constructs and ignores def');
 });
 
 test('mend heals up to equipment-aware max HP', () => {

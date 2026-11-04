@@ -87,7 +87,7 @@ test('keeper sparks constructs when nobody needs healing', () => {
   const iven = createCompanionMember('iven', 1);
   const c = createCombat({ enemyId: 'rust_sentinel' });
   const lines = companionTurn(c, iven, [iven], fixed(0));
-  assert.match(lines[0], /Spark for 20/);
+  assert.match(lines[0], /Spark for 15/);
 });
 
 test('companions act after the hero and before the enemy', () => {
