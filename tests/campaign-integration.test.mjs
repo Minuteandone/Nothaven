@@ -462,6 +462,89 @@ function frostmaneJourney(game) {
   act(game, 'toTownScene');
 }
 
+function lenswardenLockedJourney(game) {
+  assert.equal(game.state.story.flags.rescue_reward, undefined);
+  walkExit(game, 'ridge_road');
+  walkExit(game, 'observatory_ruins');
+  walkTo(game, 6, 1);
+  const before = structuredClone(game.state);
+  for (const [action, arg] of [['mapEncounter', 'observatory_lenswarden'], ['moveEast']]) {
+    act(game, action, arg);
+    assert.match(game.state.map.log.at(-1), /report to Mara/);
+    assert.deepEqual({ ...game.state, map: { ...game.state.map, log: before.map.log } }, before,
+      'the unpaid rescue gate changes only its explanatory map log');
+  }
+  walkExit(game, 'ridge_road');
+  walkExit(game, 'greyhaven');
+}
+
+function lenswardenJourney(game) {
+  assert.equal(game.state.scene, 'town');
+  const beforeRest = game.state.gold;
+  act(game, 'rest');
+  assert.equal(game.state.gold, beforeRest - 5);
+  act(game, 'explore');
+  walkExit(game, 'ridge_road');
+  walkExit(game, 'observatory_ruins');
+  walkTo(game, 6, 1);
+  assert.equal(game.state.story.flags.rescue_reward, true);
+  assert.equal(game.state.bestiary?.lenswarden, undefined);
+  assert.equal(featStatus(game.state).find(f => f.id === 'lenswarden').done, false);
+  for (const id of ['old_tusk', 'gloomfin', 'frostmane']) assert.ok(game.state.bestiary[id] > 0, `${id} was earned earlier`);
+  assert.equal(featStatus(game.state).find(f => f.id === 'trials').done, false);
+  assert.equal(DRILL_FOES.includes('lenswarden'), false);
+  const before = structuredClone(game.state);
+  const protectedKeys = ['story', 'flags', 'drillRecords', 'drillGauntlet'];
+  act(game, 'mapEncounter', 'observatory_lenswarden');
+  assert.equal(game.state.scene, 'combat');
+  assert.equal(game.state.combat.encounterId, 'observatory_lenswarden');
+  assert.equal(game.state.combat.enemy.id, 'lenswarden');
+  assert.equal(game.state.combat.enemy.boss, true);
+  assert.equal(game.state.combat.enemy.maxHp, 170);
+  assert.notEqual(game.state.combat.drill, true);
+  for (let turn = 0; !game.state.combat.over && turn < 100; turn++) act(game, 'attack');
+  assert.equal(game.state.combat.over, 'victory', 'earned Cutlass and recruited allies win the optional Observatory trial');
+  assert.equal(game.state.gold, before.gold + 70);
+  game.state.party.forEach((m, i) => assert.equal(m.xp, before.party[i].xp + 110));
+  const loot = [{ id: 'storm_glass', qty: 2 }];
+  assert.deepEqual(game.state.combat.rewards.items, loot);
+  const expectedInventory = structuredClone(before.inventory);
+  for (const drop of loot) {
+    const stack = expectedInventory.find(item => item.id === drop.id);
+    if (stack) stack.qty += drop.qty;
+    else expectedInventory.push({ ...drop });
+  }
+  assert.deepEqual(game.state.inventory, expectedInventory);
+  const expectedBook = { ...before.bestiary, lenswarden: 1 };
+  assert.deepEqual(game.state.bestiary, expectedBook);
+  for (const key of protectedKeys) assert.deepEqual(game.state[key], before[key], `${key} is untouched by Lenswarden`);
+  assert.equal(featStatus(game.state).find(f => f.id === 'lenswarden').done, true);
+  assert.equal(featStatus(game.state).find(f => f.id === 'trials').done, true);
+  act(game, 'finish');
+  assert.equal(game.state.scene, 'explore');
+  assert.equal(game.state.combat, null);
+  assert.equal(game.state.map.activeEncounterId, null);
+  assert.deepEqual(game.state.map.clearedEncounters, { ...before.map.clearedEncounters, observatory_lenswarden: true });
+  assert.deepEqual(game.state.map.completedInteractions, before.map.completedInteractions);
+  assert.deepEqual(game.state.inventory, expectedInventory);
+  assert.deepEqual(game.state.bestiary, expectedBook);
+  assert.equal(game.state.gold, before.gold + 70);
+  game.state.party.forEach((m, i) => assert.equal(m.xp, before.party[i].xp + 110));
+  checkpoint(game, 'complete');
+  const cleared = structuredClone(game.state);
+  act(game, 'mapEncounter', 'observatory_lenswarden');
+  assert.equal(game.state.scene, 'explore');
+  assert.equal(game.state.combat, null);
+  for (const key of [...protectedKeys, 'party', 'inventory', 'gold', 'bestiary']) {
+    assert.deepEqual(game.state[key], cleared[key], `cleared Lenswarden cannot change ${key}`);
+  }
+  assert.equal(featStatus(game.state).find(f => f.id === 'lenswarden').done, true);
+  assert.equal(featStatus(game.state).find(f => f.id === 'trials').done, true);
+  walkExit(game, 'ridge_road');
+  walkExit(game, 'greyhaven');
+  act(game, 'toTownScene');
+}
+
 function relayJourney(game, choice, early) {
   const ending = game.state.story.ending;
   assert.equal(game.state.scene, 'town');
@@ -1414,6 +1497,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         oldTuskLockedJourney(game);
         gloomfinLockedJourney(game);
         frostmaneLockedJourney(game);
+        lenswardenLockedJourney(game);
         const beforeReport = game.state.gold;
         act(game, 'storyTalk', 'mara');
         assert.equal(game.state.gold, beforeReport, 'ordinary talk does not claim the expedition reward');
@@ -1439,6 +1523,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         oldTuskJourney(game);
         gloomfinJourney(game);
         frostmaneJourney(game);
+        lenswardenJourney(game);
         relayJourney(game, relayChoice, early);
         spireJourney(game, relayChoice, early);
         companionJourney(game, early, first);
