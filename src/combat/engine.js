@@ -30,6 +30,7 @@ export function startCombat(state, enemyId, opts = {}) {
   const src = ENEMIES[enemyId];
   if (!src) throw new Error(`Unknown enemy: ${enemyId}`);
   const enemy = JSON.parse(JSON.stringify(src));
+  enemy.maxHp = enemy.hp;  // enemies track current vs max HP
   state.combat = {
     enemy,
     log: [`A ${enemy.name} draws near — ${enemy.desc}`],
@@ -61,7 +62,9 @@ function tickStatuses(state, whose) {
     }
     s.turns -= 1;
     if (s.turns <= 0) {
-      if (s.buff) { char[s.stat] -= s.amount; c.log.push(`${char.name}'s ${s.label} fades.`); }
+      if (s.buff) char[s.stat] -= s.amount;
+      else if (s.debuff) char[s.stat] += s.amount;
+      if (s.buff || s.debuff) c.log.push(`${char.name}'s ${s.label} fades.`);
       delete st[key];
     }
   }
@@ -90,12 +93,15 @@ function applyStatus(state, whose, effect) {
 }
 
 function rollDamage(attacker, defender, power, defending) {
-  let roll = rand(-1, 2);
+  // Diminishing-returns defense: high DEF softens but never nullifies an attack.
+  const raw = attacker.atk * power;
+  const reduction = defender.def / (defender.def + 8);
+  const variance = 0.85 + Math.random() * 0.3; // 0.85..1.15
   const crit = Math.random() < 0.1;
-  let dmg = attacker.atk * power + roll - defender.def;
+  let dmg = raw * (1 - reduction) * variance;
   if (crit) dmg *= 1.5;
-  dmg = clamp(Math.floor(dmg), 1, 9999);
-  if (defending) dmg = Math.max(1, Math.floor(dmg / 2));
+  dmg = clamp(Math.round(dmg), 1, 9999);
+  if (defending) dmg = Math.max(1, Math.round(dmg / 2));
   return { dmg, crit };
 }
 
@@ -130,6 +136,7 @@ function heroTurn(state, abilityId) {
   c.enemy.hp = clamp(c.enemy.hp - dmg, 0, 9999);
   const quip = CRIT_QUIPS[rand(0, CRIT_QUIPS.length - 1)]();
   c.log.push(`${hero.name} uses ${a.name}: ${dmg} damage.${crit ? ` <span class="crit">${quip}</span>` : ''}`);
+  if (c.enemy.hp <= 0) { resolveVictory(state); return; }
 }
 
 function enemyTurn(state) {
@@ -185,12 +192,15 @@ function resolveVictory(state) {
   c.log.push(`Victory! +${xp} XP, +${gold} gold.`);
   // Roll loot.
   for (const drop of c.enemy.loot || []) {
-    if (Math.random() < drop.chance) {
-      const inv = state.inventory.find(i => i.id === drop.id);
-      if (inv) inv.qty += drop.qty;
-      else state.inventory.push({ id: drop.id, qty: drop.qty });
-      c.log.push(`You found ${drop.qty} ${drop.id.replace(/_/g, ' ')}.`);
-    }
+    if (!drop || Math.random() >= (drop.chance ?? 1)) continue;
+    const min = drop.minQty ?? 1;
+    const max = drop.maxQty ?? min;
+    const qty = min + Math.floor(Math.random() * (Math.max(0, max - min) + 1));
+    if (qty <= 0) continue;
+    const inv = state.inventory.find(i => i.id === drop.id);
+    if (inv) inv.qty += qty;
+    else state.inventory.push({ id: drop.id, qty });
+    c.log.push(`You found ${qty} ${drop.id.replace(/_/g, ' ')}.`);
   }
   gainXp(state, 0); // no-op; xp already added. Kept for clarity/symmetry.
   bus.emit('combat:victory', { enemyId: c.enemy.id, encounterId: c.encounterId });

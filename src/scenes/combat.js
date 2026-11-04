@@ -35,7 +35,7 @@ export const combatScene = {
         ${statusChips(c.statuses.hero)}
       </div>
       <div class="stats">
-        <span class="dmg">${c.enemy.name}: ${c.enemy.hp} HP</span>
+        <span class="dmg">${c.enemy.name}: ${c.enemy.hp}/${c.enemy.maxHp} HP</span>
         ${statusChips(c.statuses.enemy)}
       </div>
       ${c.turn === 'enemy' && !c.over ? '<p class="turn">Enemy turn…</p>' : ''}

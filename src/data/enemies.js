@@ -1,6 +1,6 @@
 // Enemy data tables. All fields are plain JSON (keep anything added here serializable).
 // `abilities` map to entries in src/combat/abilities.js (monster ability ids prefixed `m:`).
-// `loot` is a list of [{ id, chance (0..1), qty }] rolled on victory.
+// `loot` is a list of [{ id, chance (0..1), minQty?, maxQty? }] rolled on victory.
 export const ENEMIES = {
   storm_rat: {
     id: 'storm_rat',
@@ -9,7 +9,7 @@ export const ENEMIES = {
     hp: 12, mp: 0, atk: 4, def: 1, spd: 4,
     xp: 5, gold: 3,
     abilities: [],
-    loot: [{ id: 'rat_fang', chance: 0.35, qty: 1 }],
+    loot: [{ id: 'rat_fang', chance: 0.35, minQty: 1, maxQty: 1 }],
   },
   storm_wolf: {
     id: 'storm_wolf',
@@ -18,7 +18,7 @@ export const ENEMIES = {
     hp: 22, mp: 0, atk: 7, def: 3, spd: 6,
     xp: 12, gold: 8,
     abilities: [{ id: 'm:howl' }],
-    loot: [{ id: 'wolf_pelt', chance: 0.4, qty: 1 }],
+    loot: [{ id: 'wolf_pelt', chance: 0.4, minQty: 1, maxQty: 1 }],
   },
   yolkooze: {
     id: 'yolkooze',
@@ -28,8 +28,8 @@ export const ENEMIES = {
     xp: 9, gold: 6,
     abilities: [{ id: 'm:golden_gunk' }],
     loot: [
-      { id: 'golden_egg', chance: 0.12, qty: 1 },
-      { id: 'yolk_glob', chance: 0.3, qty: 1 },
+      { id: 'golden_egg', chance: 0.12, minQty: 1, maxQty: 1 },
+      { id: 'yolk_glob', chance: 0.3, minQty: 1, maxQty: 2 },
     ],
   },
   rust_sentinel: {
@@ -39,7 +39,7 @@ export const ENEMIES = {
     hp: 40, mp: 0, atk: 9, def: 6, spd: 2,
     xp: 22, gold: 15,
     abilities: [{ id: 'm:overcharge' }],
-    loot: [{ id: 'iron_shard', chance: 0.5, qty: 1 }],
+    loot: [{ id: 'iron_shard', chance: 0.5, minQty: 1, maxQty: 2 }],
   },
   beacon_imp: {
     id: 'beacon_imp',
@@ -48,6 +48,6 @@ export const ENEMIES = {
     hp: 15, mp: 8, atk: 6, def: 3, spd: 7,
     xp: 10, gold: 7,
     abilities: [{ id: 'm:ember_burst' }],
-    loot: [{ id: 'shimmer_dust', chance: 0.25, qty: 1 }],
+    loot: [{ id: 'shimmer_dust', chance: 0.25, minQty: 1, maxQty: 1 }],
   },
 };
