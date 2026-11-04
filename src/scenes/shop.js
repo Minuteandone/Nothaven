@@ -183,10 +183,10 @@ export const shopScene = {
         </div>
         <p><em>${esc(shop.greeting)}</em></p>
         <p>${esc(game.shopMessage || '')}</p>
-        <div>
-          <button data-action="setMode" data-arg="buy" ${mode === 'buy' ? 'disabled' : ''}>Buy</button>
-          <button data-action="setMode" data-arg="sell" ${mode === 'sell' ? 'disabled' : ''}>Sell</button>
-          <button data-action="setMode" data-arg="craft" ${mode === 'craft' ? 'disabled' : ''}>Craft</button>
+        <div class="shop-tabs">
+          <button class="shop-tab${mode === 'buy' ? ' shop-tab--active' : ''}" data-action="setMode" data-arg="buy" ${mode === 'buy' ? 'aria-current="true"' : ''}>Buy</button>
+          <button class="shop-tab${mode === 'sell' ? ' shop-tab--active' : ''}" data-action="setMode" data-arg="sell" ${mode === 'sell' ? 'aria-current="true"' : ''}>Sell</button>
+          <button class="shop-tab${mode === 'craft' ? ' shop-tab--active' : ''}" data-action="setMode" data-arg="craft" ${mode === 'craft' ? 'aria-current="true"' : ''}>Craft</button>
         </div>
         ${
           mode === 'buy'
@@ -195,7 +195,7 @@ export const shopScene = {
               ? sellRows
                 ? `<table>${sellRows}</table>`
                 : '<p>You carry nothing Hesta would pay for.</p>'
-              : `<table>${craftRows}</table>`
+              : `<table class="craft-table">${craftRows}</table>`
         }
         <h3>Wardrobe${party.length > 1 ? ` — ${esc(member.name)}` : ''}</h3>
         ${
@@ -203,7 +203,7 @@ export const shopScene = {
             ? `<div>${party
                 .map((m, i) =>
                   m
-                    ? `<button data-action="selectMember" data-arg="${i}" ${i === index ? 'disabled' : ''}>${esc(m.name || `Member ${i + 1}`)}${m.companion ? ' (ally)' : ''}</button>`
+                    ? `<button class="shop-tab${i === index ? ' shop-tab--active' : ''}" data-action="selectMember" data-arg="${i}" ${i === index ? 'aria-current="true"' : ''}>${esc(m.name || `Member ${i + 1}`)}${m.companion ? ' (ally)' : ''}</button>`
                     : ''
                 )
                 .join('')}</div>`
