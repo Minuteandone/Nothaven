@@ -1,10 +1,12 @@
 // Combat scene: Attack / Skills / Items / Defend / Flee against one enemy.
 // setScene('combat', {enemyId, encounterId, returnScene}) — finishing returns to
-// returnScene with {message, combatResult, encounterId}; defeat goes to title.
+// returnScene with {message, combatResult, encounterId}; defeat wakes the party in
+// Greyhaven (half max HP, lose half gold) via recoverFromDefeat.
 import {
   createCombat, heroAction, afterHeroAction, enemyTurn, knownSkills, heroStats, victoryRewards,
 } from '../combat/rules.js';
 import { rollLoot } from '../items/loot.js';
+import { ZONES } from '../map/zones.js';
 import { grantRewards } from '../items/inventory.js';
 import { useConsumable } from '../items/consumables.js';
 import { getItem, TYPES } from '../items/items.js';
@@ -46,6 +48,30 @@ function commit(game, lines) {
   if (c.over === 'victory' && !c.rewards) resolveVictory(game, lines);
   c.log.push(...lines);
   if (c.log.length > 40) c.log.splice(0, c.log.length - 40);
+}
+
+/**
+ * Defeat is not game over: the party is carried back to Greyhaven, revived at half
+ * max HP (full MP), and loses half its gold. Map progress is kept; the player is
+ * placed at the Greyhaven spawn. Returns the message shown in town.
+ */
+export function recoverFromDefeat(state) {
+  const lost = Math.floor(Math.max(0, Number(state.gold) || 0) / 2);
+  state.gold = Math.max(0, (Number(state.gold) || 0) - lost);
+  for (const m of state.party || []) {
+    const st = heroStats(m);
+    m.hp = Math.max(1, Math.ceil(st.maxHp / 2));
+    m.mp = st.maxMp;
+    m.statuses = [];
+  }
+  state.location = 'greyhaven';
+  if (state.map && typeof state.map === 'object') {
+    state.map.zoneId = 'greyhaven';
+    const spawn = ZONES.greyhaven?.spawns?.default || { x: 2, y: 3 };
+    state.map.x = spawn.x; state.map.y = spawn.y;
+    state.map.activeEncounterId = null;
+  }
+  return `You wake in Greyhaven's infirmary. Warden Mara's patrol carried you back from the wilds${lost ? `, but ${lost} gold was lost along the way` : ''}.`;
 }
 
 export const combatScene = {
@@ -122,7 +148,11 @@ export const combatScene = {
       game.state.combat = null;
       game.combatMenu = 'main';
       for (const m of game.state.party) { m.statuses = []; if (m.hp <= 0 && m !== game.state.party[0]) m.hp = 1; }
-      if (over === 'defeat') { game.setScene('title'); return; }
+      if (over === 'defeat') {
+        const message = recoverFromDefeat(game.state);
+        game.setScene(game.scenes?.town ? 'town' : 'title', { message, combatResult: 'defeat', encounterId });
+        return;
+      }
       const message = over === 'victory' ? 'You return victorious.' : 'You slip away.';
       const target = game.scenes?.[returnScene] ? returnScene : 'town';
       game.setScene(target, { message, combatResult: over, encounterId });
