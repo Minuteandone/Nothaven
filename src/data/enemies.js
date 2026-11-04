@@ -146,4 +146,34 @@ export const ENEMIES = {
       { id: 'storm_tonic', chance: 1, minQty: 1, maxQty: 2 },
     ],
   },
+  ashen_raider: {
+    id: 'ashen_raider', name: 'Ashen Raider', hp: 84, atk: 18, def: 7, spd: 7, xp: 48, gold: 30,
+    ability: { name: 'Cinder Blade', chance: 0.3, mult: 1.25, status: 'bleeding', turns: 3 },
+    loot: [
+      { id: 'bandage', chance: 0.5, minQty: 1, maxQty: 1 },
+      { id: 'thunder_iron', chance: 0.4, minQty: 1, maxQty: 1 },
+    ],
+  },
+  spire_sentry: {
+    id: 'spire_sentry', name: 'Spire Sentry', hp: 104, atk: 17, def: 10, spd: 4, xp: 52, gold: 28,
+    tags: ['construct'],
+    ability: { name: 'Chain Lightning', chance: 0.3, mult: 1.15, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'thunder_iron', chance: 0.6, minQty: 1, maxQty: 2 },
+      { id: 'salvaged_wiring', chance: 0.5, minQty: 1, maxQty: 2 },
+    ],
+  },
+  stormcrown_tyrant: {
+    id: 'stormcrown_tyrant', name: 'Stormcrown Tyrant', hp: 300, atk: 21, def: 8, spd: 6, xp: 160, gold: 120,
+    boss: true,
+    intro: 'Atop the spire, a figure in a crown of living lightning turns from the gathering clouds. "So the little beacon-keepers finally climbed this high."',
+    defeat: 'The crown of lightning gutters and goes dark. The Tyrant sinks to one knee as the clouds above the spire finally begin to thin.',
+    enrage: { threshold: 0.4, atk: 4, chance: 0.5, line: 'The Stormcrown Tyrant raises both arms and calls the whole thunderhead down upon the spire!' },
+    ability: { name: 'Tempest Call', chance: 0.35, mult: 1.45, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'thunder_iron', chance: 1, minQty: 2, maxQty: 3 },
+      { id: 'storm_tonic', chance: 1, minQty: 2, maxQty: 2 },
+      { id: 'stormcrown_shard', chance: 1, minQty: 1, maxQty: 1 },
+    ],
+  },
 };

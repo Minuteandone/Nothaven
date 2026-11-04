@@ -214,6 +214,16 @@ export const ITEMS = Object.freeze({
     price: 34, sellPrice: 17,
     description: 'Amber glass fused by lightning on the Sunscar flats. Prized by lens-grinders.',
   },
+  thunder_iron: {
+    id: 'thunder_iron', name: 'Thunder Iron', type: TYPES.MATERIAL,
+    price: 44, sellPrice: 22,
+    description: 'Dark ore veined with blue light, mined from the Stormcrown slopes. Smiths say it hums before rain.',
+  },
+  stormcrown_shard: {
+    id: 'stormcrown_shard', name: 'Stormcrown Shard', type: TYPES.MATERIAL,
+    price: 120, sellPrice: 60,
+    description: 'A splinter of the Tyrant\'s crown, still faintly warm and flickering with trapped lightning.',
+  },
 });
 
 /**
