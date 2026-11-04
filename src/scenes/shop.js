@@ -6,7 +6,7 @@
 import { GREYHAVEN_SHOP, getShop, shopCatalog, buyItem, sellItem } from '../items/shop.js';
 import { getItem, isKnownItem, canEquip } from '../items/items.js';
 import { countItem } from '../items/inventory.js';
-import { equipItem, unequipItem, effectiveStats, createEquipment } from '../items/equipment.js';
+import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
 import { listRecipes, recipeInputsMet, recipeSummary, craft } from '../items/crafting.js';
 
 const esc = (v) =>
@@ -76,10 +76,17 @@ export const shopScene = {
     const buyRows = shopCatalog(shop)
       .map((it) => {
         const stats = isKnownItem(it.id) ? getItem(it.id).stats : null;
+        let cmpLine = '';
+        if (isKnownItem(it.id) && canEquip(it.id)) {
+          const curId = eq[getItem(it.id).slot];
+          const curItem = curId && isKnownItem(curId) ? getItem(curId) : null;
+          const delta = statDeltaSummary(curItem, getItem(it.id));
+          if (delta) cmpLine = `<br><small>vs ${esc(curItem.name)}: ${esc(delta)}</small>`;
+        }
         return `<tr>
           <td><strong>${esc(it.name)}</strong><br>
             <small>${esc(it.description)}</small><br>
-            <small>${esc(typeLabel(it.type))}${stats ? ' · ' + esc(statSummary(stats)) : ''}</small></td>
+            <small>${esc(typeLabel(it.type))}${stats ? ' · ' + esc(statSummary(stats)) : ''}</small>${cmpLine}</td>
           <td style="white-space:nowrap;">${it.price}g</td>
           <td><button data-action="buy" data-arg="${esc(it.id)}" ${gold < it.price ? 'disabled' : ''}>Buy</button></td>
         </tr>`;
@@ -111,7 +118,8 @@ export const shopScene = {
         const ownedButtons = owned
           .map((st) => {
             const it = getItem(st.id);
-            return `<button data-action="equip" data-arg="${esc(it.id)}">Equip ${esc(it.name)}</button>`;
+            const delta = statDeltaSummary(curItem, it);
+            return `<button data-action="equip" data-arg="${esc(it.id)}">Equip ${esc(it.name)}</button>${delta && curItem ? ` <small>vs ${esc(curItem.name)}: ${esc(delta)}</small>` : ''}`;
           })
           .join(' ');
         return `<tr>
