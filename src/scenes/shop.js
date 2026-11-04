@@ -193,7 +193,7 @@ export const shopScene = {
             ? `<table>${buyRows}</table>`
             : mode === 'sell'
               ? sellRows
-                ? `<table>${sellRows}</table>`
+                ? `<table class="shop-sell" aria-label="Items available to sell">${sellRows}</table>`
                 : '<p>You carry nothing Hesta would pay for.</p>'
               : `<table class="craft-table">${craftRows}</table>`
         }

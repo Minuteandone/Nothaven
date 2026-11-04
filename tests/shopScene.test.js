@@ -138,3 +138,21 @@ test('all shop modes retain a labelled responsive wardrobe and spare gear action
     assert.deepEqual(game.state, before);
   }
 });
+
+
+test('responsive selling table retains large-stack prices and both sale actions without mutation', () => {
+  const game = fakeGame();
+  game.shopMode = 'sell';
+  game.state.party[0].equipment = { weapon: null, armor: null, trinket: null };
+  game.state.inventory = [{ id: 'thunder_iron', qty: 13 }, { id: 'stormcrown_shard', qty: 1 }];
+  const before = structuredClone(game.state);
+  const html = shopScene.render(game);
+  assert.match(html, /<table class="shop-sell" aria-label="Items available to sell">/);
+  assert.match(html, /Thunder Iron<\/strong> ×13/);
+  assert.match(html, /22g each/);
+  assert.match(html, /data-action="sell" data-arg="thunder_iron"/);
+  assert.match(html, /data-action="sellAll" data-arg="thunder_iron">Sell all \(286g\)/);
+  assert.match(html, /Stormcrown Shard/);
+  assert.match(html, /60g each/);
+  assert.deepEqual(game.state, before);
+});
