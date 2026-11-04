@@ -2,6 +2,7 @@ import { TILE_TYPES, ZONES, ZONE_ORDER } from './zones.js';
 import { grantRewards } from '../items/inventory.js';
 import { useConsumable } from '../items/consumables.js';
 import { craft } from '../items/crafting.js';
+import { effectiveStats } from '../items/equipment.js';
 
 export function createMapState(initialZone = 'greyhaven') {
   const zone = ZONES[initialZone] || ZONES.greyhaven;
@@ -361,8 +362,12 @@ export function interactWith(gameState, kind, targetId, options = {}) {
       }
       gameState.gold -= cost;
       for (const member of gameState.party || []) {
-        if (typeof member.maxHp === 'number') member.hp = member.maxHp;
-        if (typeof member.maxMp === 'number') member.mp = member.maxMp;
+        const eff = effectiveStats(member);
+        if (typeof eff.maxHp === 'number') member.hp = eff.maxHp;
+        else if (typeof member.maxHp === 'number') member.hp = member.maxHp;
+        if (typeof eff.maxMp === 'number') member.mp = eff.maxMp;
+        else if (typeof member.maxMp === 'number') member.mp = member.maxMp;
+        if (Array.isArray(member.statuses)) member.statuses = [];
       }
       const msg = `Rested at ${inter.name} (-${cost}g). Party HP and MP fully restored.`;
       appendLog(mapState, msg);
