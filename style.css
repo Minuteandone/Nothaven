@@ -11,3 +11,12 @@ button:disabled { opacity:.4; cursor:not-allowed; }
 .log p { margin:.2rem 0; }
 .hp { color: var(--good); } .dmg { color: var(--bad); }
 .stats { display:flex; gap:1rem; flex-wrap:wrap; }
+
+/* Combat v2 */
+.combat .combatants { display: flex; gap: 1rem; flex-wrap: wrap; }
+.combat .unit { flex: 1 1 12rem; }
+.bar { height: 8px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; margin: 2px 0 6px; }
+.bar span { display: block; height: 100%; background: #d9534f; }
+.bar.mp span { background: #4a90d9; }
+.status { font-size: 0.75em; padding: 0 4px; border: 1px solid currentColor; border-radius: 3px; }
+.actions button { margin: 2px; }
