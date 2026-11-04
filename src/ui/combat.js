@@ -1,3 +1,4 @@
+import { BEACON_CHARGE_MAX, chargeReady } from '../combat/rules.js';
 import { heroStats, knownSkills } from '../combat/rules.js';
 import { getItem, TYPES } from '../items/items.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
@@ -83,7 +84,8 @@ function commands({ combat, hero, inventory, menu }) {
   const usableCount = (inventory || []).filter((stack) => {
     try { return getItem(stack.id).type === TYPES.CONSUMABLE; } catch { return false; }
   }).length;
-  return `<div class="actions command-grid" role="group" aria-label="Combat actions">
+  return `${chargeMeter(combat)}<div class="actions command-grid" role="group" aria-label="Combat actions">
+    ${uiButton({ action: 'burst', label: chargeReady(combat) ? 'Beacon Burst — ready!' : 'Beacon Burst', iconName: 'beacon', variant: chargeReady(combat) ? 'primary' : 'secondary', disabled: !chargeReady(combat), className: 'command-button command-button--burst' })}
     ${uiButton({ action: 'attack', label: 'Attack', iconName: 'sword', variant: 'primary', className: 'command-button' })}
     ${uiButton({ action: 'menu', arg: 'skills', label: `Skills · ${knownSkills(hero).length}`, iconName: 'focus', className: 'command-button' })}
     ${uiButton({ action: 'menu', arg: 'items', label: `Items · ${usableCount}`, iconName: 'bag', className: 'command-button' })}
@@ -91,6 +93,12 @@ function commands({ combat, hero, inventory, menu }) {
     ${uiButton({ action: 'flee', label: 'Flee', iconName: 'compass', variant: 'danger', disabled: Boolean(combat.enemy.boss), className: 'command-button command-button--flee' })}
     <p class="command-hint">${combat.enemy.boss ? 'Boss encounters must be fought to resolution.' : 'Attack or use a skill to press the advantage. Defend halves incoming damage.'}</p>
   </div>`;
+}
+
+/** Beacon Charge gauge shown above the main commands. */
+export function chargeMeter(combat) {
+  const value = Math.min(BEACON_CHARGE_MAX, Math.max(0, number(combat?.charge, 0)));
+  return `<div class="beacon-charge${value >= BEACON_CHARGE_MAX ? ' beacon-charge--ready' : ''}">${meter({ label: 'Beacon Charge', value, max: BEACON_CHARGE_MAX, tone: 'xp' })}</div>`;
 }
 
 const DIFFICULTY_NOTES = { story: 'Story mode', veteran: 'Veteran mode' };
