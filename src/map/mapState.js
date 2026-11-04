@@ -65,13 +65,17 @@ export function getInnCost(gameState, inter) {
   return inter?.costGold ?? 5;
 }
 
+// Zones where defeating The Storm's Heart (flag victory_storm_heart) halves random encounters.
+export const STORM_CALMED_ZONES = ['stormcrown_spire', 'storms_eye'];
+
 export function getEffectiveRandomEncounterChance(gameState, zone) {
   const base = typeof zone?.randomEncounterChance === 'number' ? zone.randomEncounterChance : 0;
   if (base <= 0) return 0;
-  if (gameState?.story?.flags?.relay_choice === 'route_network') {
-    return base * 0.5;
-  }
-  return base;
+  let chance = base;
+  const flags = gameState?.story?.flags || {};
+  if (flags.relay_choice === 'route_network') chance *= 0.5;
+  if (flags.victory_storm_heart && STORM_CALMED_ZONES.includes(zone?.id)) chance *= 0.5;
+  return chance;
 }
 
 export function pickRandomEncounter(encounters, rng = Math.random) {
