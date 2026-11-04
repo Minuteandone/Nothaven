@@ -8,6 +8,8 @@ const flagsOf = state => state?.story?.flags || {};
 const heroOf = state => (Array.isArray(state?.party) ? state.party[0] : null) || null;
 const COMMISSION_IDS = ['tamsin', 'iven', 'bram', 'sela'];
 
+export const WANDERERS = Object.freeze(['briar_boar', 'lens_wisp', 'wrack_eel', 'rime_wight']);
+
 export const FEATS = Object.freeze([
   Object.freeze({ id: 'first_light', title: 'First Light', detail: 'Relight the Greyhaven beacon and choose how its light is used.',
     check: s => s?.story?.stage === 'complete' || Boolean(s?.story?.ending) }),
@@ -37,6 +39,8 @@ export const FEATS = Object.freeze([
     check: s => Number(s?.story?.expedition?.completed) >= 3 }),
   Object.freeze({ id: 'catalogue', title: 'Field Researcher', detail: 'Record ten different foes in the field journal.',
     check: s => Object.values(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary : {}).filter(n => Number(n) > 0).length >= 10 }),
+  Object.freeze({ id: 'wanderers', title: 'Roadwise', detail: 'Defeat each of the four frontier wanderers: the Briar Boar, Lens Wisp, Wrack Eel and Rime Wight.',
+    check: s => WANDERERS.every(id => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary[id] : 0) > 0) }),
   Object.freeze({ id: 'veteran', title: 'Veteran Warden', detail: 'Bring Wren to level 10.',
     check: s => Number(heroOf(s)?.level) >= 10 }),
   Object.freeze({ id: 'legend', title: 'Legend of Stormhaven', detail: 'Bring Wren to level 20.',
