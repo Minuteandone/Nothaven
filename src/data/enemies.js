@@ -160,7 +160,7 @@ export const ENEMIES = {
     tags: ['construct'],
     boss: true,
     drill: false,
-    intro: 'Brass plates grind apart in the west gallery. The Lenswarden, the old opticians’ guardian, unfolds from its alcove and turns a ring of storm-glass prisms toward you!',
+    intro: 'Brass plates grind apart in the northeast vault. The Lenswarden, the old opticians’ guardian, unfolds from its alcove and turns a ring of storm-glass prisms toward you!',
     defeat: 'The prisms dim one by one. The Lenswarden folds its brass limbs, settles back into its alcove and goes still, its watch over the vaults finished.',
     enrage: { threshold: 0.5, atk: 3, chance: 0.5, line: 'Every prism on the Lenswarden flares white at once. It sweeps the gallery with sharpened light!' },
     ability: { name: 'Focused Beam', chance: 0.35, mult: 1.5, status: 'shocked', turns: 2 },
