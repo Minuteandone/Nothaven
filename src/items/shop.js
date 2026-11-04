@@ -43,7 +43,7 @@ export const STORMS_EYE_POST = Object.freeze({
   id: 'storms_eye_post',
   name: "Storm's Eye Post",
   greeting: 'The trader at the eye keeps one shelf under a glass bell. "Calm center, wild rim. Buy before you go in."',
-  stock: ['tempest_salve', 'thunder_iron', 'tempest_edge', 'maelstrom_plate', 'stormeye_signet'],
+  stock: ['tempest_salve', 'skyward_flask', 'storm_glass', 'thunder_iron', 'tempest_edge', 'maelstrom_plate', 'stormeye_signet'],
 });
 
 export const SHOPS = Object.freeze({

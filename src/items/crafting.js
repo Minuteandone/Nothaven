@@ -171,6 +171,13 @@ export const RECIPES = Object.freeze([
     inputs: [{ id: 'crownshard_focus', qty: 1 }, { id: 'storm_glass', qty: 1 }],
     outputs: [{ id: 'stormeye_signet', qty: 1 }],
   },
+  {
+    id: 'string_heartward_charm',
+    name: 'String a Heartward Charm',
+    description: 'Braid a crown shard with salvaged wiring and a pane of calm glass; the pendant keeps a steady beat even at the eye\'s center.',
+    inputs: [{ id: 'stormcrown_shard', qty: 1 }, { id: 'salvaged_wiring', qty: 2 }, { id: 'storm_glass', qty: 1 }],
+    outputs: [{ id: 'heartward_charm', qty: 1 }],
+  },
 ]);
 
 /** Look up a recipe by id (own-property safe). @returns {Recipe|undefined} */

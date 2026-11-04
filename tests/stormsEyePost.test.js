@@ -35,7 +35,9 @@ function countOf(inv, id) {
 test('SHOPS registry includes storms_eye_post and getShop resolves it', () => {
   assert.deepEqual(Object.keys(SHOPS).sort(), ['greyhaven_shop', 'relay_outpost', 'saltmere_post', 'stormcrown_post', 'storms_eye_post']);
   assert.equal(getShop('storms_eye_post').name, "Storm's Eye Post");
-  assert.ok(Array.isArray(SHOPS.storms_eye_post.stock) && SHOPS.storms_eye_post.stock.length === 5);
+  assert.ok(Array.isArray(SHOPS.storms_eye_post.stock) && SHOPS.storms_eye_post.stock.length === 7);
+  assert.ok(SHOPS.storms_eye_post.stock.includes('skyward_flask'), 'eye post must stock MP sustain');
+  assert.ok(SHOPS.storms_eye_post.stock.includes('storm_glass'), 'eye post must stock signet craft material');
 });
 
 test('every storms-eye stock and recipe endpoint references known items', () => {

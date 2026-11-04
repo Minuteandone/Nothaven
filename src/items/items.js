@@ -224,6 +224,12 @@ export const ITEMS = Object.freeze({
     price: 210, sellPrice: 105,
     description: 'A ring of calm glass cut at the eye post bench; the bearer steps lightly, as if the wind itself made way.',
   },
+  heartward_charm: {
+    id: 'heartward_charm', name: 'Heartward Charm', type: TYPES.EQUIPMENT, slot: 'trinket',
+    stats: { def: 3, hp: 12, spd: 1 },
+    price: 260, sellPrice: 130,
+    description: 'A crown shard braided with wiring and calm glass into a pendant. It beats slow and steady, like the quiet center of the eye.',
+  },
   // ---- Key items ----
   observatory_lens: {
     id: 'observatory_lens', name: 'Observatory Lens', type: TYPES.KEY,
