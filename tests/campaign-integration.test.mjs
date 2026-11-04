@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { Game } from '../src/engine.js';
 import { saveGame, loadGame } from '../src/state.js';
 import { combatScene } from '../src/scenes/combat.js';
+import { installBestiary } from '../src/scenes/bestiary.js';
+import { getItem } from '../src/items/items.js';
 import { installCompanions } from '../src/scenes/muster.js';
 import { installShop } from '../src/scenes/shop.js';
 import { countItem } from '../src/items/inventory.js';
@@ -41,6 +43,7 @@ function harness(t) {
   installProgression(game);
   installShop(game);
   installCompanions(game);
+  t.after(installBestiary(game));
   t.after(installMap(game, { enableKeyboard: false }));
   game.setScene('explore');
   return game;
@@ -70,6 +73,7 @@ function walkTo(game, tx, ty) {
       // may be used as an intermediate tile in a walking route.
       if (zone.npcs?.some(n => n.x === nx && n.y === ny)) continue;
       if ((nx !== tx || ny !== ty) && zone.exits?.some(e => e.x === nx && e.y === ny)) continue;
+      if ((nx !== tx || ny !== ty) && zone.encounters?.some(e => e.x === nx && e.y === ny && !map.clearedEncounters[e.encounterId])) continue;
       seen.add(key);
       queue.push([nx, ny, [...steps, action]]);
     }
@@ -96,12 +100,16 @@ function winEncounter(game, id) {
   assert.equal(game.state.combat.encounterId, id);
   const reward = game.state.combat.enemy.gold;
   const before = game.state.gold;
+  const species = game.state.combat.enemy.id;
+  const priorCount = game.state.bestiary?.[species] || 0;
   for (let turn = 0; !game.state.combat.over && turn < 100; turn++) act(game, 'attack');
   assert.equal(game.state.combat.over, 'victory', `win ${id} with legitimately earned stats and recruited allies`);
   assert.equal(game.state.gold, before + reward);
+  assert.equal(game.state.bestiary[species], priorCount + 1, 'actual victory records the species exactly once');
   act(game, 'finish');
   assert.equal(game.state.scene, 'explore');
   assert.equal(game.state.combat, null);
+  assert.equal(game.state.bestiary[species], priorCount + 1, 'finishing combat cannot count the same defeat twice');
   assert.equal(game.state.map.clearedEncounters[id], true);
   assert.equal(game.state.map.activeEncounterId, null);
   return reward;
@@ -113,7 +121,7 @@ function checkpoint(game, stage) {
   saveGame(game.state);
   game.state = loadGame();
   assert.ok(game.state, 'saved campaign can be loaded');
-  for (const key of ['story', 'map', 'party', 'gold', 'location', 'inventory']) {
+  for (const key of ['story', 'map', 'party', 'gold', 'location', 'inventory', 'bestiary']) {
     assert.deepEqual(game.state[key], before[key], `${key} survives ${stage} reload`);
   }
   game.setScene(game.state.scene);
@@ -164,6 +172,57 @@ function recruitAndRest(game) {
   act(game, 'rest');
   assert.equal(game.state.gold, before - 5);
   act(game, 'explore');
+}
+
+function optionalBossJourney(game, first) {
+  const originalEnding = game.state.story.ending;
+  const originalStory = structuredClone(game.state.story);
+  const routes = {
+    coast: { zone: 'saltmere_coast', encounter: 'saltmere_tide_wraith', species: 'drowned_harbormaster' },
+    heights: { zone: 'highwatch_pass', encounter: 'highwatch_warlord', species: 'pass_warlord' },
+  };
+  // Buy the coastal weapon at its actual map stall, using expedition earnings.
+  walkExit(game, 'saltmere_coast');
+  walkTo(game, 2, 3);
+  act(game, 'mapInteract', 'saltmere_post');
+  assert.equal(game.state.scene, 'shop');
+  assert.equal(game.shopId, 'saltmere_post');
+  assert.match(game.root.innerHTML, /Saltmere Trading Post/);
+  const beforePurchase = game.state.gold;
+  act(game, 'buy', 'tidebound_cutlass');
+  assert.equal(game.state.gold, beforePurchase - getItem('tidebound_cutlass').price);
+  act(game, 'equip', 'tidebound_cutlass');
+  assert.equal(game.state.party[0].equipment.weapon, 'tidebound_cutlass');
+  act(game, 'leave');
+  assert.equal(game.state.scene, 'explore');
+  assert.equal(game.state.map.zoneId, 'saltmere_coast');
+  walkExit(game, 'greyhaven');
+  for (const id of [first, first === 'coast' ? 'heights' : 'coast']) {
+    const route = routes[id];
+    act(game, 'toTownScene');
+    const beforeRest = game.state.gold;
+    act(game, 'rest');
+    assert.equal(game.state.gold, beforeRest - 5);
+    act(game, 'explore');
+    if (id === 'heights') walkExit(game, 'ridge_road');
+    walkExit(game, route.zone);
+    assert.equal(game.state.bestiary?.[route.species], undefined);
+    winEncounter(game, route.encounter);
+    assert.equal(game.state.bestiary[route.species], 1);
+    checkpoint(game, 'complete');
+    walkExit(game, id === 'coast' ? 'greyhaven' : 'ridge_road');
+    if (id === 'heights') walkExit(game, 'greyhaven');
+  }
+  assert.deepEqual(game.state.story, originalStory, 'optional bosses do not alter or repay the completed expedition');
+  assert.equal(game.state.story.ending, originalEnding);
+  act(game, 'toTownScene');
+  act(game, 'bestiary');
+  assert.match(game.root.innerHTML, /Drowned Harbormaster/);
+  assert.match(game.root.innerHTML, /Highwatch Warlord/);
+  assert.doesNotMatch(game.root.innerHTML, /Rockslide Golem/, 'unfought species remain undisclosed');
+  checkpoint(game, 'complete');
+  act(game, 'leave');
+  assert.equal(game.state.scene, 'town');
 }
 
 for (const ending of ['protect_town', 'share_signal']) {
@@ -271,6 +330,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         assert.ok(game.state.reserve.tamsin && game.state.reserve.iven);
         checkpoint(game, 'complete');
         act(game, 'leave'); act(game, 'explore');
+        optionalBossJourney(game, first);
       });
     }
   }
