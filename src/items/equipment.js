@@ -60,7 +60,7 @@ export function equipItem(actor, inv, itemId) {
     actor: outActor,
     inv: takeRes.inv,
     unequipped,
-    message: `Equipped ${item.name}${unequipped ? ` (put away ${ITEMS[unequipped].name})` : ''}.`,
+    message: `Equipped ${item.name}${unequipped ? ` (put away ${ITEMS[unequipped]?.name ?? unequipped})` : ''}.`,
   };
 }
 
@@ -77,7 +77,7 @@ export function unequipItem(actor, inv, slot) {
   const addRes = addItem(inv, current);
   if (!addRes.ok) return { ok: false, actor, inv, message: addRes.message };
   const outActor = { ...actor, equipment: { ...(actor.equipment || createEquipment()), [slot]: null } };
-  return { ok: true, actor: outActor, inv: addRes.inv, message: `Unequipped ${ITEMS[current].name}.` };
+  return { ok: true, actor: outActor, inv: addRes.inv, message: `Unequipped ${ITEMS[current]?.name ?? current}.` };
 }
 
 /**
