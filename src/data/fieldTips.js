@@ -10,6 +10,7 @@ export const FIELD_TIPS = {
   briar_boar: 'Slow but heavy. Defend when it lowers its tusks, then strike back while it recovers.',
   old_tusk: 'An optional ridge trial. Bramble Charge leaves deep bleeding: carry bandages or Rallying Light, and Defend when he enrages at half health.',
   lens_wisp: 'Fragile and quick. Its glare leaves the party shocked, so finish it fast with plain attacks.',
+  gloomfin: 'An optional coast trial. Riptide Shock blocks most skills: pack storm tonics, keep Steady Signal or Burst ready, and Defend once it enrages at half health.',
   wrack_eel: 'Its bite causes bleeding. Keep bandages handy and heal before the damage stacks up.',
   rime_wight: 'Its frost leaves the party shocked. Spark and tonics both help; Steady Signal clears the chill.',
   frost_wolf: 'The fastest beast on the heights. Bleeding stacks up quickly, so heal early rather than late.',
