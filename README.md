@@ -96,8 +96,11 @@ npm run test:browser
 The smoke test starts its own loopback-only server on a free port and fresh browser
 contexts at **320, 375, and 768px**. It uses actual buttons for the guide, Journey
 Journal filters, bestiary, muster, bag, Buy 5 purchase, save/reload, exploration,
-and a real ridge patrol victory. It checks horizontal overflow, read-only screens,
-actual purchase totals, victory summary, recorded defeat, and saved progress.
+and a real ridge patrol victory. Combat uses actual keyboard shortcuts for menus,
+Attack, and Continue; disabled Burst, modifiers, and the display-overlay guard
+must not change state. It checks horizontal overflow, read-only screens and the
+full retained battle chronicle, actual purchase totals, victory summary, recorded
+defeat, and saved progress.
 Only randomness is controlled; stats, items, positions, story facts, and victories
 are never injected. This short new-game route is **not** the full campaign,
 postgame, cross-browser, accessibility, or balance test suite.

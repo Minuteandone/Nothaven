@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 // This short new-game smoke test is not a full campaign or balance proof.
-// All progress comes from UI clicks. Evaluation only observes game state/layout;
+// All progress comes from UI clicks and key presses. Evaluation only observes game state/layout;
 // the one controlled input is Math.random, to avoid incidental patrols.
 const root = fileURLToPath(new URL('../', import.meta.url));
 const artifacts = path.join(root, 'browser-artifacts');
@@ -52,7 +52,7 @@ try {
         before.party[0].equipment = { weapon: null, armor: null, trinket: null };
       }
       await click(action);
-      assert.match(await page.locator('h1, h2').first().innerText(), title);
+      assert.match(await page.locator('main h1, main h2').first().innerText(), title);
       await fit(action);
       await click('leave');
       assert.equal((await state()).scene, 'town');
@@ -105,10 +105,42 @@ try {
       for (let step = 0; step < 4; step++) await click('moveEast');
       assert.equal((await state()).scene, 'combat');
       await fit('combat');
-      for (let turn = 0; turn < 40 && !(await state()).combat.over; turn++) await click('attack');
+      const beforeCommands = await state();
+      assert.equal(await page.locator('[data-action="burst"]').isDisabled(), true);
+      for (const key of ['b', 'Shift+a', 'Control+a']) {
+        await page.keyboard.press(key);
+        assert.deepEqual(await state(), beforeCommands, `${key}: unavailable/modified shortcut acted`);
+      }
+      await page.locator('[aria-controls="display-settings"]').click();
+      await page.keyboard.press('a');
+      assert.deepEqual(await state(), beforeCommands, 'display settings must block combat shortcuts');
+      await page.locator('[data-display-done]').click();
+      await page.keyboard.press('s');
+      assert.ok(await page.locator('[data-action="skill"]').count() > 0);
+      assert.deepEqual(await state(), beforeCommands, 'opening skills must not take a turn');
+      await fit('combat-skills');
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator('[data-action="attack"]').count(), 1);
+      await page.keyboard.press('i');
+      assert.ok(await page.locator('[data-action="item"]').count() > 0);
+      assert.deepEqual(await state(), beforeCommands, 'opening items must not take a turn');
+      await fit('combat-items');
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator('[data-action="attack"]').count(), 1);
+      assert.deepEqual(await state(), beforeCommands, 'closing command menus must not take a turn');
+      for (let turn = 0; turn < 40 && !(await state()).combat.over; turn++) await page.keyboard.press('a');
       assert.equal((await state()).combat.over, 'victory');
       assert.match(await page.locator('.battle-summary').innerText(), /\d+ rounds? · \d+ damage dealt · \d+ damage taken/);
-      await fit('victory'); await click('finish');
+      await fit('victory');
+      const beforeChronicle = await state();
+      assert.ok(beforeChronicle.combat.log.length > 8, 'earned fight retains more than the live-log window');
+      await page.locator('.battle-chronicle summary').click();
+      assert.deepEqual(await page.locator('.battle-chronicle__list li').allTextContents(), beforeChronicle.combat.log);
+      assert.deepEqual(await state(), beforeChronicle, 'reading the full chronicle must not change state');
+      await fit('battle-chronicle');
+      await page.keyboard.press('c');
+      assert.equal((await state()).scene, 'explore');
+      assert.equal((await state()).combat, null);
       assert.equal((await state()).map.clearedEncounters.ridge_patrol, true);
       await click('save');
       const saved = await state();
@@ -123,7 +155,7 @@ try {
       await fit('earned-bestiary'); await click('leave');
       assert.equal((await state()).scene, 'explore');
       assert.deepEqual(errors, []);
-      console.log(`PASS ${width}px: navigation, filters, purchase, save/reload, earned ridge victory; browser errors []`);
+      console.log(`PASS ${width}px: navigation, filters, purchase, save/reload, combat shortcuts, full chronicle, earned ridge victory; browser errors []`);
     } catch (error) {
       await page.screenshot({ path: path.join(artifacts, `${width}-failure.png`), fullPage: true }).catch(() => {});
       console.error(`FAIL ${width}px; browser errors: ${JSON.stringify(errors)}`);
