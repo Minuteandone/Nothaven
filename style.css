@@ -971,3 +971,14 @@ em.enraged {
   .zone-vista figcaption { flex-wrap: wrap; gap: .2rem .55rem; padding: .55rem .65rem; }
   .zone-vista figcaption > strong { flex-basis: 100%; }
 }
+/* Wardens' Feats */
+.feats__count { font-weight: 600; margin: 0 0 .75rem; }
+.feats__list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.feat { display: grid; grid-template-columns: 1.5rem 1fr auto; gap: .6rem; align-items: start; padding: .6rem .75rem; border: 1px solid rgba(140, 180, 201, .25); border-radius: .5rem; opacity: .7; }
+.feat h2 { font-size: 1rem; margin: 0 0 .2rem; }
+.feat p { margin: 0; font-size: .9rem; }
+.feat__mark { font-size: 1.2rem; line-height: 1.2; text-align: center; }
+.feat__status { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+.feat--done { opacity: 1; border-color: rgba(233, 198, 111, .6); }
+.feat--done .feat__mark, .feat--done .feat__status { color: #e9c66f; }
+@media (max-width: 480px) { .feat { grid-template-columns: 1.25rem 1fr; } .feat__status { grid-column: 2; } }

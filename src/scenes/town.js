@@ -39,6 +39,7 @@ export const townScene = {
             ${game.scenes?.quests ? uiButton({ action: 'questJournal', label: 'Journey journal', iconName: 'journal', variant: 'ghost' }) : ''}
             ${game.scenes?.bestiary ? uiButton({ action: 'bestiary', label: "Warden's field journal", iconName: 'journal', variant: 'ghost' }) : ''}
             ${game.scenes?.character ? uiButton({ action: 'character', label: "Wren's character sheet", iconName: 'sword', variant: 'ghost' }) : ''}
+            ${game.scenes?.feats ? uiButton({ action: 'feats', label: 'Wardens’ feats', iconName: 'beacon', variant: 'ghost' }) : ''}
             ${game.scenes?.recipes ? uiButton({ action: 'recipes', label: 'Field recipe book', iconName: 'focus', variant: 'ghost' }) : ''}
             ${game.scenes?.ending && s.flags?.endingShown ? uiButton({ action: 'chronicle', label: 'Read the chronicle', iconName: 'journal', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'explore', label: 'Explore the wilds', iconName: 'map', variant: 'primary' })}
@@ -59,6 +60,7 @@ export const townScene = {
     shop(game) { game.setScene('shop', { returnScene: 'town' }); },
     bag(game) { if (game.scenes?.bag) game.setScene('bag', { returnScene: 'town' }); },
     muster(game) { if (game.scenes?.muster) game.setScene('muster', { returnScene: 'town' }); },
+    feats(game) { if (game.scenes?.feats) game.setScene('feats', { returnScene: 'town' }); },
     questJournal(game) { if (game.scenes?.quests) game.setScene('quests', { returnScene: 'town' }); },
     bestiary(game) { if (game.scenes?.bestiary) game.setScene('bestiary', { returnScene: 'town' }); },
     character(game) { if (game.scenes?.character) game.setScene('character', { returnScene: 'town' }); },
