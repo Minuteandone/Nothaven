@@ -22,10 +22,14 @@ export const SKILLS = Object.freeze({
     description: 'Focus the beacon light into a single piercing spear for 180% damage that ignores armour.' },
   beacon_aegis: { id: 'beacon_aegis', name: 'Beacon Aegis', mp: 8, kind: 'party_ward', turns: 3,
     description: 'Spread a dome of steady beacon light over the whole party: all damage taken is halved for three enemy turns.' },
+  signal_flare: { id: 'signal_flare', name: 'Signal Flare', mp: 8, kind: 'magic', power: 20,
+    description: 'Fire a blazing signal flare straight into the foe. Ignores armour and is half again as effective on constructs.' },
+  tempest_cleave: { id: 'tempest_cleave', name: 'Tempest Cleave', mp: 11, kind: 'damage', mult: 2.8,
+    description: 'Ride the last gust of the broken storm into one sweeping strike for 280% damage.' },
 });
 
 /** Skills unlock by level. */
-export const SKILL_UNLOCKS = Object.freeze({ power_strike: 1, mend: 1, spark: 2, warding_stance: 3, rallying_light: 4, stormbreaker: 5, steady_signal: 6, beacon_lance: 7, beacon_aegis: 9 });
+export const SKILL_UNLOCKS = Object.freeze({ power_strike: 1, mend: 1, spark: 2, warding_stance: 3, rallying_light: 4, stormbreaker: 5, steady_signal: 6, beacon_lance: 7, beacon_aegis: 9, signal_flare: 11, tempest_cleave: 13 });
 
 export function knownSkills(member) {
   const lvl = member?.level || 1;
