@@ -30,3 +30,20 @@ test('guide renders every section and returns to its caller', () => {
   assert.deepEqual(visits, ['guide', 'title']);
   assert.equal(game.guideReturn, null);
 });
+
+test('field-trial guidance names all four trials, the feat, and stays egg-free', () => {
+  const drill = GUIDE_SECTIONS.flatMap((s) => s.lines).find((line) => line.includes('field trials open once'));
+  assert.ok(drill, 'guide explains when the optional field trials open');
+  for (const name of ['Old Tusk', 'Gloomfin', 'Frostmane', 'the Lenswarden']) {
+    assert.ok(drill.includes(name), `trial named in guide: ${name}`);
+  }
+  assert.ok(drill.includes('Warden Mara'), 'guide names Warden Mara as the gatekeeper');
+  assert.ok(
+    drill.includes('has paid for the Saltmere and Highwatch rescues'),
+    'guide pins the explicit payment gate over both settlements'
+  );
+  assert.ok(drill.includes('Trial Warden'), 'guide names the Trial Warden feat');
+  const eggRe = /\b(eggs?|yolks?|shells?|hatch\w*|nests?|chicks?|hens?|omelet\w*|scrambl\w*|clutch|poach\w*|fried|boil\w*|cackl\w*|easter|pearl|golden|basket|quail|goose|peeps?)\b/i;
+  const prose = GUIDE_SECTIONS.flatMap((s) => [s.title, ...s.lines]).join(' ');
+  assert.equal(eggRe.test(prose), false, 'no egg vocabulary in guide prose');
+});
