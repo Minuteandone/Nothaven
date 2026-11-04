@@ -1107,3 +1107,50 @@ html[data-motion="reduced"] em.enraged { animation: none; }
   .display-settings__header { gap: .55rem; }
   .display-settings__header .audio-toggle { padding-inline: .65rem; }
 }
+
+/* Combat keyboard commands and full battle chronicle */
+.command-button .key-hint { margin-left: auto; }
+.key-hint, .shortcut-guide kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.65rem;
+  min-height: 1.45rem;
+  padding: .12rem .35rem;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: rgba(9, 18, 29, .5);
+  color: var(--accent-bright);
+  font-family: inherit;
+  font-size: .66rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+.action-button:disabled .key-hint, .command-card:disabled .key-hint { opacity: .55; }
+.command-card__meta { display: inline-flex; align-items: center; justify-content: flex-end; gap: .5rem; flex: 0 0 auto; }
+.command-card__meta strong { color: var(--accent-bright); font-size: .72rem; }
+.shortcut-guide { margin-top: .85rem; border-top: 1px solid var(--line-soft); color: var(--muted); }
+.shortcut-guide summary { min-height: 44px; padding: .75rem .15rem .35rem; color: var(--accent); cursor: pointer; font-size: .76rem; font-weight: 750; }
+.shortcut-guide__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem .85rem; margin: .35rem 0 .65rem; }
+.shortcut-guide__grid > div { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.shortcut-guide__grid dt { flex: 0 0 2.3rem; }
+.shortcut-guide__grid dd { margin: 0; font-size: .7rem; line-height: 1.35; }
+.shortcut-guide > p { margin: .4rem 0 0; font-size: .68rem; line-height: 1.5; }
+.battle-chronicle { margin-top: .85rem; border-top: 1px solid var(--line-soft); }
+.battle-chronicle summary { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 44px; padding: .75rem .15rem .35rem; color: var(--accent); cursor: pointer; font-size: .76rem; font-weight: 750; }
+.battle-chronicle summary > span:last-child { color: var(--muted); font-size: .65rem; font-weight: 600; text-align: right; }
+.battle-chronicle > p { margin: .35rem 0 .65rem; color: var(--muted); font-size: .7rem; line-height: 1.5; }
+.battle-chronicle__list { max-height: 320px; margin: 0; padding: 0 0 0 1.8rem; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.battle-chronicle__list li { padding: .45rem .25rem .45rem .15rem; border-bottom: 1px solid var(--line-soft); color: var(--muted); font-size: .74rem; line-height: 1.5; overflow-wrap: anywhere; }
+.battle-chronicle__list li::marker { color: var(--accent); font-variant-numeric: tabular-nums; }
+.battle-chronicle__list li:last-child { border-bottom: 0; color: var(--text); }
+html[data-contrast="high"] .key-hint, html[data-contrast="high"] .shortcut-guide kbd { border-color: #fff; background: #000; color: #fff; }
+html[data-contrast="high"] .battle-chronicle__list li, html[data-contrast="high"] .shortcut-guide { color: #f2f5f7; }
+@media (max-width: 620px) {
+  .shortcut-guide__grid { grid-template-columns: 1fr; }
+  .battle-chronicle summary { align-items: flex-start; flex-wrap: wrap; gap: .2rem .6rem; }
+  .battle-chronicle summary > span:last-child { text-align: left; }
+  .command-card__meta { gap: .35rem; }
+}

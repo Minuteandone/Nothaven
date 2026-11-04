@@ -52,47 +52,65 @@ function unitCard(member, { enemy = false, leader = false, enraged = false } = {
   </article>`;
 }
 
-function commandCard({ action, arg, name, meta, description, iconName = 'focus', disabled = false }) {
+function keyHint(key) {
+  return key ? `<kbd class="key-hint" aria-hidden="true">${escapeHTML(key)}</kbd>` : '';
+}
+
+function commandButton({ shortcut = null, ...options }) {
+  const html = uiButton(options);
+  return shortcut ? html.replace('</button>', `${keyHint(shortcut)}</button>`) : html;
+}
+
+function shortcutGuide() {
+  const bindings = [
+    ['A', 'Attack'], ['S', 'Skills'], ['I', 'Items'], ['D', 'Defend'],
+    ['F', 'Flee'], ['B', 'Beacon Burst'], ['1–9', 'Choose a listed skill or item'],
+    ['Esc', 'Back to commands'], ['C', 'Continue after battle'],
+  ];
+  return `<details class="shortcut-guide"><summary>Keyboard commands</summary><dl class="shortcut-guide__grid">${bindings.map(([key, label]) => `<div><dt><kbd>${key}</kbd></dt><dd>${label}</dd></div>`).join('')}</dl><p>Shortcuts never activate disabled commands. Text fields and modified key presses are ignored.</p></details>`;
+}
+
+function commandCard({ action, arg, name, meta, description, iconName = 'focus', disabled = false, shortcut = null }) {
   return `<button type="button" class="command-card" data-action="${escapeHTML(action)}" data-arg="${escapeHTML(arg)}" title="${escapeHTML(description)}"${disabled ? ' disabled' : ''}>
-    <span class="command-card__top"><span>${icon(iconName)}${escapeHTML(name)}</span><strong>${escapeHTML(meta)}</strong></span>
+    <span class="command-card__top"><span>${icon(iconName)}${escapeHTML(name)}</span><span class="command-card__meta"><strong>${escapeHTML(meta)}</strong>${keyHint(shortcut)}</span></span>
     <span class="command-card__description">${escapeHTML(description)}</span>
   </button>`;
 }
 
 function commands({ combat, hero, inventory, menu }) {
   if (combat.over) {
-    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat) : ''}</div></div>${uiButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue' })}</div>`;
+    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'skills') {
-    const skills = knownSkills(hero).map(skill => commandCard({
+    const skills = knownSkills(hero).map((skill, index) => commandCard({
       action: 'skill', arg: skill.id, name: skill.name, meta: `${skill.mp} MP`,
       description: skill.description, iconName: skill.kind === 'heal' || skill.kind === 'party_heal' || skill.kind === 'revive' ? 'heart' : (skill.kind === 'ward' || skill.kind === 'party_ward') ? 'shield' : 'focus',
-      disabled: hero.mp < skill.mp,
+      disabled: hero.mp < skill.mp, shortcut: index < 9 ? String(index + 1) : null,
     })).join('');
-    return `<div class="actions command-list" role="group" aria-label="Skill actions">${skills || '<p class="empty-state">No skills learned yet.</p>'}${uiButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost' })}</div>`;
+    return `<div class="actions command-list" role="group" aria-label="Skill actions">${skills || '<p class="empty-state">No skills learned yet.</p>'}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'items') {
     const usable = (inventory || []).filter((stack) => {
       try { return getItem(stack.id).type === TYPES.CONSUMABLE; } catch { return false; }
     });
-    const items = usable.map((stack) => {
+    const items = usable.map((stack, index) => {
       const item = getItem(stack.id);
-      return commandCard({ action: 'item', arg: stack.id, name: item.name, meta: `×${stack.qty}`, description: item.description || 'Use this consumable item.', iconName: 'bag' });
+      return commandCard({ action: 'item', arg: stack.id, name: item.name, meta: `×${stack.qty}`, description: item.description || 'Use this consumable item.', iconName: 'bag', shortcut: index < 9 ? String(index + 1) : null });
     }).join('');
-    return `<div class="actions command-list" role="group" aria-label="Item actions">${items || '<p class="empty-state">No usable items. Visit Hesta or search caches to stock your pack.</p>'}${uiButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost' })}</div>`;
+    return `<div class="actions command-list" role="group" aria-label="Item actions">${items || '<p class="empty-state">No usable items. Visit Hesta or search caches to stock your pack.</p>'}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
   }
   const usableCount = (inventory || []).filter((stack) => {
     try { return getItem(stack.id).type === TYPES.CONSUMABLE; } catch { return false; }
   }).length;
   return `${chargeMeter(combat)}<div class="actions command-grid" role="group" aria-label="Combat actions">
-    ${uiButton({ action: 'burst', label: chargeReady(combat) ? 'Beacon Burst — ready!' : 'Beacon Burst', iconName: 'beacon', variant: chargeReady(combat) ? 'primary' : 'secondary', disabled: !chargeReady(combat), className: 'command-button command-button--burst' })}
-    ${uiButton({ action: 'attack', label: 'Attack', iconName: 'sword', variant: 'primary', className: 'command-button' })}
-    ${uiButton({ action: 'menu', arg: 'skills', label: `Skills · ${knownSkills(hero).length}`, iconName: 'focus', className: 'command-button' })}
-    ${uiButton({ action: 'menu', arg: 'items', label: `Items · ${usableCount}`, iconName: 'bag', className: 'command-button' })}
-    ${uiButton({ action: 'defend', label: 'Defend', iconName: 'shield', className: 'command-button' })}
-    ${uiButton({ action: 'flee', label: 'Flee', iconName: 'compass', variant: 'danger', disabled: Boolean(combat.enemy.boss), className: 'command-button command-button--flee' })}
+    ${commandButton({ action: 'burst', label: chargeReady(combat) ? 'Beacon Burst — ready!' : 'Beacon Burst', iconName: 'beacon', variant: chargeReady(combat) ? 'primary' : 'secondary', disabled: !chargeReady(combat), className: 'command-button command-button--burst', shortcut: 'B' })}
+    ${commandButton({ action: 'attack', label: 'Attack', iconName: 'sword', variant: 'primary', className: 'command-button', shortcut: 'A' })}
+    ${commandButton({ action: 'menu', arg: 'skills', label: `Skills · ${knownSkills(hero).length}`, iconName: 'focus', className: 'command-button', shortcut: 'S' })}
+    ${commandButton({ action: 'menu', arg: 'items', label: `Items · ${usableCount}`, iconName: 'bag', className: 'command-button', shortcut: 'I' })}
+    ${commandButton({ action: 'defend', label: 'Defend', iconName: 'shield', className: 'command-button', shortcut: 'D' })}
+    ${commandButton({ action: 'flee', label: 'Flee', iconName: 'compass', variant: 'danger', disabled: Boolean(combat.enemy.boss), className: 'command-button command-button--flee', shortcut: 'F' })}
     <p class="command-hint">${combat.enemy.boss ? 'Boss encounters must be fought to resolution.' : 'Attack or use a skill to press the advantage. Defend halves incoming damage.'}</p>
-  </div>`;
+  </div>${shortcutGuide()}`;
 }
 
 /** Beacon Charge gauge shown above the main commands. */
@@ -113,7 +131,8 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main' }) {
   const round = Math.max(1, number(combat.turn, 1));
   const phase = combat.over ? 'Resolved' : menu === 'skills' ? 'Choose a skill' : menu === 'items' ? 'Choose an item' : 'Your command';
   const commandTitle = combat.over ? 'Encounter resolved' : menu === 'skills' ? 'Skills & techniques' : menu === 'items' ? 'Field supplies' : 'Choose your action';
-  const logLines = (Array.isArray(combat.log) ? combat.log : []).slice(-8);
+  const chronicleLines = Array.isArray(combat.log) ? combat.log : [];
+  const logLines = chronicleLines.slice(-8);
   return `<div class="game-shell combat-screen" data-combat-state="${safeClass(combat.over || 'active')}">
     <div class="combat-heading-row">
       ${sceneHeader({ eyebrow: 'Turn-based encounter', title: `Battle — Round ${round}`, subtitle: `${combat.enemy.name} · ${combat.enemy.boss ? 'Boss encounter' : 'Hostile encounter'}${difficultyNote(combat)}`, iconName: 'sword' })}
@@ -141,6 +160,7 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main' }) {
         <div class="log combat-log" role="log" aria-live="polite" aria-relevant="additions text">
           ${logLines.length ? logLines.map(line => `<p>${escapeHTML(line)}</p>`).join('') : '<p>The opponent watches your next move.</p>'}
         </div>
+        ${chronicleLines.length ? `<details class="battle-chronicle"><summary><span>Full battle chronicle</span><span>${chronicleLines.length} retained ${chronicleLines.length === 1 ? 'event' : 'events'}</span></summary><p>The live log above stays concise. Review every retained event here, from oldest to newest.</p><ol class="battle-chronicle__list" aria-label="Full retained battle events">${chronicleLines.map(line => `<li>${escapeHTML(line)}</li>`).join('')}</ol></details>` : ''}
       </section>
     </div>
   </div>`;
