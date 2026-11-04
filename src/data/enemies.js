@@ -39,6 +39,7 @@ export const ENEMIES = {
       { id: 'salvaged_wiring', chance: 0.8, minQty: 1, maxQty: 2 },
       { id: 'storm_glass', chance: 0.5, minQty: 1, maxQty: 2 },
       { id: 'lens_shard', chance: 0.3, minQty: 1, maxQty: 1 },
+      { id: 'storm_dispatch_b', chance: 0.1, minQty: 1, maxQty: 1 },
     ],
   },
   tide_wraith: {
