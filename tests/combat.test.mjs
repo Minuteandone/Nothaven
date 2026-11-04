@@ -189,3 +189,13 @@ test('finish does not abandon an active combat; markup is escaped', async () => 
   assert.ok(!html.includes('<img'));
   assert.ok(html.includes('&lt;img'));
 });
+
+test('chapter two enemies are valid and loot uses known items', async () => {
+  const { ITEMS } = await import('../src/items/items.js');
+  for (const id of ['reef_crawler', 'squall_revenant', 'frost_wolf', 'rockslide_golem']) {
+    const e = ENEMIES[id];
+    assert.ok(e && e.id === id && e.hp > 0 && e.intro, id);
+    for (const l of e.loot) assert.ok(ITEMS[l.id], `${id} drops unknown ${l.id}`);
+  }
+  assert.ok(ENEMIES.rockslide_golem.tags.includes('construct'));
+});
