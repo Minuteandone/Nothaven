@@ -38,3 +38,15 @@ test('companion remarks avoid egg words', () => {
     assert.doesNotMatch(companionRemark(id, story), re);
   }
 });
+
+test('relay choice remarks take priority once the relay is restored', async () => {
+  const { companionRemark } = await import('../src/party/remarks.js');
+  for (const id of ['tamsin', 'iven', 'bram', 'sela']) {
+    const base = { stage: 'complete', ending: 'share_signal', flags: { rescue_reward: true } };
+    const rescued = companionRemark(id, base);
+    const shelter = companionRemark(id, { ...base, flags: { ...base.flags, relay_choice: 'shelter_network' } });
+    const route = companionRemark(id, { ...base, flags: { ...base.flags, relay_choice: 'route_network' } });
+    assert.ok(shelter && route && shelter !== route && shelter !== rescued && route !== rescued, id);
+    assert.equal(companionRemark(id, { ...base, flags: { ...base.flags, relay_choice: 'bogus' } }), rescued);
+  }
+});
