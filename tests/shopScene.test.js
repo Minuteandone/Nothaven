@@ -120,3 +120,21 @@ test('installShop registers the scene', () => {
   installShop(game);
   assert.equal(game.registered.shop, shopScene);
 });
+
+test('all shop modes retain a labelled responsive wardrobe and spare gear actions', () => {
+  const game = fakeGame();
+  game.shopId = 'storms_eye_post';
+  game.state.party[0].equipment = { weapon: 'tempest_edge', armor: 'maelstrom_plate', trinket: null };
+  game.state.inventory = [{ id: 'stormforged_blade', qty: 1 }, { id: 'padded_vest', qty: 1 }];
+  const before = structuredClone(game.state);
+  for (const mode of ['buy', 'sell', 'craft']) {
+    game.shopMode = mode;
+    const html = shopScene.render(game);
+    assert.match(html, /<table class="shop-wardrobe" aria-label="Equipped gear and spare equipment">/);
+    assert.match(html, /Tempest Edge/); assert.match(html, /Maelstrom Plate/);
+    assert.match(html, /data-action="equip" data-arg="stormforged_blade"/);
+    assert.match(html, /data-action="equip" data-arg="padded_vest"/);
+    assert.match(html, /data-action="unequip" data-arg="armor"/);
+    assert.deepEqual(game.state, before);
+  }
+});
