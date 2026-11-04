@@ -19,6 +19,7 @@ Provides 9×7 tile-grid exploration, multi-zone navigation, NPC/object proximity
 - `observatory_ruins` (**Observatory Ruins — Shattered Astral Dome**):
   - Story Encounter: `observatory_sentinel` (`gale_hound`) at `(4, 2)`.
   - Optional Encounter: `observatory_construct` (`rust_sentinel`) at `(7, 3)`.
+  - Optional Boss Encounter: `observatory_lenswarden` (`lenswarden`) at `(7, 1)`, requires story flag `rescue_reward`.
   - Random Encounters (12%): `gale_hound`, `storm_rat`, `rust_sentinel`, `lens_wisp`.
   - Interactables: `dispatch_observatory` at `(1, 3)`, `observatory_lens_pedestal` at `(4, 1)` (requires `observatory_sentinel` cleared), `observatory_forecast_stand` at `(3, 1)` (repeatable Long Watch reading, requires `observatory_sentinel` cleared), `observatory_supply_cache` at `(7, 5)`.
   - Exits: South Steps `(4, 6)` → `ridge_road`; North Causeway `(4, 0)` → `beacon_tower`.

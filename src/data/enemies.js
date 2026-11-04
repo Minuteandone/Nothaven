@@ -155,6 +155,21 @@ export const ENEMIES = {
       { id: 'storm_tonic', chance: 0.6, minQty: 1, maxQty: 2 },
     ],
   },
+  lenswarden: {
+    id: 'lenswarden', name: 'The Lenswarden', hp: 170, atk: 16, def: 9, spd: 6, xp: 110, gold: 70,
+    tags: ['construct'],
+    boss: true,
+    drill: false,
+    intro: 'Brass plates grind apart in the west gallery. The Lenswarden, the old opticians’ guardian, unfolds from its alcove and turns a ring of storm-glass prisms toward you!',
+    defeat: 'The prisms dim one by one. The Lenswarden folds its brass limbs, settles back into its alcove and goes still, its watch over the vaults finished.',
+    enrage: { threshold: 0.5, atk: 3, chance: 0.5, line: 'Every prism on the Lenswarden flares white at once. It sweeps the gallery with sharpened light!' },
+    ability: { name: 'Focused Beam', chance: 0.35, mult: 1.5, status: 'shocked', turns: 2 },
+    loot: [
+      { id: 'scout_compass', chance: 0.3, minQty: 1, maxQty: 1 },
+      { id: 'storm_glass', chance: 1, minQty: 1, maxQty: 2 },
+      { id: 'storm_tonic', chance: 0.5, minQty: 1, maxQty: 2 },
+    ],
+  },
   frostmane: {
     id: 'frostmane', name: 'Frostmane', hp: 160, atk: 17, def: 7, spd: 8, xp: 105, gold: 65,
     boss: true,
