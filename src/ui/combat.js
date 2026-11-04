@@ -1,0 +1,132 @@
+import { heroStats, knownSkills } from '../combat/rules.js';
+import { getItem, TYPES } from '../items/items.js';
+import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
+
+function number(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function safeClass(value) {
+  return String(value || '').replace(/[^a-z0-9_-]/gi, '');
+}
+
+function statusChips(unit) {
+  const statuses = Array.isArray(unit?.statuses) ? unit.statuses : [];
+  if (!statuses.length) return '<span data-status="clear" class="status">Clear</span>';
+  return statuses.map((status) => {
+    const id = typeof status === 'object' && status ? status.id || status.name : status;
+    const turns = typeof status === 'object' && status ? number(status.turns) : 0;
+    return `<span data-status="${safeClass(id)}" class="status">${escapeHTML(id || 'Unknown')}${turns > 0 ? ` · ${turns}` : ''}</span>`;
+  }).join('');
+}
+
+function statList(stats) {
+  return `<dl class="unit-stats" aria-label="Combat attributes">
+    <div><dt>ATK</dt><dd>${number(stats?.atk)}</dd></div>
+    <div><dt>DEF</dt><dd>${number(stats?.def)}</dd></div>
+    <div><dt>SPD</dt><dd>${number(stats?.spd)}</dd></div>
+  </dl>`;
+}
+
+function unitCard(member, { enemy = false, leader = false, enraged = false } = {}) {
+  const stats = enemy ? member : heroStats(member);
+  const down = !enemy && number(member?.hp) <= 0;
+  const boss = enemy && member?.boss;
+  const kind = enemy ? 'enemy' : leader ? 'hero' : 'ally';
+  const role = enemy ? (boss ? 'Boss' : 'Enemy') : leader ? 'Leader' : 'Ally';
+  const name = member?.name || (enemy ? 'Unknown enemy' : 'Unknown traveller');
+  return `<article class="unit ${kind}${down ? ' down' : ''}${boss ? ' boss' : ''}" aria-label="${escapeHTML(`${name}, ${role}`)}">
+    <div class="unit-card__heading">
+      <span class="unit-card__portrait" aria-hidden="true">${icon(enemy ? 'sword' : leader ? 'shield' : 'heart')}</span>
+      <div class="unit-card__identity"><span class="unit-card__role">${role}</span><h3>${escapeHTML(name)}</h3></div>
+      ${enraged ? '<em class="enraged">(enraged)</em>' : ''}${enemy ? '' : `<span class="level-badge">Lv ${Math.max(1, number(member?.level, 1))}</span>`}
+    </div>
+    <div class="unit-card__statuses" aria-label="Status effects">${statusChips(member)}${down ? ' <em>Down</em>' : ''}</div>
+    ${meter({ label: 'HP', value: member?.hp, max: enemy ? member?.maxHp || member?.hp : stats.maxHp, tone: 'hp' })}
+    ${enemy ? '' : meter({ label: 'MP', value: member?.mp, max: stats.maxMp, tone: 'mp' })}
+    ${statList(stats)}
+    ${enemy && member?.ability ? `<p class="enemy-ability">${icon('focus')}<span>Signature move<strong>${escapeHTML(member.ability.name)}</strong></span></p>` : ''}
+    ${enemy && Array.isArray(member?.tags) && member.tags.length ? `<div class="enemy-tags">${member.tags.map(tag => `<span>${escapeHTML(tag)}</span>`).join('')}</div>` : ''}
+  </article>`;
+}
+
+function commandCard({ action, arg, name, meta, description, iconName = 'focus', disabled = false }) {
+  return `<button type="button" class="command-card" data-action="${escapeHTML(action)}" data-arg="${escapeHTML(arg)}" title="${escapeHTML(description)}"${disabled ? ' disabled' : ''}>
+    <span class="command-card__top"><span>${icon(iconName)}${escapeHTML(name)}</span><strong>${escapeHTML(meta)}</strong></span>
+    <span class="command-card__description">${escapeHTML(description)}</span>
+  </button>`;
+}
+
+function commands({ combat, hero, inventory, menu }) {
+  if (combat.over) {
+    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p></div></div>${uiButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue' })}</div>`;
+  }
+  if (menu === 'skills') {
+    const skills = knownSkills(hero).map(skill => commandCard({
+      action: 'skill', arg: skill.id, name: skill.name, meta: `${skill.mp} MP`,
+      description: skill.description, iconName: skill.kind === 'heal' || skill.kind === 'party_heal' ? 'heart' : skill.kind === 'ward' ? 'shield' : 'focus',
+      disabled: hero.mp < skill.mp,
+    })).join('');
+    return `<div class="actions command-list" role="group" aria-label="Skill actions">${skills || '<p class="empty-state">No skills learned yet.</p>'}${uiButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost' })}</div>`;
+  }
+  if (menu === 'items') {
+    const usable = (inventory || []).filter((stack) => {
+      try { return getItem(stack.id).type === TYPES.CONSUMABLE; } catch { return false; }
+    });
+    const items = usable.map((stack) => {
+      const item = getItem(stack.id);
+      return commandCard({ action: 'item', arg: stack.id, name: item.name, meta: `×${stack.qty}`, description: item.description || 'Use this consumable item.', iconName: 'bag' });
+    }).join('');
+    return `<div class="actions command-list" role="group" aria-label="Item actions">${items || '<p class="empty-state">No usable items. Visit Hesta or search caches to stock your pack.</p>'}${uiButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost' })}</div>`;
+  }
+  const usableCount = (inventory || []).filter((stack) => {
+    try { return getItem(stack.id).type === TYPES.CONSUMABLE; } catch { return false; }
+  }).length;
+  return `<div class="actions command-grid" role="group" aria-label="Combat actions">
+    ${uiButton({ action: 'attack', label: 'Attack', iconName: 'sword', variant: 'primary', className: 'command-button' })}
+    ${uiButton({ action: 'menu', arg: 'skills', label: `Skills · ${knownSkills(hero).length}`, iconName: 'focus', className: 'command-button' })}
+    ${uiButton({ action: 'menu', arg: 'items', label: `Items · ${usableCount}`, iconName: 'bag', className: 'command-button' })}
+    ${uiButton({ action: 'defend', label: 'Defend', iconName: 'shield', className: 'command-button' })}
+    ${uiButton({ action: 'flee', label: 'Flee', iconName: 'compass', variant: 'danger', disabled: Boolean(combat.enemy.boss), className: 'command-button command-button--flee' })}
+    <p class="command-hint">${combat.enemy.boss ? 'Boss encounters must be fought to resolution.' : 'Attack or use a skill to press the advantage. Defend halves incoming damage.'}</p>
+  </div>`;
+}
+
+export function renderCombat({ combat, party, inventory = [], menu = 'main' }) {
+  const hero = party[0];
+  const round = Math.max(1, number(combat.turn, 1));
+  const phase = combat.over ? 'Resolved' : menu === 'skills' ? 'Choose a skill' : menu === 'items' ? 'Choose an item' : 'Your command';
+  const commandTitle = combat.over ? 'Encounter resolved' : menu === 'skills' ? 'Skills & techniques' : menu === 'items' ? 'Field supplies' : 'Choose your action';
+  const logLines = (Array.isArray(combat.log) ? combat.log : []).slice(-8);
+  return `<div class="game-shell combat-screen" data-combat-state="${safeClass(combat.over || 'active')}">
+    <div class="combat-heading-row">
+      ${sceneHeader({ eyebrow: 'Turn-based encounter', title: `Battle — Round ${round}`, subtitle: `${combat.enemy.name} · ${combat.enemy.boss ? 'Boss encounter' : 'Hostile encounter'}`, iconName: 'sword' })}
+      <div class="turn-indicator"><span class="status-dot"></span><span>${phase}</span><strong>Round ${round}</strong></div>
+    </div>
+    <section class="panel combat combat-arena" aria-label="Combatants">
+      <div class="combatants">
+        <section class="combat-side combat-side--party" aria-labelledby="combat-party-title">
+          <div class="combat-side__heading"><h2 id="combat-party-title">Your party</h2><span>${party.length} ${party.length === 1 ? 'fighter' : 'fighters'}</span></div>
+          <div class="party-units">${party.map((member, index) => unitCard(member, { leader: index === 0 })).join('')}</div>
+        </section>
+        <section class="combat-side combat-side--enemy" aria-labelledby="combat-enemy-title">
+          <div class="combat-side__heading"><h2 id="combat-enemy-title">Opposition</h2><span>${combat.enemy.boss ? 'Boss' : 'Hostile'}</span></div>
+          ${unitCard(combat.enemy, { enemy: true, enraged: Boolean(combat.enraged) })}
+        </section>
+      </div>
+    </section>
+    <div class="combat-dashboard">
+      <section class="panel command-panel" aria-labelledby="command-title">
+        <p class="eyebrow">Command phase</p><h2 id="command-title">${commandTitle}</h2>
+        ${commands({ combat, hero, inventory, menu })}
+      </section>
+      <section class="panel combat-log-panel" aria-labelledby="combat-log-title">
+        <div class="combat-side__heading"><h2 id="combat-log-title">Battle log</h2><span>Latest 8 events</span></div>
+        <div class="log combat-log" role="log" aria-live="polite" aria-relevant="additions text">
+          ${logLines.length ? logLines.map(line => `<p>${escapeHTML(line)}</p>`).join('') : '<p>The opponent watches your next move.</p>'}
+        </div>
+      </section>
+    </div>
+  </div>`;
+}
