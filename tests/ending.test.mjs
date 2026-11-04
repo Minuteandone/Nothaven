@@ -66,3 +66,31 @@ test('ending fires when story completes via direct dispatchStoryEvent (UI path)'
   assert.equal(typeof dispatchStoryEvent, 'function');
   cleanup();
 });
+
+test('finale shows once after spire report with chapter epilogues', async () => {
+  const { epilogueLines, isFinale } = await import('../src/scenes/ending.js');
+  const g = fakeGame();
+  installEnding(g);
+  g.state.story.stage = 'complete';
+  g.state.story.ending = 'share_signal';
+  g.bus.emit('story:updated', {});
+  assert.equal(g.state.scene, 'ending');
+  g.state.scene = 'town';
+  Object.assign(g.state.story.flags ||= {}, { rescue_reward: true, relay_choice: 'route_network' });
+  g.bus.emit('story:updated', {});
+  assert.equal(g.state.scene, 'town');
+  assert.equal(isFinale(g.state), false);
+  assert.equal(epilogueLines(g.state).length, 2);
+  g.state.story.flags.spire_reward = true;
+  g.bus.emit('story:updated', {});
+  assert.equal(g.state.scene, 'ending');
+  assert.equal(g.state.flags.finaleShown, true);
+  const html = endingScene.render(g);
+  assert.match(html, /Stormhaven Endures/);
+  assert.match(html, /Lanterns on the Horizon/);
+  assert.match(html, /trade roads clear/);
+  assert.match(html, /Tyrant has fallen/);
+  g.state.scene = 'town';
+  g.bus.emit('story:updated', {});
+  assert.equal(g.state.scene, 'town');
+});

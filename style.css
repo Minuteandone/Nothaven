@@ -529,3 +529,7 @@ em.enraged {
   .command-grid .command-button--flee, .command-hint, .combat-outcome, .command-continue { grid-column: 1; }
   .command-card__top { align-items: flex-start; }
 }
+
+/* Finale epilogue */
+.ending .finale-sub { margin-top: -0.4em; font-style: italic; opacity: 0.85; }
+.ending .epilogue { border-left: 3px solid currentColor; padding-left: 0.75em; opacity: 0.95; }
