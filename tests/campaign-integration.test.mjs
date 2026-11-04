@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { Game } from '../src/engine.js';
 import { saveGame, loadGame } from '../src/state.js';
 import { combatScene } from '../src/scenes/combat.js';
+import { installShop } from '../src/scenes/shop.js';
+import { countItem } from '../src/items/inventory.js';
 import { townScene } from '../src/scenes/town.js';
 import { endingScene, installEnding } from '../src/scenes/ending.js';
 import { titleScene } from '../src/scenes/title.js';
@@ -36,6 +38,7 @@ function harness(t) {
   t.after(installStory(game));
   t.after(installEnding(game));
   installProgression(game);
+  installShop(game);
   t.after(installMap(game, { enableKeyboard: false }));
   game.setScene('explore');
   return game;
@@ -171,6 +174,27 @@ for (const ending of ['protect_town', 'share_signal']) {
       assert.equal(game.state.gold, finalGold, 'repeated turn-ins and choices cannot duplicate rewards');
       assert.equal(game.state.story.ending, ending, 'ending remains exclusive after reload');
       assert.ok(game.state.party[0].hp > 0);
+      // The optional aftermath uses actual shop and scene actions, not granted items.
+      act(game, 'toTownScene');
+      act(game, 'shop');
+      assert.equal(game.state.scene, 'shop');
+      const originalInventory = structuredClone(game.state.inventory);
+      act(game, 'buy', 'rations'); act(game, 'buy', 'rations'); act(game, 'buy', 'bandage');
+      assert.equal(game.state.gold, finalGold - 22, 'relief supplies cost 22 gold');
+      assert.equal(countItem(game.state.inventory, 'rations'), countItem(originalInventory, 'rations') + 2);
+      assert.equal(countItem(game.state.inventory, 'bandage'), countItem(originalInventory, 'bandage') + 1);
+      act(game, 'leave'); act(game, 'explore');
+      act(game, 'storyTalk', 'tamsin');
+      assert.equal(game.state.gold, finalGold - 22, 'ordinary conversation does not exchange supplies');
+      act(game, 'storyRelief');
+      assert.equal(game.state.gold, finalGold + 8, 'optional relief pays exactly 30 gold');
+      assert.equal(game.state.story.flags.relief_reward, true);
+      assert.deepEqual(game.state.inventory, originalInventory, 'only the purchased relief supplies were consumed');
+      checkpoint(game, 'complete');
+      act(game, 'storyRelief');
+      assert.equal(game.state.gold, finalGold + 8, 'reload and stale hand-in do not pay again');
+      assert.equal(game.state.story.ending, ending);
+      assert.equal(game.state.scene, 'explore', 'relief does not replay the ending scene');
     });
   }
 }
