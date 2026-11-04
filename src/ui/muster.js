@@ -1,3 +1,4 @@
+import { COMPANION_MASTERY, COMPANION_MASTERY_LEVEL, hasMastery } from '../combat/rules.js';
 import { COMPANIONS, MAX_PARTY, isUnlocked, inParty } from '../party/companions.js';
 import { effectiveStats } from '../items/equipment.js';
 import { companionRemark } from '../party/remarks.js';
@@ -65,6 +66,15 @@ function activeMember(member, index) {
   </li>`;
 }
 
+/** Signature technique line: mastered, or the level at which it unlocks. */
+export function masteryLine(companion, member) {
+  const m = COMPANION_MASTERY[companion?.role];
+  if (!m) return '';
+  const done = Boolean(member) && hasMastery(member);
+  const label = done ? 'Mastered' : `Mastery at Lv ${COMPANION_MASTERY_LEVEL}`;
+  return `<p class="companion-mastery${done ? ' companion-mastery--done' : ''}"><strong>${escapeHTML(label)}: ${escapeHTML(m.name)}</strong> — ${escapeHTML(m.note)}</p>`;
+}
+
 function companionCard(game, companion) {
   const { state } = game;
   const party = Array.isArray(state?.party) ? state.party : [];
@@ -95,6 +105,7 @@ function companionCard(game, companion) {
     <div class="companion-card__body">
       <div class="companion-card__heading"><div><p class="eyebrow">${escapeHTML(ROLE_LABELS[companion.role] || companion.role)}</p><h3>${escapeHTML(companion.name)}</h3><p class="companion-title">${escapeHTML(companion.title)}</p></div><span class="companion-level">Lv ${member ? stat(member.level || 1) : 1}</span></div>
       <p class="companion-blurb">${escapeHTML(companion.blurb)}</p>
+      ${masteryLine(companion, member)}
       ${member ? `<div class="companion-vitals">${meter({ label: `HP for ${companion.name}`, value: member.hp, max: stats.maxHp, tone: 'hp' })}${meter({ label: `MP for ${companion.name}`, value: member.mp, max: stats.maxMp, tone: 'mp' })}</div>` : `<p class="companion-base">Base vitality <strong>${stat(stats.maxHp)} HP</strong> · <strong>${stat(stats.maxMp)} MP</strong></p>`}
       ${statGrid(stats)}
       <div class="companion-card__actions">${action}${talk}</div>

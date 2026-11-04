@@ -743,3 +743,7 @@ em.enraged {
   .party-capacity { min-width: 4.7rem; }
   .companion-card__heading h3 { font-size: 1.4rem; }
 }
+
+/* Companion mastery line on muster cards */
+.companion-mastery { margin: 0.4rem 0; font-size: 0.9rem; opacity: 0.85; }
+.companion-mastery--done { opacity: 1; border-left: 3px solid currentColor; padding-left: 0.5rem; }
