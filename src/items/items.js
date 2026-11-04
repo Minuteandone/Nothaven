@@ -230,6 +230,24 @@ export const ITEMS = Object.freeze({
     price: 260, sellPrice: 130,
     description: 'A crown shard braided with wiring and calm glass into a pendant. It beats slow and steady, like the quiet center of the eye.',
   },
+  squall_cleaver: {
+    id: 'squall_cleaver', name: 'Squall Cleaver', type: TYPES.EQUIPMENT, slot: 'weapon',
+    stats: { atk: 24 },
+    price: 480, sellPrice: 240,
+    description: 'Re-forged from a tempest edge and Thunder Iron under the Last Squall sky. The blade hums low, like thunder that has not yet chosen to fall.',
+  },
+  squall_bulwark: {
+    id: 'squall_bulwark', name: 'Squall Bulwark', type: TYPES.EQUIPMENT, slot: 'armor',
+    stats: { def: 17, hp: 18 },
+    price: 490, sellPrice: 245,
+    description: 'A maelstrom plate layered with rings of Thunder Iron. Heavy enough to stand inside a squall and remain unmoved.',
+  },
+  squall_sigil: {
+    id: 'squall_sigil', name: 'Squall Sigil', type: TYPES.EQUIPMENT, slot: 'trinket',
+    stats: { atk: 2, mp: 10, spd: 4 },
+    price: 350, sellPrice: 175,
+    description: 'A stormeye signet recut with calm glass and set to carry a charge of its own. It steadies the hand and quickens the cast.',
+  },
   // ---- Key items ----
   observatory_lens: {
     id: 'observatory_lens', name: 'Observatory Lens', type: TYPES.KEY,
