@@ -136,7 +136,7 @@ export function getAvailableActions(gameState) {
         label:
           inter.kind === 'inn'
             ? `Rest at ${inter.name} (${inter.costGold || 5}g)`
-            : inter.kind === 'shop'
+            : inter.kind === 'shop' || inter.kind === 'muster'
             ? `Visit ${inter.name}`
             : inter.kind === 'cache'
             ? `Open ${inter.name}`
@@ -386,6 +386,18 @@ export function interactWith(gameState, kind, targetId, options = {}) {
       };
     }
 
+    if (inter.kind === 'muster') {
+      const msg = `Visiting ${inter.name}.`;
+      appendLog(mapState, msg);
+      return {
+        state: gameState,
+        events: [{ type: 'interact', interactionId: intId }],
+        log: [msg],
+        triggerCombat: null,
+        triggerMuster: { musterId: intId },
+      };
+    }
+
     let rewardText = '';
     if (Array.isArray(inter.rewards) && inter.rewards.length > 0) {
       const currentInv = Array.isArray(gameState.inventory) ? gameState.inventory : [];
@@ -424,19 +436,20 @@ export function interactWith(gameState, kind, targetId, options = {}) {
   return { state: gameState, events, log: logs, triggerCombat: null };
 }
 
-export function useFieldConsumable(gameState, itemId) {
+export function useFieldConsumable(gameState, itemId, targetIndex = 0) {
   const mapState = ensureMapState(gameState);
-  const hero = gameState.party?.[0];
-  if (!hero) {
+  const idx = Number.isInteger(targetIndex) ? targetIndex : 0;
+  const target = idx >= 0 ? gameState.party?.[idx] : null;
+  if (!target) {
     return { ok: false, state: gameState, log: ['No party member available.'] };
   }
   const inv = Array.isArray(gameState.inventory) ? gameState.inventory : [];
-  const res = useConsumable(hero, inv, itemId);
+  const res = useConsumable(target, inv, itemId);
   if (!res.ok) {
     appendLog(mapState, res.message);
     return { ok: false, state: gameState, log: [res.message] };
   }
-  gameState.party[0] = res.actor;
+  gameState.party[idx] = res.actor;
   gameState.inventory = res.inv;
   appendLog(mapState, res.message);
   return { ok: true, state: gameState, effects: res.effects, log: [res.message] };
