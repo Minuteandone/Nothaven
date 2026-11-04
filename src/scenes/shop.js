@@ -209,7 +209,7 @@ export const shopScene = {
                 .join('')}</div>`
             : ''
         }
-        <table>${gearRows}</table>
+        <table class="shop-wardrobe" aria-label="Equipped gear and spare equipment">${gearRows}</table>
         <div style="margin-top:0.5rem;">
           <button data-action="leave">Back to ${game.shopReturnScene === 'explore' ? 'the streets' : 'town square'}</button>
         </div>
