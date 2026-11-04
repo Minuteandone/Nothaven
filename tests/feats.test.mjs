@@ -23,6 +23,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.bestiary = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`foe_${i}`, 1]));
   for (const id of WANDERERS) s.bestiary[id] = 1;
   s.bestiary.old_tusk = 1;
+  s.bestiary.gloomfin = 1;
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
   assert.equal(featsEarned(s), FEATS.length);
@@ -113,5 +114,20 @@ test('Tusk Breaker feat needs an Old Tusk defeat in the bestiary', () => {
   s.bestiary = 'broken';
   assert.equal(done(), false, 'bad bestiary is safe');
   const row = FEATS.find(f => f.id === 'tusk');
+  assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
+});
+
+test('Seawall Sentinel feat needs a Gloomfin defeat in the bestiary', () => {
+  const s = createInitialState();
+  const done = () => featStatus(s).find(f => f.id === 'gloomfin').done;
+  assert.ok(ENEMIES.gloomfin && ENEMIES.gloomfin.boss === true);
+  assert.equal(done(), false);
+  s.bestiary = { gloomfin: 0, wrack_eel: 4 };
+  assert.equal(done(), false, 'zero or ordinary eels do not count');
+  s.bestiary.gloomfin = 1;
+  assert.equal(done(), true);
+  s.bestiary = null;
+  assert.equal(done(), false, 'missing bestiary is safe');
+  const row = FEATS.find(f => f.id === 'gloomfin');
   assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
 });
