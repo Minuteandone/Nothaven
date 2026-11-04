@@ -1046,6 +1046,13 @@ export const ZONES = {
         requirementMessage: 'Ground both the western and eastern lightning anchors before approaching the Storm’s Heart.',
         description: 'The living core sustains the great storm over Stormcrown. Both lightning anchors must be grounded before its shield will fall.',
       },
+      {
+        id: 'eye_last_squall', encounterId: 'eye_last_squall', enemyId: 'last_squall', name: 'The Last Squall (optional challenge)',
+        x: 4, y: 1, symbol: '!', main: false,
+        requiresStoryFlag: 'heart_reward',
+        requirementMessage: 'A fierce squall still churns over the northern causeway. Report the Storm’s Heart to Mara in Greyhaven before taking on this optional challenge.',
+        description: 'Optional and far stronger than the Storm’s Heart: one last squall refuses to scatter. Come prepared, or leave it be — nothing else depends on it.',
+      },
     ],
     randomEncounterChance: 0.14,
     randomEncounters: [

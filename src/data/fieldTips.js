@@ -20,6 +20,7 @@ export const FIELD_TIPS = {
   tempest_shade: 'Fast and slippery. Its Static Lash shocks one ally, so keep Steady Signal ready and strike with Beacon Lance.',
   thunderhead_colossus: 'Slow but heavily plated. Spark and Beacon Lance cut through its storm-iron; Warding Stance blunts its Thunderclap.',
   storm_heart: 'The source of the storm itself. Open with Beacon Aegis, cleanse shocks quickly, and save tonics for when it spins faster.',
+  last_squall: 'An optional trial far beyond the Heart. Come at level 15 or higher with your best gear, keep Beacon Aegis up, and hold a Beacon Burst for when it draws in every storm.',
 };
 
 export function fieldTip(enemyId) {

@@ -40,6 +40,7 @@ test('eye map pins are exact, linked to the summit, and reference real enemies a
   assert.ok(zone.exits.some(e => e.toZone === 'greyhaven'));
   assert.deepEqual(zone.encounters.map(e => [e.encounterId, e.enemyId]), [
     ['eye_west_shade', 'tempest_shade'], ['eye_east_colossus', 'thunderhead_colossus'], ['storm_heart_core', 'storm_heart'],
+    ['eye_last_squall', 'last_squall'],
   ]);
   for (const enemy of [...zone.encounters, ...zone.randomEncounters]) assert.ok(ENEMIES[enemy.enemyId]);
   for (const inter of zone.interactables) for (const reward of inter.rewards || []) assert.ok(getItem(reward.id));
