@@ -120,8 +120,9 @@ export function tickHeroStatuses(c, hero) {
   const lines = [];
   if (hasStatus(hero, 'bleeding')) {
     const d = 2;
+    const lost = Math.min(d, hero.hp);
     hero.hp = Math.max(0, hero.hp - d);
-    noteTaken(c, d);
+    noteTaken(c, lost);
     lines.push(`${hero.name} bleeds for ${d}.`);
   }
   for (const id of Object.keys(c.heroTimers)) {
@@ -154,8 +155,9 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
     const ts = heroStats(target);
     const special = e.ability && rng() < (e.ability.chance ?? 0);
     const d = physicalDamage(e.atk, ts.def, rng, { mult: special ? (e.ability.mult ?? 1) : 1, warded: (c.aegisTurns || 0) > 0 });
+    const lost = Math.min(d, target.hp);
     target.hp = Math.max(0, target.hp - d);
-    noteTaken(c, d);
+    noteTaken(c, lost);
     lines.push(special ? `${e.name} uses ${e.ability.name}! ${target.name} takes ${d}.` : `${e.name} hits ${target.name} for ${d}.`);
     if (target.hp <= 0) lines.push(`${target.name} is knocked out!`);
     else if (special && e.ability.status) {
@@ -173,8 +175,9 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   if (special) {
     const ab = e.ability;
     const d = physicalDamage(e.atk, hs.def, rng, { mult: ab.mult ?? 1, warded });
+    const lost = Math.min(d, hero.hp);
     hero.hp = Math.max(0, hero.hp - d);
-    noteTaken(c, d);
+    noteTaken(c, lost);
     chargeFromHit(c, d, hs.maxHp);
     lines.push(`${e.name} uses ${ab.name}! ${hero.name} takes ${d}.`);
     if (ab.status) {
@@ -183,8 +186,9 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
     }
   } else {
     const d = physicalDamage(e.atk, hs.def, rng, { warded });
+    const lost = Math.min(d, hero.hp);
     hero.hp = Math.max(0, hero.hp - d);
-    noteTaken(c, d);
+    noteTaken(c, lost);
     chargeFromHit(c, d, hs.maxHp);
     lines.push(`${e.name} hits ${hero.name} for ${d}.`);
   }

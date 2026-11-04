@@ -36,3 +36,27 @@ test('summaryLine pluralises and only mentions Bursts when fired', () => {
   const two = summaryLine({ enemy: { hp: 0, maxHp: 50 }, stats: { rounds: 4, taken: 0, bursts: 2 } });
   assert.match(two, /4 rounds · 50 damage dealt · 0 damage taken · 2 Beacon Bursts/);
 });
+
+test('damage taken counts only HP actually lost (overkill on a 1-HP ally)', async () => {
+  const { createCompanionMember } = await import('../src/party/companions.js');
+  for (const r of [0.01, 0.3, 0.5, 0.7, 0.99]) {
+    const hero = createInitialState().party[0];
+    hero.hp = 999; hero.maxHp = 999;
+    const ally = createCompanionMember('bram', 1);
+    ally.hp = 1;
+    const party = [hero, ally];
+    const c = createCombat({ enemyId: 'storm_heart' });
+    const before = hero.hp + ally.hp;
+    heroAction(c, hero, { type: 'defend' }, () => r, party);
+    assert.equal(battleSummary(c).taken, before - (hero.hp + ally.hp), `rng ${r}`);
+  }
+});
+
+test('damage taken caps at the hero’s remaining HP on a fatal hit', () => {
+  const hero = createInitialState().party[0];
+  hero.hp = 1;
+  const c = createCombat({ enemyId: 'storm_heart' });
+  heroAction(c, hero, { type: 'attack' }, () => 0.5);
+  assert.equal(hero.hp, 0);
+  assert.equal(battleSummary(c).taken, 1);
+});
