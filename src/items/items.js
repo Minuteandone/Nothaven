@@ -63,6 +63,18 @@ export const ITEMS = Object.freeze({
     use: { hp: 60, cure: 'shocked' }, price: 42, sellPrice: 20,
     description: 'A rich inland broth served scalding at the relay outpost. Mends the body and steadies rattled nerves.',
   },
+  ember_broth: {
+    id: 'ember_broth', name: 'Ember Broth', type: TYPES.CONSUMABLE,
+    use: { hp: 80, cure: 'bleeding' },
+    price: 58, sellPrice: 28,
+    description: 'A thick cinder-flat stew kept scalding at the summit post. Warms like a small storm and knits what the raiders cut.',
+  },
+  skyward_flask: {
+    id: 'skyward_flask', name: 'Skyward Flask', type: TYPES.CONSUMABLE,
+    use: { mp: 45, cure: 'shocked' },
+    price: 64, sellPrice: 31,
+    description: 'Distilled from Stormcrown meltwater and relay herbs. Tastes of copper coins and high thin air, and steadies every jangled nerve.',
+  },
   rations: {
     id: 'rations', name: 'Trail Rations', type: TYPES.CONSUMABLE,
     use: { hp: 10 }, price: 6, sellPrice: 2,
@@ -101,6 +113,12 @@ export const ITEMS = Object.freeze({
     stats: { atk: 14 }, price: 180, sellPrice: 88,
     description: 'A fallen signal pole reforged into a long glaive. The brass inlays hum when storms roll over the pass.',
   },
+  stormforged_blade: {
+    id: 'stormforged_blade', name: 'Stormforged Blade', type: TYPES.EQUIPMENT, slot: 'weapon',
+    stats: { atk: 17 },
+    price: 235, sellPrice: 112,
+    description: 'Thunder Iron folded and quenched in summit rain. The edge hums when the sky over the spire turns dark.',
+  },
   // ---- Equipment: armor ----
   padded_vest: {
     id: 'padded_vest', name: 'Padded Vest', type: TYPES.EQUIPMENT, slot: 'armor',
@@ -132,6 +150,12 @@ export const ITEMS = Object.freeze({
     id: 'sunscar_mantle', name: 'Sunscar Mantle', type: TYPES.EQUIPMENT, slot: 'armor',
     stats: { def: 10, hp: 10 }, price: 190, sellPrice: 92,
     description: 'Layered hides baked stiff under the inland sun and stitched through with brass wire.',
+  },
+  stormcrown_plate: {
+    id: 'stormcrown_plate', name: 'Stormcrown Plate', type: TYPES.EQUIPMENT, slot: 'armor',
+    stats: { def: 12, hp: 10 },
+    price: 245, sellPrice: 118,
+    description: 'Dark plates hammered from Thunder Iron over a stormcloth lining. Made for the last climb, where the wind carries sparks.',
   },
   // ---- Equipment: trinkets ----
   tin_whistle: {
@@ -169,6 +193,12 @@ export const ITEMS = Object.freeze({
     id: 'signal_prism', name: 'Signal Prism', type: TYPES.EQUIPMENT, slot: 'trinket',
     stats: { atk: 1, mp: 6, spd: 1 }, price: 85, sellPrice: 40,
     description: 'A ground-glass prism that throws a signal beam on clear days. It steadies the hand that holds it.',
+  },
+  crownshard_focus: {
+    id: 'crownshard_focus', name: 'Crownshard Focus', type: TYPES.EQUIPMENT, slot: 'trinket',
+    stats: { atk: 1, mp: 10, spd: 2 },
+    price: 150, sellPrice: 72,
+    description: 'A sliver of crown glass set in relay copper. The trapped lightning steadies the hand and feeds the caster.',
   },
   // ---- Key items ----
   observatory_lens: {
