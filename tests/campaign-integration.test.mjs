@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { Game } from '../src/engine.js';
 import { saveGame, loadGame } from '../src/state.js';
 import { combatScene } from '../src/scenes/combat.js';
+import { installDrills } from '../src/scenes/drills.js';
+import { effectiveStats } from '../src/items/equipment.js';
 import { installBag } from '../src/scenes/bag.js';
 import { getJournal } from '../src/story/index.js';
 import { installBestiary } from '../src/scenes/bestiary.js';
@@ -46,6 +48,7 @@ function harness(t) {
   installProgression(game);
   installShop(game);
   installBag(game);
+  installDrills(game);
   installCompanions(game);
   t.after(installBestiary(game));
   t.after(installMap(game, { enableKeyboard: false }));
@@ -745,6 +748,73 @@ function watchJourney(game, early, first) {
   assert.deepEqual(game.state.inventory, inventory); assert.deepEqual(game.state.bestiary, bestiary);
 }
 
+// These are real refights of bosses defeated earlier in this same campaign.
+// No stats, victories, unlocks or inventories are injected for the drills.
+function drillJourney(game) {
+  act(game, 'toTownScene');
+  assert.ok(game.state.bestiary.drowned_harbormaster > 0);
+  assert.ok(game.state.bestiary.last_squall > 0);
+  const protectedState = () => structuredClone(Object.fromEntries(
+    ['gold', 'inventory', 'bestiary', 'story', 'flags', 'map', 'location'].map(key => [key, game.state[key]])
+  ));
+  let fieldVictories = 0;
+  const countVictory = () => { fieldVictories++; };
+  game.bus.on('combat:victory', countVictory);
+  act(game, 'drills');
+  for (let repeat = 0; repeat < 2; repeat++) {
+    const before = protectedState();
+    const beforeXp = game.state.party.map(member => member.xp);
+    act(game, 'startDrill', 'drowned_harbormaster');
+    const combat = game.state.combat;
+    assert.equal(combat.drill, true);
+    assert.equal(combat.encounterId, null);
+    const xp = Math.floor(combat.enemy.xp / 2);
+    for (let turn = 0; !combat.over && turn < 100; turn++) act(game, 'attack');
+    assert.equal(combat.over, 'victory');
+    assert.deepEqual(combat.rewards, { xp, gold: 0, items: [] });
+    assert.deepEqual(protectedState(), before, 'a drill win cannot change campaign progress or give spoils');
+    game.state.party.forEach((member, index) => assert.equal(member.xp, beforeXp[index] + xp));
+    const rewardedXp = game.state.party.map(member => member.xp);
+    act(game, 'finish');
+    assert.equal(game.state.scene, 'drills');
+    assert.equal(game.state.combat, null);
+    assert.deepEqual(protectedState(), before);
+    assert.deepEqual(game.state.party.map(member => member.xp), rewardedXp, 'Finish cannot duplicate XP');
+    checkpoint(game, 'complete');
+    assert.deepEqual(protectedState(), before);
+  }
+  // Deliberately remove the allies and gear through the same controls a player
+  // uses; defending alone against the Last Squall then causes a genuine loss.
+  act(game, 'closeDrills'); act(game, 'muster');
+  act(game, 'dismiss', 'bram'); act(game, 'dismiss', 'sela'); act(game, 'leave');
+  act(game, 'bag');
+  for (const slot of ['weapon', 'armor', 'trinket']) act(game, 'unequip', slot);
+  act(game, 'leave');
+  assert.equal(game.state.party.length, 1);
+  const beforeLoss = protectedState();
+  const beforeXp = game.state.party[0].xp;
+  act(game, 'drills'); act(game, 'startDrill', 'last_squall');
+  for (let turn = 0; !game.state.combat.over && turn < 100; turn++) act(game, 'defend');
+  assert.equal(game.state.combat.over, 'defeat');
+  assert.equal(game.state.party[0].hp, 0);
+  assert.equal(game.state.party[0].xp, beforeXp);
+  assert.deepEqual(protectedState(), beforeLoss);
+  act(game, 'finish');
+  assert.equal(game.state.scene, 'drills');
+  assert.equal(game.state.combat, null);
+  assert.deepEqual(protectedState(), beforeLoss, 'lost drill costs no gold and does not relocate the map');
+  const hero = game.state.party[0], stats = effectiveStats(hero);
+  assert.equal(hero.hp, Math.ceil(stats.maxHp / 2));
+  assert.equal(hero.mp, stats.maxMp);
+  assert.deepEqual(hero.statuses, []);
+  assert.equal(hero.xp, beforeXp);
+  assert.match(game.drillsMessage, /nothing is lost but pride/);
+  checkpoint(game, 'complete');
+  assert.deepEqual(protectedState(), beforeLoss);
+  assert.equal(fieldVictories, 0, 'drills must not emit real field-victory events');
+  game.bus.off('combat:victory', countVictory);
+}
+
 function squallJourney(game) {
   const prior = structuredClone(game.state.story);
   const endingFlags = structuredClone(game.state.flags);
@@ -964,6 +1034,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         heartJourney(game, early, first);
         watchJourney(game, early, first);
         squallJourney(game);
+        drillJourney(game);
       });
     }
   }
