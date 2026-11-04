@@ -155,6 +155,20 @@ export const ENEMIES = {
       { id: 'storm_tonic', chance: 0.6, minQty: 1, maxQty: 2 },
     ],
   },
+  frostmane: {
+    id: 'frostmane', name: 'Frostmane', hp: 160, atk: 17, def: 7, spd: 8, xp: 105, gold: 65,
+    boss: true,
+    drill: false,
+    intro: 'Snow slides off the southern bastion in a single sheet. Frostmane, the white-maned leader of the Highwatch wolf packs, pads out of the sleet with rime frozen along its jaws!',
+    defeat: 'Frostmane backs away step by step, ears flat, then turns and lopes up the scree into the cloud. The howling on the heights goes quiet.',
+    enrage: { threshold: 0.5, atk: 3, chance: 0.5, line: 'Frostmane throws back its head and howls until the cairns ring. It comes on faster and fiercer!' },
+    ability: { name: 'Rime Fang', chance: 0.35, mult: 1.5, status: 'bleeding', turns: 2 },
+    loot: [
+      { id: 'frostward_cloak', chance: 0.3, minQty: 1, maxQty: 1 },
+      { id: 'highland_flask', chance: 1, minQty: 1, maxQty: 2 },
+      { id: 'field_dressing', chance: 0.5, minQty: 1, maxQty: 2 },
+    ],
+  },
   pass_warlord: {
     id: 'pass_warlord', name: 'Highwatch Warlord', hp: 96, atk: 13, def: 6, spd: 5, xp: 70, gold: 45,
     boss: true,
