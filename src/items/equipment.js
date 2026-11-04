@@ -83,10 +83,10 @@ export function unequipItem(actor, inv, slot) {
 /**
  * Sum of equipment stat bonuses across all three slots.
  * @param {object} actor
- * @returns {{atk: number, def: number, hp: number, mp: number}}
+ * @returns {{atk: number, def: number, hp: number, mp: number, spd: number}}
  */
 export function totalStats(actor) {
-  const totals = { atk: 0, def: 0, hp: 0, mp: 0 };
+  const totals = { atk: 0, def: 0, hp: 0, mp: 0, spd: 0 };
   const eq = actor.equipment || {};
   for (const id of [eq.weapon, eq.armor, eq.trinket]) {
     if (!id) continue;
@@ -109,6 +109,6 @@ export function effectiveStats(actor) {
     def: (actor.def || 0) + bonus.def,
     maxHp: (actor.maxHp || 0) + bonus.hp,
     maxMp: (actor.maxMp || 0) + bonus.mp,
-    spd: actor.spd || 0,
+    spd: (actor.spd || 0) + bonus.spd,
   };
 }
