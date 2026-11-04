@@ -123,3 +123,16 @@ test('continue does not resume exploration when location and map disagree', () =
     delete globalThis.localStorage;
   }
 });
+
+test('inn rest restores gear-boosted max HP and clears statuses', () => {
+  const game = gameStub();
+  const hero = game.state.party[0];
+  hero.equipment = { weapon: null, armor: null, trinket: 'storm_lantern' };
+  hero.hp = 1; hero.mp = 0; hero.statuses = [{ id: 'bleeding', turns: 2 }];
+  game.state.gold = 10;
+  townScene.actions.rest(game);
+  assert.equal(game.state.gold, 5);
+  assert.equal(hero.hp, hero.maxHp + 8);
+  assert.equal(hero.mp, hero.maxMp);
+  assert.deepEqual(hero.statuses, []);
+});
