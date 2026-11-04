@@ -1,4 +1,5 @@
 import { restPrice } from '../story/relay.js';
+import { DIFFICULTIES, cycleDifficulty, getDifficulty } from '../combat/difficulty.js';
 import { saveGame } from '../state.js';
 import { effectiveStats } from '../items/equipment.js';
 import { escapeHTML, partyStatus, resourceChip, sceneHeader, uiButton } from '../ui/components.js';
@@ -38,6 +39,7 @@ export const townScene = {
             ${game.scenes?.bestiary ? uiButton({ action: 'bestiary', label: "Warden's field journal", iconName: 'journal', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'explore', label: 'Explore the wilds', iconName: 'map', variant: 'primary' })}
             ${uiButton({ action: 'save', label: 'Save journey', iconName: 'save', variant: 'ghost' })}
+            ${uiButton({ action: 'difficulty', label: `Difficulty: ${DIFFICULTIES[getDifficulty(s)].label}`, iconName: 'shield', variant: 'ghost' })}
           </div>
         </section>
       </div>
@@ -56,6 +58,7 @@ export const townScene = {
     bestiary(game) { if (game.scenes?.bestiary) game.setScene('bestiary', { returnScene: 'town' }); },
     explore(game) { game.setScene('explore'); },
     save(game) { saveGame(game.state); game.message = 'Game saved.'; },
+    difficulty(game) { const id = cycleDifficulty(game.state); game.message = `Difficulty set to ${DIFFICULTIES[id].label}. ${DIFFICULTIES[id].blurb}`; },
     ...storyUI.actions,
   },
 };
