@@ -11,7 +11,10 @@ import {
   getVisitedZones,
   installMap,
   interactWith,
+  getAvailableActions,
   movePlayer,
+  pickRandomEncounter,
+  travelToZone,
 } from '../src/map/index.js';
 
 function makeMockGame() {
@@ -237,4 +240,53 @@ test('zone hygiene: all zone names, descriptions, NPCs, interactables, and encou
       assert.ok(!banned.test(enc.name) && !banned.test(enc.description || ''), `encounter ${enc.id} on-theme`);
     }
   }
+});
+
+test('supply caches grant item rewards once and cannot be opened twice', () => {
+  const state = createInitialState();
+  travelToZone(state, 'ridge_road', 'from_greyhaven');
+  state.map.x = 1;
+  state.map.y = 4; // adjacent to ridge_supply_cache at (1, 5)
+  const actions = getAvailableActions(state);
+  assert.ok(actions.some((a) => a.kind === 'interact' && a.id === 'ridge_supply_cache' && a.label.includes('Open')));
+
+  const openRes = interactWith(state, 'interact', 'ridge_supply_cache');
+  assert.equal(openRes.events[0]?.interactionId, 'ridge_supply_cache');
+  assert.equal(state.map.completedInteractions.ridge_supply_cache, true);
+  assert.ok(state.inventory.some((s) => s.id === 'healing_herb' && s.qty === 1));
+  assert.ok(state.inventory.some((s) => s.id === 'scrap_metal' && s.qty === 2));
+
+  // Second attempt is blocked and does not duplicate items
+  const repeatRes = interactWith(state, 'interact', 'ridge_supply_cache');
+  assert.equal(repeatRes.events.length, 0);
+  assert.equal(state.inventory.find((s) => s.id === 'scrap_metal').qty, 2);
+});
+
+test('pickRandomEncounter selects entries according to weights', () => {
+  const table = [
+    { encounterId: 'common', enemyId: 'storm_rat', weight: 3 },
+    { encounterId: 'rare', enemyId: 'storm_rat', weight: 1 },
+  ];
+  assert.equal(pickRandomEncounter(table, () => 0.1).encounterId, 'common');
+  assert.equal(pickRandomEncounter(table, () => 0.74).encounterId, 'common');
+  assert.equal(pickRandomEncounter(table, () => 0.85).encounterId, 'rare');
+  assert.equal(pickRandomEncounter([], () => 0.5), null);
+});
+
+test('useFieldConsumable heals party member in exploration and exploreScene renders Field Pack', () => {
+  const game = makeMockGame();
+  installStory(game);
+  installMap(game, { enableKeyboard: false });
+  game.state.party[0].hp = 10;
+  game.state.inventory = [{ id: 'bandage', qty: 2 }];
+  game.setScene('explore');
+
+  let html = exploreScene.render(game);
+  assert.ok(html.includes('Field Pack:'));
+  assert.ok(html.includes('Linen Bandage ×2'));
+  assert.ok(html.includes('data-action="useFieldItem"'));
+
+  exploreScene.actions.useFieldItem(game, { dataset: { arg: 'bandage' } });
+  assert.equal(game.state.party[0].hp, 25);
+  assert.equal(game.state.inventory.find((s) => s.id === 'bandage').qty, 1);
 });

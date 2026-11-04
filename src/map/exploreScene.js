@@ -1,6 +1,7 @@
 import { saveGame } from '../state.js';
 import { createStoryState, getDialogue } from '../story/index.js';
 import { createStoryUI } from '../story/view.js';
+import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { ZONES } from './zones.js';
 import {
   ensureMapState,
@@ -13,6 +14,7 @@ import {
   movePlayer,
   recordEncounterVictory,
   travelToZone,
+  useFieldConsumable,
 } from './mapState.js';
 
 const escapeHtml = (value) =>
@@ -51,6 +53,30 @@ function handleActionResult(game, result) {
       returnScene: 'explore',
     });
   }
+}
+
+function renderFieldPackHtml(inventory) {
+  const stacks = Array.isArray(inventory) ? inventory.filter((s) => s && s.qty > 0) : [];
+  if (stacks.length === 0) {
+    return `<div style="margin-top:0.5rem;font-size:0.9rem;color:var(--muted);"><strong>Field Pack:</strong> Empty</div>`;
+  }
+  const itemsSummary = [];
+  const consumableButtons = [];
+  for (const stack of stacks) {
+    const item = isKnownItem(stack.id) ? getItem(stack.id) : { id: stack.id, name: stack.id };
+    itemsSummary.push(`${escapeHtml(item.name)} ×${stack.qty}`);
+    if (item.type === TYPES.CONSUMABLE) {
+      consumableButtons.push(
+        `<button data-action="useFieldItem" data-arg="${escapeHtml(item.id)}">Use ${escapeHtml(item.name)} (${stack.qty})</button>`
+      );
+    }
+  }
+  return `
+    <div style="margin-top:0.5rem;font-size:0.9rem;">
+      <div><strong>Field Pack:</strong> ${itemsSummary.join(' · ')}</div>
+      ${consumableButtons.length ? `<div style="margin-top:0.25rem;">${consumableButtons.join('')}</div>` : ''}
+    </div>
+  `;
 }
 
 function renderGridHtml(zone, mapState) {
@@ -210,7 +236,8 @@ export const exploreScene = {
           </div>
           <div style="flex:1;min-width:220px;">
             <div><strong>Nearby Actions:</strong></div>
-            <div>${contextButtons || '<span style="color:var(--muted);">Move adjacent to NPCs, gates, dispatches, or encounters to interact.</span>'}</div>
+            <div>${contextButtons || '<span style="color:var(--muted);">Move adjacent to NPCs, gates, dispatches, caches, or encounters to interact.</span>'}</div>
+            ${renderFieldPackHtml(game.state.inventory)}
             ${fastTravelButtons ? `<div style="margin-top:0.5rem;"><strong>Visited Routes:</strong> ${fastTravelButtons}</div>` : ''}
             <div style="margin-top:0.5rem;">
               <button data-action="save">Save Game</button>
@@ -219,7 +246,7 @@ export const exploreScene = {
           </div>
         </div>
         <div style="margin-top:0.5rem;font-size:0.85rem;color:var(--muted);">
-          Legend: <strong>@</strong> Hero · <strong>M/I/T</strong> NPCs · <strong>!</strong> Encounter · <strong>✉/◈/?/✦</strong> Objects · <strong>╬</strong> Zone Exit · <strong>#</strong> Wall · <strong>≈</strong> Chasm
+          Legend: <strong>@</strong> Hero · <strong>M/I/T</strong> NPCs · <strong>!</strong> Encounter · <strong>✉/◈/▣/?/✦</strong> Objects · <strong>╬</strong> Zone Exit · <strong>#</strong> Wall · <strong>≈</strong> Chasm
         </div>
       </div>
       <div class="panel log" aria-live="polite">
@@ -271,6 +298,11 @@ export const exploreScene = {
       const toZone = el?.dataset?.arg;
       if (!toZone) return;
       handleActionResult(game, interactWith(game.state, 'exit', toZone));
+    },
+    useFieldItem(game, el) {
+      const itemId = el?.dataset?.arg;
+      if (!itemId) return;
+      useFieldConsumable(game.state, itemId);
     },
     save(game) {
       saveGame(game.state);

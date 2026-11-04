@@ -1,4 +1,6 @@
 import { TILE_TYPES, ZONES, ZONE_ORDER } from './zones.js';
+import { grantRewards } from '../items/inventory.js';
+import { useConsumable } from '../items/consumables.js';
 
 export function createMapState(initialZone = 'greyhaven') {
   const zone = ZONES[initialZone] || ZONES.greyhaven;
@@ -54,6 +56,18 @@ export function isWalkable(zone, mapState, x, y) {
 
 export function isAdjacentOrOn(x1, y1, x2, y2) {
   return Math.abs(x1 - x2) + Math.abs(y1 - y2) <= 1;
+}
+
+export function pickRandomEncounter(encounters, rng = Math.random) {
+  if (!Array.isArray(encounters) || encounters.length === 0) return null;
+  const weights = encounters.map((e) => (typeof e.weight === 'number' && e.weight > 0 ? e.weight : 1));
+  const total = weights.reduce((acc, w) => acc + w, 0);
+  let roll = Math.max(0, Math.min(0.999999, Number(rng()) || 0)) * total;
+  for (let i = 0; i < encounters.length; i++) {
+    roll -= weights[i];
+    if (roll < 0) return encounters[i];
+  }
+  return encounters[encounters.length - 1];
 }
 
 export function getEntityAt(zone, mapState, x, y) {
@@ -120,6 +134,8 @@ export function getAvailableActions(gameState) {
         label:
           inter.kind === 'inn'
             ? `Rest at ${inter.name} (${inter.costGold || 5}g)`
+            : inter.kind === 'cache'
+            ? `Open ${inter.name}`
             : `Inspect ${inter.name}`,
         entity: inter,
       });
@@ -222,7 +238,7 @@ export function movePlayer(gameState, dx, dy, options = {}) {
     };
   }
 
-  // Check if stepped onto an interactable
+  // Check if stepped onto a story dispatch interactable
   const inter = (zone.interactables || []).find(
     (i) => i.x === nx && i.y === ny && !(i.once && mapState.completedInteractions[i.interactionId || i.id])
   );
@@ -239,17 +255,20 @@ export function movePlayer(gameState, dx, dy, options = {}) {
     zone.randomEncounters.length > 0 &&
     rng() < zone.randomEncounterChance
   ) {
-    const pick = zone.randomEncounters[0];
-    mapState.activeEncounterId = pick.encounterId;
-    const msg = `A roaming threat ambushes you along ${zone.name}!`;
-    appendLog(mapState, msg);
-    return {
-      state: gameState,
-      moved: true,
-      events,
-      log: [msg],
-      triggerCombat: { encounterId: pick.encounterId, enemyId: pick.enemyId, name: 'Roaming Storm Beast' },
-    };
+    const pick = pickRandomEncounter(zone.randomEncounters, rng);
+    if (pick) {
+      mapState.activeEncounterId = pick.encounterId;
+      const enemyName = pick.name || 'Roaming Storm Beast';
+      const msg = `${enemyName} ambushes you along ${zone.name}!`;
+      appendLog(mapState, msg);
+      return {
+        state: gameState,
+        moved: true,
+        events,
+        log: [msg],
+        triggerCombat: { encounterId: pick.encounterId, enemyId: pick.enemyId, name: enemyName },
+      };
+    }
   }
 
   return { state: gameState, moved: true, events, log: logs, triggerCombat: null };
@@ -315,6 +334,12 @@ export function interactWith(gameState, kind, targetId, options = {}) {
     }
     const intId = inter.interactionId || inter.id;
 
+    if (inter.once && mapState.completedInteractions[intId]) {
+      const msg = `${inter.name} has already been searched.`;
+      appendLog(mapState, msg);
+      return { state: gameState, events: [], log: [msg], triggerCombat: null };
+    }
+
     if (
       inter.requiresEncounterCleared &&
       !mapState.clearedEncounters[inter.requiresEncounterCleared]
@@ -341,10 +366,20 @@ export function interactWith(gameState, kind, targetId, options = {}) {
       return { state: gameState, events: [], log: [msg], triggerCombat: null };
     }
 
+    let rewardText = '';
+    if (Array.isArray(inter.rewards) && inter.rewards.length > 0) {
+      const currentInv = Array.isArray(gameState.inventory) ? gameState.inventory : [];
+      const grant = grantRewards(currentInv, inter.rewards);
+      if (grant.ok) {
+        gameState.inventory = grant.inv;
+        rewardText = ` (${grant.messages.join(' ')})`;
+      }
+    }
+
     if (inter.once) {
       mapState.completedInteractions[intId] = true;
     }
-    const msg = `${inter.name}: ${inter.description}`;
+    const msg = `${inter.name}: ${inter.description}${rewardText}`;
     appendLog(mapState, msg);
     logs.push(msg);
     events.push({ type: 'interact', interactionId: intId });
@@ -364,6 +399,24 @@ export function interactWith(gameState, kind, targetId, options = {}) {
   }
 
   return { state: gameState, events, log: logs, triggerCombat: null };
+}
+
+export function useFieldConsumable(gameState, itemId) {
+  const mapState = ensureMapState(gameState);
+  const hero = gameState.party?.[0];
+  if (!hero) {
+    return { ok: false, state: gameState, log: ['No party member available.'] };
+  }
+  const inv = Array.isArray(gameState.inventory) ? gameState.inventory : [];
+  const res = useConsumable(hero, inv, itemId);
+  if (!res.ok) {
+    appendLog(mapState, res.message);
+    return { ok: false, state: gameState, log: [res.message] };
+  }
+  gameState.party[0] = res.actor;
+  gameState.inventory = res.inv;
+  appendLog(mapState, res.message);
+  return { ok: true, state: gameState, effects: res.effects, log: [res.message] };
 }
 
 export function recordEncounterVictory(gameState, encounterId, enemyId = null) {
