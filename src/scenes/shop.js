@@ -3,7 +3,7 @@
 // equipment helpers in src/items/equipment.js. All rendered strings
 // are escaped; all state mutations go through the pure helpers.
 
-import { GREYHAVEN_SHOP, shopCatalog, buyItem, sellItem } from '../items/shop.js';
+import { GREYHAVEN_SHOP, getShop, shopCatalog, buyItem, sellItem } from '../items/shop.js';
 import { getItem, isKnownItem, canEquip } from '../items/items.js';
 import { countItem } from '../items/inventory.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment } from '../items/equipment.js';
@@ -60,12 +60,13 @@ export const shopScene = {
     game.shopMessage = data?.message || '';
     game.shopReturnScene = data?.returnScene || 'town';
     game.shopMemberIndex = 0;
+    game.shopId = data?.shopId && getShop(data.shopId) ? data.shopId : 'greyhaven_shop';
   },
 
   render(game) {
     const s = game.state;
     const hero = s.party[0];
-    const shop = GREYHAVEN_SHOP;
+    const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
     const mode = ['sell', 'craft'].includes(game.shopMode) ? game.shopMode : 'buy';
     const gold = s.gold ?? 0;
     const { member, index, party } = activeMember(game);
@@ -270,6 +271,7 @@ export const shopScene = {
     craft(game, el) {
       const recipeId = el?.dataset?.arg;
       if (!recipeId) return;
+      const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
       const recipe = getRecipeSafe(recipeId);
       const res = craft(game.state.inventory, recipeId);
       if (res.ok) {
@@ -277,7 +279,7 @@ export const shopScene = {
         const made = recipe
           ? recipe.outputs.map(({ id, qty }) => `${qty} ${(isKnownItem(id) ? getItem(id).name : id)}`).join(', ')
           : 'something';
-        game.shopMessage = `Hesta works the hearth: crafted ${made}.`;
+        game.shopMessage = `${shop.name} — crafted ${made}.`;
       } else {
         game.shopMessage = res.messages.join(' ');
       }
