@@ -96,33 +96,84 @@ function mapGrid(zone, mapState) {
   </div>`;
 }
 
-function nearbyActionButton(action) {
-  const types = {
-    talk: { name: 'mapTalk', iconName: 'journal' },
-    encounter: { name: 'mapEncounter', iconName: 'sword', variant: 'danger' },
-    patrol: { name: 'mapPatrol', iconName: 'sword', variant: 'secondary' },
-    interact: { name: 'mapInteract', iconName: 'bag', variant: 'primary' },
-    exit: { name: 'mapTravel', iconName: 'compass', variant: 'primary' },
-  };
-  const type = types[action.kind];
+const NEARBY_ACTION_TYPES = Object.freeze({
+  talk: { name: 'mapTalk', iconName: 'journal' },
+  encounter: { name: 'mapEncounter', iconName: 'sword', variant: 'danger' },
+  patrol: { name: 'mapPatrol', iconName: 'sword', variant: 'secondary' },
+  interact: { name: 'mapInteract', iconName: 'bag', variant: 'primary' },
+  exit: { name: 'mapTravel', iconName: 'compass', variant: 'primary' },
+});
+
+function keyHint(key) {
+  return `<kbd class="key-hint" aria-hidden="true">${escapeHTML(key)}</kbd>`;
+}
+
+function nearbyActionButton(action, index) {
+  const type = NEARBY_ACTION_TYPES[action.kind];
   if (!type) return '';
-  return uiButton({
-    action: type.name,
-    arg: action.id,
-    label: action.label,
-    iconName: type.iconName,
-    variant: type.variant || 'secondary',
-  });
+  const shortcut = index < 9 ? String(index + 1) : null;
+  return `<button type="button" class="action-button action-button--${type.variant || 'secondary'} nearby-action" data-action="${escapeHTML(type.name)}" data-arg="${escapeHTML(action.id)}"${shortcut ? ` aria-keyshortcuts="${shortcut}"` : ''}>
+    ${icon(type.iconName)}<span>${escapeHTML(action.label)}</span>${shortcut ? keyHint(shortcut) : ''}
+  </button>`;
 }
 
 function movementButton(action, label, key, arrow, className) {
-  return `<button type="button" class="action-button movement-button ${className}" data-action="${action}" aria-label="${action === 'waitTurn' ? 'Survey Area' : `Move ${label}`}">
+  const shortcuts = {
+    moveNorth: 'W ArrowUp', moveWest: 'A ArrowLeft', moveEast: 'D ArrowRight',
+    moveSouth: 'S ArrowDown', waitTurn: 'E',
+  };
+  return `<button type="button" class="action-button movement-button ${className}" data-action="${action}" aria-label="${action === 'waitTurn' ? 'Survey Area' : `Move ${label}`}" aria-keyshortcuts="${shortcuts[action]}">
     <span class="movement-button__arrow" aria-hidden="true">${arrow}</span><span>${label}</span><kbd aria-hidden="true">${key}</kbd>
   </button>`;
 }
 
+function terrainCompass(zone, mapState) {
+  const x = Number(mapState?.x);
+  const y = Number(mapState?.y);
+  const terrainAt = (tx, ty) => {
+    const inside = Number.isInteger(tx) && Number.isInteger(ty)
+      && tx >= 0 && tx < zone.width && ty >= 0 && ty < zone.height;
+    const tile = getTileInfo(zone, tx, ty);
+    return { name: inside ? tile.name : 'Map edge', passable: inside && tile.walkable === true };
+  };
+  const current = terrainAt(x, y);
+  const directions = [
+    { id: 'north', label: 'North', key: 'W', dx: 0, dy: -1 },
+    { id: 'west', label: 'West', key: 'A', dx: -1, dy: 0 },
+    { id: 'east', label: 'East', key: 'D', dx: 1, dy: 0 },
+    { id: 'south', label: 'South', key: 'S', dx: 0, dy: 1 },
+  ];
+  const items = directions.map(direction => {
+    const tx = x + direction.dx;
+    const ty = y + direction.dy;
+    const terrain = terrainAt(tx, ty);
+    return `<li data-direction="${direction.id}" data-passable="${terrain.passable}">
+      <span class="terrain-compass__direction">${direction.label}${keyHint(direction.key)}</span>
+      <span class="terrain-compass__terrain"><strong>${escapeHTML(terrain.name)}</strong><small>${escapeHTML(`${tx}, ${ty}`)} · ${terrain.passable ? 'Passable' : 'Blocked'}</small></span>
+    </li>`;
+  }).join('');
+  return `<section class="terrain-compass" aria-labelledby="terrain-compass-title">
+    <div class="terrain-compass__heading"><h3 id="terrain-compass-title">Terrain compass</h3><p>Standing on <strong>${escapeHTML(current.name)}</strong> at ${escapeHTML(`${x}, ${y}`)}.</p></div>
+    <ul aria-label="Adjacent terrain and passability">${items}</ul>
+  </section>`;
+}
+
+function explorationShortcutGuide() {
+  return `<details class="shortcut-guide exploration-shortcuts"><summary>Explorer keyboard commands</summary>
+    <dl class="shortcut-guide__grid">
+      <div><dt><kbd>WASD</kbd></dt><dd>Move one tile; arrow keys work too.</dd></div>
+      <div><dt><kbd>E</kbd></dt><dd>Survey the tile beneath you.</dd></div>
+      <div><dt><kbd>1–9</kbd></dt><dd>Choose a nearby action by its visible number.</dd></div>
+      <div><dt><kbd>Tab</kbd></dt><dd>Move through controls; Enter or Space activates.</dd></div>
+    </dl>
+    <p>E and numbered shortcuts pause while typing, using modifier keys, or viewing Display settings. Unavailable actions never activate.</p>
+  </details>`;
+}
+
 export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '', hasQuestJournal = false, hasCharacter = false, hasFeats = false }) {
-  const contextButtons = (nearbyActions || []).map(nearbyActionButton).join('');
+  const contextButtons = (nearbyActions || [])
+    .filter(action => NEARBY_ACTION_TYPES[action?.kind])
+    .map(nearbyActionButton).join('');
   const routes = (visitedZones || [])
     .filter(zoneId => zoneId !== zone.id && ZONES[zoneId])
     .map(zoneId => uiButton({
@@ -154,6 +205,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
         <p class="zone-description">${escapeHTML(zone.description)}</p>
         ${zoneVista(zone)}
         ${mapGrid(zone, mapState)}
+        ${terrainCompass(zone, mapState)}
         <ul class="map-legend" aria-label="Map legend">
           <li><span class="legend-symbol legend-symbol--player">@</span>You</li>
           <li><span class="legend-symbol legend-symbol--npc">M/I/T</span>People</li>
@@ -169,11 +221,12 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           <div class="movement-controls" role="group" aria-label="Movement Controls">
             ${movementButton('moveNorth', 'North', 'W', '↑', 'movement-button--north')}
             ${movementButton('moveWest', 'West', 'A', '←', 'movement-button--west')}
-            ${movementButton('waitTurn', 'Survey', '·', '◉', 'movement-button--survey')}
+            ${movementButton('waitTurn', 'Survey', 'E', '◉', 'movement-button--survey')}
             ${movementButton('moveEast', 'East', 'D', '→', 'movement-button--east')}
             ${movementButton('moveSouth', 'South', 'S', '↓', 'movement-button--south')}
           </div>
           <p class="control-hint">Survey to inspect the tile beneath you. Movement never spends supplies.</p>
+          ${explorationShortcutGuide()}
         </section>
         <section class="panel nearby-panel" aria-labelledby="nearby-title">
           <p class="eyebrow">Within reach</p><h2 id="nearby-title">Nearby Actions:</h2>
