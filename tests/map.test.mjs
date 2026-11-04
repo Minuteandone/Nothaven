@@ -15,6 +15,7 @@ import {
   movePlayer,
   pickRandomEncounter,
   travelToZone,
+  useFieldConsumable,
 } from '../src/map/index.js';
 
 function makeMockGame() {
@@ -377,4 +378,47 @@ test('Chapter 2 zones saltmere_coast and highwatch_pass have walkable exits, res
   game.bus.emit('combat:victory', { encounterId: 'highwatch_rescue' });
   game.setScene('explore');
   assert.equal(game.state.map.clearedEncounters.highwatch_rescue, true);
+});
+
+test('useFieldConsumable supports targeting companions by party index and greyhaven_inn heals effective maxHp', () => {
+  const state = createInitialState();
+  ensureMapState(state);
+  state.party.push({
+    id: 'tamsin',
+    name: 'Tamsin',
+    role: 'scout',
+    companion: true,
+    hp: 10,
+    maxHp: 24,
+    mp: 6,
+    maxMp: 6,
+    atk: 7,
+    def: 2,
+    spd: 7,
+    level: 1,
+    xp: 0,
+    statuses: [{ id: 'bleeding', turns: 2 }],
+    equipment: { weapon: null, armor: 'keeper_coat', trinket: null },
+  });
+  state.inventory = [{ id: 'rations', qty: 1 }];
+
+  // Out-of-range target index fails cleanly without consuming the item
+  const bad = useFieldConsumable(state, 'rations', 5);
+  assert.equal(bad.ok, false);
+  assert.equal(state.inventory.length, 1);
+
+  // Target index 1 heals companion Tamsin
+  const ok = useFieldConsumable(state, 'rations', 1);
+  assert.equal(ok.ok, true);
+  assert.equal(state.party[1].hp, 20);
+  assert.equal(state.inventory.length, 0);
+
+  // Rest at greyhaven_inn restores gear-boosted maxHp (24 + 8 = 32) and clears statuses
+  state.gold = 10;
+  state.map.x = 1;
+  state.map.y = 2;
+  interactWith(state, 'interact', 'greyhaven_inn');
+  assert.equal(state.gold, 5);
+  assert.equal(state.party[1].hp, 34);
+  assert.deepEqual(state.party[1].statuses, []);
 });
