@@ -81,7 +81,7 @@ export const combatScene = {
     const c = game.state.combat, hero = game.state.party[0];
     hero.statuses = Array.isArray(hero.statuses) ? hero.statuses : [];
     if ((c.enemy.spd || 0) > heroStats(hero).spd) {
-      c.log.push(`${c.enemy.name} moves first!`, ...enemyTurn(c, hero, rng(game)));
+      c.log.push(`${c.enemy.name} moves first!`, ...enemyTurn(c, hero, rng(game), game.state.party));
     }
   },
   render(game) {
@@ -111,6 +111,9 @@ export const combatScene = {
         <div class="unit hero"><strong>${esc(h.name)}</strong> Lv ${h.level || 1} ${st(h)}
           <div>HP ${h.hp}/${hs.maxHp}</div>${bar(h.hp, hs.maxHp, 'hp')}
           <div>MP ${h.mp}/${hs.maxMp}</div>${bar(h.mp, hs.maxMp, 'mp')}</div>
+        ${game.state.party.slice(1).map((m) => { const ms = heroStats(m); return `<div class="unit ally${m.hp <= 0 ? ' down' : ''}"><strong>${esc(m.name)}</strong> Lv ${m.level || 1}${m.hp <= 0 ? ' <em>(down)</em>' : ''}
+          <div>HP ${m.hp}/${ms.maxHp}</div>${bar(m.hp, ms.maxHp, 'hp')}
+          <div>MP ${m.mp}/${ms.maxMp}</div>${bar(m.mp, ms.maxMp, 'mp')}</div>`; }).join('')}
         <div class="unit enemy"><strong>${esc(c.enemy.name)}</strong>${c.enemy.boss ? ' <em>(boss)</em>' : ''} ${st(c.enemy)}
           <div>HP ${c.enemy.hp}/${c.enemy.maxHp}</div>${bar(c.enemy.hp, c.enemy.maxHp, 'hp')}</div>
       </div></div>
@@ -119,11 +122,11 @@ export const combatScene = {
   },
   actions: {
     menu(game, el) { game.combatMenu = el?.dataset?.arg || 'main'; },
-    attack(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'attack' }, rng(game)).lines); },
-    defend(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'defend' }, rng(game)).lines); },
-    flee(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'flee' }, rng(game)).lines); },
+    attack(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'attack' }, rng(game), game.state.party).lines); },
+    defend(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'defend' }, rng(game), game.state.party).lines); },
+    flee(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'flee' }, rng(game), game.state.party).lines); },
     skill(game, el) {
-      const res = heroAction(game.state.combat, game.state.party[0], { type: 'skill', skillId: el?.dataset?.arg }, rng(game));
+      const res = heroAction(game.state.combat, game.state.party[0], { type: 'skill', skillId: el?.dataset?.arg }, rng(game), game.state.party);
       commit(game, res.lines);
       if (res.ok) game.combatMenu = 'main';
     },
@@ -136,7 +139,7 @@ export const combatScene = {
       const cure = res.effects?.cure;
       if (cure) delete c.heroTimers[cure];
       game.combatMenu = 'main';
-      commit(game, [res.message, ...afterHeroAction(c, game.state.party[0], rng(game))]);
+      commit(game, [res.message, ...afterHeroAction(c, game.state.party[0], rng(game), game.state.party)]);
     },
     finish(game) {
       if (game.state.combat && !game.state.combat.over) return; // never abandon an active fight
@@ -144,7 +147,7 @@ export const combatScene = {
       const { over, returnScene, encounterId } = c;
       game.state.combat = null;
       game.combatMenu = 'main';
-      for (const m of game.state.party) m.statuses = [];
+      for (const m of game.state.party) { m.statuses = []; if (m.hp <= 0 && m !== game.state.party[0]) m.hp = 1; }
       if (over === 'defeat') {
         const message = recoverFromDefeat(game.state);
         game.setScene(game.scenes?.town ? 'town' : 'title', { message, combatResult: 'defeat', encounterId });

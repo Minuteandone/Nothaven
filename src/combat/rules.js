@@ -79,13 +79,26 @@ export function tickHeroStatuses(c, hero) {
 }
 
 /** Enemy acts once. Mutates hero/combat. Returns log lines. */
-export function enemyTurn(c, hero, rng = Math.random) {
+export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   const lines = [];
   const e = c.enemy;
   if (c.over || e.hp <= 0) return lines;
   if (hasStatus(e, 'stunned')) {
     e.statuses = e.statuses.filter((s) => s !== 'stunned');
     lines.push(`${e.name} is stunned and loses its turn.`);
+    return lines;
+  }
+  // Pick a target among living party members (rng is only consumed with 2+ targets).
+  const living = (party || [hero]).filter((m) => m && m.hp > 0);
+  const target = living.length > 1 ? living[Math.floor(rng() * living.length) % living.length] : hero;
+  if (target !== hero) {
+    const ts = heroStats(target);
+    const d = physicalDamage(e.atk, ts.def, rng);
+    target.hp = Math.max(0, target.hp - d);
+    lines.push(`${e.name} hits ${target.name} for ${d}.`);
+    if (target.hp <= 0) lines.push(`${target.name} is knocked out!`);
+    c.defending = false;
+    if (c.wardTurns > 0) c.wardTurns -= 1;
     return lines;
   }
   const hs = heroStats(hero);
@@ -124,7 +137,7 @@ function checkVictory(c, lines) {
  * Item use is handled by the scene (via useConsumable) and then calls `afterHeroAction`.
  * Returns {ok, lines}.
  */
-export function heroAction(c, hero, action, rng = Math.random) {
+export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
   if (c.over) return { ok: false, lines: ['The battle is over.'] };
   const lines = [];
   const hs = heroStats(hero);
@@ -177,17 +190,62 @@ export function heroAction(c, hero, action, rng = Math.random) {
       return { ok: false, lines: ['Unknown action.'] };
   }
   checkVictory(c, lines);
-  lines.push(...afterHeroAction(c, hero, rng));
+  lines.push(...afterHeroAction(c, hero, rng, party));
   return { ok: true, lines };
 }
 
 /** Enemy reply + end-of-round status ticks. Used after any hero action that consumes the turn. */
-export function afterHeroAction(c, hero, rng = Math.random) {
+export function afterHeroAction(c, hero, rng = Math.random, party = [hero]) {
   const lines = [];
   if (c.over) return lines;
-  lines.push(...enemyTurn(c, hero, rng));
+  for (const m of party || []) {
+    if (m === hero || !m || m.hp <= 0 || c.over) continue;
+    lines.push(...companionTurn(c, m, party, rng));
+    checkVictory(c, lines);
+  }
+  if (c.over) { c.turn += 1; return lines; }
+  lines.push(...enemyTurn(c, hero, rng, party));
   if (!c.over) lines.push(...tickHeroStatuses(c, hero));
   c.turn += 1;
+  return lines;
+}
+
+/**
+ * Automatic companion turn. Scouts attack (30% chance of an Aimed Shot for 140%);
+ * keepers mend the most wounded ally below half HP, spark constructs, else attack.
+ */
+export function companionTurn(c, m, party = [m], rng = Math.random) {
+  const lines = [];
+  if (c.over || !m || m.hp <= 0) return lines;
+  const ms = heroStats(m);
+  const e = c.enemy;
+  if (m.role === 'keeper') {
+    const hurt = (party || []).filter((p) => p && p.hp > 0 && p.hp < heroStats(p).maxHp / 2)
+      .sort((a, b) => a.hp / heroStats(a).maxHp - b.hp / heroStats(b).maxHp)[0];
+    if (hurt && (m.mp || 0) >= SKILLS.mend.mp) {
+      m.mp -= SKILLS.mend.mp;
+      const before = hurt.hp;
+      hurt.hp = Math.min(heroStats(hurt).maxHp, hurt.hp + SKILLS.mend.power + (m.level || 1) * 2);
+      lines.push(`${m.name} uses Mend on ${hurt.name}, restoring ${hurt.hp - before} HP.`);
+      return lines;
+    }
+    if (e.tags?.includes('construct') && (m.mp || 0) >= SKILLS.spark.mp) {
+      m.mp -= SKILLS.spark.mp;
+      const d = (SKILLS.spark.power + (m.level || 1) * 2 + randInt(rng, 0, 2)) * 2;
+      e.hp = Math.max(0, e.hp - d);
+      lines.push(`${m.name} casts Spark for ${d}!`);
+      return lines;
+    }
+  }
+  if (m.role === 'scout' && rng() < 0.3) {
+    const d = physicalDamage(ms.atk, e.def, rng, { mult: 1.4 });
+    e.hp = Math.max(0, e.hp - d);
+    lines.push(`${m.name} looses an Aimed Shot for ${d}!`);
+    return lines;
+  }
+  const d = physicalDamage(ms.atk, e.def, rng);
+  e.hp = Math.max(0, e.hp - d);
+  lines.push(`${m.name} strikes for ${d}.`);
   return lines;
 }
 
