@@ -43,7 +43,7 @@ function addStatus(unit, id, turns, store) {
 
 /** Create a fresh combat object. Unknown enemy ids fall back to storm_rat. */
 export function createCombat({ enemyId, encounterId = null, returnScene = 'town' } = {}) {
-  const base = ENEMIES[enemyId] || ENEMIES.storm_rat;
+  const base = (typeof enemyId === 'string' && Object.prototype.hasOwnProperty.call(ENEMIES, enemyId)) ? ENEMIES[enemyId] : ENEMIES.storm_rat;
   const enemy = { ...base, maxHp: base.hp, statuses: [], loot: base.loot ? base.loot.map((l) => ({ ...l })) : [] };
   return {
     enemy, encounterId, returnScene, turn: 1, over: null,

@@ -9,6 +9,8 @@ import { grantRewards } from '../items/inventory.js';
 import { useConsumable } from '../items/consumables.js';
 import { getItem, TYPES } from '../items/items.js';
 
+export const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
 function rng(game) { return game.combatRng || Math.random; }
 
 function bar(cur, max, cls) {
@@ -60,7 +62,7 @@ export const combatScene = {
     const c = game.state.combat, h = game.state.party[0];
     if (!c) return '<div class="panel"><p>No battle.</p><button data-action="finish">Continue</button></div>';
     const hs = heroStats(h);
-    const st = (u) => (u.statuses || []).map((s) => `<span class="status">${s}</span>`).join(' ');
+    const st = (u) => (u.statuses || []).map((s) => `<span class="status">${esc(s)}</span>`).join(' ');
     let buttons;
     if (c.over) {
       buttons = `<button data-action="finish">Continue</button>`;
@@ -80,13 +82,13 @@ export const combatScene = {
     }
     return `<div class="panel combat"><h2>Battle — Round ${c.turn}</h2>
       <div class="combatants">
-        <div class="unit hero"><strong>${h.name}</strong> Lv ${h.level || 1} ${st(h)}
+        <div class="unit hero"><strong>${esc(h.name)}</strong> Lv ${h.level || 1} ${st(h)}
           <div>HP ${h.hp}/${hs.maxHp}</div>${bar(h.hp, hs.maxHp, 'hp')}
           <div>MP ${h.mp}/${hs.maxMp}</div>${bar(h.mp, hs.maxMp, 'mp')}</div>
-        <div class="unit enemy"><strong>${c.enemy.name}</strong>${c.enemy.boss ? ' <em>(boss)</em>' : ''} ${st(c.enemy)}
+        <div class="unit enemy"><strong>${esc(c.enemy.name)}</strong>${c.enemy.boss ? ' <em>(boss)</em>' : ''} ${st(c.enemy)}
           <div>HP ${c.enemy.hp}/${c.enemy.maxHp}</div>${bar(c.enemy.hp, c.enemy.maxHp, 'hp')}</div>
       </div></div>
-      <div class="panel log" aria-live="polite">${c.log.slice(-8).map((l) => `<p>${l}</p>`).join('')}</div>
+      <div class="panel log" aria-live="polite">${c.log.slice(-8).map((l) => `<p>${esc(l)}</p>`).join('')}</div>
       <div class="panel actions">${buttons}</div>`;
   },
   actions: {
@@ -111,6 +113,7 @@ export const combatScene = {
       commit(game, [res.message, ...afterHeroAction(c, game.state.party[0], rng(game))]);
     },
     finish(game) {
+      if (game.state.combat && !game.state.combat.over) return; // never abandon an active fight
       const c = game.state.combat || { over: 'fled', returnScene: 'town', encounterId: null };
       const { over, returnScene, encounterId } = c;
       game.state.combat = null;

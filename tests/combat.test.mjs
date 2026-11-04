@@ -136,3 +136,22 @@ test('defeat returns to title', () => {
   combatScene.actions.finish(g);
   assert.equal(g.last.name, 'title');
 });
+
+test('inherited enemy ids like constructor fall back to storm_rat', () => {
+  const c = createCombat({ enemyId: 'constructor' });
+  assert.equal(c.enemy.id, 'storm_rat');
+  assert.ok(Number.isFinite(c.enemy.hp));
+});
+
+test('finish does not abandon an active combat; markup is escaped', async () => {
+  const { combatScene } = await import('../src/scenes/combat.js');
+  const calls = [];
+  const game = { state: { party: [{ id: 'hero', name: '<img src=x onerror=alert(1)>', hp: 30, maxHp: 30, mp: 10, maxMp: 10, atk: 6, def: 3, spd: 5, level: 1, xp: 0, statuses: [] }], inventory: [], gold: 0, combat: createCombat({ enemyId: 'storm_rat' }) },
+    scenes: { town: {} }, setScene: (n) => calls.push(n), bus: { emit() {} } };
+  combatScene.actions.finish(game);
+  assert.ok(game.state.combat, 'combat still active');
+  assert.equal(calls.length, 0);
+  const html = combatScene.render(game);
+  assert.ok(!html.includes('<img'));
+  assert.ok(html.includes('&lt;img'));
+});
