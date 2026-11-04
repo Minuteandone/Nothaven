@@ -1,3 +1,5 @@
+import { characterShortcutsEnabled } from './displayControls.js';
+
 const installedGames = new WeakMap();
 
 const MAIN_SHORTCUTS = Object.freeze({
@@ -59,6 +61,7 @@ export function combatShortcutTarget(root, event) {
   const code = codeFor(event);
   const buttons = Array.from(root.querySelectorAll?.('button[data-action]') || []);
   if (code === 'Escape') return matching(buttons, 'menu', 'main');
+  if (!characterShortcutsEnabled(doc)) return null;
 
   const digit = /^(?:Digit|Numpad)([1-9])$/.exec(code);
   if (digit) {

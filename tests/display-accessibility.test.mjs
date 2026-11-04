@@ -5,6 +5,7 @@ import {
   DEFAULT_DISPLAY_PREFERENCES,
   DISPLAY_STORAGE_KEY,
   applyDisplayPreferences,
+  characterShortcutsEnabled,
   installDisplayControls,
   loadDisplayPreferences,
   normalizeDisplayPreferences,
@@ -65,6 +66,7 @@ function fixture({ stored, storage } = {}) {
     scale: new FakeElement('select', doc),
     contrast: new FakeElement('input', doc),
     motion: new FakeElement('input', doc),
+    shortcuts: new FakeElement('input', doc),
     reset: new FakeElement('button', doc),
     done: new FakeElement('button', doc),
     status: new FakeElement('span', doc),
@@ -73,6 +75,7 @@ function fixture({ stored, storage } = {}) {
     ['[data-display-scale]', controls.scale],
     ['[data-display-contrast]', controls.contrast],
     ['[data-display-motion]', controls.motion],
+    ['[data-display-shortcuts]', controls.shortcuts],
     ['[data-display-reset]', controls.reset],
     ['[data-display-done]', controls.done],
     ['[data-display-status]', controls.status],
@@ -95,8 +98,8 @@ function fixture({ stored, storage } = {}) {
 
 test('normalization accepts only supported scales and exact boolean flags', () => {
   assert.deepEqual(normalizeDisplayPreferences(null), DEFAULT_DISPLAY_PREFERENCES);
-  assert.deepEqual(normalizeDisplayPreferences({ textScale: '115', highContrast: true, reducedMotion: true }),
-    { textScale: 115, highContrast: true, reducedMotion: true });
+  assert.deepEqual(normalizeDisplayPreferences({ textScale: '115', highContrast: true, reducedMotion: true, characterShortcuts: true }),
+    { textScale: 115, highContrast: true, reducedMotion: true, characterShortcuts: true });
   for (const value of [0, 99, 116, 200, 'large', NaN, null, {}, []]) {
     assert.equal(normalizeDisplayPreferences({ textScale: value }).textScale, 100);
   }
@@ -107,8 +110,8 @@ test('normalization accepts only supported scales and exact boolean flags', () =
 
 test('storage round trips preferences and survives malformed or denied storage', () => {
   const storage = memoryStorage();
-  assert.equal(saveDisplayPreferences(storage, { textScale: 130, highContrast: true, reducedMotion: true }), true);
-  assert.deepEqual(loadDisplayPreferences(storage), { textScale: 130, highContrast: true, reducedMotion: true });
+  assert.equal(saveDisplayPreferences(storage, { textScale: 130, highContrast: true, reducedMotion: true, characterShortcuts: true }), true);
+  assert.deepEqual(loadDisplayPreferences(storage), { textScale: 130, highContrast: true, reducedMotion: true, characterShortcuts: true });
   storage.setItem(DISPLAY_STORAGE_KEY, '{broken');
   assert.deepEqual(loadDisplayPreferences(storage), DEFAULT_DISPLAY_PREFERENCES);
   storage.setItem(DISPLAY_STORAGE_KEY, JSON.stringify({ textScale: 999, highContrast: 'yes' }));
@@ -121,10 +124,10 @@ test('storage round trips preferences and survives malformed or denied storage',
 
 test('applying preferences uses safe root attributes without mutating the input', () => {
   const root = new FakeElement('html');
-  const input = { textScale: '130', highContrast: true, reducedMotion: false };
+  const input = { textScale: '130', highContrast: true, reducedMotion: false, characterShortcuts: true };
   const snapshot = JSON.stringify(input);
   const applied = applyDisplayPreferences({ documentElement: root }, input);
-  assert.deepEqual(applied, { textScale: 130, highContrast: true, reducedMotion: false });
+  assert.deepEqual(applied, { textScale: 130, highContrast: true, reducedMotion: false, characterShortcuts: true });
   assert.equal(JSON.stringify(input), snapshot);
   assert.equal(root.getAttribute('data-text-size'), '130');
   assert.equal(root.getAttribute('data-contrast'), 'high');
@@ -134,7 +137,7 @@ test('applying preferences uses safe root attributes without mutating the input'
 
 test('saved preferences apply before interaction and the disclosure restores focus', () => {
   const { doc, dock, toggle, panel, controls, controller } = fixture({
-    stored: JSON.stringify({ textScale: 130, highContrast: true, reducedMotion: true }),
+    stored: JSON.stringify({ textScale: 130, highContrast: true, reducedMotion: true, characterShortcuts: true }),
   });
   assert.equal(dock.getAttribute('aria-label'), 'Game controls');
   assert.equal(doc.documentElement.getAttribute('data-text-size'), '130');
@@ -174,7 +177,7 @@ test('changes persist, reset restores defaults, and a reload honors saved choice
   first.controls.contrast.emit('change');
   first.controls.motion.checked = true;
   first.controls.motion.emit('change');
-  assert.deepEqual(first.controller.preferences, { textScale: 115, highContrast: true, reducedMotion: true });
+  assert.deepEqual(first.controller.preferences, { textScale: 115, highContrast: true, reducedMotion: true, characterShortcuts: true });
   assert.equal(first.controls.status.textContent, 'Reduced motion on.');
   assert.deepEqual(JSON.parse(storage.getItem(DISPLAY_STORAGE_KEY)), first.controller.preferences);
   assert.equal(first.doc.documentElement.getAttribute('data-text-size'), '115');
@@ -183,7 +186,7 @@ test('changes persist, reset restores defaults, and a reload honors saved choice
   first.controller.destroy();
 
   const second = fixture({ storage });
-  assert.deepEqual(second.controller.preferences, { textScale: 115, highContrast: true, reducedMotion: true });
+  assert.deepEqual(second.controller.preferences, { textScale: 115, highContrast: true, reducedMotion: true, characterShortcuts: true });
   second.controls.reset.emit('click');
   assert.deepEqual(second.controller.preferences, DEFAULT_DISPLAY_PREFERENCES);
   assert.equal(second.controls.status.textContent, 'Display settings reset to defaults.');
@@ -220,4 +223,42 @@ test('bootstrap installs display controls after audio and before the first scene
   }
   assert.ok(css.includes('@media (max-width: 400px)'));
   assert.ok(css.includes('html[data-text-size="130"] .scene-header h1 { font-size: 1.8rem; overflow-wrap: break-word; }'));
+});
+
+
+test('character shortcuts default on for old preferences and only exact false opts out', () => {
+  assert.equal(characterShortcutsEnabled(null), true);
+  assert.equal(characterShortcutsEnabled({}), true);
+  for (const value of [undefined, null, 0, 1, 'false', 'true', {}, []]) {
+    assert.equal(normalizeDisplayPreferences({ characterShortcuts: value }).characterShortcuts, true);
+  }
+  assert.equal(normalizeDisplayPreferences({ characterShortcuts: false }).characterShortcuts, false);
+  const old = fixture({ stored: JSON.stringify({ textScale: 115 }) });
+  assert.equal(old.controls.shortcuts.checked, true);
+  assert.equal(characterShortcutsEnabled(old.doc), true);
+  old.controller.destroy();
+});
+
+test('character shortcut opt-out persists independently of the journey and resets safely', () => {
+  const storage = memoryStorage();
+  const first = fixture({ storage });
+  const before = JSON.stringify(first.game);
+  first.controls.shortcuts.checked = false;
+  first.controls.shortcuts.emit('change');
+  assert.equal(first.controller.preferences.characterShortcuts, false);
+  assert.equal(characterShortcutsEnabled(first.doc), false);
+  assert.equal(first.doc.documentElement.getAttribute('data-character-shortcuts'), 'off');
+  assert.equal(first.controls.status.textContent, 'Letter and number shortcuts off.');
+  assert.equal(JSON.stringify(first.game), before);
+  first.controller.destroy();
+  assert.equal(first.controls.shortcuts.listeners.has('change'), false);
+  assert.equal(first.doc.documentElement.getAttribute('data-character-shortcuts'), null);
+  const second = fixture({ storage });
+  assert.equal(second.controls.shortcuts.checked, false);
+  assert.equal(characterShortcutsEnabled(second.doc), false);
+  second.controls.reset.emit('click');
+  assert.equal(second.controls.shortcuts.checked, true);
+  assert.equal(characterShortcutsEnabled(second.doc), true);
+  assert.equal(loadDisplayPreferences(storage).characterShortcuts, true);
+  second.controller.destroy();
 });
