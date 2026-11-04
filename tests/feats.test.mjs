@@ -22,6 +22,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.party = [{ ...s.party[0], level: 20 }, { id: 'bram' }, { id: 'iven' }];
   s.bestiary = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`foe_${i}`, 1]));
   for (const id of WANDERERS) s.bestiary[id] = 1;
+  s.bestiary.old_tusk = 1;
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
   assert.equal(featsEarned(s), FEATS.length);
@@ -97,5 +98,20 @@ test('Roadwise feat needs every frontier wanderer in the bestiary', () => {
   s.bestiary = null;
   assert.equal(done(), false, 'missing bestiary is safe');
   const row = FEATS.find(f => f.id === 'wanderers');
+  assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
+});
+
+test('Tusk Breaker feat needs an Old Tusk defeat in the bestiary', () => {
+  const s = createInitialState();
+  const done = () => featStatus(s).find(f => f.id === 'tusk').done;
+  assert.ok(ENEMIES.old_tusk && ENEMIES.old_tusk.boss === true);
+  assert.equal(done(), false);
+  s.bestiary = { old_tusk: 0, briar_boar: 3 };
+  assert.equal(done(), false, 'zero or other boars do not count');
+  s.bestiary.old_tusk = 1;
+  assert.equal(done(), true);
+  s.bestiary = 'broken';
+  assert.equal(done(), false, 'bad bestiary is safe');
+  const row = FEATS.find(f => f.id === 'tusk');
   assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
 });
