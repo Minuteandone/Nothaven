@@ -1,0 +1,119 @@
+# Beacon of Stormhaven — player guide
+
+[Play in your browser](https://stormhaven-rpg.pages.dev) · [Project README](../README.md)
+
+## Starting without spoilers
+
+- Choose **New journey**, speak to Warden Mara in Greyhaven, and read the quest journal below the main panels. You can also speak to Iven and Tamsin for context.
+- **Explore the wilds** opens the map. Use its movement buttons, WASD, or the arrow keys. Nearby actions appear as you approach people, landmarks, enemies, and exits.
+- Walk to new regions to discover them before using their travel shortcuts. Some passages also require quest progress.
+- **Inspect landmarks and open caches explicitly.** Standing on a chest is not the same as taking its supplies. Read nearby action labels when you reach an objective.
+- Use **Save journey** in town or **Save Game** while exploring. Saves are local to this browser/device; **Continue** on the title screen resumes your saved journey. Do not rely on automatic saving or cross-device synchronization.
+- Combat is turn-based: nothing attacks while you decide. Read **Skills** and **Items**, not just Attack. Healing and defensive skills can make a longer fight manageable; fleeing is not available against bosses.
+- New equipment must be **equipped**, not merely bought. Shops also have Sell and Craft tabs; inspect recipe requirements before selling materials. The exploration Field Pack offers ready-to-craft recipes when you have their ingredients.
+- Visit the **Watch House muster board** in town as allies unlock. Your active party has three slots including Wren. Dismissed companions become reserves rather than being deleted.
+- Paid rests restore the active party and clear statuses. Bring remedies for bleeding and shock on longer trips. If Wren falls, defeat costs half your gold, rounded down, and returns the party to Greyhaven; quest progress remains.
+- The **Warden’s field journal** reveals enemy information after victories. Its field tips are useful preparation for rematches and related threats.
+- The town **Difficulty** button cycles Standard → Veteran → Story → Standard. Standard is unchanged; Story gives foes 75% HP and 80% attack, while Veteran gives them 130% HP and 120% attack with 125% gold. Values are rounded, the setting is saved, and it applies to newly started fights.
+- Music and sound are optional. Use the audio controls if you want them; the game does not require sound.
+
+### When a quest seems stuck
+
+1. Read its current journal objective rather than repeating the last fight.
+2. Check whether it asks you to **inspect** something after winning.
+3. Return to Greyhaven for town reports. Later commissions use explicit **Accept** and **Report** buttons; ordinary conversation does not submit them.
+4. Expand **Companion commissions** to see those separate requests.
+5. Earlier discoveries count for later commissions, but discovering everything does not itself accept or pay a request.
+
+---
+
+## Walkthrough — story and reward spoilers below
+
+The five chapters share one save. The first beacon ending is permanent, but it is not the end of exploration. Choose **Keep exploring** after an ending to continue.
+
+### 1. Relight the beacon
+
+1. Speak to Mara. Leave Greyhaven through the **East Gate** for Ridge Road and clear the road patrol.
+2. Report to Mara, then speak to Iven about the lens.
+3. Take Ridge Road’s **North Ascent** to Observatory Ruins. Defeat the Observatory Sentinel and return to Iven.
+4. Consult Mara and Tamsin, then visit Beacon Tower through the observatory’s **North Causeway**. If you explored the tower earlier, visit it again after the council conversations.
+5. Make your permanent beacon choice: protect Greyhaven or share the light along the distant roads. The result changes the story, not your ability to play the following chapters.
+
+The three main payments total **105 gold** (20 + 35 + 50). Find the **Lost Ridge Dispatch** and **Observatory Dispatch**, then speak to Tamsin for a separate **15 gold**. Beacon Tower has a **Signal Lift** home.
+
+After the beacon choice, **First Light Relief** asks for **2 rations and 1 bandage**. Buy or find them, then explicitly hand them over in Greyhaven for **30 gold once**. Buying all three from Hesta costs 22 gold. This is optional and independent of the settlement expedition.
+
+### 2. Open both rescue routes
+
+Accept Mara’s relief expedition in Greyhaven. Complete these routes in either order:
+
+| Route | How to reach it | Required task |
+|---|---|---|
+| Saltmere Coast | Greyhaven’s **South Pier** | Clear the reef creatures at the coastal rescue crossing. |
+| Highwatch Pass | Ridge Road’s **North Trail** | Clear the frost wolves at the supply crossing. |
+
+Return to Greyhaven and explicitly report both safe routes for **80 gold once**. The first route you cleared is remembered. The Drowned Harbormaster and Pass Warlord are **optional bosses**, not substitutes for the rescue encounters.
+
+Tamsin and Iven unlock through the earlier road and observatory victories; Bram and Sela unlock through the respective settlement rescue victories. Use the muster board to recruit them. Saltmere’s trading post sells coastal equipment if you want an upgrade before pushing inland.
+
+### 3. Restore the inland relay
+
+After reporting both rescues, accept **A Signal of Our Own** in Greyhaven.
+
+1. Enter **Sunscar Relay** through Highwatch’s **East Gate**.
+2. Inspect the **Relay Capacitor Junction**.
+3. Defeat the **Relay Warden** and inspect the **Master Relay Console**.
+4. While beside the console, make one permanent service choice for **100 gold once**:
+   - **Shelter network:** paid rests cost **2 gold instead of 5**.
+   - **Route network:** random wandering encounters occur **half as often**. Fixed enemies remain.
+
+Neither choice replaces your original beacon ending. The **Sunscar Relay Outpost** offers inland gear and supplies; the region’s **Signal Lift** returns to Greyhaven. If you explored before accepting, your completed tasks remain valid—accept in town, then return to the console to choose.
+
+### 4. Survey Stormcrown Spire
+
+Accept **Above the Gathering Storm** in Greyhaven after choosing the relay service. From Sunscar Relay, take the **Spire Switchback**.
+
+1. Inspect the **Western Storm-Survey Archive** and **Eastern Barometer Logbook**.
+2. Prepare at the **Stormcrown Trading Post**; the expedition cache is another source of supplies.
+3. Defeat the **Stormcrown Tyrant**.
+4. Inspect the **Stormcrown Summit Cradle**, which is guarded until the Tyrant falls.
+5. Return by the **Signal Lift** and explicitly report for **150 gold once**.
+
+This report opens the **Stormhaven Endures** finale once. Keep exploring afterward. The passage beyond the summit remains locked until you have actually submitted this survey report, even if the Tyrant is already defeated.
+
+### 5. Optional: investigate the Storm’s Heart
+
+After the summit report, accept **The Storm’s Heart** in Greyhaven. Return to the spire summit and take the **Summit Passage** into **The Storm’s Eye**.
+
+- The trading post and supply cache are reachable before the anchor fights. Upgrade with money you have already earned; the final reward is not an advance.
+- Defeat the **western Tempest Shade**, then inspect the **Western Lightning Anchor**.
+- Defeat the **eastern Thunderhead Colossus**, then inspect the **Eastern Lightning Anchor**.
+- Either anchor order works. The core remains inaccessible until **both anchors have been inspected**, not merely their guardians defeated.
+- Defeat **the Storm’s Heart** at the central core. You can use the Signal Lift to rest and return before this fight; inspected anchors remain grounded.
+- Return to Greyhaven and explicitly report for **200 gold once**. If you explored before accepting, accept now; those discoveries still count.
+
+Defeating the exact core immediately halves random encounters in **Stormcrown Spire and the Storm’s Eye**, even before reporting. The route-network benefit stacks, making those encounters one quarter as likely as their original rate. Other regions, fixed enemies, and ordinary weather are not removed.
+
+Your original beacon choice, relay service, and earlier rewards remain unchanged. The report does not automatically replay an ending. **Read the chronicle** in town lets you revisit the ending and credits with the completed chapter’s aftermath; **Back to Greyhaven** returns without paying rewards again.
+
+### Optional companion commissions
+
+Expand **Companion commissions** in Greyhaven. Each unlocks with its companion; you do **not** need that companion recruited or in the active party. Accept, complete both tasks, and explicitly report in Greyhaven.
+
+| Request | Fixed enemy | Landmark to inspect | Reward |
+|---|---|---|---:|
+| Tamsin — The Scout’s Missing Route | Ridge Road’s hound den | Lost Ridge Dispatch | 25 gold |
+| Iven — The Keeper’s Second Look | Eastern observatory construct | Refractory Lens Pedestal | 35 gold |
+| Bram — A Lamp for the Late Boats | Drowned Harbormaster | Saltmere Harbor Lamp | 45 gold |
+| Sela — The Runner’s Bearings | Rockslide Golem | Highwatch Signal Cairn | 45 gold |
+
+These are one-time requests. Their exact fixed enemies matter: defeating the same species on a wandering patrol does not replace the requested encounter. Earlier victories and inspections count; an older save may need the repeatable harbor lamp or cairn inspected again.
+
+### Repeatable expedition board
+
+After the summit report, Greyhaven offers two patrol contracts:
+
+- **Sunscar Road Patrol:** defeat **2 Dust Marauders**, then claim **35 gold** in town.
+- **Stormcrown Sentry Patrol:** defeat **2 Spire Sentries**, then claim **60 gold** in town.
+
+Accept one contract at a time, then use patrols to seek new victories. Earlier kills do not count. Matching victories advance the quota but **do not automatically pay**; return and claim the reward. You may accept the same contract again from zero. Cancelling discards progress and gives no payment.
