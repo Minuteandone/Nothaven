@@ -10,8 +10,31 @@ export const GREYHAVEN_SHOP = Object.freeze({
   id: 'greyhaven_trader',
   name: "Hesta's Goods",
   greeting: 'Hesta the trader looks up from her ledgers. "Storm took half my roof, but the shelves held. What do you need?"',
-  stock: ['rations', 'bandage', 'healing_herb', 'storm_tonic', 'rusted_pipe', 'padded_vest', 'leather_armor', 'scout_compass'],
+  stock: ['rations', 'bandage', 'healing_herb', 'storm_tonic', 'field_dressing', 'highland_flask', 'rusted_pipe', 'padded_vest', 'leather_armor', 'scout_compass', 'gale_charm'],
 });
+
+/** The Saltmere coastal salvage stall (chapter two). Keyed in SHOPS by the map
+ * interaction id, since the map's triggerShop passes the interactable id. */
+export const SALTMERE_POST = Object.freeze({
+  id: 'saltmere_post',
+  name: 'Saltmere Trading Post',
+  greeting: 'The salvage stall smells of tar and brine. "Everything here floats or cuts," the keeper says. "Mostly both."',
+  stock: ['hearty_chowder', 'field_dressing', 'saltweather_jerkin', 'tidebound_cutlass', 'pearl_focus', 'rations'],
+});
+
+/** All shops, keyed by the map interaction id that opens them. */
+export const SHOPS = Object.freeze({
+  greyhaven_shop: GREYHAVEN_SHOP,
+  saltmere_post: SALTMERE_POST,
+});
+
+/**
+ * @param {string} id shop id (the map interaction id)
+ * @returns {object|null} the shop, or null when unknown
+ */
+export function getShop(id) {
+  return typeof id === 'string' && Object.hasOwn(SHOPS, id) ? SHOPS[id] : null;
+}
 
 /**
  * @param {object} shop a shop definition
