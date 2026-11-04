@@ -45,11 +45,21 @@ function getRecipeSafe(id) {
   return listRecipes().find((r) => r.id === id) || null;
 }
 
+function activeMember(game) {
+  const party = Array.isArray(game.state?.party) && game.state.party.length ? game.state.party : [];
+  let index = Number.isInteger(game.shopMemberIndex) ? game.shopMemberIndex : 0;
+  if (index < 0 || index >= party.length) index = 0;
+  const member = party[index] || party[0] || null;
+  if (member && !member.equipment) member.equipment = createEquipment();
+  return { member, index, party };
+}
+
 export const shopScene = {
   onEnter(game, data) {
     game.shopMode = ['sell', 'craft'].includes(data?.mode) ? data.mode : 'buy';
     game.shopMessage = data?.message || '';
     game.shopReturnScene = data?.returnScene || 'town';
+    game.shopMemberIndex = 0;
   },
 
   render(game) {
@@ -58,8 +68,9 @@ export const shopScene = {
     const shop = GREYHAVEN_SHOP;
     const mode = ['sell', 'craft'].includes(game.shopMode) ? game.shopMode : 'buy';
     const gold = s.gold ?? 0;
-    const eff = effectiveStats(hero);
-    const eq = hero.equipment || createEquipment();
+    const { member, index, party } = activeMember(game);
+    const eff = effectiveStats(member);
+    const eq = member.equipment || createEquipment();
 
     const buyRows = shopCatalog(shop)
       .map((it) => {
@@ -168,7 +179,18 @@ export const shopScene = {
                 : '<p>You carry nothing Hesta would pay for.</p>'
               : `<table>${craftRows}</table>`
         }
-        <h3>Wardrobe</h3>
+        <h3>Wardrobe${party.length > 1 ? ` — ${esc(member.name)}` : ''}</h3>
+        ${
+          party.length > 1
+            ? `<div>${party
+                .map((m, i) =>
+                  m
+                    ? `<button data-action="selectMember" data-arg="${i}" ${i === index ? 'disabled' : ''}>${esc(m.name || `Member ${i + 1}`)}${m.companion ? ' (ally)' : ''}</button>`
+                    : ''
+                )
+                .join('')}</div>`
+            : ''
+        }
         <table>${gearRows}</table>
         <div style="margin-top:0.5rem;">
           <button data-action="leave">Back to ${game.shopReturnScene === 'explore' ? 'the streets' : 'town square'}</button>
@@ -216,23 +238,32 @@ export const shopScene = {
         game.state.inventory = res.state.inventory;
       }
     },
+    selectMember(game, el) {
+      const i = parseInt(el?.dataset?.arg, 10);
+      const party = Array.isArray(game.state?.party) ? game.state.party : [];
+      if (Number.isInteger(i) && i >= 0 && i < party.length && party[i]) game.shopMemberIndex = i;
+    },
     equip(game, el) {
       const id = el?.dataset?.arg;
       if (!id) return;
-      const res = equipItem(game.state.party[0], game.state.inventory, id);
+      const { member, index } = activeMember(game);
+      if (!member) return;
+      const res = equipItem(member, game.state.inventory, id);
       game.shopMessage = res.message;
       if (res.ok) {
-        game.state.party[0] = res.actor;
+        game.state.party[index] = res.actor;
         game.state.inventory = res.inv;
       }
     },
     unequip(game, el) {
       const slot = el?.dataset?.arg;
       if (!slot) return;
-      const res = unequipItem(game.state.party[0], game.state.inventory, slot);
+      const { member, index } = activeMember(game);
+      if (!member) return;
+      const res = unequipItem(member, game.state.inventory, slot);
       game.shopMessage = res.message;
       if (res.ok) {
-        game.state.party[0] = res.actor;
+        game.state.party[index] = res.actor;
         game.state.inventory = res.inv;
       }
     },
