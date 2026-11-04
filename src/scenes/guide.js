@@ -22,6 +22,7 @@ export const GUIDE_SECTIONS = Object.freeze([
   Object.freeze({ title: 'Party and growth', lines: [
     'Up to three travelers fight together. Rescued allies join the Watch House muster board in Greyhaven, where you can swap them in or out.',
     'Victories earn experience. Each level raises health, focus, attack, defense and speed, and some levels teach Wren a new skill.',
+    'At level 8 each companion masters a signature technique: Keeper’s Mend, Bulwark Bash, Bright Flare or Piercing Shot.',
     'Shops sell gear for each region, and the bag lets you equip it and use supplies. Shops and the field craft upgrades from salvaged materials.',
   ] }),
   Object.freeze({ title: 'Settings and saving', lines: [

@@ -319,20 +319,35 @@ export function afterHeroAction(c, hero, rng = Math.random, party = [hero]) {
  * def-ignoring Signal Flare. Shocked companions can't use MP techniques
  * (Mend/Spark/Flare) and simply attack; bleeding companions lose 2 HP a round.
  */
+/** Level at which companions master their signature technique. */
+export const COMPANION_MASTERY_LEVEL = 8;
+export const COMPANION_MASTERY = Object.freeze({
+  keeper: { name: 'Keeper’s Mend', note: 'Mend restores 50% more HP.' },
+  guardian: { name: 'Bulwark Bash', note: 'Shield Bash triggers more often and hits harder.' },
+  signaler: { name: 'Bright Flare', note: 'Signal Flare deals 50% more damage.' },
+  scout: { name: 'Piercing Shot', note: 'Aimed Shot triggers more often and hits harder.' },
+});
+/** True once a companion has reached mastery level. */
+export function hasMastery(m) {
+  return (m?.level || 1) >= COMPANION_MASTERY_LEVEL;
+}
+
 export function companionTurn(c, m, party = [m], rng = Math.random) {
   const lines = [];
   if (c.over || !m || m.hp <= 0) return lines;
   const ms = heroStats(m);
   const e = c.enemy;
   const shocked = hasStatus(m, 'shocked'); // shocked allies can't channel MP techniques
+  const master = hasMastery(m);
   if (m.role === 'keeper' && !shocked) {
     const hurt = (party || []).filter((p) => p && p.hp > 0 && p.hp < heroStats(p).maxHp / 2)
       .sort((a, b) => a.hp / heroStats(a).maxHp - b.hp / heroStats(b).maxHp)[0];
     if (hurt && (m.mp || 0) >= SKILLS.mend.mp) {
       m.mp -= SKILLS.mend.mp;
       const before = hurt.hp;
-      hurt.hp = Math.min(heroStats(hurt).maxHp, hurt.hp + SKILLS.mend.power + (m.level || 1) * 2);
-      lines.push(`${m.name} uses Mend on ${hurt.name}, restoring ${hurt.hp - before} HP.`);
+      const heal = SKILLS.mend.power + (m.level || 1) * 2;
+      hurt.hp = Math.min(heroStats(hurt).maxHp, hurt.hp + (master ? Math.floor(heal * 1.5) : heal));
+      lines.push(`${m.name} uses ${master ? COMPANION_MASTERY.keeper.name : 'Mend'} on ${hurt.name}, restoring ${hurt.hp - before} HP.`);
       return lines;
     }
     if (e.tags?.includes('construct') && (m.mp || 0) >= SKILLS.spark.mp) {
@@ -343,10 +358,10 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
       return lines;
     }
   }
-  if (m.role === 'guardian' && rng() < 0.25) {
-    const d = physicalDamage(ms.atk, e.def, rng);
+  if (m.role === 'guardian' && rng() < (master ? 0.35 : 0.25)) {
+    const d = physicalDamage(ms.atk, e.def, rng, master ? { mult: 1.3 } : undefined);
     e.hp = Math.max(0, e.hp - d);
-    lines.push(`${m.name} lands a Shield Bash for ${d}!`);
+    lines.push(`${m.name} lands a ${master ? COMPANION_MASTERY.guardian.name : 'Shield Bash'} for ${d}!`);
     if (e.hp > 0 && !e.boss && !hasStatus(e, 'stunned')) {
       addStatus(e, 'stunned', 1, c.enemyTimers);
       lines.push(`${e.name} is stunned!`);
@@ -355,15 +370,16 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
   }
   if (m.role === 'signaler' && !shocked && (m.mp || 0) >= 3) {
     m.mp -= 3;
-    const d = 5 + (m.level || 1) * 2 + randInt(rng, 0, 2);
+    const base = 5 + (m.level || 1) * 2 + randInt(rng, 0, 2);
+    const d = master ? Math.floor(base * 1.5) : base;
     e.hp = Math.max(0, e.hp - d);
-    lines.push(`${m.name} hurls a Signal Flare for ${d}!`);
+    lines.push(`${m.name} hurls a ${master ? COMPANION_MASTERY.signaler.name : 'Signal Flare'} for ${d}!`);
     return lines;
   }
-  if (m.role === 'scout' && rng() < 0.3) {
-    const d = physicalDamage(ms.atk, e.def, rng, { mult: 1.4 });
+  if (m.role === 'scout' && rng() < (master ? 0.4 : 0.3)) {
+    const d = physicalDamage(ms.atk, e.def, rng, { mult: master ? 1.7 : 1.4 });
     e.hp = Math.max(0, e.hp - d);
-    lines.push(`${m.name} looses an Aimed Shot for ${d}!`);
+    lines.push(`${m.name} looses ${master ? 'a ' + COMPANION_MASTERY.scout.name : 'an Aimed Shot'} for ${d}!`);
     return lines;
   }
   const d = physicalDamage(ms.atk, e.def, rng);
