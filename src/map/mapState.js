@@ -198,7 +198,10 @@ function zoneLockReason(gameState, zone) {
   return zone?.requiresStoryFlag && gameState.story?.flags?.[zone.requiresStoryFlag] !== true
     ? zone.travelRequirementMessage || 'Complete the required expedition before entering this area.' : null;
 }
-function encounterLockReason(mapState, encounter) {
+function encounterLockReason(mapState, encounter, gameState) {
+  if (encounter?.requiresStoryFlag && gameState?.story?.flags?.[encounter.requiresStoryFlag] !== true) {
+    return encounter.requirementMessage || 'Complete the required expedition before engaging.';
+  }
   return encounter?.requiresInteractions?.some(id => mapState.completedInteractions[id] !== true)
     ? encounter.requirementMessage || 'Complete the required inspections before engaging.' : null;
 }
@@ -249,7 +252,7 @@ export function movePlayer(gameState, dx, dy, options = {}) {
 
   const nextExit = (zone.exits || []).find(ex => ex.x === nx && ex.y === ny);
   const nextEncounter = (zone.encounters || []).find(e => e.x === nx && e.y === ny && !mapState.clearedEncounters[e.encounterId || e.id]);
-  const lock = zoneLockReason(gameState, ZONES[nextExit?.toZone]) || encounterLockReason(mapState, nextEncounter);
+  const lock = zoneLockReason(gameState, ZONES[nextExit?.toZone]) || encounterLockReason(mapState, nextEncounter, gameState);
   if (lock) return lockedResult(gameState, lock);
 
   mapState.x = nx;
@@ -366,7 +369,7 @@ export function interactWith(gameState, kind, targetId, options = {}) {
       events.push({ type: 'victory', encounterId: encId, enemyId: enc.enemyId });
       return { state: gameState, events, log: [msg], triggerCombat: null };
     }
-    const lock = encounterLockReason(mapState, enc);
+    const lock = encounterLockReason(mapState, enc, gameState);
     if (lock) return lockedResult(gameState, lock);
     mapState.activeEncounterId = encId;
     const msg = `Engaging ${enc.name}!`;

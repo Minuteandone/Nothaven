@@ -24,6 +24,10 @@ export function applyHeartEvent(previous, event) {
     if (!f.victory_storm_heart) log.push('The great storm over Stormcrown breaks. Wandering encounters are now half as likely on Stormcrown Spire and in the Storm’s Eye; route-network guidance, if chosen, halves that chance again. Fixed encounters are unchanged.');
     f.victory_storm_heart = true;
   }
+  if (event.type === 'victory' && event.encounterId === 'eye_last_squall' && f.heart_reward === true) {
+    if (!f.victory_last_squall) log.push('The Last Squall rolls away over the mountains. This optional trial carries no report or commission — only the story of it.');
+    f.victory_last_squall = true;
+  }
   if (event.type === 'heart-accept' && heartAvailable(state) && !f.heart_accepted && !f.heart_reward) {
     f.heart_accepted = true;
     log.push('Mara commissions a final expedition into the Storm’s Eye. Ground the western and eastern lightning anchors, defeat the Storm Heart at the core, and return with your report. Earlier findings count toward the commission.');
@@ -45,7 +49,16 @@ export function getHeartJournal(story) {
     : !f.eye_anchor_west || !f.eye_anchor_east ? `Ground the lightning anchors: ${[!f.eye_anchor_west && 'the western anchor', !f.eye_anchor_east && 'the eastern anchor'].filter(Boolean).join(' and ')}. Prepare companions, upgraded equipment, and shock remedies before approaching the core.`
     : !f.victory_storm_heart ? 'Defeat the Storm Heart at the core. The anchored lightning opens the way, but the core must still be fought.'
     : `The great storm over Stormcrown has broken. Return to Greyhaven and explicitly report to Mara for ${HEART_GOLD} gold; conversation alone does not submit the report.`;
-  return [{ id: 'heart', title: 'The Storm’s Heart', status: f.heart_reward ? 'complete' : 'active', objective }];
+  const entries = [{ id: 'heart', title: 'The Storm’s Heart', status: f.heart_reward ? 'complete' : 'active', objective }];
+  if (f.heart_reward === true) entries.push(lastSquallEntry(f));
+  return entries;
+}
+
+/** Optional postgame trial: no reward, no report, no new ending. */
+function lastSquallEntry(f) {
+  return f.victory_last_squall === true
+    ? { id: 'last_squall', title: 'Optional: The Last Squall', status: 'complete', objective: 'You outlasted the Last Squall above the northern causeway of the Storm’s Eye. Nothing else depended on it; the victory is yours alone.' }
+    : { id: 'last_squall', title: 'Optional: The Last Squall', status: 'active', objective: 'Optional challenge: one squall still churns above the northern causeway of the Storm’s Eye. It is far stronger than the Storm’s Heart — come at level 15 or higher with your best gear, or leave it be.' };
 }
 
 export function getHeartDialogue(story, npcId) {
