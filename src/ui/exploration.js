@@ -120,7 +120,7 @@ function movementButton(action, label, key, arrow, className) {
   </button>`;
 }
 
-export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '' }) {
+export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '', hasQuestJournal = false }) {
   const contextButtons = (nearbyActions || []).map(nearbyActionButton).join('');
   const routes = (visitedZones || [])
     .filter(zoneId => zoneId !== zone.id && ZONES[zoneId])
@@ -180,6 +180,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           ${routes ? `<div class="visited-routes"><h3>${icon('map')}Visited Routes:</h3><div>${routes}</div></div>` : ''}
           <div class="explore-utilities">
             ${uiButton({ action: 'openBag', label: 'Open Bag', iconName: 'bag', variant: 'ghost' })}
+            ${hasQuestJournal ? uiButton({ action: 'openQuests', label: 'Journey Journal', iconName: 'journal', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'openJournal', label: 'Field Journal', iconName: 'journal', variant: 'ghost' })}
             ${uiButton({ action: 'save', label: 'Save Game', iconName: 'save' })}
             ${uiButton({ action: 'toTownScene', label: 'Town Overview', iconName: 'beacon', variant: 'ghost' })}
