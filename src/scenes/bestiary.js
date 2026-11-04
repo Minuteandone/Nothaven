@@ -3,6 +3,7 @@
 // from the combat:victory event and registers the 'bestiary' scene.
 import { ENEMIES } from '../data/enemies.js';
 import { getItem } from '../items/items.js';
+import { fieldTip } from '../data/fieldTips.js';
 
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 const own = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);
@@ -31,6 +32,7 @@ function entryHtml({ enemy: e, count }) {
     <p><em>${esc(e.intro || '')}</em></p>
     <p>HP ${e.hp} · ATK ${e.atk} · DEF ${e.def} · SPD ${e.spd} · XP ${e.xp} · Gold ${e.gold}</p>
     ${ability}${e.enrage ? `<p class="hint">Second phase: grows enraged below ${Math.round(e.enrage.threshold * 100)}% HP (+${e.enrage.atk} ATK).</p>` : ''}${loot ? `<p>Known spoils: ${loot}</p>` : ''}
+    ${fieldTip(e.id) ? `<p class="field-tip"><strong>Mara’s advice:</strong> ${esc(fieldTip(e.id))}</p>` : ''}
     <p>Defeated: ${count}</p></li>`;
 }
 
