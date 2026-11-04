@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { FEATS, featStatus, featsEarned, featsScene } from '../src/scenes/feats.js';
+import { FEATS, WANDERERS, featStatus, featsEarned, featsScene } from '../src/scenes/feats.js';
+import { ENEMIES } from '../src/data/enemies.js';
 import { createInitialState } from '../src/state.js';
 import { DRILL_FOES } from '../src/scenes/drills.js';
 
@@ -20,6 +21,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.story.expedition = { active: null, completed: 3 };
   s.party = [{ ...s.party[0], level: 20 }, { id: 'bram' }, { id: 'iven' }];
   s.bestiary = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`foe_${i}`, 1]));
+  for (const id of WANDERERS) s.bestiary[id] = 1;
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
   assert.equal(featsEarned(s), FEATS.length);
@@ -79,4 +81,21 @@ test('Unbroken Run feat needs a full-length gauntlet best', () => {
   assert.equal(done(), true);
   const row = FEATS.find(f => f.id === 'gauntlet');
   assert.doesNotMatch(`${row.title} ${row.detail}`, /egg|yolk|shell|hatch|nest|chick|omelet|scramble|cluck|hen\b/i);
+});
+
+test('Roadwise feat needs every frontier wanderer in the bestiary', () => {
+  const s = createInitialState();
+  const done = () => featStatus(s).find(f => f.id === 'wanderers').done;
+  for (const id of WANDERERS) assert.ok(ENEMIES[id] && !ENEMIES[id].boss, `${id} is a real non-boss foe`);
+  assert.equal(done(), false);
+  s.bestiary = { briar_boar: 2, lens_wisp: 1, wrack_eel: 1 };
+  assert.equal(done(), false, 'three of four is not enough');
+  s.bestiary.rime_wight = 0;
+  assert.equal(done(), false, 'a zero count does not count');
+  s.bestiary.rime_wight = 1;
+  assert.equal(done(), true);
+  s.bestiary = null;
+  assert.equal(done(), false, 'missing bestiary is safe');
+  const row = FEATS.find(f => f.id === 'wanderers');
+  assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
 });
