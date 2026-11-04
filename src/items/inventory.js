@@ -4,7 +4,7 @@
 // Every function here is pure: it returns new objects and never mutates its inputs,
 // so the engine can keep `game.state` JSON-serializable and easily undo-able.
 
-import { ITEMS, getItem, GOLD_ID } from './items.js';
+import { getItem, isKnownItem, GOLD_ID } from './items.js';
 
 /** @returns {Array<{id: string, qty: number}>} a fresh empty inventory */
 export function createInventory() {
@@ -40,12 +40,12 @@ export function addItem(inv, itemId, qty = 1) {
   if (!Number.isInteger(qty) || qty <= 0) {
     return { ok: false, inv: clone(inv), message: `Cannot add ${qty} of ${itemId}.` };
   }
-  try { getItem(itemId); } catch { return { ok: false, inv: clone(inv), message: `Unknown item: ${itemId}.` }; }
+  let item;
+  try { item = getItem(itemId); } catch { return { ok: false, inv: clone(inv), message: `Unknown item: ${itemId}.` }; }
   const out = clone(inv);
   const stack = out.find((s) => s.id === itemId);
   if (stack) stack.qty += qty;
   else out.push({ id: itemId, qty });
-  const item = ITEMS[itemId];
   return { ok: true, inv: out, message: `Received ${item.name} x${qty}.` };
 }
 
@@ -108,12 +108,19 @@ export function grantRewards(inv, rewards) {
  * @returns {{ok: boolean, inv: Array<{id:string,qty:number}>, message: string}}
  */
 export function takeRewards(inv, requirements) {
+  const entries = Object.entries(requirements || {});
+  for (const [id, qty] of entries) {
+    if (!Number.isInteger(qty) || qty <= 0) {
+      return { ok: false, inv: clone(inv), message: `Invalid requirement: ${id} x${qty}.` };
+    }
+  }
   if (!hasItems(inv, requirements)) {
     return { ok: false, inv: clone(inv), message: 'Missing required items.' };
   }
   let out = clone(inv);
-  for (const [id, qty] of Object.entries(requirements)) {
+  for (const [id, qty] of entries) {
     const res = removeItem(out, id, qty);
+    if (!res.ok) return { ok: false, inv: clone(inv), message: res.message };
     out = res.inv;
   }
   return { ok: true, inv: out, message: 'Handed over the required items.' };
@@ -146,7 +153,7 @@ export function deserializeInventory(str) {
     if (!Number.isInteger(stack.qty) || stack.qty <= 0) {
       return { ok: false, inv: null, message: `Corrupt inventory (bad qty for ${stack.id}).` };
     }
-    if (!ITEMS[stack.id] || seen.has(stack.id)) {
+    if (!isKnownItem(stack.id) || seen.has(stack.id)) {
       return { ok: false, inv: null, message: `Corrupt inventory (bad id ${stack.id}).` };
     }
     seen.add(stack.id);
