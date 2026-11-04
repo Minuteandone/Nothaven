@@ -19,6 +19,7 @@ import { guideScene } from './scenes/guide.js';
 import { installCharacter } from './scenes/character.js';
 import { installDisplayControls } from './ui/displayControls.js';
 import { installCombatControls } from './ui/combatControls.js';
+import { installExplorationControls } from './ui/explorationControls.js';
 
 const game = new Game(document.getElementById('app'));
 game.registerScene('title', titleScene);
@@ -30,6 +31,7 @@ game.registerScene('guide', guideScene);
 installStory(game);
 installProgression(game);
 installMap(game); // registers the 'explore' scene
+installExplorationControls(game); // exploration-scoped Survey and nearby-action shortcuts
 installShop(game); // registers the 'shop' scene (Hesta's Goods)
 installBag(game); // registers the 'bag' scene (inventory screen)
 installCompanions(game); // registers the 'muster' scene (recruit companions)
