@@ -47,3 +47,13 @@ const storyUI = createStoryUI(game => game.state.location);
 ```
 
 Render at most one story panel per scene (heading IDs are fixed). Town panels expose NPC buttons; only the beacon tower exposes ending buttons. Other locations still show the journal. All dynamic text is escaped. Actions dispatch directly to the adapter and preserve the engine's existing render cycle. Temporary dialogue/message properties live on `game`, not in the save; clear `game.storyDialogue` and `game.storyMessage` when starting or loading a game so old conversations do not appear in a new run.
+
+
+### Post-update notifications
+`dispatchStoryEvent` emits `story:updated` with `{event, state, rewards, log}` after
+assigning the new story state and applying gold rewards. This fires for direct
+story UI actions as well as events forwarded by `installStory`. Scene observers
+(such as chapter credits) should listen to this notification, not the incoming
+`story:event` command. Do not apply its rewards again or forward it back into the
+reducer. The notification also occurs for no-op events; use saved flags to guard
+one-time side effects.
