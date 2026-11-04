@@ -41,6 +41,8 @@ export const FEATS = Object.freeze([
     check: s => Object.values(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary : {}).filter(n => Number(n) > 0).length >= 10 }),
   Object.freeze({ id: 'wanderers', title: 'Roadwise', detail: 'Defeat each of the four frontier wanderers: the Briar Boar, Lens Wisp, Wrack Eel and Rime Wight.',
     check: s => WANDERERS.every(id => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary[id] : 0) > 0) }),
+  Object.freeze({ id: 'tusk', title: 'Tusk Breaker', detail: 'Defeat Old Tusk, the grey king of the briar boars, on his Ridge Road ledge.',
+    check: s => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary.old_tusk : 0) > 0 }),
   Object.freeze({ id: 'veteran', title: 'Veteran Warden', detail: 'Bring Wren to level 10.',
     check: s => Number(heroOf(s)?.level) >= 10 }),
   Object.freeze({ id: 'legend', title: 'Legend of Stormhaven', detail: 'Bring Wren to level 20.',
