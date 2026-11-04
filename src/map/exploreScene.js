@@ -90,6 +90,7 @@ export const exploreScene = {
       storyHtml: storyUI.render(game),
       hasQuestJournal: Boolean(game.scenes?.quests),
       hasCharacter: Boolean(game.scenes?.character),
+      hasFeats: Boolean(game.scenes?.feats),
     })}`;
   },
 
@@ -156,6 +157,7 @@ export const exploreScene = {
         game.setScene('bag', { returnScene: 'explore' });
       }
     },
+    openFeats(game) { if (game.scenes?.feats) game.setScene('feats', { returnScene: 'explore' }); },
     openQuests(game) { if (game.scenes?.quests) game.setScene('quests', { returnScene: 'explore' }); },
     openJournal(game) {
       if (game.scenes?.bestiary) {

@@ -121,7 +121,7 @@ function movementButton(action, label, key, arrow, className) {
   </button>`;
 }
 
-export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '', hasQuestJournal = false, hasCharacter = false }) {
+export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '', hasQuestJournal = false, hasCharacter = false, hasFeats = false }) {
   const contextButtons = (nearbyActions || []).map(nearbyActionButton).join('');
   const routes = (visitedZones || [])
     .filter(zoneId => zoneId !== zone.id && ZONES[zoneId])
@@ -184,6 +184,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
             ${hasCharacter ? uiButton({ action: 'openCharacter', label: 'Character Sheet', iconName: 'journal', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'openBag', label: 'Open Bag', iconName: 'bag', variant: 'ghost' })}
             ${hasQuestJournal ? uiButton({ action: 'openQuests', label: 'Journey Journal', iconName: 'journal', variant: 'ghost' }) : ''}
+            ${hasFeats ? uiButton({ action: 'openFeats', label: 'Wardens’ Feats', iconName: 'beacon', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'openJournal', label: 'Field Journal', iconName: 'journal', variant: 'ghost' })}
             ${uiButton({ action: 'save', label: 'Save Game', iconName: 'save' })}
             ${uiButton({ action: 'toTownScene', label: 'Town Overview', iconName: 'beacon', variant: 'ghost' })}
