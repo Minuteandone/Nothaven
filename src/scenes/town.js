@@ -1,6 +1,7 @@
 import { saveGame } from '../state.js';
 import { effectiveStats } from '../items/equipment.js';
 import { escapeHTML, partyStatus, resourceChip, sceneHeader, uiButton } from '../ui/components.js';
+import { getTownOutlook } from '../story/outlook.js';
 import { createStoryUI } from '../story/view.js';
 
 const storyUI = createStoryUI(() => 'greyhaven');
@@ -9,6 +10,7 @@ export const townScene = {
   onEnter(game, data) { game.message = data?.message || ''; },
   render(game) {
     const s = game.state;
+    const outlook = getTownOutlook(s.story);
     const message = game.message || 'Wind howls through the half-shuttered streets.';
     return `<main class="game-shell town-screen">
       ${sceneHeader({ eyebrow: 'Beacon Ward', title: 'Greyhaven', subtitle: 'A frontier town holding fast beneath a restless sky.', iconName: 'beacon' })}
@@ -17,11 +19,11 @@ export const townScene = {
       <div class="town-grid">
         <article class="panel story-panel">
           <p class="eyebrow">The road ahead</p>
-          <h2>A light beyond the ridge</h2>
+          <h2>${escapeHTML(outlook.title)}</h2>
           <p class="location-message" role="status">${escapeHTML(message)}</p>
           <div class="divider"></div>
-          <p>The damaged beacon darkens the headland while storm clouds gather over the ridge road. Beyond it, the old observatory may hold the means to rekindle the light.</p>
-          <p class="quiet-note">Prepare in town before setting out. The wilds are dangerous, and every turn matters.</p>
+          <p>${escapeHTML(outlook.text)}</p>
+          <p class="quiet-note">${escapeHTML(outlook.hint)}</p>
         </article>
         <section class="panel action-panel" aria-labelledby="town-actions-title">
           <p class="eyebrow">Choose your next step</p>
