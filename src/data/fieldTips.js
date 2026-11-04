@@ -17,6 +17,9 @@ export const FIELD_TIPS = {
   ashen_raider: 'Hits hard and leaves burning wounds. Good armor and a ready cleanse keep raids short.',
   spire_sentry: 'Chain Lightning shocks the party. Beacon Lance pierces its plating even while shocked.',
   stormcrown_tyrant: 'The storm’s master. Raise Beacon Aegis before it enrages, and keep a cleanse for its Tempest Call.',
+  tempest_shade: 'Fast and slippery. Its Static Lash shocks one ally, so keep Steady Signal ready and strike with Beacon Lance.',
+  thunderhead_colossus: 'Slow but heavily plated. Spark and Beacon Lance cut through its storm-iron; Warding Stance blunts its Thunderclap.',
+  storm_heart: 'The source of the storm itself. Open with Beacon Aegis, cleanse shocks quickly, and save tonics for when it spins faster.',
 };
 
 export function fieldTip(enemyId) {
