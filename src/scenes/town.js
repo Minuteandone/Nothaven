@@ -1,4 +1,5 @@
 import { saveGame } from '../state.js';
+import { effectiveStats } from '../items/equipment.js';
 import { escapeHTML, partyStatus, resourceChip, sceneHeader, uiButton } from '../ui/components.js';
 import { createStoryUI } from '../story/view.js';
 
@@ -40,7 +41,7 @@ export const townScene = {
   actions: {
     rest(game) {
       const s = game.state; if (s.gold < 5) return;
-      s.gold -= 5; s.party.forEach(p => { p.hp = p.maxHp; p.mp = p.maxMp; });
+      s.gold -= 5; s.party.forEach(p => { const st = effectiveStats(p); p.hp = st.maxHp || p.maxHp; p.mp = st.maxMp || p.maxMp; p.statuses = []; });
       game.message = 'You rest at the inn and wake refreshed.';
     },
     shop(game) { game.setScene('shop', { returnScene: 'town' }); },
