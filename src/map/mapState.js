@@ -60,6 +60,20 @@ export function isAdjacentOrOn(x1, y1, x2, y2) {
   return Math.abs(x1 - x2) + Math.abs(y1 - y2) <= 1;
 }
 
+export function getInnCost(gameState, inter) {
+  if (gameState?.story?.flags?.relay_choice === 'shelter_network') return 2;
+  return inter?.costGold ?? 5;
+}
+
+export function getEffectiveRandomEncounterChance(gameState, zone) {
+  const base = typeof zone?.randomEncounterChance === 'number' ? zone.randomEncounterChance : 0;
+  if (base <= 0) return 0;
+  if (gameState?.story?.flags?.relay_choice === 'route_network') {
+    return base * 0.5;
+  }
+  return base;
+}
+
 export function pickRandomEncounter(encounters, rng = Math.random) {
   if (!Array.isArray(encounters) || encounters.length === 0) return null;
   const weights = encounters.map((e) => (typeof e.weight === 'number' && e.weight > 0 ? e.weight : 1));
@@ -135,7 +149,7 @@ export function getAvailableActions(gameState) {
         id: intId,
         label:
           inter.kind === 'inn'
-            ? `Rest at ${inter.name} (${inter.costGold || 5}g)`
+            ? `Rest at ${inter.name} (${getInnCost(gameState, inter)}g)`
             : inter.kind === 'shop' || inter.kind === 'muster'
             ? `Visit ${inter.name}`
             : inter.kind === 'cache'
@@ -252,12 +266,13 @@ export function movePlayer(gameState, dx, dy, options = {}) {
 
   // Optional random encounter check in wild zones
   const rng = options.rng || Math.random;
+  const effectiveChance = getEffectiveRandomEncounterChance(gameState, zone);
   if (
     !options.disableRandomEncounters &&
-    zone.randomEncounterChance > 0 &&
+    effectiveChance > 0 &&
     Array.isArray(zone.randomEncounters) &&
     zone.randomEncounters.length > 0 &&
-    rng() < zone.randomEncounterChance
+    rng() < effectiveChance
   ) {
     const pick = pickRandomEncounter(zone.randomEncounters, rng);
     if (pick) {
@@ -354,7 +369,7 @@ export function interactWith(gameState, kind, targetId, options = {}) {
     }
 
     if (inter.kind === 'inn') {
-      const cost = inter.costGold ?? 5;
+      const cost = getInnCost(gameState, inter);
       if ((gameState.gold ?? 0) < cost) {
         const msg = `You need ${cost} gold to rest at ${inter.name}.`;
         appendLog(mapState, msg);
