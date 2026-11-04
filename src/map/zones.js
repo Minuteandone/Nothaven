@@ -108,6 +108,18 @@ export const ZONES = {
         description: 'Market stall stocked with trail rations, bandages, tonics, and frontier gear.',
       },
       {
+        id: 'greyhaven_watch_house',
+        interactionId: 'greyhaven_watch_house',
+        name: 'Watch House Muster Board',
+        kind: 'muster',
+        x: 2,
+        y: 1,
+        symbol: 'W',
+        once: false,
+        description:
+          'Duty roster where companions gather to join or rotate out of your party.',
+      },
+      {
         id: 'greyhaven_board',
         interactionId: 'greyhaven_board',
         name: 'Watchmen Noticeboard',

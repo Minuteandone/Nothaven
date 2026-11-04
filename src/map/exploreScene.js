@@ -45,6 +45,11 @@ function handleActionResult(game, result) {
     return;
   }
 
+  if (result.triggerMuster && game.scenes?.muster) {
+    game.setScene('muster', { returnScene: 'explore', musterId: result.triggerMuster.musterId });
+    return;
+  }
+
   if (result.triggerCombat) {
     const { encounterId, enemyId } = result.triggerCombat;
     game.setScene('combat', {
