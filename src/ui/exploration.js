@@ -3,6 +3,7 @@ import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.j
 import { getEntityAt, getTileInfo } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
+import { zoneVista } from './zoneArt.js';
 
 function safeClass(value) {
   return String(value || '').replace(/[^a-z0-9_-]/gi, '');
@@ -120,7 +121,7 @@ function movementButton(action, label, key, arrow, className) {
   </button>`;
 }
 
-export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '', hasQuestJournal = false }) {
+export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '', hasQuestJournal = false, hasCharacter = false }) {
   const contextButtons = (nearbyActions || []).map(nearbyActionButton).join('');
   const routes = (visitedZones || [])
     .filter(zoneId => zoneId !== zone.id && ZONES[zoneId])
@@ -151,6 +152,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           <span class="turn-badge">Explore</span>
         </div>
         <p class="zone-description">${escapeHTML(zone.description)}</p>
+        ${zoneVista(zone)}
         ${mapGrid(zone, mapState)}
         <ul class="map-legend" aria-label="Map legend">
           <li><span class="legend-symbol legend-symbol--player">@</span>You</li>
@@ -179,6 +181,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           ${fieldPack(state.inventory, state.party)}
           ${routes ? `<div class="visited-routes"><h3>${icon('map')}Visited Routes:</h3><div>${routes}</div></div>` : ''}
           <div class="explore-utilities">
+            ${hasCharacter ? uiButton({ action: 'openCharacter', label: 'Character Sheet', iconName: 'journal', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'openBag', label: 'Open Bag', iconName: 'bag', variant: 'ghost' })}
             ${hasQuestJournal ? uiButton({ action: 'openQuests', label: 'Journey Journal', iconName: 'journal', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'openJournal', label: 'Field Journal', iconName: 'journal', variant: 'ghost' })}
