@@ -174,3 +174,4 @@ The **Wardens' feats** panel lists milestones of your journey. Alongside the cha
 - **Unbroken Run** — clear the full Yard Gauntlet against every yard boss without a single loss.
 - **Roadwise** — defeat each of the four frontier wanderers described above.
 - **Tusk Breaker** — defeat Old Tusk, the optional Ridge Road trial described above.
+- **Seawall Sentinel** — defeat Gloomfin, the optional Saltmere Coast trial described above.
