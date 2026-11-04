@@ -160,6 +160,8 @@ Four wandering foes can appear on the early roads in addition to the familiar pa
 
 **Gloomfin (optional coast trial).** After the same report, a giant storm-charged wrack eel starts hunting off Saltmere's north seawall. Its **Riptide Shock** leaves you shocked, which blocks most skills, so carry storm tonics and keep Steady Signal or Burst ready. Like Old Tusk, it is a one-off field challenge that stays out of the sparring drills.
 
+**Frostmane (optional heights trial).** After that report, the white-maned leader of the Highwatch wolf packs prowls the southern bastion of Highwatch Pass. Its **Rime Fang** opens bleeding wounds, so bring bandages or field dressings and keep Rallying Light ready. It is another one-off field challenge that stays out of the sparring drills.
+
 Each adds an entry to the bestiary, so they help toward the **catalogue** feat. Their drops are ordinary supplies such as healing herbs, storm glass, field dressings, and tonics.
 
 ### Watch House yard: drills, gauntlet and feats
