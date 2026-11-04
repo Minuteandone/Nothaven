@@ -150,6 +150,27 @@ export const RECIPES = Object.freeze([
     inputs: [{ id: 'highland_flask', qty: 1 }, { id: 'storm_glass', qty: 2 }],
     outputs: [{ id: 'skyward_flask', qty: 1 }],
   },
+  {
+    id: 'forge_tempest_edge',
+    name: 'Forge a Tempest Edge',
+    description: 'Draw a stormforged blade out long at the eye post anvil and temper it with fresh Thunder Iron.',
+    inputs: [{ id: 'stormforged_blade', qty: 1 }, { id: 'thunder_iron', qty: 2 }],
+    outputs: [{ id: 'tempest_edge', qty: 1 }],
+  },
+  {
+    id: 'hammer_maelstrom_plate',
+    name: 'Hammer a Maelstrom Plate',
+    description: 'Rehammer Stormcrown plate with interleaved Thunder Iron rings so the whirlwind finds no grip.',
+    inputs: [{ id: 'stormcrown_plate', qty: 1 }, { id: 'thunder_iron', qty: 2 }],
+    outputs: [{ id: 'maelstrom_plate', qty: 1 }],
+  },
+  {
+    id: 'cut_stormeye_signet',
+    name: 'Cut a Stormeye Signet',
+    description: 'Recut a crownshard focus into a smooth ring of calm glass at the eye post bench.',
+    inputs: [{ id: 'crownshard_focus', qty: 1 }, { id: 'storm_glass', qty: 1 }],
+    outputs: [{ id: 'stormeye_signet', qty: 1 }],
+  },
 ]);
 
 /** Look up a recipe by id (own-property safe). @returns {Recipe|undefined} */
