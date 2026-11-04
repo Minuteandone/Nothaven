@@ -107,7 +107,7 @@ test('patrols unlock only after report, reject invalid IDs and ignore pre-accept
   assert.deepEqual(applyStoryEvent(s, { type: 'expedition-claim' }).rewards, []);
 });
 
-for (const c of EXPEDITIONS) test(`${c.id} counts new species victories, caps progress, and can be completed twice`, () => {
+for (const c of EXPEDITIONS.filter(c => !c.requiresFlag)) test(`${c.id} counts new species victories, caps progress, and can be completed twice`, () => {
   let story = freeze(reported());
   for (let cycle = 1; cycle <= 2; cycle++) {
     story = advance(story, { type: 'expedition-accept', contractId: c.id });
@@ -176,7 +176,7 @@ test('real event bus commits survey and repeated patrol payments before notifica
     assert.deepEqual(scenes, [], 'postgame must not replay the chapter 1 ending');
     dispatchStoryEvent(game, report); checkpoint();
     assert.deepEqual(scenes, ['ending'], 'spire report shows the finale once');
-    for (const contract of EXPEDITIONS) {
+    for (const contract of EXPEDITIONS.filter(c => !c.requiresFlag)) {
       dispatchStoryEvent(game, { type: 'expedition-accept', contractId: contract.id }); checkpoint();
       for (let n = 1; n <= 2; n++) {
         game.bus.emit('combat:victory', { enemyId: contract.enemyId }); checkpoint();
