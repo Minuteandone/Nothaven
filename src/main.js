@@ -18,11 +18,13 @@ import { installDrills } from './scenes/drills.js';
 import { guideScene } from './scenes/guide.js';
 import { installCharacter } from './scenes/character.js';
 import { installDisplayControls } from './ui/displayControls.js';
+import { installCombatControls } from './ui/combatControls.js';
 
 const game = new Game(document.getElementById('app'));
 game.registerScene('title', titleScene);
 game.registerScene('town', townScene);
 game.registerScene('combat', combatScene);
+installCombatControls(game); // combat-scoped shortcuts click existing enabled buttons
 game.registerScene('ending', endingScene);
 game.registerScene('guide', guideScene);
 installStory(game);
