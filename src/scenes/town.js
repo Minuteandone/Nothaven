@@ -1,17 +1,40 @@
 import { saveGame } from '../state.js';
+import { escapeHTML, partyStatus, resourceChip, sceneHeader, uiButton } from '../ui/components.js';
+import { createStoryUI } from '../story/view.js';
+
+const storyUI = createStoryUI(() => 'greyhaven');
 
 export const townScene = {
   onEnter(game, data) { game.message = data?.message || ''; },
   render(game) {
-    const s = game.state, h = s.party[0];
-    return `<div class="panel"><h2>Greyhaven</h2>
-      <div class="stats"><span>${h.name} Lv ${h.level}</span><span class="hp">HP ${h.hp}/${h.maxHp}</span>
-      <span>MP ${h.mp}/${h.maxMp}</span><span>XP ${h.xp}</span><span>Gold ${s.gold}</span></div>
-      <p>${game.message || 'Wind howls through the half-shuttered streets.'}</p>
-      <button data-action="rest" ${s.gold < 5 ? 'disabled' : ''}>Rest at Inn (5g)</button>
-      <button data-action="shop">Hesta's Goods</button>
-      <button data-action="explore">Explore the Wilds</button>
-      <button data-action="save">Save Game</button></div>`;
+    const s = game.state;
+    const message = game.message || 'Wind howls through the half-shuttered streets.';
+    return `<main class="game-shell town-screen">
+      ${sceneHeader({ eyebrow: 'Beacon Ward', title: 'Greyhaven', subtitle: 'A frontier town holding fast beneath a restless sky.', iconName: 'beacon' })}
+      <div class="town-resource-row">${resourceChip({ iconName: 'coin', label: 'Gold', value: s.gold })}<span class="location-status"><span class="status-dot"></span> Shelter available</span></div>
+      ${partyStatus(s.party)}
+      <div class="town-grid">
+        <article class="panel story-panel">
+          <p class="eyebrow">The road ahead</p>
+          <h2>A light beyond the ridge</h2>
+          <p class="location-message" role="status">${escapeHTML(message)}</p>
+          <div class="divider"></div>
+          <p>The damaged beacon darkens the headland while storm clouds gather over the ridge road. Beyond it, the old observatory may hold the means to rekindle the light.</p>
+          <p class="quiet-note">Prepare in town before setting out. The wilds are dangerous, and every turn matters.</p>
+        </article>
+        <section class="panel action-panel" aria-labelledby="town-actions-title">
+          <p class="eyebrow">Choose your next step</p>
+          <h2 id="town-actions-title">Town actions</h2>
+          <div class="action-list">
+            ${uiButton({ action: 'rest', label: 'Rest at the inn · 5 gold', iconName: 'bed', disabled: s.gold < 5 })}
+            ${uiButton({ action: 'shop', label: "Hesta's Goods", iconName: 'coin', variant: 'ghost' })}
+            ${uiButton({ action: 'explore', label: 'Explore the wilds', iconName: 'map', variant: 'primary' })}
+            ${uiButton({ action: 'save', label: 'Save journey', iconName: 'save', variant: 'ghost' })}
+          </div>
+        </section>
+      </div>
+      ${storyUI.render(game)}
+    </main>`;
   },
   actions: {
     rest(game) {
@@ -20,7 +43,8 @@ export const townScene = {
       game.message = 'You rest at the inn and wake refreshed.';
     },
     shop(game) { game.setScene('shop', { returnScene: 'town' }); },
-    explore(game) { game.setScene(game.scenes.explore ? 'explore' : 'combat', game.scenes.explore ? undefined : { enemyId: 'storm_rat' }); },
+    explore(game) { game.setScene('explore'); },
     save(game) { saveGame(game.state); game.message = 'Game saved.'; },
+    ...storyUI.actions,
   },
 };
