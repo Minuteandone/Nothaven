@@ -1,3 +1,4 @@
+import { applyWatchEvent, getWatchJournal, getWatchDialogue } from './watch.js';
 import { applyHeartEvent, getHeartJournal, getHeartDialogue } from './heart.js';
 import { applyCommissionEvent, getCommissionJournal } from './commissions.js';
 import { getSettlerDialogue } from './settlers.js';
@@ -101,7 +102,8 @@ export function applyStoryEvent(previous = createStoryState(), event) {
   const expedition = applyExpeditionEvent(spire.state, event);
   const commission = applyCommissionEvent(expedition.state, event);
   const heart = applyHeartEvent(commission.state, event);
-  return { state: heart.state, rewards: [...rewards, ...rescue.rewards, ...relay.rewards, ...spire.rewards, ...expedition.rewards, ...commission.rewards, ...heart.rewards], log: [...log, ...rescue.log, ...relay.log, ...spire.log, ...expedition.log, ...commission.log, ...heart.log] };
+  const watch = applyWatchEvent(heart.state, event);
+  return { state: watch.state, rewards: [...rewards, ...rescue.rewards, ...relay.rewards, ...spire.rewards, ...expedition.rewards, ...commission.rewards, ...heart.rewards, ...watch.rewards], log: [...log, ...rescue.log, ...relay.log, ...spire.log, ...expedition.log, ...commission.log, ...heart.log, ...watch.log] };
 }
 
 const OBJECTIVES = {
@@ -142,6 +144,7 @@ export function getJournal(state = createStoryState()) {
   journal.push(...getRelayJournal(state));
   journal.push(...getSpireJournal(state));
   journal.push(...getHeartJournal(state));
+  journal.push(...getWatchJournal(state));
   journal.push(...getExpeditionJournal(state));
   journal.push(...getCommissionJournal(state));
   return journal;
@@ -163,6 +166,8 @@ export function getEndingSummary(state) {
 export function getDialogue(state = createStoryState(), npcId) {
   const settler = getSettlerDialogue(state, npcId);
   if (settler) return settler;
+  const watch = getWatchDialogue(state, npcId);
+  if (watch) return watch;
   const heart = getHeartDialogue(state, npcId);
   if (heart) return heart;
   const spire = getSpireDialogue(state, npcId);
