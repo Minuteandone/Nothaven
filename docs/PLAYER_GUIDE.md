@@ -162,6 +162,8 @@ Four wandering foes can appear on the early roads in addition to the familiar pa
 
 **Frostmane (optional heights trial).** After that report, the white-maned leader of the Highwatch wolf packs prowls the southern bastion of Highwatch Pass. Its **Rime Fang** opens bleeding wounds, so bring bandages or field dressings and keep Rallying Light ready. It is another one-off field challenge that stays out of the sparring drills.
 
+**The Lenswarden (optional observatory trial).** The same report unseals the northeast vault of the Observatory Ruins, where the old opticians’ brass guardian still stands watch. It is a construct, so Spark and Signal Flare deal extra damage, but its **Focused Beam** leaves you shocked: pack storm tonics or keep Steady Signal ready. Like the other field trials, it never appears in the sparring drills.
+
 Each adds an entry to the bestiary, so they help toward the **catalogue** feat. Their drops are ordinary supplies such as healing herbs, storm glass, field dressings, and tonics.
 
 ### Watch House yard: drills, gauntlet and feats
