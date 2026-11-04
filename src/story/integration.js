@@ -6,6 +6,8 @@ export function dispatchStoryEvent(game, event) {
   game.state.story = result.state;
   for (const reward of result.rewards) game.state.gold += reward.gold;
   if (result.log.length) game.storyMessage = result.log.join(' ');
+  // Notify observers after both state and rewards are committed, including direct UI calls.
+  game.bus?.emit('story:updated', { event, ...result });
   return result;
 }
 

@@ -113,3 +113,31 @@ test('adapter applies rewards once, ignores enemy species, and follows new state
   cleanup();
   assert.equal(handlers.get('story:event').size, 0);
 });
+
+
+test('adapter notifies observers after state and rewards for direct and bus calls', () => {
+  const handlers = new Map();
+  const bus = {
+    on(k, fn) { if (!handlers.has(k)) handlers.set(k, new Set()); handlers.get(k).add(fn); },
+    off(k, fn) { handlers.get(k)?.delete(fn); },
+    emit(k, e) { handlers.get(k)?.forEach(fn => fn(e)); },
+  };
+  const game = { state: { gold: 0, story: createStoryState() }, bus };
+  const cleanup = installStory(game);
+  const observed = [];
+  bus.on('story:updated', payload => {
+    assert.equal(payload.state, game.state.story);
+    observed.push({ event: payload.event, gold: game.state.gold, rewards: payload.rewards });
+  });
+  dispatchStoryEvent(game, talk('mara'));
+  bus.emit('story:event', visit('ridge_road'));
+  bus.emit('combat:victory', { encounterId: 'ridge_patrol' });
+  dispatchStoryEvent(game, talk('mara'));
+  assert.equal(observed.length, 4, 'exactly one notification per reducer invocation');
+  assert.equal(observed[3].gold, 20, 'reward already committed when observer runs');
+  assert.deepEqual(observed[3].rewards, [{ id: 'road_reward', gold: 20 }]);
+  dispatchStoryEvent(game, talk('mara'));
+  assert.equal(observed.at(-1).gold, 20);
+  assert.deepEqual(observed.at(-1).rewards, []);
+  cleanup();
+});
