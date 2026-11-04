@@ -98,6 +98,10 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
     target.hp = Math.max(0, target.hp - d);
     lines.push(special ? `${e.name} uses ${e.ability.name}! ${target.name} takes ${d}.` : `${e.name} hits ${target.name} for ${d}.`);
     if (target.hp <= 0) lines.push(`${target.name} is knocked out!`);
+    else if (special && e.ability.status) {
+      addStatus(target, e.ability.status, e.ability.turns || 3, allyTimers(c, target));
+      lines.push(e.ability.status === 'bleeding' ? `${target.name} is bleeding!` : `${target.name} is shocked!`);
+    }
     c.defending = false;
     if (c.wardTurns > 0) c.wardTurns -= 1;
     return lines;
@@ -123,6 +127,37 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   c.defending = false;
   if (c.wardTurns > 0) c.wardTurns -= 1;
   if (hero.hp <= 0) { c.over = 'defeat'; lines.push(`${hero.name} collapses...`); }
+  return lines;
+}
+
+/** Per-companion status timers live in c.allyTimers[memberId]. */
+export function allyTimers(c, m) {
+  if (!c.allyTimers || typeof c.allyTimers !== 'object') c.allyTimers = {};
+  const key = String(m?.id ?? 'ally');
+  if (!Object.prototype.hasOwnProperty.call(c.allyTimers, key)) c.allyTimers[key] = {};
+  return c.allyTimers[key];
+}
+
+/** Tick bleeding/shock on living companions once per round. Returns log lines. */
+export function tickAllyStatuses(c, party, hero) {
+  const lines = [];
+  for (const m of party || []) {
+    if (!m || m === hero || m.hp <= 0 || !Array.isArray(m.statuses) || !m.statuses.length) continue;
+    if (hasStatus(m, 'bleeding')) {
+      m.hp = Math.max(0, m.hp - 2);
+      lines.push(`${m.name} bleeds for 2.`);
+      if (m.hp <= 0) { lines.push(`${m.name} is knocked out!`); m.statuses = []; continue; }
+    }
+    const timers = allyTimers(c, m);
+    for (const id of Object.keys(timers)) {
+      timers[id] -= 1;
+      if (timers[id] <= 0) {
+        delete timers[id];
+        m.statuses = m.statuses.filter((st) => st !== id);
+        lines.push(id === 'bleeding' ? `${m.name}'s bleeding stops.` : `${m.name} shakes off the shock.`);
+      }
+    }
+  }
   return lines;
 }
 
@@ -207,6 +242,7 @@ export function afterHeroAction(c, hero, rng = Math.random, party = [hero]) {
   if (c.over) { c.turn += 1; return lines; }
   lines.push(...enemyTurn(c, hero, rng, party));
   if (!c.over) lines.push(...tickHeroStatuses(c, hero));
+  if (!c.over) lines.push(...tickAllyStatuses(c, party, hero));
   c.turn += 1;
   return lines;
 }
@@ -215,14 +251,16 @@ export function afterHeroAction(c, hero, rng = Math.random, party = [hero]) {
  * Automatic companion turn. Scouts attack (30% chance of an Aimed Shot for 140%);
  * keepers mend the most wounded ally below half HP, spark constructs, else attack;
  * guardians may Shield Bash (25%, stuns non-bosses); signalers spend 3 MP on a
- * def-ignoring Signal Flare.
+ * def-ignoring Signal Flare. Shocked companions can't use MP techniques
+ * (Mend/Spark/Flare) and simply attack; bleeding companions lose 2 HP a round.
  */
 export function companionTurn(c, m, party = [m], rng = Math.random) {
   const lines = [];
   if (c.over || !m || m.hp <= 0) return lines;
   const ms = heroStats(m);
   const e = c.enemy;
-  if (m.role === 'keeper') {
+  const shocked = hasStatus(m, 'shocked'); // shocked allies can't channel MP techniques
+  if (m.role === 'keeper' && !shocked) {
     const hurt = (party || []).filter((p) => p && p.hp > 0 && p.hp < heroStats(p).maxHp / 2)
       .sort((a, b) => a.hp / heroStats(a).maxHp - b.hp / heroStats(b).maxHp)[0];
     if (hurt && (m.mp || 0) >= SKILLS.mend.mp) {
@@ -250,7 +288,7 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
     }
     return lines;
   }
-  if (m.role === 'signaler' && (m.mp || 0) >= 3) {
+  if (m.role === 'signaler' && !shocked && (m.mp || 0) >= 3) {
     m.mp -= 3;
     const d = 5 + (m.level || 1) * 2 + randInt(rng, 0, 2);
     e.hp = Math.max(0, e.hp - d);

@@ -113,7 +113,7 @@ export const combatScene = {
           <div>MP ${h.mp}/${hs.maxMp}</div>${bar(h.mp, hs.maxMp, 'mp')}</div>
         ${game.state.party.slice(1).map((m) => { const ms = heroStats(m); return `<div class="unit ally${m.hp <= 0 ? ' down' : ''}"><strong>${esc(m.name)}</strong> Lv ${m.level || 1}${m.hp <= 0 ? ' <em>(down)</em>' : ''}
           <div>HP ${m.hp}/${ms.maxHp}</div>${bar(m.hp, ms.maxHp, 'hp')}
-          <div>MP ${m.mp}/${ms.maxMp}</div>${bar(m.mp, ms.maxMp, 'mp')}</div>`; }).join('')}
+          <div>MP ${m.mp}/${ms.maxMp}</div>${bar(m.mp, ms.maxMp, 'mp')}${st(m) ? `<div>${st(m)}</div>` : ''}</div>`; }).join('')}
         <div class="unit enemy"><strong>${esc(c.enemy.name)}</strong>${c.enemy.boss ? ' <em>(boss)</em>' : ''} ${st(c.enemy)}
           <div>HP ${c.enemy.hp}/${c.enemy.maxHp}</div>${bar(c.enemy.hp, c.enemy.maxHp, 'hp')}</div>
       </div></div>
