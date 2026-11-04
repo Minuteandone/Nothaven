@@ -141,8 +141,12 @@ export const ITEMS = Object.freeze({
  * @param {string} id
  * @returns {object} the item definition (do not mutate)
  */
+export function isKnownItem(id) {
+  return typeof id === 'string' && Object.hasOwn(ITEMS, id);
+}
+
 export function getItem(id) {
-  const item = ITEMS[id];
+  const item = isKnownItem(id) ? ITEMS[id] : undefined;
   if (!item) throw new Error(`Unknown item id: ${id}`);
   return item;
 }
@@ -152,6 +156,7 @@ export function getItem(id) {
  * @returns {boolean} true if `id` is a known equipment item
  */
 export function canEquip(id) {
+  if (!isKnownItem(id)) return false;
   const item = ITEMS[id];
-  return !!item && item.type === TYPES.EQUIPMENT && !!item.slot;
+  return item.type === TYPES.EQUIPMENT && !!item.slot;
 }
