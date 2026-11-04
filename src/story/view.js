@@ -1,3 +1,4 @@
+import { getRescueJournal, rescueReady, RESCUE_GOLD } from './rescue.js';
 import { createStoryState, getDialogue, getEndingChoices, getJournal } from './index.js';
 import { getReliefQuest, reliefSupplies } from './relief.js';
 import { dispatchReliefHandIn, dispatchStoryEvent } from './integration.js';
@@ -14,11 +15,13 @@ export function createStoryUI(getLocation = game => game.state.location) {
       const dialogue = game.storyDialogue?.location === location ? game.storyDialogue : null;
       const talkButtons = location === 'greyhaven' ? `<div class="story-people" aria-label="People in Greyhaven">${Object.entries(npcNames).map(([id, name]) => `<button data-action="storyTalk" data-arg="${id}">Speak to ${name}</button>`).join('')}</div>` : '';
       const relief = getReliefQuest(state);
+      const rescue = getRescueJournal(state)[0];
       const choices = location === 'beacon_tower' ? getEndingChoices(state) : [];
       return `<section class="panel story-panel" aria-labelledby="story-heading">
         <h2 id="story-heading">The Beacon and the Storm</h2>
         ${talkButtons}
         ${location === 'greyhaven' && relief?.status === 'active' ? `<section aria-label="First Light Relief"><h3>First Light Relief</h3><p>${escape(relief.objective)}</p><p>${escape(reliefSupplies(game.state.inventory))}</p><button data-action="storyRelief">Hand over 2 rations + 1 bandage for 30 gold</button></section>` : ''}
+        ${location === 'greyhaven' && rescue?.status === 'active' ? `<section aria-label="Roads to Our Neighbors"><h3>Roads to Our Neighbors</h3><p>${escape(rescue.objective)}</p>${!state.flags.rescue_accepted ? '<button data-action="storyRescue" data-arg="accept">Accept Mara’s relief expedition</button>' : rescueReady(state) ? `<button data-action="storyRescue" data-arg="report">Report both routes to Mara for ${RESCUE_GOLD} gold</button>` : ''}</section>` : ''}
         ${dialogue ? `<div class="story-dialogue" aria-live="polite"><h3>${escape(dialogue.speaker)}</h3><p>${escape(dialogue.text)}</p><button data-action="storyDismiss">Close conversation</button></div>` : ''}
         ${game.storyMessage ? `<p class="story-update" role="status">${escape(game.storyMessage)}</p>` : ''}
         ${choices.length ? `<section aria-labelledby="beacon-choice-heading"><h3 id="beacon-choice-heading">Where will the light reach?</h3><p>This choice completes the chapter and cannot be changed in this save.</p>${choices.map(choice => `<div class="story-choice"><p>${escape(choice.description)}</p><button data-action="storyChoose" data-arg="${escape(choice.id)}">${escape(choice.label)}</button></div>`).join('')}</section>` : ''}
@@ -34,6 +37,13 @@ export function createStoryUI(getLocation = game => game.state.location) {
         game.storyMessage = '';
         game.storyDialogue = { ...dialogue, location: 'greyhaven' };
         dispatchStoryEvent(game, { type: 'talk', npcId });
+      },
+      storyRescue(game, element) {
+        if (getLocation(game) !== 'greyhaven') return;
+        const action = element?.dataset?.arg;
+        if (!['accept', 'report'].includes(action)) return;
+        game.storyDialogue = null;
+        dispatchStoryEvent(game, { type: `rescue-${action}` });
       },
       storyRelief(game) {
         if (getLocation(game) !== 'greyhaven') return;
