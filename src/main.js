@@ -10,6 +10,7 @@ import { installBag } from './scenes/bag.js';
 import { installCompanions } from './scenes/muster.js';
 import { installBestiary } from './scenes/bestiary.js';
 import { endingScene, installEnding } from './scenes/ending.js';
+import { installAudio } from './audio/controls.js';
 
 const game = new Game(document.getElementById('app'));
 game.registerScene('title', titleScene);
@@ -24,5 +25,6 @@ installBag(game); // registers the 'bag' scene (inventory screen)
 installCompanions(game); // registers the 'muster' scene (recruit companions)
 installBestiary(game); // registers the 'bestiary' scene + records defeated foes
 installEnding(game); // after installStory so the story state is already updated
+installAudio(game); // creates no AudioContext until the player explicitly enables sound
 game.setScene('title');
 window.game = game; // handy for debugging
