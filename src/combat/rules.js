@@ -7,7 +7,7 @@ export const SKILLS = Object.freeze({
   power_strike: { id: 'power_strike', name: 'Power Strike', mp: 3, kind: 'damage', mult: 1.6,
     description: 'A heavy two-handed blow for 160% damage.' },
   spark: { id: 'spark', name: 'Spark', mp: 4, kind: 'magic', power: 8,
-    description: 'Call a lightning lash that ignores armour. Doubly effective on constructs.' },
+    description: 'Call a lightning lash that ignores armour. Half again as effective on constructs.' },
   mend: { id: 'mend', name: 'Mend', mp: 4, kind: 'heal', power: 10,
     description: 'Steady breath and practiced hands restore health.' },
   warding_stance: { id: 'warding_stance', name: 'Warding Stance', mp: 2, kind: 'ward',
@@ -232,7 +232,7 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
         if (rng() < 0.25) { addStatus(c.enemy, 'stunned', 1, c.enemyTimers); lines.push(`${c.enemy.name} reels, stunned.`); }
       } else if (sk.kind === 'magic') {
         let d = sk.power + (hero.level || 1) * 2 + randInt(rng, 0, 2);
-        if (c.enemy.tags?.includes('construct')) d *= 2;
+        if (c.enemy.tags?.includes('construct')) d = Math.floor(d * 1.5);
         c.enemy.hp = Math.max(0, c.enemy.hp - d);
         lines.push(`${hero.name} casts ${sk.name} for ${d}!`);
       } else if (sk.kind === 'heal') {
@@ -331,7 +331,7 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
     }
     if (e.tags?.includes('construct') && (m.mp || 0) >= SKILLS.spark.mp) {
       m.mp -= SKILLS.spark.mp;
-      const d = (SKILLS.spark.power + (m.level || 1) * 2 + randInt(rng, 0, 2)) * 2;
+      const d = Math.floor((SKILLS.spark.power + (m.level || 1) * 2 + randInt(rng, 0, 2)) * 1.5);
       e.hp = Math.max(0, e.hp - d);
       lines.push(`${m.name} casts Spark for ${d}!`);
       return lines;
