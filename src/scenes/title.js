@@ -16,6 +16,7 @@ export const titleScene = {
           <div class="title-actions">
             ${uiButton({ action: 'newGame', label: 'New journey', iconName: 'compass', variant: 'primary' })}
             ${uiButton({ action: 'continue', label: 'Continue', iconName: 'save', disabled: !hasSave() })}
+            ${uiButton({ action: 'guide', label: 'How to play', iconName: 'journal', variant: 'ghost' })}
           </div>
           <p class="save-note">Single player <span aria-hidden="true">•</span> Your progress is saved on this device</p>
         </section>
@@ -24,6 +25,7 @@ export const titleScene = {
     </main>`;
   },
   actions: {
+    guide(game) { if (game.scenes?.guide) game.setScene('guide', { returnScene: 'title' }); },
     newGame(game) { game.state = createInitialState(); clearStoryTransients(game); game.setScene('town'); },
     continue(game) {
       const s = loadGame();
