@@ -32,7 +32,7 @@ test('recipesUsingItem returns book-order recipes consuming the item', () => {
     'reforge_blade', 'forge_cutlass', 'weave_jerkin',
   ]);
   assert.deepEqual(recipesUsingItem('relay_brass').map((r) => r.id), [
-    'forge_relay_glaive', 'cut_signal_prism',
+    'forge_relay_glaive', 'cut_signal_prism', 'cut_crownshard_focus',
   ]);
 });
 

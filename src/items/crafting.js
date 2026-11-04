@@ -122,6 +122,34 @@ export const RECIPES = Object.freeze([
     inputs: [{ id: 'hearty_chowder', qty: 1 }, { id: 'rations', qty: 1 }],
     outputs: [{ id: 'spiced_broth', qty: 1 }],
   },
+  {
+    id: 'forge_stormforged_blade',
+    name: 'Forge a Stormforged Blade',
+    description: 'Reforge a salvaged blade with Thunder Iron and quench it in summit rain until the edge hums.',
+    inputs: [{ id: 'salvaged_blade', qty: 1 }, { id: 'thunder_iron', qty: 3 }],
+    outputs: [{ id: 'stormforged_blade', qty: 1 }],
+  },
+  {
+    id: 'hammer_stormcrown_plate',
+    name: 'Hammer a Stormcrown Plate',
+    description: 'Cold-hammer Thunder Iron over a frostward cloak and line it with stormcloth for the last climb.',
+    inputs: [{ id: 'frostward_cloak', qty: 1 }, { id: 'thunder_iron', qty: 3 }],
+    outputs: [{ id: 'stormcrown_plate', qty: 1 }],
+  },
+  {
+    id: 'cut_crownshard_focus',
+    name: 'Cut a Crownshard Focus',
+    description: 'Set a sliver of crown glass into relay copper with a ground lens shard to steady the trapped lightning.',
+    inputs: [{ id: 'lens_shard', qty: 1 }, { id: 'stormcrown_shard', qty: 1 }, { id: 'relay_brass', qty: 1 }],
+    outputs: [{ id: 'crownshard_focus', qty: 1 }],
+  },
+  {
+    id: 'distill_skyward_flask',
+    name: 'Distill a Skyward Flask',
+    description: 'Redistill a highland flask with storm glass and relay herbs until it tastes of the thin cold air above the clouds.',
+    inputs: [{ id: 'highland_flask', qty: 1 }, { id: 'storm_glass', qty: 2 }],
+    outputs: [{ id: 'skyward_flask', qty: 1 }],
+  },
 ]);
 
 /** Look up a recipe by id (own-property safe). @returns {Recipe|undefined} */

@@ -32,10 +32,18 @@ export const RELAY_OUTPOST = Object.freeze({
 });
 
 /** All shops, keyed by the map interaction id that opens them. */
+export const STORMCROWN_POST = Object.freeze({
+  id: 'stormcrown_post',
+  name: 'Stormcrown Trading Post',
+  greeting: 'The post keeper spreads a climb map across the counter. "Last shelf before the sky. Buy warm, climb quiet, and mind the sentries."',
+  stock: ['ember_broth', 'skyward_flask', 'thunder_iron', 'stormforged_blade', 'stormcrown_plate', 'crownshard_focus'],
+});
+
 export const SHOPS = Object.freeze({
   greyhaven_shop: GREYHAVEN_SHOP,
   saltmere_post: SALTMERE_POST,
   relay_outpost: RELAY_OUTPOST,
+  stormcrown_post: STORMCROWN_POST,
 });
 
 /**
