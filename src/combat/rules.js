@@ -93,9 +93,10 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   const target = living.length > 1 ? living[Math.floor(rng() * living.length) % living.length] : hero;
   if (target !== hero) {
     const ts = heroStats(target);
-    const d = physicalDamage(e.atk, ts.def, rng);
+    const special = e.ability && rng() < (e.ability.chance ?? 0);
+    const d = physicalDamage(e.atk, ts.def, rng, { mult: special ? (e.ability.mult ?? 1) : 1 });
     target.hp = Math.max(0, target.hp - d);
-    lines.push(`${e.name} hits ${target.name} for ${d}.`);
+    lines.push(special ? `${e.name} uses ${e.ability.name}! ${target.name} takes ${d}.` : `${e.name} hits ${target.name} for ${d}.`);
     if (target.hp <= 0) lines.push(`${target.name} is knocked out!`);
     c.defending = false;
     if (c.wardTurns > 0) c.wardTurns -= 1;
