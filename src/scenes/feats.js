@@ -22,6 +22,8 @@ export const FEATS = Object.freeze([
     check: s => flagsOf(s).victory_storm_heart === true }),
   Object.freeze({ id: 'squall', title: 'Weathered the Last Squall', detail: 'Defeat the optional Last Squall in the Storm’s Eye.',
     check: s => flagsOf(s).victory_last_squall === true }),
+  Object.freeze({ id: 'watch', title: 'Keeper of the Long Watch', detail: 'Take fresh readings at the harbor lamp, the Highwatch cairn and the forecast stand, then report them to Mara.',
+    check: s => flagsOf(s).watch_reward === true }),
   Object.freeze({ id: 'muster', title: 'Full Muster', detail: 'March with a full party of three.',
     check: s => Array.isArray(s?.party) && s.party.length >= MAX_PARTY }),
   Object.freeze({ id: 'commissions', title: 'Trusted by All', detail: 'Complete every companion commission.',

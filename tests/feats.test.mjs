@@ -14,7 +14,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   const s = createInitialState();
   s.story.stage = 'complete'; s.story.ending = 'share_signal';
   Object.assign(s.story.flags, { rescue_reward: true, relay_choice: 'route_network', victory_stormcrown_tyrant: true,
-    spire_reward: true, victory_storm_heart: true, victory_last_squall: true,
+    spire_reward: true, victory_storm_heart: true, victory_last_squall: true, watch_reward: true,
     commission_tamsin_reward: true, commission_iven_reward: true, commission_bram_reward: true, commission_sela_reward: true });
   s.story.expedition = { active: null, completed: 3 };
   s.party = [{ ...s.party[0], level: 20 }, { id: 'bram' }, { id: 'iven' }];
@@ -24,7 +24,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
 
 test('strict flags are not satisfied by truthy look-alikes', () => {
   const s = createInitialState();
-  Object.assign(s.story.flags, { spire_reward: 'yes', victory_storm_heart: 1, victory_last_squall: 'true' });
+  Object.assign(s.story.flags, { spire_reward: 'yes', victory_storm_heart: 1, victory_last_squall: 'true', watch_reward: 'yes' });
   const done = featStatus(s).filter(f => f.done).map(f => f.id);
   assert.deepEqual(done, []);
 });
