@@ -33,6 +33,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'Use Save journey in town to keep your progress on this device, and Continue on the title screen to return.',
     'Sound is muted by default. The audio controls let you turn on the storm ambience and adjust the volume.',
     'The Journey Journal lists every active task, the Character Sheet shows gear and effective stats, and Wardens’ Feats records the milestones of your journey — all open from Greyhaven or the expedition screen.',
+    'Sparring Drills in Greyhaven let you refight any boss you have already beaten for half its experience. Drills pay no gold or spoils, and losing one costs nothing.',
   ] }),
 ]);
 

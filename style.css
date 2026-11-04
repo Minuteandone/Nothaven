@@ -982,3 +982,13 @@ em.enraged {
 .feat--done { opacity: 1; border-color: rgba(233, 198, 111, .6); }
 .feat--done .feat__mark, .feat--done .feat__status { color: #e9c66f; }
 @media (max-width: 480px) { .feat { grid-template-columns: 1.25rem 1fr; } .feat__status { grid-column: 2; } }
+
+/* Sparring Drills */
+.drills__intro { margin: 0 0 1rem; }
+.drills__message { margin: 0 0 .75rem; font-weight: 600; }
+.drills__list { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
+.drill { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .6rem .8rem; border: 1px solid rgba(255,255,255,.14); border-radius: 10px; }
+.drill h2 { font-size: 1rem; margin: 0; }
+.drill p { margin: .2rem 0 0; font-size: .9rem; opacity: .85; }
+.drill--locked { opacity: .6; }
+@media (max-width: 560px) { .drill { flex-direction: column; align-items: stretch; } }
