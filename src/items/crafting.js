@@ -94,6 +94,34 @@ export const RECIPES = Object.freeze([
     inputs: [{ id: 'storm_tonic', qty: 1 }, { id: 'storm_glass', qty: 1 }],
     outputs: [{ id: 'highland_flask', qty: 1 }],
   },
+  {
+    id: 'forge_relay_glaive',
+    name: 'Forge a Relay Glaive',
+    description: 'Fit salvaged brass fittings along a salvaged blade and mount the haft on an old signal pole.',
+    inputs: [{ id: 'salvaged_blade', qty: 1 }, { id: 'relay_brass', qty: 2 }, { id: 'storm_glass', qty: 1 }],
+    outputs: [{ id: 'relay_glaive', qty: 1 }],
+  },
+  {
+    id: 'weave_sunscar_mantle',
+    name: 'Weave a Sunscar Mantle',
+    description: 'Overstitch a frostward cloak with sun-baked amber glass so it turns both frost and glare.',
+    inputs: [{ id: 'frostward_cloak', qty: 1 }, { id: 'sunscar_glass', qty: 2 }],
+    outputs: [{ id: 'sunscar_mantle', qty: 1 }],
+  },
+  {
+    id: 'cut_signal_prism',
+    name: 'Cut a Signal Prism',
+    description: 'Grind a lens shard square and seat it in brass fittings from the relay line.',
+    inputs: [{ id: 'lens_shard', qty: 1 }, { id: 'relay_brass', qty: 2 }],
+    outputs: [{ id: 'signal_prism', qty: 1 }],
+  },
+  {
+    id: 'brew_spiced_broth',
+    name: 'Brew Spiced Broth',
+    description: 'Thin a hearty chowder with snowmelt and inland spice until it steams clean through.',
+    inputs: [{ id: 'hearty_chowder', qty: 1 }, { id: 'rations', qty: 1 }],
+    outputs: [{ id: 'spiced_broth', qty: 1 }],
+  },
 ]);
 
 /** Look up a recipe by id (own-property safe). @returns {Recipe|undefined} */
