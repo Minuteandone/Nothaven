@@ -159,6 +159,22 @@ export const ZONES = {
         description:
           'A weather-sealed leather satchel wedged beside the chasm: courier logs detailing the storm surge patterns.',
       },
+      {
+        id: 'ridge_supply_cache',
+        interactionId: 'ridge_supply_cache',
+        name: 'Wayfarer Supply Crate',
+        kind: 'cache',
+        x: 1,
+        y: 5,
+        symbol: '▣',
+        once: true,
+        rewards: [
+          { id: 'healing_herb', qty: 1 },
+          { id: 'scrap_metal', qty: 2 },
+        ],
+        description:
+          'A cedar supply crate lashed to an iron piton beside the cliff trail.',
+      },
     ],
     encounters: [
       {
@@ -175,7 +191,8 @@ export const ZONES = {
     ],
     randomEncounterChance: 0.12,
     randomEncounters: [
-      { encounterId: 'ridge_skirmish', enemyId: 'storm_rat', weight: 1 },
+      { encounterId: 'ridge_skirmish', enemyId: 'storm_rat', name: 'Cliffside Storm Rat', weight: 3 },
+      { encounterId: 'ridge_ambush', enemyId: 'storm_rat', name: 'Prowling Storm Rat', weight: 1 },
     ],
   },
 
@@ -245,6 +262,23 @@ export const ZONES = {
         description:
           'The pristine storm-glass lens rests in its bronze gimbal, awaiting transport to the Beacon Tower.',
       },
+      {
+        id: 'observatory_supply_cache',
+        interactionId: 'observatory_supply_cache',
+        name: 'Optician Instrument Chest',
+        kind: 'cache',
+        x: 7,
+        y: 5,
+        symbol: '▣',
+        once: true,
+        rewards: [
+          { id: 'storm_glass', qty: 1 },
+          { id: 'salvaged_wiring', qty: 2 },
+          { id: 'rations', qty: 1 },
+        ],
+        description:
+          'A brass coffer containing spare storm-glass blanks, copper leads, and dry trail rations.',
+      },
     ],
     encounters: [
       {
@@ -261,7 +295,8 @@ export const ZONES = {
     ],
     randomEncounterChance: 0.12,
     randomEncounters: [
-      { encounterId: 'ruins_skirmish', enemyId: 'storm_rat', weight: 1 },
+      { encounterId: 'ruins_skirmish', enemyId: 'storm_rat', name: 'Vault Storm Rat', weight: 2 },
+      { encounterId: 'ruins_prowler', enemyId: 'storm_rat', name: 'Dome Scavenger', weight: 1 },
     ],
   },
 
@@ -316,6 +351,22 @@ export const ZONES = {
         once: false,
         description:
           'The central lens cradle and reflector array. Once the council in Greyhaven has been heard, use the Beacon panel below to align the light.',
+      },
+      {
+        id: 'tower_supply_cache',
+        interactionId: 'tower_supply_cache',
+        name: 'Watchkeeper Locker',
+        kind: 'cache',
+        x: 3,
+        y: 2,
+        symbol: '▣',
+        once: true,
+        rewards: [
+          { id: 'storm_tonic', qty: 1 },
+          { id: 'salvaged_wiring', qty: 1 },
+        ],
+        description:
+          'The tower keeper’s emergency locker stocked with a storm tonic and braided copper wire.',
       },
     ],
     encounters: [],
