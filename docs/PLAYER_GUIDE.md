@@ -109,6 +109,18 @@ After you claim the **Heart report reward**, a final storm gathers on the northe
 
 Three **craft-only** upgrades appear in every shop’s **Craft** tab and the town **Field Recipe Book** once you hold their inputs: **Squall Cleaver** (Tempest Edge + 3 Thunder Iron + 1 Stormcrown Shard), **Squall Bulwark** (Maelstrom Plate + 3 Thunder Iron + 1 Stormcrown Shard) and **Squall Sigil** (Stormeye Signet + 2 Thunder Iron + 2 Storm Glass, with no shard required). None of them are ever sold outright. Stormcrown Shards drop from the Stormcrown Tyrant, the Storm’s Heart and The Last Squall, with a rare chance from the Thunderhead Colossus.
 
+#### Optional survey: The Long Watch
+
+After claiming the **Heart report reward**, explicitly accept **The Long Watch** in Greyhaven. This survey is independent of **The Last Squall**; you do not need to fight that optional boss.
+
+Take **fresh readings after accepting** at all three repeatable stations, in any order:
+
+- **Saltmere Harbor Lamp:** south from Greyhaven, at the pier’s southern end.
+- **Highwatch Signal Cairn:** through Ridge Road’s north trail, at the northern overlook.
+- **Observatory Forecast Stand:** through Ridge Road’s north ascent, beside the old lens pedestal. The stand is a separate, repeatable landmark; the recovered lens is not moved or collected again.
+
+Old inspections do **not** count, unlike the earlier companion requests. You can save between readings. Return to Greyhaven and explicitly **report the three readings for 180 gold once**; conversation alone neither accepts nor pays. The completed journal records the shared forecast timetable. This survey changes no ending, combat difficulty, or encounter rate; ordinary storms and road threats remain.
+
 ### Optional companion commissions
 
 Expand **Companion commissions** in Greyhaven. Each unlocks with its companion; you do **not** need that companion recruited or in the active party. Accept, complete both tasks, and explicitly report in Greyhaven.

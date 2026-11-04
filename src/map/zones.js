@@ -302,6 +302,19 @@ export const ZONES = {
           'The pristine storm-glass lens rests in its bronze gimbal, awaiting transport to the Beacon Tower.',
       },
       {
+        id: 'observatory_forecast_stand',
+        interactionId: 'observatory_forecast_stand',
+        name: 'Observatory Forecast Stand',
+        kind: 'lore',
+        x: 3,
+        y: 1,
+        symbol: '✦',
+        once: false,
+        requiresEncounterCleared: 'observatory_sentinel',
+        description:
+          'A weathered sighting rule and a slate of wind measurements stand beside the empty lens mounting. They can compare the harbor lamps and northern cairns without moving the recovered lens.',
+      },
+      {
         id: 'observatory_supply_cache',
         interactionId: 'observatory_supply_cache',
         name: 'Optician Instrument Chest',

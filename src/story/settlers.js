@@ -4,6 +4,7 @@ export const SETTLERS = Object.freeze({
     speaker: 'Ona Vell, Saltmere Harbormaster',
     victoryFlag: 'rescue_victory_coast',
     lines: Object.freeze({
+      watch: 'The harbor readings now reach the northern watch on the same timetable. We still haul the boats in when the wind turns.',
       waiting: 'Saltmere has weathered storms for a hundred years, but reef creatures now block the landing. Our evacuation boats need someone to clear the coast road.',
       rescued: 'Our nets are drying in the sun again. Tell Warden Mara that Saltmere remembers who came down the coast road for us.',
       shelter_network: 'The relay shelters mean our carters can sleep dry at every waystation inland. Fewer of them come home with fever.',
@@ -15,6 +16,7 @@ export const SETTLERS = Object.freeze({
     speaker: 'Captain Rusk, Highwatch Garrison',
     victoryFlag: 'rescue_victory_heights',
     lines: Object.freeze({
+      watch: 'Our cairn readings and Saltmere’s harbor measurements finally agree on the hour. Better forecasts do not replace sentries, but they help us send caravans at the right time.',
       waiting: 'Frost wolves have cut off the supply crossing. My sentries are cold and running short of provisions; clear a way through before the next caravan arrives.',
       rescued: 'The supply crossing is open again. Our sentries can bring the stranded caravan through, though the upper pass still needs a careful watch.',
       shelter_network: 'The relay shelters along the East Gate road saved two frostbitten couriers last week. I owe your council a barrel of cider.',
@@ -29,7 +31,8 @@ export function getSettlerDialogue(story, npcId) {
   if (!settler) return null;
   const f = story?.flags || {};
   let key = 'waiting';
-  if (f.spire_reward) key = 'spire';
+  if (f.watch_reward === true) key = 'watch';
+  else if (f.spire_reward) key = 'spire';
   else if (f.relay_choice === 'shelter_network' || f.relay_choice === 'route_network') key = f.relay_choice;
   else if (f[settler.victoryFlag]) key = 'rescued';
   return { speaker: settler.speaker, text: settler.lines[key], choices: [] };

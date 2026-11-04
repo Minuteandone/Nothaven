@@ -683,6 +683,68 @@ function heartJourney(game, early, first) {
   assert.deepEqual(game.state.flags, endingFlags);
 }
 
+function watchJourney(game, early, first) {
+  assert.equal(game.state.map.zoneId, 'greyhaven');
+  assert.equal(game.state.story.flags.heart_reward, true);
+  assert.equal(game.state.story.flags.victory_last_squall, undefined, 'survey is independent of the optional superboss');
+  const prior = structuredClone(game.state.story), endingFlags = structuredClone(game.state.flags);
+  const gold = game.state.gold, party = structuredClone(game.state.party), inventory = structuredClone(game.state.inventory);
+  const bestiary = structuredClone(game.state.bestiary);
+  assert.equal(game.state.map.completedInteractions.observatory_lens_pedestal, true, 'old lens was already collected');
+  const routes = {
+    coast: { zones: ['saltmere_coast'], x: 4, y: 5, id: 'saltmere_harbor_lamp', flag: 'watch_coast', home: ['greyhaven'] },
+    heights: { zones: ['ridge_road', 'highwatch_pass'], x: 4, y: 1, id: 'highwatch_cairn', flag: 'watch_heights', home: ['ridge_road', 'greyhaven'] },
+    observatory: { zones: ['ridge_road', 'observatory_ruins'], x: 3, y: 1, id: 'observatory_forecast_stand', flag: 'watch_observatory', home: ['beacon_tower', 'greyhaven'] },
+  };
+  const order = early ? ['observatory', first, first === 'coast' ? 'heights' : 'coast']
+    : [first, first === 'coast' ? 'heights' : 'coast', 'observatory'];
+  const inspect = (route, accepted) => {
+    for (const zone of route.zones) walkExit(game, zone);
+    walkTo(game, route.x, route.y); act(game, 'mapInteract', route.id);
+    assert.equal(game.state.story.flags[route.flag], accepted ? true : undefined);
+    checkpoint(game, 'complete');
+    const story = structuredClone(game.state.story);
+    act(game, 'mapInteract', route.id);
+    assert.deepEqual(game.state.story, story, 'repeat reading cannot add progress or rewards');
+    act(game, 'storyWatch', 'report'); act(game, 'storyWatch', 'accept');
+    assert.deepEqual(game.state.story, story, 'stale out-of-town controls do nothing');
+    assert.equal(game.state.gold, gold);
+    for (const zone of route.home) walkExit(game, zone);
+  };
+  if (early) {
+    for (const id of order) inspect(routes[id], false);
+    assert.equal(game.state.story.flags.watch_accepted, undefined);
+  }
+  act(game, 'storyTalk', 'mara');
+  assert.equal(game.state.story.flags.watch_accepted, undefined, 'conversation never accepts');
+  act(game, 'storyWatch', 'accept'); checkpoint(game, 'complete');
+  for (const route of Object.values(routes)) assert.equal(game.state.story.flags[route.flag], undefined, 'old inspections receive no credit');
+  for (const [index, id] of order.entries()) {
+    act(game, 'storyWatch', 'report'); assert.equal(game.state.gold, gold, 'partial report cannot pay');
+    inspect(routes[id], true);
+    assert.equal(Object.values(routes).filter(route => game.state.story.flags[route.flag] === true).length, index + 1);
+    act(game, 'storyWatch', 'accept');
+    assert.equal(game.state.story.flags[routes[id].flag], true, 'repeat acceptance never resets progress');
+  }
+  assert.match(getJournal(game.state.story).find(q => q.id === 'long_watch').objective, /explicitly report/);
+  act(game, 'storyTalk', 'mara'); assert.equal(game.state.gold, gold, 'conversation never pays');
+  act(game, 'storyWatch', 'report');
+  assert.equal(game.state.gold, gold + 180);
+  assert.equal(game.state.story.flags.watch_reward, true);
+  assert.equal(game.state.scene, 'explore', 'survey opens no new ending');
+  checkpoint(game, 'complete');
+  act(game, 'storyWatch', 'report'); act(game, 'storyWatch', 'accept');
+  assert.equal(game.state.gold, gold + 180, 'saved report pays exactly once');
+  assert.equal(getJournal(game.state.story).find(q => q.id === 'long_watch').status, 'complete');
+  assert.equal(game.state.story.flags.victory_last_squall, undefined);
+  assert.equal(game.state.map.completedInteractions.observatory_lens_pedestal, true);
+  assert.equal(game.state.map.completedInteractions.observatory_forecast_stand, undefined, 'stand remains repeatable');
+  for (const [key, value] of Object.entries(prior.flags)) assert.deepEqual(game.state.story.flags[key], value, `survey preserves ${key}`);
+  assert.equal(game.state.story.ending, prior.ending); assert.deepEqual(game.state.story.expedition, prior.expedition);
+  assert.deepEqual(game.state.flags, endingFlags); assert.deepEqual(game.state.party, party);
+  assert.deepEqual(game.state.inventory, inventory); assert.deepEqual(game.state.bestiary, bestiary);
+}
+
 function squallJourney(game) {
   const prior = structuredClone(game.state.story);
   const endingFlags = structuredClone(game.state.flags);
@@ -900,6 +962,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         spireJourney(game, relayChoice, early);
         companionJourney(game, early, first);
         heartJourney(game, early, first);
+        watchJourney(game, early, first);
         squallJourney(game);
       });
     }
