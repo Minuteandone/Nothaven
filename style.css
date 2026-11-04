@@ -995,3 +995,8 @@ em.enraged {
 
 /* Sparring Drills records */
 .drill__record { margin: 0.2rem 0 0; font-size: 0.85rem; opacity: 0.8; }
+
+/* Yard Gauntlet (drills) */
+.drills__gauntlet { margin-top: 1rem; }
+.drills__gauntlet h2 { margin: 0 0 0.4rem; font-size: 1.1rem; }
+.drills__gauntlet p { margin: 0 0 0.6rem; }

@@ -1,7 +1,7 @@
 import { getDifficulty } from '../combat/difficulty.js';
 import { applyLevelUps } from '../core/progression.js';
 import { getItem } from '../items/items.js';
-import { recordDrillWin } from './drills.js';
+import { recordDrillWin, recordGauntlet, validGauntlet } from './drills.js';
 // Combat scene: Attack / Skills / Items / Defend / Flee against one enemy.
 // setScene('combat', {enemyId, encounterId, returnScene}) — finishing returns to
 // returnScene with {message, combatResult, encounterId}; defeat wakes the party in
@@ -97,6 +97,10 @@ export const combatScene = {
     game.combatMenu = 'main';
     const c = game.state.combat, hero = game.state.party[0];
     if (data.drill === true) { c.drill = true; c.encounterId = null; }
+    if (c.drill === true && validGauntlet(data.gauntlet, c.enemy?.id)) {
+      c.gauntlet = { queue: [...data.gauntlet.queue], index: data.gauntlet.index };
+      c.log.push(`Yard Gauntlet — bout ${c.gauntlet.index + 1} of ${c.gauntlet.queue.length}.`);
+    }
     hero.statuses = Array.isArray(hero.statuses) ? hero.statuses : [];
     if ((c.enemy.spd || 0) > heroStats(hero).spd) {
       c.log.push(`${c.enemy.name} moves first!`, ...enemyTurn(c, hero, rng(game), game.state.party));
@@ -138,7 +142,7 @@ export const combatScene = {
     finish(game) {
       if (game.state.combat && !game.state.combat.over) return; // never abandon an active fight
       const c = game.state.combat || { over: 'fled', returnScene: 'town', encounterId: null };
-      const { over, returnScene, encounterId, drill } = c;
+      const { over, returnScene, encounterId, drill, gauntlet } = c;
       game.state.combat = null;
       game.combatMenu = 'main';
       for (const m of game.state.party) { m.statuses = []; if (m.hp <= 0 && m !== game.state.party[0]) m.hp = 1; }
@@ -148,6 +152,20 @@ export const combatScene = {
             const st = heroStats(m);
             m.hp = Math.max(1, Math.ceil(st.maxHp / 2)); m.mp = st.maxMp; m.statuses = [];
           }
+        }
+        if (gauntlet) {
+          const total = gauntlet.queue.length;
+          if (over === 'victory' && gauntlet.index + 1 < total) {
+            game.setScene('combat', { enemyId: gauntlet.queue[gauntlet.index + 1], encounterId: null, returnScene: 'drills', drill: true, gauntlet: { queue: gauntlet.queue, index: gauntlet.index + 1 } });
+            return;
+          }
+          const beaten = over === 'victory' ? total : gauntlet.index;
+          const rec = recordGauntlet(game.state, beaten);
+          const best = rec?.newBest && beaten > 0 ? ' A new gauntlet best!' : '';
+          const gMessage = over === 'victory' ? `Gauntlet complete! You beat all ${total} foes back to back.${best}`
+            : `The gauntlet ends after ${beaten} of ${total} foes. Mara helps you up — nothing is lost but pride.${best}`;
+          game.setScene('drills', { message: gMessage, combatResult: over });
+          return;
         }
         const message = over === 'victory' ? 'Drill complete. Mara nods and resets the targets.'
           : over === 'defeat' ? 'The drill is lost. Mara helps you up — nothing is lost but pride.'
