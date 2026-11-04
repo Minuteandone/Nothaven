@@ -10,19 +10,19 @@ export const GUIDE_SECTIONS = Object.freeze([
   ] }),
   Object.freeze({ title: 'Battle', lines: [
     'Battles are turn-based. Choose Attack, a Skill, an Item, Defend or Flee, and your companions act after you.',
-    'Defend halves the next blow aimed at you. Fleeing depends on speed and never works against a boss.',
+    'Defend halves damage to Wren during the next enemy action. Fleeing depends on speed and never works against a boss.',
     'Bosses grow fiercer once badly wounded. Watch for the warning line in the battle log.',
     'If Wren falls, the patrol carries the party back to Greyhaven at half health, minus half your gold.',
   ] }),
   Object.freeze({ title: 'Conditions', lines: [
     'Bleeding drains 2 health each round until it wears off or is treated.',
-    'Shocked stops healing and support skills. Attacks, damage skills, items and Steady Signal still work, and Steady Signal clears it.',
+    'Shocked blocks magic and support skills such as Spark, Mend and Signal Flare. Attacks, physical skills like Power Strike, Beacon Lance, items and Steady Signal still work, and Steady Signal clears it.',
     'Resting at the Greyhaven inn restores the whole party and clears every condition.',
   ] }),
   Object.freeze({ title: 'Party and growth', lines: [
     'Up to three travelers fight together. Rescued allies join the Watch House muster board in Greyhaven, where you can swap them in or out.',
     'Victories earn experience. Each level raises health, focus, attack, defense and speed, and some levels teach Wren a new skill.',
-    'Shops sell gear for each region, and the bag lets you equip it, use supplies and craft upgrades from salvaged materials.',
+    'Shops sell gear for each region, and the bag lets you equip it and use supplies. Shops and the field craft upgrades from salvaged materials.',
   ] }),
   Object.freeze({ title: 'Settings and saving', lines: [
     'The Difficulty button in Greyhaven switches between Story, Standard and Veteran foes at any time.',
