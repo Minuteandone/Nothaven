@@ -186,6 +186,7 @@ function checkVictory(c, lines) {
   if (c.enemy.hp <= 0 && !c.over) {
     c.over = 'victory';
     lines.push(`${c.enemy.name} is defeated!`);
+    if (c.enemy.defeat) lines.push(c.enemy.defeat);
   }
 }
 

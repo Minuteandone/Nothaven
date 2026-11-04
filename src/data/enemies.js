@@ -45,6 +45,7 @@ export const ENEMIES = {
     id: 'tide_wraith', name: 'Tide Wraith', hp: 50, atk: 10, def: 4, spd: 6, xp: 50, gold: 30,
     boss: true,
     intro: 'Seawater and lightning knot together into a Tide Wraith at the foot of the beacon!',
+    defeat: 'The Tide Wraith unravels into harmless rain. Far above, the beacon housing stops shuddering.',
     enrage: { threshold: 0.5, atk: 2, chance: 0.5, line: 'The Tide Wraith draws the whole storm into itself, arcing with lightning!' },
     ability: { name: 'Undertow', chance: 0.35, mult: 1.3, status: 'shocked', turns: 2 },
     loot: [
@@ -93,6 +94,7 @@ export const ENEMIES = {
     id: 'pass_warlord', name: 'Highwatch Warlord', hp: 64, atk: 12, def: 5, spd: 5, xp: 70, gold: 45,
     boss: true,
     intro: 'Atop the frozen switchbacks, the Highwatch Warlord levels a notched halberd and bars the pass!',
+    defeat: 'The Warlord drives his halberd into the snow and kneels. "Highwatch is yours to guard now," he rasps, and fades into the sleet.',
     enrage: { threshold: 0.5, atk: 3, chance: 0.5, line: 'The Highwatch Warlord tears off his frozen helm and roars for the pass to hold. His blows grow heavier!' },
     ability: { name: 'Sweeping Halberd', chance: 0.35, mult: 1.4, status: 'bleeding', turns: 3 },
     loot: [
@@ -105,6 +107,7 @@ export const ENEMIES = {
     id: 'drowned_harbormaster', name: 'Drowned Harbormaster', hp: 58, atk: 11, def: 4, spd: 6, xp: 64, gold: 40,
     boss: true,
     intro: 'Chains rattle under the pier as the Drowned Harbormaster rises, lantern blazing with storm-light!',
+    defeat: 'The Harbormaster\'s lantern dims to a calm amber. He lowers it toward the harbor mouth, as if guiding one last ship home, and sinks beneath the waves.',
     enrage: { threshold: 0.5, atk: 2, chance: 0.55, line: 'The Harbormaster\'s lantern flares white as the tide surges back in. His chains whip faster!' },
     ability: { name: 'Anchor Chain', chance: 0.35, mult: 1.35, status: 'shocked', turns: 2 },
     loot: [
@@ -134,6 +137,7 @@ export const ENEMIES = {
     id: 'relay_warden', name: 'Relay Warden', hp: 170, atk: 16, def: 7, spd: 5, xp: 95, gold: 60,
     tags: ['construct'], boss: true,
     intro: 'The relay station shudders awake. A towering brass Warden unfolds from its cradle, coils humming with stolen storm-charge!',
+    defeat: 'The Relay Warden folds back into its cradle with a long mechanical sigh. Its coils cool from blue to dull copper, and the console beyond flickers to life.',
     enrage: { threshold: 0.5, atk: 3, chance: 0.5, line: 'The Relay Warden vents a gout of blue sparks and overclocks its coils. Its strikes come harder!' },
     ability: { name: 'Overcharge Beam', chance: 0.35, mult: 1.4, status: 'shocked', turns: 2 },
     loot: [
