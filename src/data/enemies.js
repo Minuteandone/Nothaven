@@ -147,7 +147,7 @@ export const ENEMIES = {
     ],
   },
   ashen_raider: {
-    id: 'ashen_raider', name: 'Ashen Raider', hp: 84, atk: 18, def: 7, spd: 7, xp: 48, gold: 30,
+    id: 'ashen_raider', name: 'Ashen Raider', hp: 120, atk: 24, def: 7, spd: 7, xp: 48, gold: 30,
     ability: { name: 'Cinder Blade', chance: 0.3, mult: 1.25, status: 'bleeding', turns: 3 },
     loot: [
       { id: 'bandage', chance: 0.5, minQty: 1, maxQty: 1 },
@@ -155,7 +155,7 @@ export const ENEMIES = {
     ],
   },
   spire_sentry: {
-    id: 'spire_sentry', name: 'Spire Sentry', hp: 104, atk: 17, def: 10, spd: 4, xp: 52, gold: 28,
+    id: 'spire_sentry', name: 'Spire Sentry', hp: 140, atk: 23, def: 10, spd: 4, xp: 52, gold: 28,
     tags: ['construct'],
     ability: { name: 'Chain Lightning', chance: 0.3, mult: 1.15, status: 'shocked', turns: 2 },
     loot: [
