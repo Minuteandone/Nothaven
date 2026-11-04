@@ -20,15 +20,15 @@ function fakeGame() {
 test('ending scene shows once when story completes', () => {
   const g = fakeGame();
   installEnding(g);
-  g.bus.emit('story:event', {});
+  g.bus.emit('story:updated', {});
   assert.equal(g.state.scene, 'title');
   g.state.story.stage = 'complete';
   g.state.story.ending = 'share_signal';
-  g.bus.emit('story:event', {});
+  g.bus.emit('story:updated', {});
   assert.equal(g.state.scene, 'ending');
   assert.equal(g.state.flags.endingShown, true);
   g.state.scene = 'town';
-  g.bus.emit('story:event', {});
+  g.bus.emit('story:updated', {});
   assert.equal(g.state.scene, 'town');
 });
 
@@ -45,4 +45,24 @@ test('keepExploring falls back to town when no explore scene', () => {
   const g = fakeGame();
   endingScene.actions.keepExploring(g);
   assert.equal(g.state.scene, 'town');
+});
+
+test('ending fires when story completes via direct dispatchStoryEvent (UI path)', async () => {
+  const { dispatchStoryEvent } = await import('../src/story/integration.js');
+  const handlers = new Map();
+  const bus = {
+    on(k, fn) { if (!handlers.has(k)) handlers.set(k, new Set()); handlers.get(k).add(fn); },
+    off(k, fn) { handlers.get(k)?.delete(fn); },
+    emit(k, e) { handlers.get(k)?.forEach(fn => fn(e)); },
+  };
+  const scenes = [];
+  const game = { bus, state: { gold: 0, flags: {}, story: { stage: 'complete' } }, setScene: (n) => scenes.push(n) };
+  const cleanup = installEnding(game);
+  // Simulate the observer notification the adapter emits after any reduction.
+  bus.emit('story:updated', { event: { type: 'noop' }, state: game.state.story });
+  assert.deepEqual(scenes, ['ending']);
+  bus.emit('story:updated', {});
+  assert.deepEqual(scenes, ['ending'], 'only once');
+  assert.equal(typeof dispatchStoryEvent, 'function');
+  cleanup();
 });
