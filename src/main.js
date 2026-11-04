@@ -9,6 +9,7 @@ import { installShop } from './scenes/shop.js';
 import { installBag } from './scenes/bag.js';
 import { installCompanions } from './scenes/muster.js';
 import { installBestiary } from './scenes/bestiary.js';
+import { installRecipeBook } from './scenes/recipes.js';
 import { endingScene, installEnding } from './scenes/ending.js';
 import { installAudio } from './audio/controls.js';
 import { installQuestJournal } from './scenes/quests.js';
@@ -30,6 +31,7 @@ installCompanions(game); // registers the 'muster' scene (recruit companions)
 installQuestJournal(game);
 installBestiary(game); // registers the 'bestiary' scene + records defeated foes
 installCharacter(game); // registers Wren's read-only character sheet
+installRecipeBook(game); // registers the 'recipes' scene (Field Recipe Book)
 installEnding(game); // after installStory so the story state is already updated
 installAudio(game); // creates no AudioContext until the player explicitly enables sound
 game.setScene('title');
