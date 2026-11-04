@@ -23,6 +23,22 @@ export const COMPANIONS = Object.freeze({
     unlockHint: 'Defeat the observatory sentinel so Iven can safely leave the tower.',
     stats: { hp: 20, mp: 14, atk: 4, def: 2, spd: 4 },
   }),
+  bram: Object.freeze({
+    id: 'bram', name: 'Bram', role: 'guardian',
+    title: 'Saltmere Harbor Warden',
+    blurb: 'A broad-shouldered dockhand who held the flooded pier alone. Bashes foes off balance with his tide-scarred shield.',
+    unlock: 'rescue_victory_coast',
+    unlockHint: 'Break the siege at Saltmere so Bram can leave the harbor watch.',
+    stats: { hp: 32, mp: 4, atk: 6, def: 4, spd: 3 },
+  }),
+  sela: Object.freeze({
+    id: 'sela', name: 'Sela', role: 'signaler',
+    title: 'Highwatch Signal Runner',
+    blurb: 'Keeps the mountain cairns lit through any gale. Hurls blinding signal flares that burn straight through armor.',
+    unlock: 'rescue_victory_heights',
+    unlockHint: 'Drive the raiders from Highwatch so Sela can rejoin the signal line.',
+    stats: { hp: 22, mp: 12, atk: 5, def: 2, spd: 6 },
+  }),
 });
 
 const has = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);

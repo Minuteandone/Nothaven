@@ -157,3 +157,49 @@ test('enemy specials can target companions (damage only, no status)', () => {
   assert.ok(tamsin.hp < before);
   assert.deepEqual(tamsin.statuses, []);
 });
+
+test('rescued settlers unlock from chapter two rescue victories', () => {
+  const s = createInitialState();
+  assert.equal(isUnlocked(s, 'bram'), false);
+  assert.equal(isUnlocked(s, 'sela'), false);
+  assert.equal(recruitCompanion(s, 'bram').ok, false);
+  s.story.flags.rescue_victory_coast = true;
+  assert.equal(recruitCompanion(s, 'bram').ok, true);
+  assert.equal(recruitCompanion(s, 'sela').ok, false, 'sela still locked');
+  s.story.flags.rescue_victory_heights = true;
+  assert.equal(recruitCompanion(s, 'sela').ok, true);
+  assert.equal(s.party.length, MAX_PARTY);
+});
+
+test('guardian Shield Bash stuns ordinary foes but not bosses', () => {
+  const bram = createCompanionMember('bram', 1);
+  const c = createCombat({ enemyId: 'ridge_bandit' });
+  const hp0 = c.enemy.hp;
+  const lines = companionTurn(c, bram, [bram], fixed(0));
+  assert.match(lines[0], /Bram lands a Shield Bash/);
+  assert.ok(c.enemy.hp < hp0);
+  assert.match(lines[1], /is stunned/);
+  const boss = createCombat({ enemyId: 'tide_wraith' });
+  const bossLines = companionTurn(boss, bram, [bram], fixed(0));
+  assert.match(bossLines[0], /Shield Bash/);
+  assert.equal(bossLines.length, 1, 'bosses are never stunned');
+});
+
+test('signaler Signal Flare spends 3 MP and ignores defense', () => {
+  const sela = createCompanionMember('sela', 1);
+  const c = createCombat({ enemyId: 'rust_sentinel' });
+  const mp0 = sela.mp, hp0 = c.enemy.hp;
+  const lines = companionTurn(c, sela, [sela], fixed(0));
+  assert.match(lines[0], /Sela hurls a Signal Flare for 7/);
+  assert.equal(sela.mp, mp0 - 3);
+  assert.equal(c.enemy.hp, hp0 - 7);
+  sela.mp = 2;
+  const plain = companionTurn(c, sela, [sela], fixed(0.9));
+  assert.doesNotMatch(plain[0], /Signal Flare/);
+});
+
+test('muster board lists all four companions', () => {
+  const s = createInitialState();
+  const html = musterScene.render({ state: s, musterMessage: '' });
+  for (const name of ['Tamsin', 'Iven', 'Bram', 'Sela']) assert.ok(html.includes(name), name);
+});
