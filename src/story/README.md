@@ -68,3 +68,34 @@ and pays 30 gold once; ordinary NPC conversations never consume inventory.
 `story:updated`; its reward metadata is informational, already paid (do not reapply).
 Completion lives in `story.flags.relief_reward`, with ending-specific journal prose.
 The scene location getter governs both the button and action, like other story controls.
+
+## Chapter two — Roads to Our Neighbors
+
+`rescue.js` extends the campaign without changing `story.stage === 'complete'`
+or the permanent `story.ending`. Old completed saves immediately offer an
+explicit expedition acceptance button in Greyhaven; ordinary NPC conversations
+neither accept the expedition nor collect its payment. Relief remains independent.
+
+Map contract agreed with the map owner:
+
+| Settlement | Zone ID | Fixed encounter ID | Access |
+| --- | --- | --- | --- |
+| Saltmere | `saltmere_coast` | `saltmere_rescue` | Greyhaven South Pier |
+| Highwatch | `highwatch_pass` | `highwatch_rescue` | Ridge Road North Trail |
+
+Each route needs both its visit and fixed encounter victory. Either order works;
+facts persist before acceptance, including before the beacon ending. Enemy species
+and ordinary rematches do not substitute for these fixed encounter IDs.
+
+The scene dispatches `rescue-accept` and `rescue-report` only in Greyhaven, using
+the same location getter as its rendered controls. As with chapter one's reducer,
+trusted facts enter through the story bus; proximity enforcement belongs to scenes.
+`rescue-report` pays 80 gold once, guarded by `story.flags.rescue_reward`, through
+the standard post-commit reward adapter. Supplies are never consumed. The first
+route opened is retained in `rescue_first` and affects the completed journal prose;
+the earlier beacon choice also changes the aftermath and NPC dialogue.
+
+`story-rescue.test.mjs` covers both route orders and endings, early facts, guards,
+immutable input, duplicate events, adapter notifications, save/load, and ending
+observer compatibility. Full physical-route campaign coverage should accompany
+the matching zone implementation; these focused tests do not claim map reachability.

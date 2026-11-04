@@ -1,3 +1,4 @@
+import { applyRescueEvent, getRescueJournal, getRescueDialogue } from './rescue.js';
 import { getReliefQuest } from './relief.js';
 
 /** Serializable, DOM-free campaign progression for Beacon of Stormhaven. */
@@ -88,7 +89,8 @@ export function applyStoryEvent(previous = createStoryState(), event) {
       break;
   }
   reconcile();
-  return { state, rewards, log };
+  const rescue = applyRescueEvent(state, event);
+  return { state: rescue.state, rewards: [...rewards, ...rescue.rewards], log: [...log, ...rescue.log] };
 }
 
 const OBJECTIVES = {
@@ -125,6 +127,7 @@ export function getJournal(state = createStoryState()) {
   }
   const relief = getReliefQuest(state);
   if (relief) journal.push(relief);
+  journal.push(...getRescueJournal(state));
   return journal;
 }
 
@@ -142,6 +145,8 @@ export function getEndingSummary(state) {
 }
 
 export function getDialogue(state = createStoryState(), npcId) {
+  const rescue = getRescueDialogue(state, npcId);
+  if (rescue) return rescue;
   const s = state.stage;
   const f = state.flags;
   if (npcId === 'mara') {
