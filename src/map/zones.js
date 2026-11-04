@@ -677,8 +677,8 @@ export const ZONES = {
     height: 7,
     grid: [
       '^^^^^^^^^',
-      '#...,...#',
-      '#.#...#.#',
+      '#...,...+',
+      '#.#...#..',
       '+...,...#',
       '#.#.....#',
       '#.....+.#',
@@ -687,6 +687,7 @@ export const ZONES = {
     spawns: {
       default: { x: 1, y: 3 },
       from_highwatch_pass: { x: 1, y: 3 },
+      from_stormcrown_spire: { x: 8, y: 2 },
     },
     exits: [
       {
@@ -695,6 +696,13 @@ export const ZONES = {
         toZone: 'highwatch_pass',
         toSpawn: 'from_sunscar_relay',
         label: 'West Trail → Highwatch Pass',
+      },
+      {
+        x: 8,
+        y: 1,
+        toZone: 'stormcrown_spire',
+        toSpawn: 'from_sunscar_relay',
+        label: 'Spire Switchback → Stormcrown Spire',
       },
       {
         x: 6,
@@ -791,6 +799,155 @@ export const ZONES = {
       { encounterId: 'sunscar_drone_sweep', enemyId: 'relay_drone', name: 'Relay Drone', weight: 2 },
     ],
   },
+  stormcrown_spire: {
+    id: 'stormcrown_spire',
+    name: 'Stormcrown Spire',
+    subtitle: 'Summit of the Storm',
+    danger: 4,
+    dangerLevel: 4,
+    description:
+      'Lightning-split basalt steps and ancient survey buttresses climb into the heart of the perpetual squall at Stormcrown Spire. Recovering the lost storm-survey records and defeating the Stormcrown Tyrant at the summit will secure the frontier skies.',
+    width: 9,
+    height: 7,
+    grid: [
+      '^^^,,,^^^',
+      '#...,...#',
+      '#.#.#.#.#',
+      '#...,...#',
+      '#...#...#',
+      '+...,...+',
+      '^^^^^^^^^',
+    ],
+    spawns: {
+      default: { x: 1, y: 5 },
+      from_sunscar_relay: { x: 1, y: 5 },
+    },
+    exits: [
+      {
+        x: 0,
+        y: 5,
+        toZone: 'sunscar_relay',
+        toSpawn: 'from_stormcrown_spire',
+        label: 'Lower Switchback → Sunscar Relay',
+      },
+      {
+        x: 8,
+        y: 5,
+        toZone: 'greyhaven',
+        toSpawn: 'default',
+        label: 'Signal Lift → Greyhaven',
+      },
+    ],
+    npcs: [],
+    interactables: [
+      {
+        id: 'survey_records_a',
+        interactionId: 'survey_records_a',
+        name: 'Western Storm-Survey Archive',
+        kind: 'quest',
+        x: 1,
+        y: 1,
+        symbol: '✦',
+        once: false,
+        description:
+          'A slate-sheltered survey locker holding early wind-shear charts and high-altitude pressure readings.',
+      },
+      {
+        id: 'survey_records_b',
+        interactionId: 'survey_records_b',
+        name: 'Eastern Barometer Logbook',
+        kind: 'quest',
+        x: 7,
+        y: 3,
+        symbol: '✦',
+        once: false,
+        description:
+          'A brass-bound logbook chained to the eastern observation parapet, recording storm-front recurrence cycles.',
+      },
+      {
+        id: 'spire_summit',
+        interactionId: 'spire_summit',
+        name: 'Stormcrown Summit Cradle',
+        kind: 'quest',
+        x: 4,
+        y: 0,
+        symbol: '✦',
+        once: false,
+        requiresEncounterCleared: 'stormcrown_tyrant',
+        description:
+          'The lightning-scoured summit array where the spire’s master weather vane and storm-rod anchor into the peak.',
+      },
+      {
+        id: 'spire_supply_cache',
+        interactionId: 'spire_supply_cache',
+        name: 'Spire Expedition Cache',
+        kind: 'cache',
+        x: 2,
+        y: 5,
+        symbol: '▣',
+        once: true,
+        rewards: [
+          { id: 'storm_tonic', qty: 1 },
+          { id: 'thunder_iron', qty: 1 },
+          { id: 'spiced_broth', qty: 1 },
+        ],
+        description:
+          'An iron-strapped expedition footlocker left by the first storm-surveyors with tonics and Thunder Iron.',
+      },
+      {
+        id: 'stormcrown_post',
+        interactionId: 'stormcrown_post',
+        name: 'Stormcrown Trading Post',
+        kind: 'shop',
+        x: 4,
+        y: 5,
+        symbol: '$',
+        once: false,
+        description:
+          'A wind-lashed quartermaster depot at the base of the spire trading Thunder Iron armaments and summit provisions.',
+      },
+    ],
+    encounters: [
+      {
+        id: 'stormcrown_tyrant',
+        encounterId: 'stormcrown_tyrant',
+        enemyId: 'stormcrown_tyrant',
+        name: 'Stormcrown Tyrant',
+        x: 4,
+        y: 1,
+        symbol: '!',
+        main: true,
+        description: 'A figure wreathed in living lightning commanding the upper steps of Stormcrown Spire.',
+      },
+      {
+        id: 'spire_sentry_post',
+        encounterId: 'spire_sentry_post',
+        enemyId: 'spire_sentry',
+        name: 'Spire Sentry Post',
+        x: 3,
+        y: 3,
+        symbol: '!',
+        main: false,
+        description: 'An armored construct sentry discharging chain lightning across the central terrace.',
+      },
+      {
+        id: 'spire_raider_camp',
+        encounterId: 'spire_raider_camp',
+        enemyId: 'ashen_raider',
+        name: 'Ashen Raider Camp',
+        x: 6,
+        y: 5,
+        symbol: '!',
+        main: false,
+        description: 'A camp of cinder-blade raiders scavenging Thunder Iron along the lower switchback.',
+      },
+    ],
+    randomEncounterChance: 0.14,
+    randomEncounters: [
+      { encounterId: 'spire_raider_ambush', enemyId: 'ashen_raider', name: 'Ashen Raider', weight: 2 },
+      { encounterId: 'spire_sentry_patrol', enemyId: 'spire_sentry', name: 'Spire Sentry', weight: 2 },
+    ],
+  },
 };
 
 export const ZONE_ORDER = [
@@ -801,4 +958,5 @@ export const ZONE_ORDER = [
   'saltmere_coast',
   'highwatch_pass',
   'sunscar_relay',
+  'stormcrown_spire',
 ];

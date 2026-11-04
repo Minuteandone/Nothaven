@@ -8,10 +8,11 @@ function safeClass(value) {
   return String(value || '').replace(/[^a-z0-9_-]/gi, '');
 }
 
-function fieldPack(inventory) {
+function fieldPack(inventory, party = []) {
   const stacks = Array.isArray(inventory) ? inventory.filter(stack => stack && stack.qty > 0) : [];
   const summaries = [];
   const consumables = [];
+  const companions = Array.isArray(party) ? party.slice(1) : [];
   const crafts = listRecipes()
     .filter(recipe => recipeInputsMet(stacks, recipe).ok)
     .map(recipe => `<button type="button" class="action-button action-button--ghost" data-action="craftFieldItem" data-arg="${escapeHTML(recipe.id)}" title="${escapeHTML(recipeSummary(recipe))}">${icon('focus')}<span>Craft: ${escapeHTML(recipe.name)}</span></button>`);
@@ -27,6 +28,17 @@ function fieldPack(inventory) {
         iconName: 'heart',
         variant: 'ghost',
       }));
+      companions.forEach((ally, idx) => {
+        if (!ally) return;
+        const targetIdx = idx + 1;
+        consumables.push(uiButton({
+          action: 'useFieldItem',
+          arg: `${item.id}:${targetIdx}`,
+          label: `Use ${item.name} → ${ally.name || `Ally ${targetIdx}`}`,
+          iconName: 'heart',
+          variant: 'ghost',
+        }));
+      });
     }
   }
 
@@ -87,6 +99,7 @@ function nearbyActionButton(action) {
   const types = {
     talk: { name: 'mapTalk', iconName: 'journal' },
     encounter: { name: 'mapEncounter', iconName: 'sword', variant: 'danger' },
+    patrol: { name: 'mapPatrol', iconName: 'sword', variant: 'secondary' },
     interact: { name: 'mapInteract', iconName: 'bag', variant: 'primary' },
     exit: { name: 'mapTravel', iconName: 'compass', variant: 'primary' },
   };
@@ -163,9 +176,11 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
         <section class="panel nearby-panel" aria-labelledby="nearby-title">
           <p class="eyebrow">Within reach</p><h2 id="nearby-title">Nearby Actions:</h2>
           <div class="nearby-actions">${contextButtons || '<p class="empty-state">Move beside a person, route, cache, or threat to interact.</p>'}</div>
-          ${fieldPack(state.inventory)}
+          ${fieldPack(state.inventory, state.party)}
           ${routes ? `<div class="visited-routes"><h3>${icon('map')}Visited Routes:</h3><div>${routes}</div></div>` : ''}
           <div class="explore-utilities">
+            ${uiButton({ action: 'openBag', label: 'Open Bag', iconName: 'bag', variant: 'ghost' })}
+            ${uiButton({ action: 'openJournal', label: 'Field Journal', iconName: 'journal', variant: 'ghost' })}
             ${uiButton({ action: 'save', label: 'Save Game', iconName: 'save' })}
             ${uiButton({ action: 'toTownScene', label: 'Town Overview', iconName: 'beacon', variant: 'ghost' })}
           </div>
