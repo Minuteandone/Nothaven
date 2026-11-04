@@ -9,7 +9,7 @@ function gameStub() {
     state: createInitialState(),
     storyDialogue: { speaker: 'Old conversation', location: 'greyhaven' },
     storyMessage: 'Old update',
-    setScene(name) { this.enteredScene = name; },
+    setScene(name) { this.enteredScene = name; this.state.scene = name; },
   };
 }
 
@@ -49,4 +49,77 @@ test('town renders the shared story panel and exposes its actions', () => {
   townScene.actions.storyTalk(game, { dataset: { arg: 'mara' } });
   assert.equal(game.state.story.stage, 'road');
   assert.match(townScene.render(game), /story-dialogue/);
+});
+
+test('continue resumes a valid saved exploration in its current zone', () => {
+  const saved = createInitialState();
+  saved.scene = 'explore';
+  saved.location = 'ridge_road';
+  saved.map = {
+    zoneId: 'ridge_road',
+    x: 4,
+    y: 2,
+    visitedZones: { greyhaven: true, ridge_road: true },
+    clearedEncounters: {},
+    completedInteractions: {},
+    log: [],
+  };
+  globalThis.localStorage = { getItem: () => JSON.stringify(saved) };
+  try {
+    const game = gameStub();
+    titleScene.actions.continue(game);
+    assert.equal(game.enteredScene, 'explore');
+    assert.equal(game.state.scene, 'explore');
+    assert.equal(game.state.location, 'ridge_road');
+    assert.equal(game.state.map.zoneId, 'ridge_road');
+    assert.equal(game.state.map.x, 4);
+    assert.equal(game.state.map.y, 2);
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
+
+test('continue synchronizes a non-exploration save to Greyhaven before town', () => {
+  const saved = createInitialState();
+  saved.scene = 'town';
+  saved.location = 'ridge_road';
+  saved.map = {
+    zoneId: 'ridge_road',
+    x: 4,
+    y: 2,
+    visitedZones: { greyhaven: true, ridge_road: true },
+    clearedEncounters: {},
+    completedInteractions: {},
+    log: [],
+  };
+  globalThis.localStorage = { getItem: () => JSON.stringify(saved) };
+  try {
+    const game = gameStub();
+    titleScene.actions.continue(game);
+    assert.equal(game.enteredScene, 'town');
+    assert.equal(game.state.scene, 'town');
+    assert.equal(game.state.location, 'greyhaven');
+    assert.equal(game.state.map.zoneId, 'greyhaven');
+    assert.equal(game.state.map.x, 2);
+    assert.equal(game.state.map.y, 3);
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
+
+test('continue does not resume exploration when location and map disagree', () => {
+  const saved = createInitialState();
+  saved.scene = 'explore';
+  saved.location = 'ridge_road';
+  saved.map = { zoneId: 'greyhaven', x: 4, y: 2 };
+  globalThis.localStorage = { getItem: () => JSON.stringify(saved) };
+  try {
+    const game = gameStub();
+    titleScene.actions.continue(game);
+    assert.equal(game.enteredScene, 'town');
+    assert.equal(game.state.location, 'greyhaven');
+    assert.equal(game.state.map.zoneId, 'greyhaven');
+  } finally {
+    delete globalThis.localStorage;
+  }
 });

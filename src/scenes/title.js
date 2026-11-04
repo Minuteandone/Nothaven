@@ -1,5 +1,6 @@
 import { createInitialState, loadGame, hasSave } from '../state.js';
 import { beaconArt, sceneHeader, uiButton } from '../ui/components.js';
+import { ZONES, ensureMapState, travelToZone } from '../map/index.js';
 
 function clearStoryTransients(game) {
   game.storyDialogue = null;
@@ -24,6 +25,23 @@ export const titleScene = {
   },
   actions: {
     newGame(game) { game.state = createInitialState(); clearStoryTransients(game); game.setScene('town'); },
-    continue(game) { const s = loadGame(); if (s) { game.state = s; clearStoryTransients(game); game.setScene('town'); } },
+    continue(game) {
+      const s = loadGame();
+      if (!s) return;
+      game.state = s;
+      clearStoryTransients(game);
+
+      const canResumeExploration = s.scene === 'explore'
+        && s.map
+        && ZONES[s.map.zoneId]
+        && s.map.zoneId === s.location;
+      if (canResumeExploration) {
+        ensureMapState(s);
+        game.setScene('explore');
+      } else {
+        travelToZone(s, 'greyhaven', 'default');
+        game.setScene('town', { message: 'Your expedition resumes in Greyhaven.' });
+      }
+    },
   },
 };
