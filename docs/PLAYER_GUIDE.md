@@ -157,3 +157,15 @@ Four wandering foes can appear on the early roads in addition to the familiar pa
 | Rime Wight | Highwatch Pass | **Numbing Frost** can leave you **shocked** | Keep a storm tonic handy and lean on attacks |
 
 Each adds an entry to the bestiary, so they help toward the **catalogue** feat. Their drops are ordinary supplies such as healing herbs, storm glass, field dressings, and tonics.
+
+### Watch House yard: drills, gauntlet and feats
+
+Greyhaven's **Sparring drills** board lets you refight any boss you have already defeated in the field, one bout at a time. Each drill pays **half that foe's experience to every party member**, but no gold, items, or journal entries — it is pure practice and cannot change the story. Defeating a boss in the field unlocks its drill. Each drill records how many times you have won and your best (fewest) rounds.
+
+Once **three** drills are unlocked, the **Yard Gauntlet** opens beside them: face every unlocked drill boss back to back, with wounds and spent MP carrying over between bouts. Losing ends the run but costs nothing — no gold is lost and the party stands back up. Your best run (foes beaten in one attempt) is recorded.
+
+The **Wardens' feats** panel lists milestones of your journey. Alongside the chapter milestones it tracks three yard-and-road achievements:
+
+- **Yard Champion** — win a Sparring Drill against every boss.
+- **Unbroken Run** — clear the full Yard Gauntlet against every boss without a single loss.
+- **Roadwise** — defeat each of the four frontier wanderers described above.
