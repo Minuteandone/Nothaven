@@ -93,6 +93,13 @@ function commands({ combat, hero, inventory, menu }) {
   </div>`;
 }
 
+const DIFFICULTY_NOTES = { story: 'Story mode', veteran: 'Veteran mode' };
+/** Shows the active preset only when it differs from Standard. */
+export function difficultyNote(combat) {
+  const id = combat?.difficulty;
+  return Object.prototype.hasOwnProperty.call(DIFFICULTY_NOTES, id) ? ` · ${DIFFICULTY_NOTES[id]}` : '';
+}
+
 export function renderCombat({ combat, party, inventory = [], menu = 'main' }) {
   const hero = party[0];
   const round = Math.max(1, number(combat.turn, 1));
@@ -101,7 +108,7 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main' }) {
   const logLines = (Array.isArray(combat.log) ? combat.log : []).slice(-8);
   return `<div class="game-shell combat-screen" data-combat-state="${safeClass(combat.over || 'active')}">
     <div class="combat-heading-row">
-      ${sceneHeader({ eyebrow: 'Turn-based encounter', title: `Battle — Round ${round}`, subtitle: `${combat.enemy.name} · ${combat.enemy.boss ? 'Boss encounter' : 'Hostile encounter'}`, iconName: 'sword' })}
+      ${sceneHeader({ eyebrow: 'Turn-based encounter', title: `Battle — Round ${round}`, subtitle: `${combat.enemy.name} · ${combat.enemy.boss ? 'Boss encounter' : 'Hostile encounter'}${difficultyNote(combat)}`, iconName: 'sword' })}
       <div class="turn-indicator"><span class="status-dot"></span><span>${phase}</span><strong>Round ${round}</strong></div>
     </div>
     <section class="panel combat combat-arena" aria-label="Combatants">
