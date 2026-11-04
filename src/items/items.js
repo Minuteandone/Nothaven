@@ -75,6 +75,12 @@ export const ITEMS = Object.freeze({
     price: 64, sellPrice: 31,
     description: 'Distilled from Stormcrown meltwater and relay herbs. Tastes of copper coins and high thin air, and steadies every jangled nerve.',
   },
+  tempest_salve: {
+    id: 'tempest_salve', name: 'Tempest Salve', type: TYPES.CONSUMABLE,
+    use: { hp: 75, cure: 'shocked' },
+    price: 66, sellPrice: 33,
+    description: 'Balm brewed from calm-of-the-eye meltwater. Knits deep wounds and settles nerves frazzled by the storm\'s static.',
+  },
   rations: {
     id: 'rations', name: 'Trail Rations', type: TYPES.CONSUMABLE,
     use: { hp: 10 }, price: 6, sellPrice: 2,
@@ -119,6 +125,12 @@ export const ITEMS = Object.freeze({
     price: 235, sellPrice: 112,
     description: 'Thunder Iron folded and quenched in summit rain. The edge hums when the sky over the spire turns dark.',
   },
+  tempest_edge: {
+    id: 'tempest_edge', name: 'Tempest Edge', type: TYPES.EQUIPMENT, slot: 'weapon',
+    stats: { atk: 21 },
+    price: 360, sellPrice: 180,
+    description: 'Stormforged steel drawn long and thin at the eye post anvil, eager for the hunt inside the storm.',
+  },
   // ---- Equipment: armor ----
   padded_vest: {
     id: 'padded_vest', name: 'Padded Vest', type: TYPES.EQUIPMENT, slot: 'armor',
@@ -156,6 +168,12 @@ export const ITEMS = Object.freeze({
     stats: { def: 12, hp: 10 },
     price: 245, sellPrice: 118,
     description: 'Dark plates hammered from Thunder Iron over a stormcloth lining. Made for the last climb, where the wind carries sparks.',
+  },
+  maelstrom_plate: {
+    id: 'maelstrom_plate', name: 'Maelstrom Plate', type: TYPES.EQUIPMENT, slot: 'armor',
+    stats: { def: 15, hp: 14 },
+    price: 370, sellPrice: 185,
+    description: 'Stormcrown plate rebuilt at the eye with interlocking shoulders, so the whirlwind finds no grip.',
   },
   // ---- Equipment: trinkets ----
   tin_whistle: {
@@ -199,6 +217,12 @@ export const ITEMS = Object.freeze({
     stats: { atk: 1, mp: 10, spd: 2 },
     price: 150, sellPrice: 72,
     description: 'A sliver of crown glass set in relay copper. The trapped lightning steadies the hand and feeds the caster.',
+  },
+  stormeye_signet: {
+    id: 'stormeye_signet', name: 'Stormeye Signet', type: TYPES.EQUIPMENT, slot: 'trinket',
+    stats: { mp: 8, spd: 3 },
+    price: 210, sellPrice: 105,
+    description: 'A ring of calm glass cut at the eye post bench; the bearer steps lightly, as if the wind itself made way.',
   },
   // ---- Key items ----
   observatory_lens: {

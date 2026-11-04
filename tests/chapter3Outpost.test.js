@@ -33,7 +33,7 @@ function countOf(inv, id) {
 }
 
 test('SHOPS registry includes relay_outpost and getShop rejects unknowns', () => {
-  assert.deepEqual(Object.keys(SHOPS).sort(), ['greyhaven_shop', 'relay_outpost', 'saltmere_post', 'stormcrown_post']);
+  assert.deepEqual(Object.keys(SHOPS).sort(), ['greyhaven_shop', 'relay_outpost', 'saltmere_post', 'stormcrown_post', 'storms_eye_post']);
   assert.equal(getShop('relay_outpost').name, 'Relay Outpost Stores');
   assert.equal(getShop('constructor'), null);
   assert.equal(getShop(42), null);

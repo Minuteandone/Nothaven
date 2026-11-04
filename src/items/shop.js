@@ -39,11 +39,19 @@ export const STORMCROWN_POST = Object.freeze({
   stock: ['ember_broth', 'skyward_flask', 'thunder_iron', 'stormforged_blade', 'stormcrown_plate', 'crownshard_focus'],
 });
 
+export const STORMS_EYE_POST = Object.freeze({
+  id: 'storms_eye_post',
+  name: "Storm's Eye Post",
+  greeting: 'The trader at the eye keeps one shelf under a glass bell. "Calm center, wild rim. Buy before you go in."',
+  stock: ['tempest_salve', 'thunder_iron', 'tempest_edge', 'maelstrom_plate', 'stormeye_signet'],
+});
+
 export const SHOPS = Object.freeze({
   greyhaven_shop: GREYHAVEN_SHOP,
   saltmere_post: SALTMERE_POST,
   relay_outpost: RELAY_OUTPOST,
   stormcrown_post: STORMCROWN_POST,
+  storms_eye_post: STORMS_EYE_POST,
 });
 
 /**
