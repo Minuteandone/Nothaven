@@ -98,7 +98,7 @@ const OBJECTIVES = {
   road: 'Visit the ridge road and defeat the ridge patrol.',
   road_report: 'Return to Mara in Greyhaven to report the cleared road.',
   lens_briefing: 'Speak to Iven in Greyhaven about the broken beacon.',
-  lens: 'Visit the observatory ruins and defeat the observatory sentinel to recover the lens.',
+  lens: 'Visit the observatory ruins and defeat the threat guarding the focusing lens.',
   lens_report: 'Bring the focusing lens to Iven in Greyhaven.',
   decision: 'Choose the beacon’s reach: protect Greyhaven or share its signal.',
 };
@@ -160,7 +160,7 @@ export function getDialogue(state = createStoryState(), npcId) {
   }
   if (npcId === 'iven') {
     let text = 'The beacon failed on my watch. I have studied every drawing, but drawings cannot replace a broken lens.';
-    if (['lens_briefing', 'lens'].includes(s)) text = 'A focusing lens survives in the observatory ruins. Its sentinel no longer recognizes the keepers. Recover it, and I can repair the beacon.';
+    if (['lens_briefing', 'lens'].includes(s)) text = 'A focusing lens survives in the observatory ruins. Storm-driven creatures have overrun its galleries. Recover it, and I can repair the beacon.';
     if (s === 'lens_report') text = 'You found it! I can fit the lens, but we must choose how far to spread its light. Listen to Mara and Tamsin first.';
     if (['council', 'decision'].includes(s)) text = 'One strong shield or many smaller ones. Neither setting can do everything. Hear them both, then meet the storm at the beacon tower.';
     if (s === 'complete') text = 'For the first time since the storm, I can look up at the tower without shame. Thank you.';
