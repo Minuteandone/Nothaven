@@ -4,6 +4,7 @@
 
 const LINES = {
   tamsin: {
+    spire: 'The Spire’s crown is dark at last. From the summit I could see every road we ever cleared, all at once.',
     shelter_network: 'Sheltered waystations every half day of walking. My feet thank you; my scouting pride is wounded.',
     route_network: 'With the relay calling the patrols, half the dust raiders turn back before we even reach them. Boring roads are good roads.',
     early: 'The ridge road twists like a snapped rope. Stay low on the switchbacks and the bandits never see you coming.',
@@ -12,6 +13,7 @@ const LINES = {
     rescued: 'Both roads are open again. I counted the caravans this morning and ran out of fingers.',
   },
   iven: {
+    spire: 'I kept a sliver of the Stormcrown Shard under glass. It still flickers when thunder rolls far out at sea.',
     shelter_network: 'The relay feeds warmth to every waystation now. I added a little dial to each one. Nobody asked, but they all use it.',
     route_network: 'Routing the network means every signal tower talks to every other. I spent all night listening to them chatter.',
     early: 'The focusing lens bends storm light into a single beam. Without it the beacon is just a very tall lamp.',
@@ -20,6 +22,7 @@ const LINES = {
     rescued: 'Saltmere sent spare copper wire and Highwatch sent star charts. I may never sleep again.',
   },
   bram: {
+    spire: 'Saltmere fishers sailed past the headland today without once looking up at the sky. That is what peace looks like.',
     shelter_network: 'Saltmere runners rest at the waystations now. A roof and a fire for two coins is a fair trade on a long road.',
     route_network: 'The relay clears the roads before the caravans set out. Fewer fights, more cargo. Saltmere approves.',
     early: 'The tide took half the pier, but it will not take the rest while I can still lift a shield.',
@@ -28,6 +31,7 @@ const LINES = {
     rescued: 'The harbor watch is back on the breakwater. I owe you a proper meal at the Saltmere Post.',
   },
   sela: {
+    spire: 'I ran the Spire switchbacks again this morning just to prove I could. The wind was only wind.',
     shelter_network: 'The cairn runners sleep in the relay shelters between legs. I have never seen them so rested, or so smug.',
     route_network: 'Signals race from the pass to the coast faster than I can run. I am not jealous. Much.',
     early: 'Every cairn on the pass is a promise: light it, and the next runner knows the path is safe.',
@@ -40,6 +44,8 @@ const LINES = {
 export function companionRemark(id, story = {}) {
   if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(LINES, id)) return '';
   const set = LINES[id];
+  const f = story?.flags || {};
+  if ((f.spire_summit || f.spire_victory || f.victory_stormcrown_tyrant) && set.spire) return set.spire;
   const relay = story?.flags?.relay_choice;
   if ((relay === 'shelter_network' || relay === 'route_network') && set[relay]) return set[relay];
   if (story?.flags?.rescue_reward) return set.rescued;
