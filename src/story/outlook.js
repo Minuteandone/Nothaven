@@ -1,3 +1,4 @@
+import { getRelayJournal, relayAftermath } from './relay.js';
 import { RESCUE_ROUTES, routeRescued } from './rescue.js';
 
 // Read-only scene copy: viewing the town never advances or rewards a quest.
@@ -16,12 +17,22 @@ export function getTownOutlook(story) {
   const light = story.ending === 'protect_town'
     ? 'A steady blue shield holds over Greyhaven.'
     : 'Silver light marks the roads beyond Greyhaven, while watch crews tend the thinner town shield.';
+  if (flags.relay_choice) return {
+    title: 'The inland lights answer',
+    text: relayAftermath(story),
+    hint: flags.relief_reward ? 'The network is running. Rest, regroup, and explore the dangers still beyond the cleared roads.' : 'Mara still welcomes the First Light Relief supplies listed in your journal.',
+  };
+  if (flags.relay_accepted && flags.rescue_reward) return {
+    title: 'An inland signal to restore',
+    text: `${light} The council’s commission will give the returning settlements a network of their own.`,
+    hint: getRelayJournal(story)[0].objective,
+  };
   if (flags.rescue_reward) return {
     title: 'The roads bring people home',
     text: `${light} Saltmere’s harbor watch and Highwatch’s supply crews can travel again. The first returning caravans bring neighbors, medicine, and news through the gates.`,
     hint: flags.relief_reward
-      ? 'Your relief supplies have joined the caravans. Rest, regroup, and explore the dangers still beyond the cleared roads.'
-      : 'The roads are open. Mara still welcomes the First Light Relief supplies listed in your journal.',
+      ? 'Your relief supplies have joined the caravans. Accept the council’s relay commission to restore Sunscar’s inland network.'
+      : 'Accept the council’s relay commission for the next expedition. Mara still welcomes the First Light Relief supplies.',
   };
   if (flags.rescue_accepted) {
     const safe = RESCUE_ROUTES.filter(route => routeRescued(story, route));
