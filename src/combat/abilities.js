@@ -32,8 +32,8 @@ export const MONSTER_ABILITIES = {
     desc: 'Raises attack with a piercing cry.',
     fx: 'buff', stat: 'atk', amount: 2, turns: 3,
   },
-  'm:golden_gunk': {
-    id: 'm:golden_gunk', name: 'Golden Gunk',
+  'm:corrosive_slime': {
+    id: 'm:corrosive_slime', name: 'Corrosive Slime',
     desc: 'Flings sticky gold that slows its target.',
     fx: 'debuff', stat: 'spd', amount: 2, turns: 2,
   },

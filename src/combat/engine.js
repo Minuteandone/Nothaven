@@ -12,14 +12,14 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const CRIT_QUIPS = [
   () => 'Critical hit!',
   () => 'A devastating blow!',
-  () => "It's over-easy!", // a soft-boiled nod for attentive players
+  () => 'A devastating blow!',
   () => 'You find a crack in their guard!',
 ];
 
 const FLEE_QUIPS = [
   () => 'You escape!',
   () => 'You slip away into the storm.',
-  () => 'You make like a hen and scurry off, egg on your face.',
+  () => 'You scramble away before things get worse!',
 ];
 
 export function bestCombatant(state) {
@@ -156,7 +156,7 @@ function enemyTurn(state) {
       const msg = applyStatus(state, ab.fx === 'buff' ? 'enemy' : 'hero', {
         buff: ab.fx === 'buff', debuff: ab.fx === 'debuff',
         dot: ab.fx === 'burn' ? ab.dot : undefined,
-        stat: ab.stat, amount: ab.amount, turns: ab.turns, label: ab.id === 'm:golden_gunk' ? 'slowed' : ab.id === 'm:ember_burst' ? 'burn' : ab.stat,
+        stat: ab.stat, amount: ab.amount, turns: ab.turns, label: ab.id === 'm:corrosive_slime' ? 'slowed' : ab.id === 'm:ember_burst' ? 'burn' : ab.stat,
       });
       c.log.push(`${enemy.name} uses ${ab.name}: ${msg}`);
     } else if (ab.fx === 'selfDamage') {

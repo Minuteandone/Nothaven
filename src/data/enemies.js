@@ -20,16 +20,16 @@ export const ENEMIES = {
     abilities: [{ id: 'm:howl' }],
     loot: [{ id: 'wolf_pelt', chance: 0.4, minQty: 1, maxQty: 1 }],
   },
-  yolkooze: {
-    id: 'yolkooze',
-    name: 'Yolk Ooze',
-    desc: 'A quivering ooze glowing a sickly gold, congealed it is said from the yolks of broken stormbird nests.',
+  storm_ooze: {
+    id: 'storm_ooze',
+    name: 'Storm Ooze',
+    desc: 'A shimmering mass of electrified slime, born where lightning strikes the ridge puddles repeatedly.',
     hp: 18, mp: 0, atk: 5, def: 2, spd: 3,
     xp: 9, gold: 6,
-    abilities: [{ id: 'm:golden_gunk' }],
+    abilities: [{ id: 'm:corrosive_slime' }],
     loot: [
-      { id: 'golden_egg', chance: 0.12, minQty: 1, maxQty: 1 },
-      { id: 'yolk_glob', chance: 0.3, minQty: 1, maxQty: 2 },
+      { id: 'storm_crystal', chance: 0.12, minQty: 1, maxQty: 1 },
+      { id: 'ooze_essence', chance: 0.3, minQty: 1, maxQty: 2 },
     ],
   },
   rust_sentinel: {
