@@ -13,6 +13,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'Defend halves damage to Wren during the next enemy action. Fleeing depends on speed and never works against a boss.',
     'Bosses grow fiercer once badly wounded. Watch for the warning line in the battle log.',
     'The Beacon Charge gauge fills as Wren attacks, uses skills, defends and takes hits. When it is full, unleash a Beacon Burst: a def-ignoring blast that also clears bleeding and shock, usable even while shocked.',
+    'After each victory, the battle summary tallies the rounds fought, damage dealt, damage your party took and any Beacon Bursts fired.',
     'If Wren falls, the patrol carries the party back to Greyhaven at half health, minus half your gold.',
   ] }),
   Object.freeze({ title: 'Conditions', lines: [
