@@ -7,6 +7,8 @@ test('burstCheer picks the first conscious companion with a known role', () => {
   assert.equal(burstCheer([{ role: 'keeper', hp: 0 }, { role: 'guardian', hp: 5 }]), BURST_CHEERS.guardian);
   assert.equal(burstCheer([{ name: 'Wren', hp: 30 }]), '');
   assert.equal(burstCheer(null), '');
+  assert.equal(burstCheer([{ role: 'constructor', hp: 9 }, { role: 'toString', hp: 9 }]), '');
+  assert.equal(burstCheer([{ role: '__proto__', hp: 9 }, { role: 'scout', hp: 9 }]), BURST_CHEERS.scout);
   assert.ok(Object.isFrozen(BURST_CHEERS));
   assert.deepEqual(Object.keys(BURST_CHEERS).sort(), ['guardian', 'keeper', 'scout', 'signaler']);
 });

@@ -226,7 +226,8 @@ export const BURST_CHEERS = Object.freeze({
 
 export function burstCheer(party) {
   if (!Array.isArray(party)) return '';
-  const ally = party.find((m) => m && (m.hp || 0) > 0 && BURST_CHEERS[m.role]);
+  const known = (role) => typeof role === 'string' && Object.prototype.hasOwnProperty.call(BURST_CHEERS, role);
+  const ally = party.find((m) => m && (m.hp || 0) > 0 && known(m.role));
   return ally ? BURST_CHEERS[ally.role] : '';
 }
 
