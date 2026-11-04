@@ -43,6 +43,21 @@ export const ITEMS = Object.freeze({
     use: { mp: 20, cure: 'shocked' }, price: 22, sellPrice: 11,
     description: 'A crackling draught distilled from storm-charged salts. Restores focus.',
   },
+  field_dressing: {
+    id: 'field_dressing', name: 'Field Dressing', type: TYPES.CONSUMABLE,
+    use: { hp: 20, cure: 'bleeding' }, price: 16, sellPrice: 8,
+    description: 'Rolled gauze, a splint of driftwood, and a knot tied tight. Built for the field.',
+  },
+  hearty_chowder: {
+    id: 'hearty_chowder', name: 'Hearty Chowder', type: TYPES.CONSUMABLE,
+    use: { hp: 45 }, price: 26, sellPrice: 12,
+    description: 'Smoked fish and root vegetables simmered in a storm-proof pot. A meal, not a snack.',
+  },
+  highland_flask: {
+    id: 'highland_flask', name: 'Highland Flask', type: TYPES.CONSUMABLE,
+    use: { mp: 35, cure: 'shocked' }, price: 34, sellPrice: 16,
+    description: "A mountaineer's reserve of juniper and melted snowmelt. Warms the hands, sharpens the mind.",
+  },
   rations: {
     id: 'rations', name: 'Trail Rations', type: TYPES.CONSUMABLE,
     use: { hp: 10 }, price: 6, sellPrice: 2,
@@ -70,6 +85,11 @@ export const ITEMS = Object.freeze({
     stats: { atk: 9 }, price: 95, sellPrice: 45,
     description: 'A guard blade reforged over the hearth from storm-wreck salvage. Honest iron, second life.',
   },
+  tidebound_cutlass: {
+    id: 'tidebound_cutlass', name: 'Tidebound Cutlass', type: TYPES.EQUIPMENT, slot: 'weapon',
+    stats: { atk: 11 }, price: 120, sellPrice: 58,
+    description: 'A short curved blade the Saltmere salvagers keep waxed against the spray. It remembers the sea.',
+  },
 
   // ---- Equipment: armor ----
   padded_vest: {
@@ -86,6 +106,16 @@ export const ITEMS = Object.freeze({
     id: 'keeper_coat', name: "Keeper's Coat", type: TYPES.EQUIPMENT, slot: 'armor',
     stats: { def: 8, hp: 10 }, price: 150, sellPrice: 75,
     description: 'The heavy weathercoat of a beacon keeper, warded against storm and spark.',
+  },
+  saltweather_jerkin: {
+    id: 'saltweather_jerkin', name: 'Saltweather Jerkin', type: TYPES.EQUIPMENT, slot: 'armor',
+    stats: { def: 6, hp: 5 }, price: 70, sellPrice: 33,
+    description: 'Tarred canvas layered over boiled hide. Salt-stiff, storm-ready, faintly smelling of the docks.',
+  },
+  frostward_cloak: {
+    id: 'frostward_cloak', name: 'Frostward Cloak', type: TYPES.EQUIPMENT, slot: 'armor',
+    stats: { def: 9, hp: 5 }, price: 165, sellPrice: 80,
+    description: 'Highwatch wool lined with panels of storm glass that hold the mountain cold at bay.',
   },
 
   // ---- Equipment: trinkets ----
@@ -108,6 +138,16 @@ export const ITEMS = Object.freeze({
     id: 'storm_lantern', name: 'Storm Lantern', type: TYPES.EQUIPMENT, slot: 'trinket',
     stats: { hp: 8, spd: 1 }, price: 40, sellPrice: 18,
     description: 'A shut brass lantern that holds its flame against the gale. Light steadies the hand.',
+  },
+  gale_charm: {
+    id: 'gale_charm', name: 'Gale Charm', type: TYPES.EQUIPMENT, slot: 'trinket',
+    stats: { spd: 2, mp: 3 }, price: 60, sellPrice: 28,
+    description: 'A lens shard wound in fine signal wire. It tugs gently toward the open wind.',
+  },
+  pearl_focus: {
+    id: 'pearl_focus', name: 'Pearl Focus', type: TYPES.EQUIPMENT, slot: 'trinket',
+    stats: { mp: 8 }, price: 50, sellPrice: 24,
+    description: 'A grey pearl from the Saltmere beds. Rest the eyes on it and the storm quiets.',
   },
 
   // ---- Key items ----

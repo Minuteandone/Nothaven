@@ -45,6 +45,55 @@ export const RECIPES = Object.freeze([
     inputs: [{ id: 'leather_armor', qty: 1 }, { id: 'salvaged_wiring', qty: 2 }],
     outputs: [{ id: 'keeper_coat', qty: 1 }],
   },
+  {
+    id: 'forge_cutlass',
+    name: 'Forge a Tidebound Cutlass',
+    description: 'Hone a salvaged blade against reef chitin edges and set a shard of storm glass in the grip.',
+    inputs: [{ id: 'salvaged_blade', qty: 1 }, { id: 'scrap_metal', qty: 2 }, { id: 'storm_glass', qty: 1 }],
+    outputs: [{ id: 'tidebound_cutlass', qty: 1 }],
+  },
+  {
+    id: 'weave_jerkin',
+    name: 'Weave a Saltweather Jerkin',
+    description: 'Overlay oiled hide with tarred canvas scraped from the harbor wrecks.',
+    inputs: [{ id: 'leather_armor', qty: 1 }, { id: 'scrap_metal', qty: 2 }],
+    outputs: [{ id: 'saltweather_jerkin', qty: 1 }],
+  },
+  {
+    id: 'line_frostward_cloak',
+    name: 'Line a Frostward Cloak',
+    description: 'Sew panels of storm glass into highland wool; the panels drink the cold before you feel it.',
+    inputs: [{ id: 'saltweather_jerkin', qty: 1 }, { id: 'storm_glass', qty: 2 }],
+    outputs: [{ id: 'frostward_cloak', qty: 1 }],
+  },
+  {
+    id: 'string_gale_charm',
+    name: 'String a Gale Charm',
+    description: 'Wind fine signal wire around a lens shard until it hums against the wind.',
+    inputs: [{ id: 'lens_shard', qty: 1 }, { id: 'salvaged_wiring', qty: 2 }],
+    outputs: [{ id: 'gale_charm', qty: 1 }],
+  },
+  {
+    id: 'brew_chowder',
+    name: 'Brew Hearty Chowder',
+    description: 'Smoke the day\'s catch over the hearth and simmer it slow with trail rations.',
+    inputs: [{ id: 'rations', qty: 2 }, { id: 'healing_herb', qty: 1 }],
+    outputs: [{ id: 'hearty_chowder', qty: 1 }],
+  },
+  {
+    id: 'pack_field_dressing',
+    name: 'Pack a Field Dressing',
+    description: 'Boil and double-fold two linen bandages into one field-ready roll.',
+    inputs: [{ id: 'bandage', qty: 2 }],
+    outputs: [{ id: 'field_dressing', qty: 1 }],
+  },
+  {
+    id: 'mull_highland_flask',
+    name: 'Mull a Highland Flask',
+    description: 'Warm a storm tonic over the hearth with juniper snowmelt until it steadies instead of sparks.',
+    inputs: [{ id: 'storm_tonic', qty: 1 }, { id: 'storm_glass', qty: 1 }],
+    outputs: [{ id: 'highland_flask', qty: 1 }],
+  },
 ]);
 
 /** Look up a recipe by id (own-property safe). @returns {Recipe|undefined} */

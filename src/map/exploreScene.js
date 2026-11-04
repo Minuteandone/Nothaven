@@ -40,7 +40,7 @@ function handleActionResult(game, result) {
   emitMapEvents(game, result.events);
 
   if (result.triggerShop && game.scenes?.shop) {
-    game.setScene('shop', { returnScene: 'explore' });
+    game.setScene('shop', { returnScene: 'explore', shopId: result.triggerShop.shopId });
     return;
   }
 
