@@ -4,6 +4,11 @@ import { guideScene, GUIDE_SECTIONS, skillRoadmap } from '../src/scenes/guide.js
 import { titleScene } from '../src/scenes/title.js';
 import { SKILL_UNLOCKS } from '../src/combat/rules.js';
 
+if (!globalThis.localStorage) {
+  const store = new Map();
+  globalThis.localStorage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
+}
+
 test('skill roadmap lists every unlock in level order', () => {
   const rows = skillRoadmap();
   assert.equal(rows.length, Object.keys(SKILL_UNLOCKS).length);
