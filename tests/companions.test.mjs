@@ -6,6 +6,7 @@ import { musterScene } from '../src/scenes/muster.js';
 import { combatScene } from '../src/scenes/combat.js';
 import { createInitialState } from '../src/state.js';
 import { migrateSave } from '../src/core/save.js';
+import { GROWTH, xpForLevel, xpToNext } from '../src/core/progression.js';
 
 const fixed = (v) => () => v;
 const seq = (...vals) => { let i = 0; return () => vals[i++ % vals.length]; };
@@ -55,8 +56,16 @@ test('dismissed companions keep their progress in reserve', () => {
 test('new companions scale to the hero level', () => {
   const m = createCompanionMember('iven', 3);
   assert.equal(m.level, 3);
-  assert.equal(m.maxHp, COMPANIONS.iven.stats.hp + 10);
+  assert.equal(m.maxHp, COMPANIONS.iven.stats.hp + 2 * GROWTH.maxHp);
+  assert.equal(m.maxMp, COMPANIONS.iven.stats.mp + 2 * GROWTH.maxMp);
   assert.equal(m.hp, m.maxHp);
+});
+
+test('late recruits start on the cumulative XP curve', () => {
+  const m = createCompanionMember('iven', 3);
+  assert.equal(m.xp, xpForLevel(3));
+  assert.equal(xpToNext(m), xpForLevel(4) - xpForLevel(3));
+  assert.equal(createCompanionMember('tamsin', 1).xp, 0);
 });
 
 test('keeper mends the most wounded ally; scout aimed shot', () => {

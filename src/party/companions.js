@@ -2,6 +2,7 @@
 // The hero (party[0]) is player-controlled; companions in party[1..] act
 // automatically in combat (see companionTurn in src/combat/rules.js).
 import { createEquipment } from '../items/equipment.js';
+import { GROWTH, xpForLevel } from '../core/progression.js';
 
 export const MAX_PARTY = 3;
 
@@ -45,13 +46,13 @@ export function createCompanionMember(id, level = 1) {
   const s = c.stats;
   const lv = Math.max(1, Math.floor(level) || 1);
   const up = lv - 1;
-  const maxHp = s.hp + up * 5;
-  const maxMp = s.mp + up * 2;
+  const maxHp = s.hp + up * GROWTH.maxHp;
+  const maxMp = s.mp + up * GROWTH.maxMp;
   return {
     id: c.id, name: c.name, role: c.role, companion: true,
     hp: maxHp, maxHp, mp: maxMp, maxMp,
-    atk: s.atk + up * 2, def: s.def + up, spd: s.spd + up,
-    level: lv, xp: 0, statuses: [], equipment: createEquipment(),
+    atk: s.atk + up * GROWTH.atk, def: s.def + up * GROWTH.def, spd: s.spd + up * GROWTH.spd,
+    level: lv, xp: xpForLevel(lv), statuses: [], equipment: createEquipment(),
   };
 }
 
