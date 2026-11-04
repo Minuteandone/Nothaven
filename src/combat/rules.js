@@ -45,6 +45,22 @@ function addStatus(unit, id, turns, store) {
   store[id] = Math.max(store[id] || 0, turns);
 }
 
+/**
+ * Boss second phase: when an enemy with `enrage {threshold, atk, chance, line}`
+ * drops to threshold x maxHp or below, it enrages once per fight (atk bonus,
+ * optional new ability chance) and logs its line. Returns log lines.
+ */
+export function checkBossPhase(c) {
+  const e = c && c.enemy;
+  if (!e || !e.enrage || c.enraged || e.hp <= 0) return [];
+  const t = typeof e.enrage.threshold === 'number' ? e.enrage.threshold : 0.5;
+  if (e.hp > Math.floor((e.maxHp || e.hp) * t)) return [];
+  c.enraged = true;
+  e.atk += e.enrage.atk || 0;
+  if (e.ability && typeof e.enrage.chance === 'number') e.ability = { ...e.ability, chance: e.enrage.chance };
+  return [e.enrage.line || `${e.name} grows desperate!`];
+}
+
 /** Create a fresh combat object. Unknown enemy ids fall back to storm_rat. */
 export function createCombat({ enemyId, encounterId = null, returnScene = 'town' } = {}) {
   const base = (typeof enemyId === 'string' && Object.prototype.hasOwnProperty.call(ENEMIES, enemyId)) ? ENEMIES[enemyId] : ENEMIES.storm_rat;
@@ -92,6 +108,7 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
     lines.push(`${e.name} is stunned and loses its turn.`);
     return lines;
   }
+  lines.push(...checkBossPhase(c));
   // Pick a target among living party members (rng is only consumed with 2+ targets).
   const living = (party || [hero]).filter((m) => m && m.hp > 0);
   const target = living.length > 1 ? living[Math.floor(rng() * living.length) % living.length] : hero;

@@ -248,3 +248,29 @@ test('Stormbreaker deals heavy damage', async () => {
   assert.equal(hero.mp, 13);
   assert.ok(before - c.enemy.hp >= Math.floor(20 * 2.2) - c.enemy.def - 1);
 });
+
+test('bosses enrage once at half HP: atk bonus, ability chance, log line', async () => {
+  const { createCombat, checkBossPhase, enemyTurn } = await import('../src/combat/rules.js');
+  const c = createCombat({ enemyId: 'pass_warlord' });
+  const baseAtk = c.enemy.atk;
+  assert.deepEqual(checkBossPhase(c), []);
+  c.enemy.hp = Math.floor(c.enemy.maxHp / 2);
+  const hero = { id: 'hero', name: 'Wren', hp: 30, maxHp: 30, mp: 10, maxMp: 10, atk: 6, def: 3, spd: 5, level: 1, statuses: [] };
+  const lines = enemyTurn(c, hero, () => 0.99, [hero]);
+  assert.equal(c.enraged, true);
+  assert.equal(c.enemy.atk, baseAtk + 3);
+  assert.equal(c.enemy.ability.chance, 0.5);
+  assert.match(lines[0], /Warlord/);
+  assert.deepEqual(checkBossPhase(c), [], 'only once per fight');
+  const fresh = createCombat({ enemyId: 'pass_warlord' });
+  assert.equal(fresh.enemy.atk, baseAtk, 'base enemy data is not mutated');
+  assert.equal(fresh.enemy.ability.chance, 0.35);
+});
+
+test('non-boss enemies never enrage', async () => {
+  const { createCombat, checkBossPhase } = await import('../src/combat/rules.js');
+  const c = createCombat({ enemyId: 'storm_rat' });
+  c.enemy.hp = 1;
+  assert.deepEqual(checkBossPhase(c), []);
+  assert.ok(!c.enraged);
+});
