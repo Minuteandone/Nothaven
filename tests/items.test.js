@@ -93,7 +93,7 @@ test('equip / unequip swap through the inventory and aggregate stats', () => {
   actor = res.actor; inv = res.inv;
   assert.equal(countItem(inv, 'iron_sword'), 0, 'equipped item leaves inventory');
   assert.equal(actor.equipment.weapon, 'iron_sword');
-  assert.deepEqual(totalStats(actor), { atk: 7, def: 0, hp: 0, mp: 0 });
+  assert.deepEqual(totalStats(actor), { atk: 7, def: 0, hp: 0, mp: 0, spd: 0 });
   // full set
   res = equipItem(actor, inv, 'keeper_coat'); actor = res.actor; inv = res.inv;
   res = equipItem(actor, inv, 'scout_compass'); actor = res.actor; inv = res.inv;
@@ -115,6 +115,19 @@ test('equip / unequip swap through the inventory and aggregate stats', () => {
   assert.equal(equipItem(actor, inv, 'bandage').ok, false);
   assert.equal(canActorEquip('bandage'), false);
   assert.equal(canActorEquip('iron_sword'), true);
+});
+
+test('equipment spd bonuses accumulate into totalStats/effectiveStats', () => {
+  const actor = makeActor(); // base spd 5
+  let inv = grantRewards(createInventory(), { storm_lantern: 1 }).inv;
+  const res = equipItem(actor, inv, 'storm_lantern');
+  assert.equal(res.ok, true);
+  const equipped = res.actor;
+  assert.deepEqual(totalStats(equipped), { atk: 0, def: 0, hp: 8, mp: 0, spd: 1 });
+  const eff = effectiveStats(equipped);
+  assert.equal(eff.spd, 6, 'base spd 5 + lantern 1');
+  assert.equal(eff.maxHp, 38, 'base maxHp 30 + lantern 8');
+  assert.equal(effectiveStats(actor).spd, 5, 'no gear = base spd');
 });
 
 test('rollLoot is deterministic with a stubbed rng and merges across enemies', () => {

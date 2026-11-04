@@ -65,6 +65,11 @@ export const ITEMS = Object.freeze({
     stats: { atk: 12 }, price: 180, sellPrice: 90,
     description: 'A keen-edged longsword carried by the wardens of old Greyhaven.',
   },
+  salvaged_blade: {
+    id: 'salvaged_blade', name: 'Salvaged Blade', type: TYPES.EQUIPMENT, slot: 'weapon',
+    stats: { atk: 9 }, price: 95, sellPrice: 45,
+    description: 'A guard blade reforged over the hearth from storm-wreck salvage. Honest iron, second life.',
+  },
 
   // ---- Equipment: armor ----
   padded_vest: {
@@ -98,6 +103,11 @@ export const ITEMS = Object.freeze({
     id: 'lens_shard', name: 'Lens Shard', type: TYPES.EQUIPMENT, slot: 'trinket',
     stats: { atk: 2, mp: 5 }, price: 70, sellPrice: 35,
     description: 'A fragment of the observatory lens that glows faintly before a storm.',
+  },
+  storm_lantern: {
+    id: 'storm_lantern', name: 'Storm Lantern', type: TYPES.EQUIPMENT, slot: 'trinket',
+    stats: { hp: 8, spd: 1 }, price: 40, sellPrice: 18,
+    description: 'A shut brass lantern that holds its flame against the gale. Light steadies the hand.',
   },
 
   // ---- Key items ----
