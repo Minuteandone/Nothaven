@@ -1,3 +1,4 @@
+import { restPrice } from '../story/relay.js';
 import { saveGame } from '../state.js';
 import { effectiveStats } from '../items/equipment.js';
 import { escapeHTML, partyStatus, resourceChip, sceneHeader, uiButton } from '../ui/components.js';
@@ -11,6 +12,7 @@ export const townScene = {
   render(game) {
     const s = game.state;
     const outlook = getTownOutlook(s.story);
+    const price = restPrice(s.story);
     const message = game.message || 'Wind howls through the half-shuttered streets.';
     return `<main class="game-shell town-screen">
       ${sceneHeader({ eyebrow: 'Beacon Ward', title: 'Greyhaven', subtitle: 'A frontier town holding fast beneath a restless sky.', iconName: 'beacon' })}
@@ -29,7 +31,7 @@ export const townScene = {
           <p class="eyebrow">Choose your next step</p>
           <h2 id="town-actions-title">Town actions</h2>
           <div class="action-list">
-            ${uiButton({ action: 'rest', label: 'Rest at the inn · 5 gold', iconName: 'bed', disabled: s.gold < 5 })}
+            ${uiButton({ action: 'rest', label: `Rest at the inn · ${price} gold`, iconName: 'bed', disabled: s.gold < price })}
             ${uiButton({ action: 'shop', label: "Hesta's Goods", iconName: 'coin', variant: 'ghost' })}
             ${game.scenes?.bag ? uiButton({ action: 'bag', label: 'Open your bag', iconName: 'bag', variant: 'ghost' }) : ''}
             ${game.scenes?.muster ? uiButton({ action: 'muster', label: 'Watch House muster board', iconName: 'shield', variant: 'ghost' }) : ''}
@@ -44,8 +46,8 @@ export const townScene = {
   },
   actions: {
     rest(game) {
-      const s = game.state; if (s.gold < 5) return;
-      s.gold -= 5; s.party.forEach(p => { const st = effectiveStats(p); p.hp = st.maxHp || p.maxHp; p.mp = st.maxMp || p.maxMp; p.statuses = []; });
+      const s = game.state, price = restPrice(s.story); if (s.gold < price) return;
+      s.gold -= price; s.party.forEach(p => { const st = effectiveStats(p); p.hp = st.maxHp || p.maxHp; p.mp = st.maxMp || p.maxMp; p.statuses = []; });
       game.message = 'You rest at the inn and wake refreshed.';
     },
     shop(game) { game.setScene('shop', { returnScene: 'town' }); },
