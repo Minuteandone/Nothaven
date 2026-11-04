@@ -1,3 +1,4 @@
+import { createStoryState } from './story/index.js';
 const SAVE_KEY = 'stormhaven-save';
 
 export function createInitialState() {
@@ -11,6 +12,7 @@ export function createInitialState() {
     flags: {},       // story flags — see src/story/
     questLog: {},    // { questId: stage }
     location: 'town',
+    story: createStoryState(),
     combat: null,
   };
 }

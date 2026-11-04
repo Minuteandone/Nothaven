@@ -13,9 +13,9 @@ function enemyTurn(game) {
 }
 
 export const combatScene = {
-  onEnter(game, { enemyId }) {
+  onEnter(game, { enemyId, encounterId = null, returnScene = 'town' }) {
     const enemy = { ...ENEMIES[enemyId] };
-    game.state.combat = { enemy, log: [`A ${enemy.name} appears!`], defending: false, over: null };
+    game.state.combat = { enemy, log: [`A ${enemy.name} appears!`], defending: false, over: null, encounterId, returnScene };
     if (enemy.spd > game.state.party[0].spd) enemyTurn(game);
   },
   render(game) {
@@ -37,7 +37,7 @@ export const combatScene = {
       if (c.enemy.hp <= 0) {
         game.state.gold += c.enemy.gold; h.xp += c.enemy.xp;
         c.log.push(`Victory! +${c.enemy.xp} XP, +${c.enemy.gold} gold.`); c.over = 'victory';
-        game.bus.emit('combat:victory', { enemyId: c.enemy.id });
+        game.bus.emit('combat:victory', { enemyId: c.enemy.id, encounterId: c.encounterId });
       } else enemyTurn(game);
     },
     defend(game) { const c = game.state.combat; c.defending = true; c.log.push('You brace yourself.'); enemyTurn(game); },
@@ -46,8 +46,9 @@ export const combatScene = {
       if (Math.random() < 0.6) { c.log.push('You escape!'); c.over = 'fled'; } else { c.log.push('You fail to escape!'); enemyTurn(game); }
     },
     finish(game) {
-      const over = game.state.combat.over; game.state.combat = null;
-      if (over === 'defeat') game.setScene('title'); else game.setScene('town', { message: over === 'victory' ? 'You return victorious.' : 'You slip back to town.' });
+      const { over, returnScene, encounterId } = game.state.combat; game.state.combat = null;
+      if (over === 'defeat') game.setScene('title');
+      else game.setScene(returnScene, { message: over === 'victory' ? 'You return victorious.' : 'You slip away.', combatResult: over, encounterId });
     },
   },
 };
