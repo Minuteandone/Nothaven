@@ -16,10 +16,14 @@ export const SKILLS = Object.freeze({
     description: 'Lift the beacon lantern high: every standing ally recovers health and stops bleeding.' },
   stormbreaker: { id: 'stormbreaker', name: 'Stormbreaker', mp: 7, kind: 'damage', mult: 2.2,
     description: 'Channel the gale into one devastating swing for 220% damage.' },
+  steady_signal: { id: 'steady_signal', name: 'Steady Signal', mp: 3, kind: 'cleanse',
+    description: 'Sound a calm, steady note on the signal whistle: every standing ally shakes off bleeding and shock. Usable while shocked.' },
+  beacon_lance: { id: 'beacon_lance', name: 'Beacon Lance', mp: 9, kind: 'pierce', mult: 1.8,
+    description: 'Focus the beacon light into a single piercing spear for 180% damage that ignores armour.' },
 });
 
 /** Skills unlock by level. */
-export const SKILL_UNLOCKS = Object.freeze({ power_strike: 1, mend: 1, spark: 2, warding_stance: 3, rallying_light: 4, stormbreaker: 5 });
+export const SKILL_UNLOCKS = Object.freeze({ power_strike: 1, mend: 1, spark: 2, warding_stance: 3, rallying_light: 4, stormbreaker: 5, steady_signal: 6, beacon_lance: 7 });
 
 export function knownSkills(member) {
   const lvl = member?.level || 1;
@@ -214,7 +218,7 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
     case 'skill': {
       const sk = SKILLS[action.skillId];
       if (!sk || !knownSkills(hero).some((s) => s.id === sk.id)) return { ok: false, lines: ['You do not know that skill.'] };
-      if (shocked && sk.kind !== 'damage') return { ok: false, lines: ['Too shocked to focus on that.'] };
+      if (shocked && sk.kind !== 'damage' && sk.kind !== 'cleanse' && sk.kind !== 'pierce') return { ok: false, lines: ['Too shocked to focus on that.'] };
       if ((hero.mp || 0) < sk.mp) return { ok: false, lines: [`Not enough MP for ${sk.name}.`] };
       hero.mp -= sk.mp;
       if (sk.kind === 'damage') {
@@ -243,6 +247,20 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
         }
         if (c.heroTimers) delete c.heroTimers.bleeding;
         lines.unshift(`${hero.name} raises a Rallying Light!`);
+      } else if (sk.kind === 'pierce') {
+        const d = Math.max(1, Math.floor(hs.atk * sk.mult) + randInt(rng, -1, 2));
+        c.enemy.hp = Math.max(0, c.enemy.hp - d);
+        lines.push(`${hero.name} hurls a ${sk.name} for ${d}!`);
+      } else if (sk.kind === 'cleanse') {
+        lines.push(`${hero.name} sounds a Steady Signal.`);
+        for (const m of party) {
+          if (!m || (m.hp || 0) <= 0) continue;
+          const had = Array.isArray(m.statuses) && m.statuses.some((st) => st === 'bleeding' || st === 'shocked');
+          if (Array.isArray(m.statuses)) m.statuses = m.statuses.filter((st) => st !== 'bleeding' && st !== 'shocked');
+          if (m !== hero && c.allyTimers?.[m.id]) { delete c.allyTimers[m.id].bleeding; delete c.allyTimers[m.id].shocked; }
+          if (had) lines.push(`${m.name} steadies.`);
+        }
+        if (c.heroTimers) { delete c.heroTimers.bleeding; delete c.heroTimers.shocked; }
       } else if (sk.kind === 'ward') {
         c.wardTurns = 2;
         lines.push(`${hero.name} settles into a Warding Stance.`);
