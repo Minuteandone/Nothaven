@@ -172,6 +172,15 @@ export function getAvailableActions(gameState) {
     }
   }
 
+  if (Array.isArray(zone.randomEncounters) && zone.randomEncounters.length > 0) {
+    actions.push({
+      kind: 'patrol',
+      id: zone.id,
+      label: `Patrol ${zone.name} for Hostiles`,
+      entity: null,
+    });
+  }
+
   return actions;
 }
 
@@ -505,4 +514,29 @@ export function getClearedEncounters(gameState) {
 export function getVisitedZones(gameState) {
   const mapState = ensureMapState(gameState);
   return ZONE_ORDER.filter((z) => mapState.visitedZones?.[z]);
+}
+
+export function patrolZone(gameState, options = {}) {
+  const mapState = ensureMapState(gameState);
+  const zone = getZone(mapState.zoneId);
+  if (!Array.isArray(zone.randomEncounters) || zone.randomEncounters.length === 0) {
+    const msg = `No roaming hostiles reported in ${zone.name}.`;
+    appendLog(mapState, msg);
+    return { state: gameState, events: [], log: [msg], triggerCombat: null };
+  }
+  const rng = options.rng || Math.random;
+  const pick = pickRandomEncounter(zone.randomEncounters, rng);
+  if (!pick) {
+    return { state: gameState, events: [], log: [], triggerCombat: null };
+  }
+  mapState.activeEncounterId = null;
+  const enemyName = pick.name || 'Roaming Storm Beast';
+  const msg = `Patrol engaged ${enemyName} in ${zone.name}!`;
+  appendLog(mapState, msg);
+  return {
+    state: gameState,
+    events: [],
+    log: [msg],
+    triggerCombat: { encounterId: null, enemyId: pick.enemyId, name: enemyName },
+  };
 }

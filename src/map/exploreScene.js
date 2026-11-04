@@ -12,6 +12,7 @@ import {
   getZone,
   interactWith,
   movePlayer,
+  patrolZone,
   recordEncounterVictory,
   travelToZone,
   useFieldConsumable,
@@ -93,16 +94,16 @@ export const exploreScene = {
   actions: {
     ...storyUI.actions,
     moveNorth(game) {
-      handleActionResult(game, movePlayer(game.state, 0, -1, { disableRandomEncounters: true }));
+      handleActionResult(game, movePlayer(game.state, 0, -1, { rng: game.mapRng || Math.random }));
     },
     moveSouth(game) {
-      handleActionResult(game, movePlayer(game.state, 0, 1, { disableRandomEncounters: true }));
+      handleActionResult(game, movePlayer(game.state, 0, 1, { rng: game.mapRng || Math.random }));
     },
     moveWest(game) {
-      handleActionResult(game, movePlayer(game.state, -1, 0, { disableRandomEncounters: true }));
+      handleActionResult(game, movePlayer(game.state, -1, 0, { rng: game.mapRng || Math.random }));
     },
     moveEast(game) {
-      handleActionResult(game, movePlayer(game.state, 1, 0, { disableRandomEncounters: true }));
+      handleActionResult(game, movePlayer(game.state, 1, 0, { rng: game.mapRng || Math.random }));
     },
     waitTurn(game) {
       const mapState = ensureMapState(game.state);
@@ -123,6 +124,9 @@ export const exploreScene = {
       if (!encId) return;
       handleActionResult(game, interactWith(game.state, 'encounter', encId));
     },
+    mapPatrol(game) {
+      handleActionResult(game, patrolZone(game.state, { rng: game.mapRng || Math.random }));
+    },
     mapInteract(game, el) {
       const intId = el?.dataset?.arg;
       if (!intId) return;
@@ -134,9 +138,21 @@ export const exploreScene = {
       handleActionResult(game, interactWith(game.state, 'exit', toZone));
     },
     useFieldItem(game, el) {
-      const itemId = el?.dataset?.arg;
-      if (!itemId) return;
-      useFieldConsumable(game.state, itemId);
+      const raw = el?.dataset?.arg;
+      if (!raw) return;
+      const [itemId, idxStr] = String(raw).split(':');
+      const targetIndex = idxStr !== undefined ? Number.parseInt(idxStr, 10) : 0;
+      useFieldConsumable(game.state, itemId, Number.isInteger(targetIndex) ? targetIndex : 0);
+    },
+    openBag(game) {
+      if (game.scenes?.bag) {
+        game.setScene('bag', { returnScene: 'explore' });
+      }
+    },
+    openJournal(game) {
+      if (game.scenes?.bestiary) {
+        game.setScene('bestiary', { returnScene: 'explore' });
+      }
     },
     craftFieldItem(game, el) {
       const recipeId = el?.dataset?.arg;
