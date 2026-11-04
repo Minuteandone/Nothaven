@@ -6,7 +6,9 @@
 import { getItem, isKnownItem, canEquip, TYPES, SLOTS } from '../items/items.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
 import { useConsumable } from '../items/consumables.js';
-import { recipesUsingItem } from '../items/crafting.js';
+import { recipesUsingItem, listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
+import { countItem } from '../items/inventory.js';
+import { craftInField } from '../map/mapState.js';
 import { sellValueOf } from '../items/shop.js';
 
 const esc = (v) =>
@@ -94,6 +96,34 @@ function bagRow(item, stack, member) {
   );
 }
 
+/** Crafting section: every recipe with a have/need checklist and a craft button. */
+function craftSection(inv) {
+  const rows = listRecipes().map((recipe) => {
+    const check = recipeInputsMet(inv, recipe);
+    const checklist = (recipe.inputs || []).map((input) => {
+      const have = countItem(inv, input.id);
+      const label = isKnownItem(input.id) ? getItem(input.id).name : input.id;
+      return `<li class="${have >= input.qty ? 'have' : 'need'}">${esc(label)} ×${input.qty} <small>(have ${have})</small></li>`;
+    }).join('');
+    const outputs = (recipe.outputs || []).map((out) => {
+      const item = isKnownItem(out.id) ? getItem(out.id) : null;
+      const sum = item ? statSummary(item.stats) : '';
+      return `${esc(item?.name ?? out.id)} ×${out.qty}${sum ? ` <small>(${esc(sum)})</small>` : ''}`;
+    }).join(', ');
+    return (
+      `<tr>` +
+      `<td><strong>${esc(recipe.name)}</strong>` +
+      (recipe.description ? `<br><small>${esc(recipe.description)}</small>` : '') +
+      `<br><small>Needs: ${esc(recipeSummary(recipe))}</small></td>` +
+      `<td><ul class="craft-checklist">${checklist}</ul></td>` +
+      `<td><strong>${outputs}</strong></td>` +
+      `<td><button data-action="craft" data-arg="${esc(recipe.id)}"${check.ok ? '' : ' disabled'}>Craft</button></td>` +
+      `</tr>`
+    );
+  }).join('');
+  return `<section class="bag-group" aria-label="Crafting"><h3>Crafting</h3><table class="craft-table">${rows}</table></section>`;
+}
+
 export const bagScene = {
   onEnter(game, data = {}) {
     game.bagReturnScene = data.returnScene ?? 'town';
@@ -145,6 +175,7 @@ export const bagScene = {
       ${game.bagMessage ? `<p class="bag-message" role="status">${esc(game.bagMessage)}</p>` : ''}
       ${equippedSection}
       ${sections || '<p class="bag-empty">Your bag is empty.</p>'}
+      ${craftSection(s.inventory)}
       <button data-action="leave">Back</button>
     </main>`;
   },
@@ -192,6 +223,13 @@ export const bagScene = {
         game.state.party[index] = res.actor;
         game.state.inventory = res.inv;
       }
+    },
+
+    craft(game, el) {
+      const recipeId = el?.dataset?.arg;
+      if (!recipeId) return;
+      const res = craftInField(game.state, recipeId);
+      game.bagMessage = res?.log?.[0] || (res?.ok ? 'Crafted.' : 'Crafting failed.');
     },
 
     leave(game) {
