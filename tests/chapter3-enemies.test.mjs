@@ -25,5 +25,5 @@ test('relay warden is a construct boss that enrages once at half hp', () => {
   checkBossPhase(c);
   assert.ok(c.enraged);
   assert.equal(c.enemy.atk, baseAtk + 3);
-  assert.equal(ENEMIES.relay_warden.atk, 13);
+  assert.equal(ENEMIES.relay_warden.atk, 16);
 });
