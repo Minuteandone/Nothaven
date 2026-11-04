@@ -12,11 +12,11 @@ const ENDINGS = {
 };
 
 const RELAY_EPILOGUE = {
-  shelter_network: 'The Sunscar Relay hums over every hearth it can reach. Inns, infirmaries and storm cellars stay warm and lit, and no traveler is turned away from shelter.',
-  route_network: 'The Sunscar Relay sweeps the trade roads clear. Caravans run on schedule between Greyhaven, Saltmere and Highwatch, and the wilds grow quieter each season.',
+  shelter_network: 'The Sunscar Relay keeps shelters warm and lit across the frontier, and weary travelers rest for a smaller fee wherever its power reaches.',
+  route_network: 'The Sunscar Relay guides patrols along the trade roads. Ambushes grow rarer between Greyhaven, Saltmere and Highwatch, though travelers still keep their blades close.',
 };
 
-const SPIRE_EPILOGUE = 'Atop Stormcrown Spire, the Tyrant has fallen and the summit cradle burns with steady light. For the first time in a generation, the great storm breaks apart before it reaches the valley.';
+const SPIRE_EPILOGUE = 'Atop Stormcrown Spire, the Tyrant has fallen and its instruments no longer feed the storm. With the recovered survey records, the settlements now forecast dangerous weather together, and the expedition board keeps the roads watched.';
 
 /** Epilogue lines for every chapter the player has completed, in order. */
 export function epilogueLines(state) {
