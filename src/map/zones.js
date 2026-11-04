@@ -241,7 +241,7 @@ export const ZONES = {
     subtitle: 'Shattered Astral Dome',
     dangerLevel: 2,
     description:
-      'Lightning flickers across cracked brass arcs and collapsed vaults. The great refractory lens rests within the upper sanctum.',
+      'Lightning flickers across warped brass arcs and collapsed vaults. The great refractory lens rests within the upper sanctum.',
     width: 9,
     height: 7,
     grid: [

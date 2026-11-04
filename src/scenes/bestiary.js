@@ -30,7 +30,7 @@ function entryHtml({ enemy: e, count }) {
   return `<li class="bestiary-entry"><h3>${esc(e.name)}${tags.length ? ` <small>${esc(tags.join(' · '))}</small>` : ''}</h3>
     <p><em>${esc(e.intro || '')}</em></p>
     <p>HP ${e.hp} · ATK ${e.atk} · DEF ${e.def} · SPD ${e.spd} · XP ${e.xp} · Gold ${e.gold}</p>
-    ${ability}${loot ? `<p>Known spoils: ${loot}</p>` : ''}
+    ${ability}${e.enrage ? `<p class="hint">Second phase: grows enraged below ${Math.round(e.enrage.threshold * 100)}% HP (+${e.enrage.atk} ATK).</p>` : ''}${loot ? `<p>Known spoils: ${loot}</p>` : ''}
     <p>Defeated: ${count}</p></li>`;
 }
 
