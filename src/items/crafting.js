@@ -177,7 +177,28 @@ export const RECIPES = Object.freeze([
     description: 'Braid a crown shard with salvaged wiring and a pane of calm glass; the pendant keeps a steady beat even at the eye\'s center.',
     inputs: [{ id: 'stormcrown_shard', qty: 1 }, { id: 'salvaged_wiring', qty: 2 }, { id: 'storm_glass', qty: 1 }],
     outputs: [{ id: 'heartward_charm', qty: 1 }],
+  },  {
+    id: 'forge_squall_cleaver',
+    name: 'Forge a Squall Cleaver',
+    description: 'Reforge a tempest edge with Thunder Iron and a crown shard until the blade carries the whole weight of the squall.',
+    inputs: [{ id: 'tempest_edge', qty: 1 }, { id: 'thunder_iron', qty: 3 }, { id: 'stormcrown_shard', qty: 1 }],
+    outputs: [{ id: 'squall_cleaver', qty: 1 }],
   },
+  {
+    id: 'hammer_squall_bulwark',
+    name: 'Hammer a Squall Bulwark',
+    description: 'Cap a maelstrom plate with Thunder Iron rings and a crown shard; the armor stands where lesser gear folds.',
+    inputs: [{ id: 'maelstrom_plate', qty: 1 }, { id: 'thunder_iron', qty: 3 }, { id: 'stormcrown_shard', qty: 1 }],
+    outputs: [{ id: 'squall_bulwark', qty: 1 }],
+  },
+  {
+    id: 'cut_squall_sigil',
+    name: 'Cut a Squall Sigil',
+    description: 'Recut a stormeye signet with calm glass and Thunder Iron into a sigil that holds its charge through any weather.',
+    inputs: [{ id: 'stormeye_signet', qty: 1 }, { id: 'thunder_iron', qty: 2 }, { id: 'storm_glass', qty: 2 }],
+    outputs: [{ id: 'squall_sigil', qty: 1 }],
+  },
+
 ]);
 
 /** Look up a recipe by id (own-property safe). @returns {Recipe|undefined} */
