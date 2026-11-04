@@ -207,7 +207,8 @@ export const shopScene = {
     buy(game, el) {
       const id = el?.dataset?.arg;
       if (!id) return;
-      const res = buyItem(game.state, GREYHAVEN_SHOP, id, 1);
+      const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
+      const res = buyItem(game.state, shop, id, 1);
       game.shopMessage = res.message;
       if (res.ok) {
         game.state.gold = res.state.gold;
