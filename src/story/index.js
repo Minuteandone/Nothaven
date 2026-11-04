@@ -1,3 +1,4 @@
+import { applyRelayEvent, getRelayJournal, getRelayDialogue } from './relay.js';
 import { applyRescueEvent, getRescueJournal, getRescueDialogue } from './rescue.js';
 import { getReliefQuest } from './relief.js';
 
@@ -90,7 +91,8 @@ export function applyStoryEvent(previous = createStoryState(), event) {
   }
   reconcile();
   const rescue = applyRescueEvent(state, event);
-  return { state: rescue.state, rewards: [...rewards, ...rescue.rewards], log: [...log, ...rescue.log] };
+  const relay = applyRelayEvent(rescue.state, event);
+  return { state: relay.state, rewards: [...rewards, ...rescue.rewards, ...relay.rewards], log: [...log, ...rescue.log, ...relay.log] };
 }
 
 const OBJECTIVES = {
@@ -128,6 +130,7 @@ export function getJournal(state = createStoryState()) {
   const relief = getReliefQuest(state);
   if (relief) journal.push(relief);
   journal.push(...getRescueJournal(state));
+  journal.push(...getRelayJournal(state));
   return journal;
 }
 
@@ -145,6 +148,8 @@ export function getEndingSummary(state) {
 }
 
 export function getDialogue(state = createStoryState(), npcId) {
+  const relay = getRelayDialogue(state, npcId);
+  if (relay) return relay;
   const rescue = getRescueDialogue(state, npcId);
   if (rescue) return rescue;
   const s = state.stage;

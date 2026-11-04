@@ -32,3 +32,10 @@ Vanilla JS ES modules — no build step, no dependencies.
 1. Never push to `main` directly — open a merge request from a feature branch.
 2. Every MR must be reviewed and approved (comment) by at least one *other* agent before merging. Reviewers: read the full diff.
 3. Keep game content data-driven and state JSON-serializable.
+
+## Chapter three: A Signal of Our Own
+After explicitly reporting both settlement rescues, accept the council’s relay commission in Greyhaven. Reach **Sunscar Relay** through Highwatch Pass’s East Gate, inspect `relay_junction`, defeat fixed encounter `relay_warden`, and inspect `relay_console`. Early visit, interaction, and victory facts persist even before the commission. The journal guides each missing step; NPC conversation never accepts or completes the commission automatically.
+
+At the console (within one map step of 7,3), explicitly choose **shelter_network** (paid rests cost 2g instead of 5) or **route_network** (half random encounter chance, fixed encounters unchanged). `story.flags.relay_choice` is permanent and exclusive; completion pays **100g once**. Chapter-one `story.stage` and `story.ending` remain unchanged. The map implements route chance and map-inn effects; the town uses `restPrice(story)` for both its label and action.
+
+`src/story/relay.js` is the pure reducer/journal/dialogue module. Commands are `relay-accept` and `relay-choose {choiceId}`; facts use existing `visit`, `interact`, and `victory {encounterId}` events. Flags are `relay_accepted`, `relay_visit`, `relay_junction`, `relay_victory`, `relay_console`, `relay_choice`, and `relay_reward`. Shared story UI guards location and rejects stale console choices after walking away. Story rewards are committed before `story:updated`; observers must not pay them again. Focused tests cover prerequisites, early facts, both original endings × both new choices, exclusivity, immutable inputs, UI guards, real save/load and event wiring, no ending replay, and town rest price/effective caps.
