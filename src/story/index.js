@@ -1,3 +1,4 @@
+import { applyCommissionEvent, getCommissionJournal } from './commissions.js';
 import { getSettlerDialogue } from './settlers.js';
 import { applySpireEvent, getSpireJournal, getSpireDialogue } from './spire.js';
 import { applyExpeditionEvent, getExpeditionJournal } from './expeditions.js';
@@ -97,7 +98,8 @@ export function applyStoryEvent(previous = createStoryState(), event) {
   const relay = applyRelayEvent(rescue.state, event);
   const spire = applySpireEvent(relay.state, event);
   const expedition = applyExpeditionEvent(spire.state, event);
-  return { state: expedition.state, rewards: [...rewards, ...rescue.rewards, ...relay.rewards, ...spire.rewards, ...expedition.rewards], log: [...log, ...rescue.log, ...relay.log, ...spire.log, ...expedition.log] };
+  const commission = applyCommissionEvent(expedition.state, event);
+  return { state: commission.state, rewards: [...rewards, ...rescue.rewards, ...relay.rewards, ...spire.rewards, ...expedition.rewards, ...commission.rewards], log: [...log, ...rescue.log, ...relay.log, ...spire.log, ...expedition.log, ...commission.log] };
 }
 
 const OBJECTIVES = {
@@ -138,6 +140,7 @@ export function getJournal(state = createStoryState()) {
   journal.push(...getRelayJournal(state));
   journal.push(...getSpireJournal(state));
   journal.push(...getExpeditionJournal(state));
+  journal.push(...getCommissionJournal(state));
   return journal;
 }
 

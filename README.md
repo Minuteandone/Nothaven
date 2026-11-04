@@ -39,3 +39,23 @@ After explicitly reporting both settlement rescues, accept the council’s relay
 At the console (within one map step of 7,3), explicitly choose **shelter_network** (paid rests cost 2g instead of 5) or **route_network** (half random encounter chance, fixed encounters unchanged). `story.flags.relay_choice` is permanent and exclusive; completion pays **100g once**. Chapter-one `story.stage` and `story.ending` remain unchanged. The map implements route chance and map-inn effects; the town uses `restPrice(story)` for both its label and action.
 
 `src/story/relay.js` is the pure reducer/journal/dialogue module. Commands are `relay-accept` and `relay-choose {choiceId}`; facts use existing `visit`, `interact`, and `victory {encounterId}` events. Flags are `relay_accepted`, `relay_visit`, `relay_junction`, `relay_victory`, `relay_console`, `relay_choice`, and `relay_reward`. Shared story UI guards location and rejects stale console choices after walking away. Story rewards are committed before `story:updated`; observers must not pay them again. Focused tests cover prerequisites, early facts, both original endings × both new choices, exclusivity, immutable inputs, UI guards, real save/load and event wiring, no ending replay, and town rest price/effective caps.
+
+### Optional companion commissions
+
+Greyhaven's collapsed **Companion commissions** board offers four personal requests
+as their companions unlock; recruitment and active party slots are not required.
+Accept explicitly, complete the fixed encounter and landmark, then report explicitly
+in Greyhaven. Tamsin pays 25 gold (ridge hound den + ridge dispatch), Iven 35
+(eastern observatory construct + lens pedestal), Bram 45 (Drowned Harbormaster +
+harbor lamp), and Sela 45 (Rockslide Golem + signal cairn), each once per save.
+Only accepted requests enter the journal. These requests do not alter the original
+beacon ending, relay service, rescue progression, or finale.
+
+`src/story/commissions.js` retains exact fixed-encounter and interaction facts even
+before acceptance; species-only patrol victories cannot substitute. On acceptance,
+the town UI reconciles exact boolean entries from the **live** map's
+`clearedEncounters` and `completedInteractions` for older saves, without fabricating
+combat events. Old once-only dispatch/pedestal inspections therefore still count;
+the repeatable harbor lamp and cairn can be inspected again if their earlier use
+was not recorded. Reports and acceptance use the same authoritative location getter
+as board rendering. Rewards are committed before `story:updated`, as with other quests.
