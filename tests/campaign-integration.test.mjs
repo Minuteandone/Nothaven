@@ -12,6 +12,7 @@ import { townScene } from '../src/scenes/town.js';
 import { endingScene, installEnding } from '../src/scenes/ending.js';
 import { titleScene } from '../src/scenes/title.js';
 import { installStory } from '../src/story/integration.js';
+import { COMMISSIONS, commissionProgress } from '../src/story/commissions.js';
 import { installProgression } from '../src/core/progression.js';
 import { installMap, ZONES, isWalkable, getEffectiveRandomEncounterChance } from '../src/map/index.js';
 
@@ -448,6 +449,79 @@ function spireJourney(game, choice, early) {
   checkpoint(game, 'complete');
 }
 
+function companionJourney(game, early, first) {
+  const originalEnding = game.state.story.ending;
+  const relay = game.state.story.flags.relay_choice;
+  const expedition = structuredClone(game.state.story.expedition);
+  const partyIds = game.state.party.map(m => m.id);
+  assert.deepEqual(partyIds, ['hero', 'bram', 'sela'], 'requests do not require Tamsin or Iven in the active party');
+  assert.equal(game.state.map.zoneId, 'greyhaven');
+  for (const c of COMMISSIONS) {
+    assert.equal(commissionProgress(game.state.story, c.id).available, true);
+    assert.equal(commissionProgress(game.state.story, c.id).accepted, false);
+    if (!early) act(game, 'storyCommissionAccept', c.id);
+  }
+  assert.equal(game.state.story.flags.commission_tamsin_inspected, true, 'original dispatch already counts');
+  assert.equal(game.state.story.flags.commission_bram_victory, true, 'earlier Harbormaster victory already counts');
+  act(game, 'toTownScene'); act(game, 'rest'); act(game, 'explore');
+  const beforeTasks = game.state.gold;
+  let combatGold = 0;
+  walkExit(game, 'ridge_road');
+  combatGold += winEncounter(game, 'ridge_hound_den'); checkpoint(game, 'complete');
+  walkExit(game, 'observatory_ruins');
+  combatGold += winEncounter(game, 'observatory_construct'); checkpoint(game, 'complete');
+  walkTo(game, 4, 1); act(game, 'mapInteract', 'observatory_lens_pedestal');
+  assert.equal(game.state.map.completedInteractions.observatory_lens_pedestal, true);
+  checkpoint(game, 'complete');
+  walkExit(game, 'beacon_tower'); walkExit(game, 'greyhaven');
+  for (const id of [first, first === 'coast' ? 'heights' : 'coast']) {
+    if (id === 'coast') {
+      walkExit(game, 'saltmere_coast');
+      walkTo(game, 4, 5); act(game, 'mapInteract', 'saltmere_harbor_lamp');
+      assert.equal(game.state.story.flags.commission_bram_inspected, true);
+    } else {
+      walkExit(game, 'ridge_road'); walkExit(game, 'highwatch_pass');
+      walkTo(game, 4, 1); act(game, 'mapInteract', 'highwatch_cairn');
+      assert.equal(game.state.story.flags.commission_sela_inspected, true);
+      combatGold += winEncounter(game, 'highwatch_construct');
+    }
+    checkpoint(game, 'complete');
+    const beforeStale = game.state.gold;
+    for (const c of COMMISSIONS) act(game, 'storyCommissionReport', c.id);
+    assert.equal(game.state.gold, beforeStale, 'stale reports outside Greyhaven cannot pay');
+    if (id === 'heights') walkExit(game, 'ridge_road');
+    walkExit(game, 'greyhaven');
+  }
+  assert.equal(game.state.gold, beforeTasks + combatGold, 'tasks themselves pay enemy loot only');
+  for (const c of COMMISSIONS) {
+    if (early) {
+      assert.equal(commissionProgress(game.state.story, c.id).accepted, false);
+      act(game, 'storyCommissionReport', c.id);
+      assert.equal(game.state.story.flags[`commission_${c.id}_reward`], undefined, 'facts alone cannot claim an unaccepted request');
+      act(game, 'storyCommissionAccept', c.id);
+    }
+    assert.equal(commissionProgress(game.state.story, c.id).ready, true);
+    checkpoint(game, 'complete');
+    const beforeReport = game.state.gold;
+    act(game, 'storyCommissionReport', c.id);
+    assert.equal(game.state.gold, beforeReport + c.gold);
+    assert.equal(commissionProgress(game.state.story, c.id).complete, true);
+    assert.equal(game.state.scene, 'explore', 'personal reports do not replay either ending');
+    checkpoint(game, 'complete');
+    act(game, 'storyCommissionReport', c.id); act(game, 'storyCommissionAccept', c.id);
+    assert.equal(game.state.gold, beforeReport + c.gold, 'reloaded report and acceptance cannot repay');
+  }
+  assert.equal(game.state.gold, beforeTasks + combatGold + 150);
+  assert.equal(game.state.story.ending, originalEnding);
+  assert.equal(game.state.story.flags.relay_choice, relay);
+  assert.equal(game.state.story.flags.rescue_reward, true);
+  assert.equal(game.state.story.flags.spire_reward, true);
+  assert.equal(game.state.flags.finaleShown, true);
+  assert.deepEqual(game.state.story.expedition, expedition);
+  assert.deepEqual(game.state.party.map(m => m.id), partyIds);
+  checkpoint(game, 'complete');
+}
+
 for (const ending of ['protect_town', 'share_signal']) {
   for (const early of [false, true]) {
     for (const first of ['coast', 'heights']) for (const relayChoice of ['shelter_network', 'route_network']) {
@@ -556,6 +630,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         optionalBossJourney(game, first);
         relayJourney(game, relayChoice, early);
         spireJourney(game, relayChoice, early);
+        companionJourney(game, early, first);
       });
     }
   }
