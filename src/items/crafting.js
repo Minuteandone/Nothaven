@@ -83,7 +83,7 @@ export const RECIPES = Object.freeze([
   {
     id: 'pack_field_dressing',
     name: 'Pack a Field Dressing',
-    description: 'Boil and double-fold two linen bandages into one field-ready roll.',
+    description: 'Wash in brine and double-fold two linen bandages into one field-ready roll.',
     inputs: [{ id: 'bandage', qty: 2 }],
     outputs: [{ id: 'field_dressing', qty: 1 }],
   },
