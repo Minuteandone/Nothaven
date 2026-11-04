@@ -90,12 +90,38 @@ export function heroStats(hero) {
   return effectiveStats(hero);
 }
 
+/** Per-battle bookkeeping for the victory summary (no effect on outcomes). */
+function battleStats(c) {
+  if (!c || typeof c !== 'object') return { rounds: 0, taken: 0, bursts: 0 };
+  if (!c.stats || typeof c.stats !== 'object') c.stats = { rounds: 0, taken: 0, bursts: 0 };
+  return c.stats;
+}
+
+function noteTaken(c, d) {
+  const st = battleStats(c);
+  st.taken = (st.taken || 0) + Math.max(0, Math.floor(Number(d) || 0));
+}
+
+/** Rounds fought, damage dealt to the foe, damage the party took, and Bursts fired. */
+export function battleSummary(c) {
+  const st = c?.stats || {};
+  const e = c?.enemy || {};
+  const max = Number.isFinite(e.maxHp) ? e.maxHp : (e.hp || 0);
+  return {
+    rounds: st.rounds || 0,
+    dealt: Math.max(0, max - (e.hp || 0)),
+    taken: st.taken || 0,
+    bursts: st.bursts || 0,
+  };
+}
+
 /** Tick statuses on the hero at the start of the hero's turn. Returns log lines. */
 export function tickHeroStatuses(c, hero) {
   const lines = [];
   if (hasStatus(hero, 'bleeding')) {
     const d = 2;
     hero.hp = Math.max(0, hero.hp - d);
+    noteTaken(c, d);
     lines.push(`${hero.name} bleeds for ${d}.`);
   }
   for (const id of Object.keys(c.heroTimers)) {
@@ -129,6 +155,7 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
     const special = e.ability && rng() < (e.ability.chance ?? 0);
     const d = physicalDamage(e.atk, ts.def, rng, { mult: special ? (e.ability.mult ?? 1) : 1, warded: (c.aegisTurns || 0) > 0 });
     target.hp = Math.max(0, target.hp - d);
+    noteTaken(c, d);
     lines.push(special ? `${e.name} uses ${e.ability.name}! ${target.name} takes ${d}.` : `${e.name} hits ${target.name} for ${d}.`);
     if (target.hp <= 0) lines.push(`${target.name} is knocked out!`);
     else if (special && e.ability.status) {
@@ -147,6 +174,7 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
     const ab = e.ability;
     const d = physicalDamage(e.atk, hs.def, rng, { mult: ab.mult ?? 1, warded });
     hero.hp = Math.max(0, hero.hp - d);
+    noteTaken(c, d);
     chargeFromHit(c, d, hs.maxHp);
     lines.push(`${e.name} uses ${ab.name}! ${hero.name} takes ${d}.`);
     if (ab.status) {
@@ -156,6 +184,7 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   } else {
     const d = physicalDamage(e.atk, hs.def, rng, { warded });
     hero.hp = Math.max(0, hero.hp - d);
+    noteTaken(c, d);
     chargeFromHit(c, d, hs.maxHp);
     lines.push(`${e.name} hits ${hero.name} for ${d}.`);
   }
@@ -181,6 +210,7 @@ export function tickAllyStatuses(c, party, hero) {
   for (const m of party || []) {
     if (!m || m === hero || m.hp <= 0 || !Array.isArray(m.statuses) || !m.statuses.length) continue;
     if (hasStatus(m, 'bleeding')) {
+      noteTaken(c, Math.min(2, m.hp));
       m.hp = Math.max(0, m.hp - 2);
       lines.push(`${m.name} bleeds for 2.`);
       if (m.hp <= 0) { lines.push(`${m.name} is knocked out!`); m.statuses = []; continue; }
@@ -315,6 +345,7 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
     case 'burst': {
       if (!chargeReady(c)) return { ok: false, lines: ['The Beacon Charge is not full yet.'] };
       c.charge = 0;
+      battleStats(c).bursts += 1;
       const d = Math.max(1, Math.floor(hs.atk * BEACON_BURST.mult) + (hero.level || 1) * BEACON_BURST.perLevel);
       c.enemy.hp = Math.max(0, c.enemy.hp - d);
       lines.push(`${hero.name} unleashes a ${BEACON_BURST.name}! Searing light deals ${d}.`);
@@ -345,6 +376,7 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
 /** Enemy reply + end-of-round status ticks. Used after any hero action that consumes the turn. */
 export function afterHeroAction(c, hero, rng = Math.random, party = [hero]) {
   const lines = [];
+  battleStats(c).rounds += 1;
   if (c.over) return lines;
   for (const m of party || []) {
     if (m === hero || !m || m.hp <= 0 || c.over) continue;

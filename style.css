@@ -826,3 +826,6 @@ em.enraged {
 .beacon-charge { margin: 0 0 .75rem; }
 .beacon-charge--ready .meter__fill { box-shadow: 0 0 10px rgba(255, 214, 102, .8); }
 .command-button--burst { grid-column: 1 / -1; }
+
+/* Post-battle recap (src/ui/combat.js summaryLine) */
+.battle-summary { margin: .25rem 0 0; font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
