@@ -1,3 +1,4 @@
+import { getDifficulty } from '../combat/difficulty.js';
 // Combat scene: Attack / Skills / Items / Defend / Flee against one enemy.
 // setScene('combat', {enemyId, encounterId, returnScene}) — finishing returns to
 // returnScene with {message, combatResult, encounterId}; defeat wakes the party in
@@ -71,7 +72,7 @@ export function recoverFromDefeat(state) {
 
 export const combatScene = {
   onEnter(game, data = {}) {
-    game.state.combat = createCombat(data);
+    game.state.combat = createCombat({ ...data, difficulty: getDifficulty(game.state) });
     game.combatMenu = 'main';
     const c = game.state.combat, hero = game.state.party[0];
     hero.statuses = Array.isArray(hero.statuses) ? hero.statuses : [];

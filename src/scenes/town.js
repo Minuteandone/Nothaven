@@ -1,4 +1,5 @@
 import { restPrice } from '../story/relay.js';
+import { DIFFICULTIES, cycleDifficulty, getDifficulty } from '../combat/difficulty.js';
 import { saveGame } from '../state.js';
 import { effectiveStats } from '../items/equipment.js';
 import { escapeHTML, partyStatus, resourceChip, sceneHeader, uiButton } from '../ui/components.js';
@@ -39,6 +40,7 @@ export const townScene = {
             ${game.scenes?.ending && s.flags?.endingShown ? uiButton({ action: 'chronicle', label: 'Read the chronicle', iconName: 'journal', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'explore', label: 'Explore the wilds', iconName: 'map', variant: 'primary' })}
             ${uiButton({ action: 'save', label: 'Save journey', iconName: 'save', variant: 'ghost' })}
+            ${uiButton({ action: 'difficulty', label: `Difficulty: ${DIFFICULTIES[getDifficulty(s)].label}`, iconName: 'shield', variant: 'ghost' })}
           </div>
         </section>
       </div>
@@ -58,6 +60,7 @@ export const townScene = {
     chronicle(game) { if (game.scenes?.ending && game.state.flags?.endingShown) game.setScene('ending', { returnScene: 'town' }); },
     explore(game) { game.setScene('explore'); },
     save(game) { saveGame(game.state); game.message = 'Game saved.'; },
+    difficulty(game) { const id = cycleDifficulty(game.state); game.message = `Difficulty set to ${DIFFICULTIES[id].label}. ${DIFFICULTIES[id].blurb}`; },
     ...storyUI.actions,
   },
 };

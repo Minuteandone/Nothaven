@@ -1,6 +1,7 @@
 // Combat rules for Beacon of Stormhaven. Pure-ish functions over a combat
 // object and the party; randomness is injected (`rng`) so tests are deterministic.
 import { ENEMIES } from '../data/enemies.js';
+import { scaleEnemy } from './difficulty.js';
 import { effectiveStats } from '../items/equipment.js';
 
 export const SKILLS = Object.freeze({
@@ -72,9 +73,9 @@ export function checkBossPhase(c) {
 }
 
 /** Create a fresh combat object. Unknown enemy ids fall back to storm_rat. */
-export function createCombat({ enemyId, encounterId = null, returnScene = 'town' } = {}) {
+export function createCombat({ enemyId, encounterId = null, returnScene = 'town', difficulty = 'standard' } = {}) {
   const base = (typeof enemyId === 'string' && Object.prototype.hasOwnProperty.call(ENEMIES, enemyId)) ? ENEMIES[enemyId] : ENEMIES.storm_rat;
-  const enemy = { ...base, maxHp: base.hp, statuses: [], loot: base.loot ? base.loot.map((l) => ({ ...l })) : [] };
+  const enemy = scaleEnemy({ ...base, maxHp: base.hp, statuses: [], loot: base.loot ? base.loot.map((l) => ({ ...l })) : [] }, difficulty);
   return {
     enemy, encounterId, returnScene, turn: 1, over: null,
     defending: false, wardTurns: 0, aegisTurns: 0, heroTimers: {}, enemyTimers: {},
