@@ -357,6 +357,14 @@ function spireJourney(game, choice, early) {
   checkpoint(game, 'complete');
   walkTo(game, 4, 0); act(game, 'mapInteract', 'spire_summit');
   assert.equal(game.state.story.flags.spire_summit, true);
+  // The summit passage stays shut until the survey is actually reported.
+  walkTo(game, 5, 1);
+  const passagePosition = { x: game.state.map.x, y: game.state.map.y, steps: game.state.map.steps };
+  act(game, 'moveNorth');
+  assert.deepEqual({ x: game.state.map.x, y: game.state.map.y, steps: game.state.map.steps }, passagePosition);
+  act(game, 'mapTravel', 'storms_eye');
+  assert.equal(game.state.map.zoneId, 'stormcrown_spire');
+  assert.equal(game.state.story.flags.heart_visit, undefined);
   const beforeReport = game.state.gold;
   act(game, 'storySpire', 'report');
   assert.equal(game.state.gold, beforeReport, 'stale report outside town cannot pay');
@@ -522,6 +530,122 @@ function companionJourney(game, early, first) {
   checkpoint(game, 'complete');
 }
 
+
+function heartJourney(game, early, first) {
+  const prior = structuredClone(game.state.story);
+  const endingFlags = structuredClone(game.state.flags);
+  const choice = prior.flags.relay_choice;
+  const restPrice = choice === 'shelter_network' ? 2 : 5;
+  assert.equal(game.state.map.zoneId, 'greyhaven');
+  if (!early) act(game, 'storyHeart', 'accept');
+  const rest = () => {
+    act(game, 'toTownScene');
+    const before = game.state.gold;
+    act(game, 'rest');
+    assert.equal(game.state.gold, before - restPrice);
+    act(game, 'explore');
+  };
+  const reachEye = () => {
+    walkExit(game, 'ridge_road'); walkExit(game, 'highwatch_pass');
+    walkExit(game, 'sunscar_relay'); walkExit(game, 'stormcrown_spire');
+    walkExit(game, 'storms_eye');
+  };
+  rest();
+  act(game, 'mapTravel', 'storms_eye');
+  assert.equal(game.state.map.zoneId, 'greyhaven', 'unvisited eye still requires physical discovery');
+  reachEye();
+  assert.equal(game.state.story.flags.heart_visit, true);
+  assert.equal(game.state.map.x, 1); assert.equal(game.state.map.y, 5);
+  // Buy both upgrades from the actual mapped shop, financed before core loot.
+  walkTo(game, 4, 5); act(game, 'mapInteract', 'storms_eye_post');
+  assert.equal(game.state.scene, 'shop');
+  assert.equal(game.shopId, 'storms_eye_post');
+  assert.match(game.root.innerHTML, /Storm&#39;s Eye Post/);
+  const beforeShop = game.state.gold;
+  act(game, 'buy', 'tempest_edge'); act(game, 'equip', 'tempest_edge');
+  assert.equal(game.state.party[0].equipment.weapon, 'tempest_edge');
+  act(game, 'sell', 'stormforged_blade');
+  act(game, 'buy', 'maelstrom_plate'); act(game, 'equip', 'maelstrom_plate');
+  assert.equal(game.state.party[0].equipment.armor, 'maelstrom_plate');
+  assert.equal(game.state.gold, beforeShop - getItem('tempest_edge').price
+    + getItem('stormforged_blade').sellPrice - getItem('maelstrom_plate').price);
+  act(game, 'leave');
+  walkTo(game, 2, 5);
+  const beforeCache = structuredClone(game.state.inventory);
+  act(game, 'mapInteract', 'eye_supply_cache');
+  for (const id of ['storm_tonic', 'ember_broth', 'thunder_iron']) {
+    assert.equal(countItem(game.state.inventory, id), countItem(beforeCache, id) + 1);
+  }
+  const collected = structuredClone(game.state.inventory);
+  act(game, 'mapInteract', 'eye_supply_cache');
+  assert.deepEqual(game.state.inventory, collected);
+  checkpoint(game, 'complete');
+  const blockedCore = () => {
+    walkTo(game, 4, 4);
+    const before = { x: game.state.map.x, y: game.state.map.y, steps: game.state.map.steps };
+    act(game, 'mapEncounter', 'storm_heart_core');
+    act(game, 'moveNorth');
+    assert.equal(game.state.scene, 'explore');
+    assert.deepEqual({ x: game.state.map.x, y: game.state.map.y, steps: game.state.map.steps }, before);
+    assert.equal(game.state.map.activeEncounterId, null);
+    assert.equal(game.state.story.flags.victory_storm_heart, undefined);
+  };
+  blockedCore();
+  const order = first === 'coast' ? ['west', 'east'] : ['east', 'west'];
+  for (const [index, side] of order.entries()) {
+    const id = `eye_anchor_${side}`;
+    const guardian = side === 'west' ? 'eye_west_shade' : 'eye_east_colossus';
+    winEncounter(game, guardian);
+    assert.equal(game.state.story.flags.victory_storm_heart, undefined, 'guardian is not the exact core');
+    const anchor = ZONES.storms_eye.interactables.find(i => i.id === id);
+    walkTo(game, anchor.x, anchor.y); act(game, 'mapInteract', id);
+    assert.equal(game.state.map.completedInteractions[id], true);
+    assert.equal(game.state.story.flags[id], true);
+    checkpoint(game, 'complete');
+    if (index === 0) blockedCore();
+  }
+  // The lift remains usable; pay for recovery rather than injecting health.
+  walkExit(game, 'greyhaven'); rest(); reachEye();
+  const chance = choice === 'route_network' ? 0.07 : 0.14;
+  assert.equal(getEffectiveRandomEncounterChance(game.state, ZONES.storms_eye), chance);
+  winEncounter(game, 'storm_heart_core');
+  assert.equal(game.state.story.flags.victory_storm_heart, true);
+  assert.equal(game.state.bestiary.storm_heart, 1);
+  assert.equal(game.state.story.flags.heart_reward, undefined);
+  for (const zone of ['storms_eye', 'stormcrown_spire']) {
+    assert.equal(getEffectiveRandomEncounterChance(game.state, ZONES[zone]), chance / 2);
+  }
+  assert.equal(getEffectiveRandomEncounterChance(game.state, ZONES.sunscar_relay), chance);
+  checkpoint(game, 'complete');
+  const beforeReport = game.state.gold;
+  act(game, 'storyHeart', 'report');
+  assert.equal(game.state.gold, beforeReport, 'stale out-of-town report cannot pay');
+  walkExit(game, 'greyhaven');
+  if (early) {
+    assert.equal(game.state.story.flags.heart_accepted, undefined);
+    act(game, 'storyHeart', 'report');
+    assert.equal(game.state.gold, beforeReport, 'early discoveries alone do not accept or pay');
+    act(game, 'storyHeart', 'accept');
+    checkpoint(game, 'complete');
+  }
+  act(game, 'storyTalk', 'mara');
+  assert.equal(game.state.gold, beforeReport, 'conversation cannot submit the report');
+  act(game, 'storyHeart', 'report');
+  assert.equal(game.state.gold, beforeReport + 200);
+  assert.equal(game.state.story.flags.heart_reward, true);
+  assert.equal(game.state.scene, 'explore', 'heart report does not replay either ending');
+  checkpoint(game, 'complete');
+  act(game, 'storyHeart', 'report'); act(game, 'storyHeart', 'accept');
+  assert.equal(game.state.gold, beforeReport + 200, 'reloaded report cannot duplicate payment');
+  for (const [key, value] of Object.entries(prior.flags)) {
+    assert.deepEqual(game.state.story.flags[key], value, `heart preserves prior flag ${key}`);
+  }
+  assert.equal(game.state.story.ending, prior.ending);
+  assert.deepEqual(game.state.story.expedition, prior.expedition);
+  assert.deepEqual(game.state.flags, endingFlags);
+  assert.deepEqual(game.state.party.map(m => m.id), ['hero', 'bram', 'sela']);
+}
+
 for (const ending of ['protect_town', 'share_signal']) {
   for (const early of [false, true]) {
     for (const first of ['coast', 'heights']) for (const relayChoice of ['shelter_network', 'route_network']) {
@@ -631,6 +755,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         relayJourney(game, relayChoice, early);
         spireJourney(game, relayChoice, early);
         companionJourney(game, early, first);
+        heartJourney(game, early, first);
       });
     }
   }
