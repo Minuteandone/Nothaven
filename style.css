@@ -243,3 +243,8 @@ button:disabled, .action-button:disabled { opacity: .42; cursor: not-allowed; }
 .bar.mp span { background: #4a90d9; }
 .status { font-size: 0.75em; padding: 0 4px; border: 1px solid currentColor; border-radius: 3px; }
 .actions button { margin: 2px; }
+
+/* Companion units in combat */
+.combat .unit.ally { border-left: 3px solid #6fb3d2; padding-left: 0.5rem; }
+.combat .unit.ally.down { opacity: 0.5; filter: grayscale(0.8); }
+.combat .unit.ally.down em { color: #d47a6a; font-style: normal; }
