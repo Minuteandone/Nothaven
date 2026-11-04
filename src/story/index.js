@@ -1,3 +1,5 @@
+import { getReliefQuest } from './relief.js';
+
 /** Serializable, DOM-free campaign progression for Beacon of Stormhaven. */
 export const LOCATION_IDS = Object.freeze(['greyhaven', 'ridge_road', 'observatory_ruins', 'beacon_tower']);
 const ENCOUNTERS = ['ridge_patrol', 'observatory_sentinel'];
@@ -121,6 +123,8 @@ export function getJournal(state = createStoryState()) {
     journal.push({ id: 'dispatches', title: 'Lost Dispatches', status: f.dispatch_reward ? 'complete' : 'active',
       objective: f.dispatch_reward ? 'Tamsin has the field reports and can plan relief routes.' : missing.length ? `Recover the field reports at ${missing.join(' and ')}.` : 'Return both field reports to Tamsin in Greyhaven.' });
   }
+  const relief = getReliefQuest(state);
+  if (relief) journal.push(relief);
   return journal;
 }
 
