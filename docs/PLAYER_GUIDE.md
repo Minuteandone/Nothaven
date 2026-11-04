@@ -98,6 +98,10 @@ Defeating the exact core immediately halves random encounters in **Stormcrown Sp
 
 Your original beacon choice, relay service, and earlier rewards remain unchanged. The report does not automatically replay an ending. **Read the chronicle** in town lets you revisit the ending and credits with the completed chapter’s aftermath; **Back to Greyhaven** returns without paying rewards again.
 
+#### Optional challenge: The Last Squall
+
+After you claim the **Heart report reward**, a final storm gathers on the northern causeway of **the Storm’s Eye**. **The Last Squall** is an optional trial far stronger than the Storm’s Heart. Level **15 or higher** with your best gear is recommended; keep Beacon Aegis up and save a Beacon Burst for when it draws in every storm. Victory grants experience, gold and materials only. It records a journal entry but pays no report reward and changes no ending, so you can leave it be.
+
 ### Optional companion commissions
 
 Expand **Companion commissions** in Greyhaven. Each unlocks with its companion; you do **not** need that companion recruited or in the active party. Accept, complete both tasks, and explicitly report in Greyhaven.
