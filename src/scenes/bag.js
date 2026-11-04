@@ -4,7 +4,7 @@
 // through the pure helpers, and results are written back to state.
 
 import { getItem, isKnownItem, canEquip, TYPES, SLOTS } from '../items/items.js';
-import { equipItem, unequipItem, effectiveStats, createEquipment } from '../items/equipment.js';
+import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
 import { useConsumable } from '../items/consumables.js';
 
 const esc = (v) =>
@@ -58,8 +58,15 @@ function bagRow(item, stack, member) {
     controls = `<button data-action="use" data-arg="${esc(item.id)}">Use</button>`;
   } else if (item.type === TYPES.EQUIPMENT && canEquip(item.id)) {
     const equippedHere = member?.equipment?.[item.slot] === item.id;
+    let delta = '';
+    if (!equippedHere) {
+      const curId = member?.equipment?.[item.slot];
+      const curItem = curId && isKnownItem(curId) ? getItem(curId) : null;
+      delta = statDeltaSummary(curItem, item);
+    }
     controls =
       `<button data-action="equip" data-arg="${esc(item.id)}">Equip</button>` +
+      (delta ? ` <small>${esc(delta)}</small>` : '') +
       (equippedHere ? ` <button data-action="unequip" data-arg="${esc(item.slot)}">Unequip ${SLOT_LABELS[item.slot] || esc(item.slot)}</button>` : '');
   }
   return (
