@@ -822,7 +822,10 @@ function gauntletJourney(game) {
   act(game, 'closeDrills'); act(game, 'muster');
   for (const id of ['bram', 'sela']) act(game, 'recruit', id);
   act(game, 'leave'); act(game, 'bag');
-  for (const id of ['maelstrom_edge', 'maelstrom_plate', 'heartward_charm']) act(game, 'equip', id);
+  for (const [slot, id] of [['weapon', 'tempest_edge'], ['armor', 'maelstrom_plate'], ['trinket', 'heartward_charm']]) {
+    act(game, 'equip', id);
+    assert.equal(game.state.party[0].equipment[slot], id, 'earned gear was actually equipped');
+  }
   act(game, 'leave'); act(game, 'rest'); act(game, 'explore');
   for (const zone of ['ridge_road', 'observatory_ruins', 'beacon_tower']) walkExit(game, zone);
   winEncounter(game, 'beacon_tide_wraith');
