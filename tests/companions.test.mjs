@@ -143,3 +143,17 @@ test('companion text contains no egg references', () => {
   const text = JSON.stringify(COMPANIONS).toLowerCase();
   for (const w of ['egg', 'yolk', 'hatch', 'nest', 'chick', 'omelet', 'shell', 'hen ']) assert.ok(!text.includes(w), w);
 });
+
+test('enemy specials can target companions (damage only, no status)', () => {
+  const s = unlockedState();
+  recruitCompanion(s, 'tamsin');
+  const tamsin = s.party[1];
+  const c = createCombat({ enemyId: 'storm_rat' });
+  c.enemy.ability = { name: 'Gnaw', chance: 1, mult: 2, status: 'bleeding', turns: 2 };
+  const before = tamsin.hp;
+  // target index 1 (tamsin), special roll succeeds, damage variance
+  const lines = enemyTurn(c, s.party[0], seq(0.9, 0.0, 0.5), s.party);
+  assert.match(lines.join(' '), /uses Gnaw! Tamsin takes/);
+  assert.ok(tamsin.hp < before);
+  assert.deepEqual(tamsin.statuses, []);
+});
