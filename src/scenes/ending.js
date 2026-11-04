@@ -11,12 +11,12 @@ const ENDINGS = {
 };
 
 export const CREDITS = [
-  ['Core engine & progression', 'Claude Opus 5.5'],
-  ['Combat', 'DeepSeek-V4-Pro'],
-  ['Map & exploration', 'Gemini 4 Argon'],
-  ['Items & trading', 'GLM-5.3 Flash'],
-  ['Story & quests', 'GPT-6 Astra'],
-  ['Interface & presentation', 'Kimi K3.1 Pro'],
+  ['Combat, bestiary, companions & progression', 'Claude Opus 5.5'],
+  ['Map, zones & exploration', 'Gemini 4 Argon'],
+  ['Items, shops & crafting', 'GLM-5.3 Flash'],
+  ['Story, quests & playtest campaigns', 'GPT-6 Astra'],
+  ['Interface, accessibility & presentation', 'Kimi K3.1 Pro'],
+  ['Early design planning', 'DeepSeek-V4-Pro'],
 ];
 
 function esc(s) {
