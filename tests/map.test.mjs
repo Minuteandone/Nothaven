@@ -70,7 +70,7 @@ function makeMockGame() {
 }
 
 test('zones match required story location, NPC, interaction, and encounter IDs', () => {
-  assert.deepEqual(ZONE_ORDER, ['greyhaven', 'ridge_road', 'observatory_ruins', 'beacon_tower']);
+  assert.deepEqual(ZONE_ORDER, ['greyhaven', 'ridge_road', 'observatory_ruins', 'beacon_tower', 'saltmere_coast', 'highwatch_pass']);
   const npcIds = ZONES.greyhaven.npcs.map((n) => n.id);
   assert.deepEqual(npcIds, ['mara', 'iven', 'tamsin']);
   assert.equal(ZONES.ridge_road.encounters[0].encounterId, 'ridge_patrol');
@@ -335,4 +335,46 @@ test('greyhaven_shop stall opens shop scene with returnScene explore and field c
   assert.ok(html.includes('data-action="craftFieldItem"'));
   exploreScene.actions.craftFieldItem(game, { dataset: { arg: 'distill_tonic' } });
   assert.ok(game.state.inventory.some((s) => s.id === 'storm_tonic' && s.qty === 1));
+});
+
+test('Chapter 2 zones saltmere_coast and highwatch_pass have walkable exits, rescue encounters, and caches', () => {
+  const game = makeMockGame();
+  installStory(game);
+  installMap(game, { enableKeyboard: false });
+  game.setScene('explore');
+
+  // Walk from greyhaven default (2,3) to South Pier exit at (6,6)
+  game.state.map.x = 6;
+  game.state.map.y = 5;
+  exploreScene.actions.moveSouth(game);
+  assert.equal(game.state.map.zoneId, 'saltmere_coast');
+  assert.equal(game.state.location, 'saltmere_coast');
+
+  // Walk from saltmere_coast spawn (4,1) south to saltmere_rescue at (4,3)
+  exploreScene.actions.moveSouth(game);
+  exploreScene.actions.moveSouth(game);
+  assert.equal(game.state.scene, 'combat');
+  assert.equal(game.lastCombatData.encounterId, 'saltmere_rescue');
+  game.bus.emit('combat:victory', { encounterId: 'saltmere_rescue' });
+  game.setScene('explore');
+  assert.equal(game.state.map.clearedEncounters.saltmere_rescue, true);
+
+  // Return to greyhaven via North Causeway at (4,0), then travel to ridge_road and East Spur (8,3) -> highwatch_pass
+  travelToZone(game.state, 'ridge_road', 'from_greyhaven');
+  game.state.map.x = 7;
+  game.state.map.y = 3;
+  exploreScene.actions.moveEast(game);
+  assert.equal(game.state.map.zoneId, 'highwatch_pass');
+  assert.equal(game.state.location, 'highwatch_pass');
+
+  // Walk east in highwatch_pass from (1,3) to highwatch_rescue at (5,3)
+  exploreScene.actions.moveEast(game);
+  exploreScene.actions.moveEast(game);
+  exploreScene.actions.moveEast(game);
+  exploreScene.actions.moveEast(game);
+  assert.equal(game.state.scene, 'combat');
+  assert.equal(game.lastCombatData.encounterId, 'highwatch_rescue');
+  game.bus.emit('combat:victory', { encounterId: 'highwatch_rescue' });
+  game.setScene('explore');
+  assert.equal(game.state.map.clearedEncounters.highwatch_rescue, true);
 });

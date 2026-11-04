@@ -28,11 +28,12 @@ export const ZONES = {
       '#......,+',
       '#.,..#..#',
       '#.......#',
-      '#########',
+      '######+##',
     ],
     spawns: {
       default: { x: 2, y: 3 },
       from_ridge_road: { x: 7, y: 3 },
+      from_saltmere_coast: { x: 6, y: 5 },
     },
     exits: [
       {
@@ -41,6 +42,13 @@ export const ZONES = {
         toZone: 'ridge_road',
         toSpawn: 'from_greyhaven',
         label: 'East Gate → Ridge Road',
+      },
+      {
+        x: 6,
+        y: 6,
+        toZone: 'saltmere_coast',
+        toSpawn: 'from_greyhaven',
+        label: 'South Pier → Saltmere Coast',
       },
     ],
     npcs: [
@@ -130,7 +138,7 @@ export const ZONES = {
       '^^^^^^^+#',
       '##...,..#',
       '#..,^^..#',
-      '+...,...#',
+      '+...,...+',
       '#..~~,..#',
       '#...,..~#',
       '#########',
@@ -139,6 +147,7 @@ export const ZONES = {
       default: { x: 1, y: 3 },
       from_greyhaven: { x: 1, y: 3 },
       from_observatory_ruins: { x: 7, y: 1 },
+      from_highwatch_pass: { x: 7, y: 3 },
     },
     exits: [
       {
@@ -154,6 +163,13 @@ export const ZONES = {
         toZone: 'observatory_ruins',
         toSpawn: 'from_ridge_road',
         label: 'North Ascent → Observatory Ruins',
+      },
+      {
+        x: 8,
+        y: 3,
+        toZone: 'highwatch_pass',
+        toSpawn: 'from_ridge_road',
+        label: 'North Trail → Highwatch Pass',
       },
     ],
     npcs: [],
@@ -420,6 +436,192 @@ export const ZONES = {
     randomEncounterChance: 0,
     randomEncounters: [],
   },
+
+  saltmere_coast: {
+    id: 'saltmere_coast',
+    name: 'Saltmere Coast',
+    subtitle: 'Flooded Fishing Settlement',
+    dangerLevel: 2,
+    description:
+      'Spray-drenched boardwalks and storm-battered cottages cling to the tidal cove of Saltmere. Beyond the breakwater, creatures driven ashore by the gale threaten the stranded fisherfolk.',
+    width: 9,
+    height: 7,
+    grid: [
+      '####+####',
+      '#...,...#',
+      '#.~...~.#',
+      '#...,...#',
+      '#.~...~.#',
+      '#.......#',
+      '~~~~~~~~~',
+    ],
+    spawns: {
+      default: { x: 4, y: 1 },
+      from_greyhaven: { x: 4, y: 1 },
+    },
+    exits: [
+      {
+        x: 4,
+        y: 0,
+        toZone: 'greyhaven',
+        toSpawn: 'from_saltmere_coast',
+        label: 'North Causeway → Greyhaven',
+      },
+    ],
+    npcs: [],
+    interactables: [
+      {
+        id: 'saltmere_supply_cache',
+        interactionId: 'saltmere_supply_cache',
+        name: 'Harbor Master Chest',
+        kind: 'cache',
+        x: 7,
+        y: 5,
+        symbol: '▣',
+        once: true,
+        rewards: [
+          { id: 'bandage', qty: 1 },
+          { id: 'rations', qty: 1 },
+        ],
+        description:
+          'A tarred sea-chest lashed to the Saltmere dock pilings with dry bandages and rations.',
+      },
+      {
+        id: 'saltmere_harbor_lamp',
+        interactionId: 'saltmere_harbor_lamp',
+        name: 'Saltmere Harbor Lamp',
+        kind: 'lore',
+        x: 4,
+        y: 5,
+        symbol: '✦',
+        once: false,
+        description:
+          'The brass harbor lamp at the end of Saltmere pier, aligned to answer the main Stormhaven beacon.',
+      },
+    ],
+    encounters: [
+      {
+        id: 'saltmere_rescue',
+        encounterId: 'saltmere_rescue',
+        enemyId: 'gale_hound',
+        name: 'Saltmere Breakwater Pack',
+        x: 4,
+        y: 3,
+        symbol: '!',
+        main: true,
+        description: 'Storm-driven beasts cornering Saltmere’s harbor watch along the flooded pier.',
+      },
+      {
+        id: 'saltmere_tide_wraith',
+        encounterId: 'saltmere_tide_wraith',
+        enemyId: 'tide_wraith',
+        name: 'Shoal Tide Wraith',
+        x: 1,
+        y: 5,
+        symbol: '!',
+        main: false,
+        description: 'A churning spirit of lightning and surf lashing the western boatshed.',
+      },
+    ],
+    randomEncounterChance: 0.12,
+    randomEncounters: [
+      { encounterId: 'saltmere_hound_prowl', enemyId: 'gale_hound', name: 'Coastal Gale Hound', weight: 2 },
+      { encounterId: 'saltmere_rat_swarm', enemyId: 'storm_rat', name: 'Wharf Storm Rat', weight: 2 },
+    ],
+  },
+
+  highwatch_pass: {
+    id: 'highwatch_pass',
+    name: 'Highwatch Pass',
+    subtitle: 'Wind-Scoured Mountain Outpost',
+    dangerLevel: 2,
+    description:
+      'Frost-rimmed ramparts and stone signal cairns guard the upper pass at Highwatch. Cut off by rockslides, the outpost defenders hold the timber palisade against raiders and rogue constructs.',
+    width: 9,
+    height: 7,
+    grid: [
+      '^^^^^^^^^',
+      '#...,...#',
+      '#.#...#.#',
+      '+...,...#',
+      '#.#...#.#',
+      '#.......#',
+      '#########',
+    ],
+    spawns: {
+      default: { x: 1, y: 3 },
+      from_ridge_road: { x: 1, y: 3 },
+    },
+    exits: [
+      {
+        x: 0,
+        y: 3,
+        toZone: 'ridge_road',
+        toSpawn: 'from_highwatch_pass',
+        label: 'West Switchback → Ridge Road',
+      },
+    ],
+    npcs: [],
+    interactables: [
+      {
+        id: 'highwatch_supply_cache',
+        interactionId: 'highwatch_supply_cache',
+        name: 'Outpost Quartermaster Crate',
+        kind: 'cache',
+        x: 7,
+        y: 5,
+        symbol: '▣',
+        once: true,
+        rewards: [
+          { id: 'healing_herb', qty: 2 },
+          { id: 'scrap_metal', qty: 1 },
+        ],
+        description:
+          'An iron-bound supply crate stored behind the Highwatch windbreak.',
+      },
+      {
+        id: 'highwatch_cairn',
+        interactionId: 'highwatch_cairn',
+        name: 'Highwatch Signal Cairn',
+        kind: 'lore',
+        x: 4,
+        y: 1,
+        symbol: '✦',
+        once: false,
+        description:
+          'A stone watch-cairn overlooking the northern peaks, ready to relay the beacon’s warning.',
+      },
+    ],
+    encounters: [
+      {
+        id: 'highwatch_rescue',
+        encounterId: 'highwatch_rescue',
+        enemyId: 'ridge_bandit',
+        name: 'Highwatch Siege Raiders',
+        x: 5,
+        y: 3,
+        symbol: '!',
+        main: true,
+        description: 'Raiders and storm scavengers pressing against the Highwatch palisade gate.',
+      },
+      {
+        id: 'highwatch_construct',
+        encounterId: 'highwatch_construct',
+        enemyId: 'rust_sentinel',
+        name: 'Frostbitten Rust Sentinel',
+        x: 7,
+        y: 1,
+        symbol: '!',
+        main: false,
+        description: 'A weather-scarred construct stalking the northern watchtower.',
+      },
+    ],
+    randomEncounterChance: 0.12,
+    randomEncounters: [
+      { encounterId: 'highwatch_raider_skirmish', enemyId: 'ridge_bandit', name: 'Pass Raider', weight: 2 },
+      { encounterId: 'highwatch_sentinel_prowl', enemyId: 'rust_sentinel', name: 'Stray Rust Sentinel', weight: 1 },
+    ],
+  },
 };
 
 export const ZONE_ORDER = [
@@ -427,4 +629,6 @@ export const ZONE_ORDER = [
   'ridge_road',
   'observatory_ruins',
   'beacon_tower',
+  'saltmere_coast',
+  'highwatch_pass',
 ];
