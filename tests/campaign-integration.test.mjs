@@ -13,7 +13,7 @@ import { installBestiary } from '../src/scenes/bestiary.js';
 import { getItem } from '../src/items/items.js';
 import { installCompanions } from '../src/scenes/muster.js';
 import { installShop } from '../src/scenes/shop.js';
-import { countItem } from '../src/items/inventory.js';
+import { countItem, grantRewards } from '../src/items/inventory.js';
 import { townScene } from '../src/scenes/town.js';
 import { endingScene, installEnding } from '../src/scenes/ending.js';
 import { titleScene } from '../src/scenes/title.js';
@@ -1201,6 +1201,9 @@ function calibrationJourney(game) {
   walkExit(game, 'greyhaven');
   assert.match(getJournal(game.state.story).find(q => q.id === 'signal_calibration').objective, /explicitly report.*220 gold/);
   act(game, 'storyTalk', 'mara'); assert.equal(game.state.gold, gold, 'talk never pays');
+  const beforeCalibrationPay = structuredClone(game.state);
+  act(game, 'storyExpedition', 'signal_line_patrol');
+  assert.deepEqual(game.state, beforeCalibrationPay, 'unpaid Calibration cannot unlock Signal Line Patrol');
   act(game, 'storyCalibration', 'report');
   assert.equal(game.state.gold, gold + 220); assert.equal(game.state.story.flags.calibration_reward, true);
   assert.equal(game.state.scene, 'explore', 'no ending is replayed');
@@ -1213,6 +1216,71 @@ function calibrationJourney(game) {
   const oldStory = structuredClone(game.state.story);
   for (const key of ['calibration_accepted', ...fields, 'calibration_reward']) delete oldStory.flags[key];
   assert.deepEqual(oldStory, prior, 'old ending, relay purpose, quests and expedition stay unchanged');
+}
+
+
+function signalLineJourney(game, reverse) {
+  assert.equal(game.state.map.zoneId, 'greyhaven');
+  assert.equal(game.state.story.flags.calibration_reward, true);
+  const prior = structuredClone(game.state.story), flags = structuredClone(game.state.flags);
+  const id = 'signal_line_patrol';
+  const targets = { dust_marauder: 0, spire_sentry: 0, tempest_shade: 0 };
+  act(game, 'storyExpedition', id);
+  assert.deepEqual(game.state.story.expedition.active, { id, progress: 0, targets });
+  checkpoint(game, 'complete');
+  act(game, 'toTownScene'); act(game, 'rest'); act(game, 'explore');
+  for (const zone of ['ridge_road', 'highwatch_pass', 'sunscar_relay']) walkExit(game, zone);
+  const routes = reverse ? [
+    { zones: ['stormcrown_spire', 'storms_eye'], enemy: 'tempest_shade', rng: .25 },
+    { zones: ['stormcrown_spire'], enemy: 'spire_sentry', rng: .75 },
+    { zones: ['sunscar_relay'], enemy: 'dust_marauder', rng: .25 },
+  ] : [
+    { zones: [], enemy: 'dust_marauder', rng: .25 },
+    { zones: ['stormcrown_spire'], enemy: 'spire_sentry', rng: .75 },
+    { zones: ['storms_eye'], enemy: 'tempest_shade', rng: .25 },
+  ];
+  for (const [index, route] of routes.entries()) {
+    for (const zone of route.zones) walkExit(game, zone);
+    // A second genuine victory against the first target cannot substitute for another region.
+    for (let repeat = 0; repeat < (index === 0 ? 2 : 1); repeat++) {
+      game.mapRng = () => route.rng; act(game, 'mapPatrol'); delete game.mapRng;
+      const c = game.state.combat;
+      assert.equal(c.enemy.id, route.enemy); assert.equal(c.encounterId, null); assert.notEqual(c.drill, true);
+      const gold = game.state.gold, xp = game.state.party.map(m => m.xp), book = game.state.bestiary[route.enemy] || 0;
+      const inv = structuredClone(game.state.inventory);
+      for (let turn = 0; !c.over && turn < 100; turn++) act(game, 'attack');
+      assert.equal(c.over, 'victory');
+      assert.equal(game.state.gold, gold + c.rewards.gold, 'only normal battle gold, never board payment');
+      game.state.party.forEach((m, i) => assert.equal(m.xp, xp[i] + c.rewards.xp));
+      const expected = grantRewards(inv, c.rewards.items); assert.equal(expected.ok, true);
+      assert.deepEqual(game.state.inventory, expected.inv);
+      assert.equal(game.state.bestiary[route.enemy], book + 1);
+      targets[route.enemy] = 1;
+      const active = { id, progress: index + 1, targets: { ...targets } };
+      assert.deepEqual(game.state.story.expedition.active, active);
+      act(game, 'finish'); assert.equal(game.state.combat, null);
+      assert.deepEqual(game.state.story.expedition.active, active);
+      checkpoint(game, 'complete');
+      const before = structuredClone(game.state); act(game, 'storyExpedition', 'claim');
+      assert.deepEqual(game.state, before, 'out-of-town claim is a whole-state no-op');
+    }
+  }
+  walkExit(game, 'greyhaven');
+  const gold = game.state.gold;
+  act(game, 'storyTalk', 'mara'); assert.equal(game.state.gold, gold, 'talk never pays');
+  const beforeClaim = structuredClone(game.state);
+  act(game, 'storyExpedition', 'claim');
+  const expected = structuredClone(beforeClaim); expected.gold += 120;
+  expected.story.expedition = { active: null, completed: prior.expedition.completed + 1 };
+  assert.deepEqual(game.state, expected, 'claim changes only gold and shared expedition completion');
+  checkpoint(game, 'complete');
+  const paid = structuredClone(game.state); act(game, 'storyExpedition', 'claim'); assert.deepEqual(game.state, paid);
+  act(game, 'storyExpedition', id);
+  assert.deepEqual(game.state.story.expedition.active, { id, progress: 0, targets: { dust_marauder: 0, spire_sentry: 0, tempest_shade: 0 } });
+  act(game, 'storyExpedition', 'cancel');
+  assert.deepEqual(game.state, paid, 'repeat and cancellation reset counts without changing payment or saved journey');
+  assert.deepEqual({ ...game.state.story, expedition: prior.expedition }, prior, 'all older story flags, ending and relay choice survive');
+  assert.deepEqual(game.state.flags, flags);
 }
 
 // These are real refights of bosses defeated earlier in this same campaign.
@@ -1684,6 +1752,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         heartJourney(game, early, first);
         watchJourney(game, early, first);
         calibrationJourney(game);
+        signalLineJourney(game, early);
         squallJourney(game);
         drillJourney(game);
         gauntletJourney(game);

@@ -217,6 +217,12 @@ Below the feats, the **Service record** tallies your real battles: battles won, 
 
 The bag screen holds the whole party's supplies and is reachable from town and the field. Member tabs choose whose stat line, gear comparisons and Equip buttons apply to; each stack lists its total sell value, and consumables can be used on the selected member without leaving the screen. Sort buttons above the item groups reorder stacks by type, name, or total sell value; the default order stays the way items were gathered.
 
+### Signal Line Patrol
+
+After collecting the summit survey and Signal Calibration payments, Greyhaven's expedition board offers **Signal Line Patrol** for **120 gold**. Accept it, then win one new battle each against a Dust Marauder in Sunscar Relay, a Spire Sentry in Stormcrown Spire, and a Tempest Shade in The Storm’s Eye, in any order. The journal tracks each target separately; repeat victories against the same target cannot replace another, and earlier victories do not count.
+
+Return to Greyhaven and explicitly claim the payment. This repeatable contract shares the board's one-active-patrol limit; cancelling or accepting it again starts all three counts over. It does not change the beacon ending or your relay choice.
+
 ### Planning with the Recipe Book
 
 Use **All**, **Ready**, or **Missing** to narrow the Field Recipe Book, and type a recipe, ingredient, or output name before choosing **Search**. Search ignores letter case; **Clear search** keeps your availability filter. Filters use the last applied search, not unfinished typing. Reopening the book resets both choices. These controls only change the reference view: crafting still happens in the Bag or at a trader, and your journey save is unchanged.
