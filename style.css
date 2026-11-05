@@ -1291,8 +1291,8 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
   white-space: normal;
 }
 
-/* Owned-count hints on shop buy rows */
-.buy-owned {
+/* Bag-count hints on shop buy rows */
+.bag-owned {
   display: block;
   color: var(--muted);
   font-size: 0.9em;

@@ -104,13 +104,13 @@ export const shopScene = {
             craftLine = `<br><small>Used in: ${esc(names.join(' · '))}${rest > 0 ? ` (+${rest} more)` : ''}</small>`;
           }
         }
-        const ownedCount = countItem(s.inventory, it.id);
-        const ownedHint = ownedCount > 0 ? `<small class="buy-owned">owned ${ownedCount}</small>` : '';
+        const bagCount = countItem(s.inventory, it.id);
+        const bagHint = bagCount > 0 ? `<small class="bag-owned">in bag ${bagCount}</small>` : '';
         return `<tr>
           <td><strong>${esc(it.name)}</strong><br>
             <small>${esc(it.description)}</small><br>
             <small>${esc(typeLabel(it.type))}${stats ? ' · ' + esc(statSummary(stats)) : ''}</small>${craftLine}${cmpLine}</td>
-          <td style="white-space:nowrap;">${it.price}g${ownedHint}</td>
+          <td style="white-space:nowrap;">${it.price}g${bagHint}</td>
           <td>
             <button data-action="buy" data-arg="${esc(it.id)}"${buyQty > 1 ? ` aria-label="Buy ${buyQty} ${esc(it.name)}"` : ''} ${gold < it.price ? 'disabled' : ''}>${buyQty > 1 ? `Buy ×${buyQty}` : 'Buy'}</button>
             <button data-action="buy5" data-arg="${esc(it.id)}" aria-label="Buy 5 ${esc(it.name)}" ${gold < it.price ? 'disabled' : ''}>Buy 5</button>
