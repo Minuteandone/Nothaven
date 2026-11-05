@@ -54,7 +54,7 @@ export function combatAnchor(target) {
 /** Shake the game container briefly. */
 export function screenShake(intensity = 4, duration = 300) {
   // Respect OS and in-game reduced-motion preferences
-  if (prefersReducedMotion()) return;
+  if (prefersReducedMotion() || typeof document === 'undefined') return;
   const app = document.getElementById('app');
   if (!app) return;
   app.style.transition = 'transform 0.05s ease';
@@ -151,7 +151,7 @@ export function injectAnimCSS() {
 }
 
 /** Wire animations to game events. Returns a cleanup function.
- *  Hooks combat:victory, combat:defeat, and party:levelup for screen effects,
+ *  Hooks combat:victory (shake + enemy card fade), combat:defeat, and party:levelup for screen effects,
  *  and combat:hp for floating damage and healing numbers.
  *  Crossfade is handled by the engine — call crossfadeScene() directly from
  *  engine.setScene() if desired. */
@@ -160,7 +160,12 @@ export function installAnimations(game) {
   injectAnimCSS();
   const bus = game.bus;
 
-  function onVictory() { screenShake(3, 250); }
+  // Fade the defeated foe's card once the engine has re-rendered the victory screen.
+  function onVictory() {
+    screenShake(3, 250);
+    if (typeof document === 'undefined') return;
+    setTimeout(() => enemyDeathFade(combatAnchor('enemy')), 0);
+  }
   function onDefeat() { screenShake(8, 500); }
   function onLevelUp() { screenShake(2, 200); }
   // Float damage (red) and healing (green) numbers over the unit cards once the
