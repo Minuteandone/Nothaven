@@ -54,3 +54,10 @@ test('guide scaffolding — header, roadmap and buttons — stays egg-free', () 
   // are stripped by the shared guard, so the benign game-shell class is fine.
   assertEggFree(guideScene.render(), 'guide rendered HTML (scaffolding included)');
 });
+
+test('guide Thunderhoof tip names its Sparkrack Tine drop', async () => {
+  const { ITEMS } = await import('../src/items/items.js');
+  const text = JSON.stringify(GUIDE_SECTIONS);
+  assert.match(text, /Thunderhoof[^']*Sparkrack Tine/);
+  assert.equal(ITEMS.sparkrack_tine.name, 'Sparkrack Tine');
+});
