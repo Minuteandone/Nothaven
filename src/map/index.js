@@ -1,8 +1,9 @@
-export { TILE_TYPES, ZONES, ZONE_ORDER } from './zones.js';
+export { TILE_TYPES, ZONE_CONDITIONS, ZONES, ZONE_ORDER } from './zones.js';
 export {
   createMapState,
   ensureMapState,
   getZone,
+  getZoneCondition,
   getTileChar,
   getTileInfo,
   isWalkable,
