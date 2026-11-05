@@ -797,7 +797,7 @@ em.enraged {
   .companion-card__body { padding: 1rem; }
   .companion-blurb { font-size: .82rem; }
   .companion-card__actions .action-button { font-size: .8rem; }
-  .muster-section-heading { align-items: flex-start; }
+  .muster-section-heading { flex-wrap: wrap; align-items: flex-start; }
   .directory-count { padding-top: .25rem; white-space: nowrap; }
 }
 @media (max-width: 360px) {
