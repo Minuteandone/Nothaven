@@ -9,6 +9,7 @@ import { SHOPS } from '../src/items/shop.js';
 import { SKILLS } from '../src/combat/rules.js';
 import { FEATS } from '../src/scenes/feats.js';
 import { TRADES } from '../src/items/trade.js';
+import { POSTGAME_DEEDS } from '../src/scenes/ending.js';
 
 // Hidden words can be spelled by the first letters of a text field read in game order.
 const HIDDEN = /egg|yolk|omel|scram|fried|boil|sunny|easter|hatch|nest|chick|poach|shell|devil|bened|quail|hen|coddl|clutch|ovum|oeuf|huevo/i;
@@ -58,7 +59,8 @@ const CATALOGUES = {
   skills: () => Object.values(SKILLS),
   feats: () => FEATS,
   'zone conditions': () => Object.values(ZONE_CONDITIONS),
-  trades: () => TRADES
+  trades: () => TRADES,
+  'postgame deeds': () => POSTGAME_DEEDS
 };
 
 for (const [name, list] of Object.entries(CATALOGUES)) {
