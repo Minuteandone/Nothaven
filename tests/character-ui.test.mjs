@@ -28,7 +28,7 @@ test('level-one sheet is read-only and shows open gear, current resources, XP, a
   assert.match(html, /aria-label="Level 1 experience" aria-valuemin="0" aria-valuemax="15" aria-valuenow="0"/);
   assert.match(html, /15 XP to level 2/);
   assert.match(html, /Next threshold: 15 total XP/);
-  assert.match(html, /2 \/ 13 known/);
+  assert.match(html, /2 \/ 14 known/);
   assert.match(html, /data-skill="power_strike" data-learned="true"/);
   assert.match(html, /data-skill="mend" data-learned="true"/);
   assert.match(html, /data-skill="spark" data-learned="false"/);
@@ -66,7 +66,7 @@ test('equipment-aware stat table separates base values, gear bonuses, and effect
 
 test('skill roadmap uses the combat registry and distinguishes every known and upcoming unlock', () => {
   const html = renderCharacter({ member: { ...createInitialState().party[0], level: 7, xp: xpForLevel(7) } });
-  assert.match(html, /8 \/ 13 known/);
+  assert.match(html, /8 \/ 14 known/);
   for (const [id, unlock] of Object.entries(SKILL_UNLOCKS)) {
     assert.ok(html.includes(`data-skill="${id}" data-learned="${unlock <= 7}"`), id);
     assert.ok(html.includes(SKILLS[id].name), id);
@@ -96,7 +96,7 @@ test('maximum level presents a completion state rather than a false next-level g
   const html = renderCharacter({ member });
   assert.match(html, /Maximum level reached/);
   assert.match(html, /Level 20 is the current cap/);
-  assert.match(html, /13 \/ 13 known/);
+  assert.match(html, /14 \/ 14 known/);
   assert.ok(!html.includes('XP to level 21'));
   assert.ok(!html.includes('aria-label="Level 20 experience"'));
   assert.equal(characterProgress(member).remaining, 0);
