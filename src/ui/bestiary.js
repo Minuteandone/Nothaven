@@ -82,6 +82,17 @@ function stats(enemy) {
   return `<dl class="foe-stats" aria-label="Combat record">${values.map(([label, value]) => `<div><dt>${label}</dt><dd>${number(value)}</dd></div>`).join('')}</dl>`;
 }
 
+/** Static catalogue guidance, only called after the known-victory filter. */
+function windupDetails(enemy, comparison = false) {
+  const w = enemy.windup;
+  if (!w || typeof w.name !== 'string' || !w.name.trim() ||
+      !Number.isFinite(w.chance) || w.chance <= 0 || w.chance > 1 ||
+      !Number.isFinite(w.mult) || w.mult <= 0) return '';
+  const tag = comparison ? 'div' : 'section';
+  const className = comparison ? 'comparison-tactic' : 'foe-tactic';
+  return `<${tag} class="${className} foe-windup"><h4>Windup: ${escapeHTML(w.name)}</h4><p>${escapeHTML(Math.round(w.chance * 100))}% chance to begin gathering. Gathers for one enemy action, then aims a ×${escapeHTML(w.mult)} ATK strike at Wren on its next action. After the warning, Defend or a ward halves the strike; stunning the foe interrupts it.</p></${tag}>`;
+}
+
 function comparisonCard({ enemy }) {
   const ability = enemy.ability;
   const details = ability
@@ -91,6 +102,7 @@ function comparisonCard({ enemy }) {
     <div class="comparison-card__heading"><div><p class="eyebrow">${enemy.boss ? 'Boss record' : 'Patrol record'}</p><h3>${escapeHTML(enemy.name)}</h3></div>${uiButton({ action: 'removeComparedFoe', arg: enemy.id, label: 'Remove', variant: 'ghost', className: 'comparison-remove' })}</div>
     ${stats(enemy)}
     <div class="comparison-tactic"><h4>${escapeHTML(ability?.name || 'Signature move')}</h4><p>${details || 'No additional trigger details recorded.'}</p></div>
+    ${windupDetails(enemy, true)}
     ${enemy.enrage ? `<p class="foe-phase"><strong>Second phase: grows enraged below ${Math.round(number(enemy.enrage.threshold) * 100)}% HP (+${number(enemy.enrage.atk)} ATK)</strong>.</p>` : ''}
   </article>`;
 }
@@ -122,6 +134,7 @@ function knownEntry({ enemy, count }, selected = false, full = false) {
       ${enemy.intro ? `<p class="foe-intro">${escapeHTML(enemy.intro)}</p>` : ''}
       ${stats(enemy)}
       ${ability}
+      ${windupDetails(enemy)}
       ${enemy.enrage ? `<p class="foe-phase"><strong>Second phase: grows enraged below ${Math.round(number(enemy.enrage.threshold) * 100)}% HP (+${number(enemy.enrage.atk)} ATK)</strong>.</p>` : ''}
       ${loot.length ? `<div class="foe-spoils"><strong>Known spoils:</strong><ul>${loot.map(name => `<li>${escapeHTML(name)}</li>`).join('')}</ul></div>` : ''}
       ${tip ? `<p class="field-tip"><strong>Mara’s advice:</strong> ${escapeHTML(tip)}</p>` : ''}
