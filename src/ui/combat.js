@@ -77,7 +77,7 @@ function commandCard({ action, arg, name, meta, description, iconName = 'focus',
   </button>`;
 }
 
-function commands({ combat, hero, inventory, menu }) {
+function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
   if (combat.over) {
     return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
   }
@@ -90,14 +90,20 @@ function commands({ combat, hero, inventory, menu }) {
     return `<div class="actions command-list" role="group" aria-label="Skill actions">${skills || '<p class="empty-state">No skills learned yet.</p>'}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'items') {
+    const recipient = Number.isInteger(itemTargetIndex) ? party[itemTargetIndex] : null;
+    const validRecipient = Boolean(recipient && recipient.hp > 0);
+    const recipients = `<div class="item-recipients" role="group" aria-label="Item recipient">${party.map((member, index) => {
+      const stats = heroStats(member), down = !(member.hp > 0);
+      return `<button type="button" data-action="itemTarget" data-arg="${index}" aria-pressed="${index === itemTargetIndex && !down}"${down ? ' disabled' : ''}><strong>${escapeHTML(member.name)}</strong><span>HP ${number(member.hp)}/${number(stats.maxHp)} · MP ${number(member.mp)}/${number(stats.maxMp)}${down ? ' · Down' : ''}</span></button>`;
+    }).join('')}</div><p class="item-recipient-note" role="status">${validRecipient ? `Using items on ${escapeHTML(recipient.name)}. Choosing a recipient does not spend a turn.` : 'Choose a living party member to use an item.'}</p><p class="item-recipient-note">Items cannot revive downed allies. Rekindle can revive them once learned.</p>`;
     const usable = (inventory || []).filter((stack) => {
       try { return getItem(stack.id).type === TYPES.CONSUMABLE; } catch { return false; }
     });
     const items = usable.map((stack, index) => {
       const item = getItem(stack.id);
-      return commandCard({ action: 'item', arg: stack.id, name: item.name, meta: `×${stack.qty}`, description: item.description || 'Use this consumable item.', iconName: 'bag', shortcut: index < 9 ? String(index + 1) : null });
+      return commandCard({ action: 'item', arg: stack.id, name: item.name, meta: `×${stack.qty}`, description: item.description || 'Use this consumable item.', iconName: 'bag', disabled: !validRecipient, shortcut: index < 9 ? String(index + 1) : null });
     }).join('');
-    return `<div class="actions command-list" role="group" aria-label="Item actions">${items || '<p class="empty-state">No usable items. Visit Hesta or search caches to stock your pack.</p>'}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
+    return `<div class="actions command-list" role="group" aria-label="Item actions">${recipients}${items || '<p class="empty-state">No usable items. Visit Hesta or search caches to stock your pack.</p>'}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
   }
   const usableCount = (inventory || []).filter((stack) => {
     try { return getItem(stack.id).type === TYPES.CONSUMABLE; } catch { return false; }
@@ -126,7 +132,7 @@ export function difficultyNote(combat) {
   return Object.prototype.hasOwnProperty.call(DIFFICULTY_NOTES, id) ? ` · ${DIFFICULTY_NOTES[id]}` : '';
 }
 
-export function renderCombat({ combat, party, inventory = [], menu = 'main' }) {
+export function renderCombat({ combat, party, inventory = [], menu = 'main', itemTargetIndex = 0 }) {
   const hero = party[0];
   const round = Math.max(1, number(combat.turn, 1));
   const phase = combat.over ? 'Resolved' : menu === 'skills' ? 'Choose a skill' : menu === 'items' ? 'Choose an item' : 'Your command';
@@ -153,7 +159,7 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main' }) {
     <div class="combat-dashboard">
       <section class="panel command-panel" aria-labelledby="command-title">
         <p class="eyebrow">Command phase</p><h2 id="command-title">${commandTitle}</h2>
-        ${commands({ combat, hero, inventory, menu })}
+        ${commands({ combat, hero, party, inventory, menu, itemTargetIndex })}
       </section>
       <section class="panel combat-log-panel" aria-labelledby="combat-log-title">
         <div class="combat-side__heading"><h2 id="combat-log-title">Battle log</h2><span>Latest 8 events</span></div>

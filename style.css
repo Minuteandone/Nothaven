@@ -1218,3 +1218,10 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
 
 /* Ending/Chronicle heading: let long title words wrap on narrow screens at large text */
 .ending h1 { overflow-wrap: anywhere; hyphens: auto; }
+
+/* Combat supplies: recipient selection is separate from item shortcuts. */
+.item-recipients { display: flex; flex-wrap: wrap; gap: .5rem; min-width: 0; }
+.item-recipients button { flex: 1 1 10rem; min-width: 0; min-height: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.item-recipients button strong, .item-recipients button span { display: block; }
+.item-recipients button[aria-pressed="true"] { outline: 2px solid currentColor; outline-offset: -3px; }
+.item-recipient-note { margin: .25rem 0; overflow-wrap: anywhere; }
