@@ -124,3 +124,14 @@ including heading/count containment, without changing party progress.
 The portable smoke also compares its one genuinely defeated Ridge Bandit at 115%
 and 130% text size, then checks Remove/re-add/Clear and Back without progress changes.
 This fresh route does not claim three-card comparison coverage.
+
+## Earned campaign regression
+
+`tests/campaign-integration.test.mjs` walks sixteen combinations of the original
+ending, early exploration, rescue order and relay service through the campaign.
+Cinderclaw coverage approaches its Sunscar tile before the Spire payment, checks
+that both encounter actions refuse without moving or consuming map RNG, then
+returns after payment with earned equipment and allies for a real fight. It checks
+260 XP per member, 140 gold, deterministic loot, Dune Breaker, unchanged Trial
+Warden/drill eligibility, one-time rewards, and save/load persistence. This fixed-RNG
+route is a regression check, not a first-availability difficulty estimate.
