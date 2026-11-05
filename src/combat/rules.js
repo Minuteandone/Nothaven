@@ -164,6 +164,10 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   if (e.windup && rng() < (e.windup.chance ?? 0)) {
     c.windup = { name: e.windup.name };
     lines.push(`${e.name} begins gathering ${e.windup.name}! Brace yourself: Defend or a ward will blunt the blow.`);
+    // Gathering is the enemy's action, so one-action defenses expire as usual.
+    c.defending = false;
+    if (c.wardTurns > 0) c.wardTurns -= 1;
+    if (c.aegisTurns > 0) c.aegisTurns -= 1;
     return lines;
   }
   // Pick a target among living party members (rng is only consumed with 2+ targets).

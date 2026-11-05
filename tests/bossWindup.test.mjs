@@ -81,3 +81,19 @@ test('foes without a windup never consume extra rng', () => {
   assert.equal(calls2, calls + 1);
   assert.equal(c.windup, undefined);
 });
+
+test('gathering spends Defend and one ward/aegis turn like any enemy action', () => {
+  const c = createCombat({ enemyId: 'stormcrown_tyrant' });
+  const h = hero();
+  c.defending = true; c.wardTurns = 1; c.aegisTurns = 2;
+  enemyTurn(c, h, seq(0.01), [h]);
+  assert.ok(enemyWindingUp(c));
+  assert.equal(c.defending, false);
+  assert.equal(c.wardTurns, 0);
+  assert.equal(c.aegisTurns, 1);
+  // With every defense spent, the released blow lands unbraced.
+  c.aegisTurns = 0;
+  const lines = enemyTurn(c, h, seq(0.5), [h]);
+  assert.ok(lines.some((l) => /unleashes/.test(l)));
+  assert.ok(!lines.some((l) => /braced/.test(l)));
+});
