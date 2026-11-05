@@ -47,7 +47,7 @@ test('no egg-shaped (elliptical) CSS or SVG shapes ship', () => {
   const OVAL_RE = /<ellipse\b|ellipse\(|radial-gradient\(\s*ellipse|border-radius\s*:[^;]*\//i;
   const hits = FILES.filter((path) => /\.(m?js|css|html)$/.test(path))
     .flatMap((path) => readFileSync(path, 'utf8').split('\n')
-      .map((line, i) => (OVAL_RE.test(line) && !/OVAL_RE|ban|doesNotMatch/i.test(line) ? `${path.slice(root.length + 1)}:${i + 1}` : null))
+      .map((line, i) => (OVAL_RE.test(line) ? `${path.slice(root.length + 1)}:${i + 1}` : null))
       .filter(Boolean));
   assert.deepEqual(hits, []);
 });
