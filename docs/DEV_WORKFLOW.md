@@ -77,3 +77,7 @@ pattern. Reuse it end to end:
   string.
 - Align every docs claim (player guide, map README) with the code before
   requesting review.
+
+## Repo-wide content guard
+
+`tests/repoEggGuard.test.mjs` scans every file under `src/` and `docs/`, plus `style.css`, `index.html` and `README.md`, against the shared banned-word list in `tests/helpers/eggGuard.mjs`. It also rejects elliptical shapes (`<ellipse>`, `ellipse()`, and two-value `border-radius` with `/`). New content tests should `import { EGG_RE } from './helpers/eggGuard.mjs'` instead of copying a local regex. Vetted benign tokens (such as the main layout class name) are stripped token-by-token in the test, never by skipping whole lines.
