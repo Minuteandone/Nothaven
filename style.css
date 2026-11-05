@@ -1215,3 +1215,6 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
   .comparison-card__heading { flex-wrap: wrap; }
   .comparison-card__heading .comparison-remove { width: 100%; justify-content: center; }
 }
+
+/* Ending/Chronicle heading: let long title words wrap on narrow screens at large text */
+.ending h1 { overflow-wrap: anywhere; hyphens: auto; }
