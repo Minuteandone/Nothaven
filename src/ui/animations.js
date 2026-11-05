@@ -41,6 +41,16 @@ export function damagePopup(anchor, amount, kind = 'damage') {
   el.addEventListener('animationend', () => el.remove(), { once: true });
 }
 
+/** The rendered unit card for a `combat:hp` target: 'enemy' or a party index. */
+export function combatAnchor(target) {
+  if (typeof document === 'undefined' || typeof document.querySelector !== 'function') return null;
+  if (target === 'enemy') return document.querySelector('.combat-side--enemy .unit');
+  const i = Number(target);
+  if (!Number.isInteger(i) || i < 0) return null;
+  const cards = document.querySelectorAll('.party-units .unit');
+  return cards && cards[i] ? cards[i] : null;
+}
+
 /** Shake the game container briefly. */
 export function screenShake(intensity = 4, duration = 300) {
   // Respect OS and in-game reduced-motion preferences
@@ -141,7 +151,8 @@ export function injectAnimCSS() {
 }
 
 /** Wire animations to game events. Returns a cleanup function.
- *  Hooks combat:victory, combat:defeat, and party:levelup for screen effects.
+ *  Hooks combat:victory, combat:defeat, and party:levelup for screen effects,
+ *  and combat:hp for floating damage and healing numbers.
  *  Crossfade is handled by the engine — call crossfadeScene() directly from
  *  engine.setScene() if desired. */
 export function installAnimations(game) {
@@ -152,14 +163,29 @@ export function installAnimations(game) {
   function onVictory() { screenShake(3, 250); }
   function onDefeat() { screenShake(8, 500); }
   function onLevelUp() { screenShake(2, 200); }
+  // Float damage (red) and healing (green) numbers over the unit cards once the
+  // engine has re-rendered the combat screen after the action.
+  function onHp(payload) {
+    const changes = Array.isArray(payload?.changes) ? payload.changes : [];
+    if (!changes.length || typeof document === 'undefined') return;
+    setTimeout(() => {
+      for (const ch of changes) {
+        const anchor = combatAnchor(ch.target);
+        const amount = Math.abs(Number(ch.delta) || 0);
+        if (anchor && amount) damagePopup(anchor, amount, ch.delta < 0 ? 'damage' : 'heal');
+      }
+    }, 0);
+  }
 
   bus.on('combat:victory', onVictory);
   bus.on('combat:defeat', onDefeat);
   bus.on('party:levelup', onLevelUp);
+  bus.on('combat:hp', onHp);
 
   return () => {
     bus.off('combat:victory', onVictory);
     bus.off('combat:defeat', onDefeat);
     bus.off('party:levelup', onLevelUp);
+    bus.off('combat:hp', onHp);
   };
 }
