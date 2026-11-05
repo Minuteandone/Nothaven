@@ -118,3 +118,12 @@ test('portrait fallback uses known safe SVG ids and accessible text', () => {
   assert.ok(!html.includes('<b>Traveller</b>'));
   assert.match(html, /companion-portrait--locked/);
 });
+
+test('muster remarks read the Service Record for Stormborn boss victories', () => {
+  const state = createInitialState();
+  unlock(state, 'tamsin');
+  state.ledger = { stormbornBossVictories: 1 };
+  const game = gameWith(state);
+  game.musterTalk = 'tamsin';
+  assert.match(renderMuster(game), /hardest and still walked back through the gate/);
+});
