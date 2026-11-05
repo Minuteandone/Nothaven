@@ -105,6 +105,11 @@ Only randomness is controlled; stats, items, positions, story facts, and victori
 are never injected. This short new-game route is **not** the full campaign,
 postgame, cross-browser, accessibility, or balance test suite.
 
+The same fresh route also toggles letter/number shortcuts off and back on through
+Display, checks device-local persistence after Save/reload, and exercises blocked
+exploration/combat keys alongside working arrows, Escape, and native buttons.
+These keyboard checks do not validate speech input or screen-reader support.
+
 Screenshots and Playwright traces are written to the ignored `browser-artifacts/`
 folder, including a failure screenshot when possible. View a trace with
 `npx playwright show-trace browser-artifacts/320-trace.zip`. No changes are made to
