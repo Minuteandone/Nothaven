@@ -1,6 +1,6 @@
 import { companionTactic } from '../party/tactics.js';
 import { isCompanionId } from '../party/companions.js';
-import { BEACON_CHARGE_MAX, chargeReady, battleSummary } from '../combat/rules.js';
+import { BEACON_CHARGE_MAX, chargeReady, battleSummary, enemyWindingUp } from '../combat/rules.js';
 import { heroStats, knownSkills } from '../combat/rules.js';
 import { getItem, TYPES } from '../items/items.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
@@ -164,6 +164,7 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main', ite
         <section class="combat-side combat-side--enemy" aria-labelledby="combat-enemy-title">
           <div class="combat-side__heading"><h2 id="combat-enemy-title">Opposition</h2><span>${combat.enemy.boss ? 'Boss' : 'Hostile'}</span></div>
           ${unitCard(combat.enemy, { enemy: true, enraged: Boolean(combat.enraged) })}
+          ${windupCue(combat)}
         </section>
       </div>
     </section>
@@ -181,6 +182,13 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main', ite
       </section>
     </div>
   </div>`;
+}
+
+/** Warning shown while a boss gathers a telegraphed blow for next turn. */
+export function windupCue(combat) {
+  if (!enemyWindingUp(combat)) return '';
+  const name = combat.windup?.name || combat.enemy?.windup?.name || 'a heavy blow';
+  return `<p class="windup-cue" role="status"><strong>Gathering ${escapeHTML(name)}</strong> · Next turn it lands on your leader. Defend or a ward halves it; a stun breaks it.</p>`;
 }
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
