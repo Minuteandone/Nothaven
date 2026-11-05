@@ -33,7 +33,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'The Difficulty button in Greyhaven switches between Story, Standard, Veteran and Stormborn foes at any time; overcoming any boss on Stormborn earns the Calm in the Gale feat.',
     'Use Save journey in town to keep your progress on this device, and Continue on the title screen to return.',
     'Sound is muted by default. The audio controls let you turn on the storm ambience and adjust the volume.',
-    'The Journey Journal lists every active task, the Character Sheet shows gear and effective stats, and Wardens’ Feats records the milestones of your journey — all open from Greyhaven or the expedition screen.',
+    'The Journey Journal lists every active task, the Character Sheet shows gear and effective stats, and Wardens’ Feats records the milestones of your journey — all open from Greyhaven or the expedition screen. In Wardens’ Feats, the All, Earned and Not yet buttons narrow the list.',
     'Sparring Drills in Greyhaven let you refight the yard bosses you have already beaten for half their experience. Optional field trials such as Old Tusk, Gloomfin, Frostmane and the Lenswarden stay out on the map. Drills pay no gold or spoils, and losing one costs nothing.',
     'The four field trials open once Warden Mara has paid for the Saltmere and Highwatch rescues. Overcoming Old Tusk, Gloomfin, Frostmane and the Lenswarden earns the Trial Warden feat.',
     'After the Stormcrown Spire is settled, Cinderclaw, a giant sand scorpion, waits in the dunes below the Sunscar signal lift. It is a harder, separate trial for level 9 or above and does not count toward Trial Warden; defeating it earns the Dune Breaker feat.',
