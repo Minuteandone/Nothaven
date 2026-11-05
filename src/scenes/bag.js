@@ -11,6 +11,7 @@ import { countItem } from '../items/inventory.js';
 import { craftInField } from '../map/mapState.js';
 import { sellValueOf, shopsStocking, isScarceItem } from '../items/shop.js';
 import { FITTING_SLOTS, MAX_FITTING, fittingLevel, fittingEffectText } from '../items/forge.js';
+import { recipeBookEntries, filterRecipeEntries } from './recipes.js';
 
 const esc = (v) =>
   String(v ?? '').replace(/[&<>"']/g, (c) =>
@@ -28,6 +29,18 @@ const TYPE_TITLES = {
 
 export const BAG_SORTS = Object.freeze(['type', 'name', 'value']);
 const BAG_SORT_LABELS = { type: 'Type', name: 'Name', value: 'Value' };
+const bagQueryText = (value) => typeof value === 'string' ? value.trim().slice(0, 120) : '';
+const canFilterBag = (game) => game.state?.scene === 'bag' && !game.state.combat;
+
+/** Pure: keep stacks whose item display name matches the query (case-insensitive). Empty query keeps everything. */
+export function filterStacksByQuery(stacks, query = '') {
+  const term = bagQueryText(query).toLowerCase();
+  if (!term) return [...(stacks || [])];
+  return (stacks || []).filter((st) => {
+    const item = isKnownItem(st.id) ? getItem(st.id) : null;
+    return (item?.name ?? st.id).toLowerCase().includes(term);
+  });
+}
 
 const byString = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
@@ -139,8 +152,12 @@ function bagRow(item, stack, member) {
 }
 
 /** Crafting section: every recipe with a have/need checklist and a craft button. */
-function craftSection(inv) {
-  const rows = listRecipes().map((recipe) => {
+function craftSection(inv, query = '') {
+  const term = bagQueryText(query);
+  const recipes = term
+    ? filterRecipeEntries(recipeBookEntries(inv), 'all', term).map((entry) => entry.recipe)
+    : listRecipes();
+  const rows = recipes.map((recipe) => {
     const check = recipeInputsMet(inv, recipe);
     const usesScarce = (recipe.inputs || []).some((input) => isScarceItem(input.id));
     const checklist = (recipe.inputs || []).map((input) => {
@@ -169,7 +186,8 @@ function craftSection(inv) {
       `</tr>`
     );
   }).join('');
-  return `<section class="bag-group" aria-label="Crafting"><h3>Crafting</h3><table class="craft-table">${rows}</table></section>`;
+  const countLine = term ? `<p role="status">Showing ${recipes.length} of ${listRecipes().length} recipes.</p>` : '';
+  return `<section class="bag-group" aria-label="Crafting"><h3>Crafting</h3>${countLine}<table class="craft-table">${rows}</table></section>`;
 }
 
 export const bagScene = {
@@ -177,6 +195,7 @@ export const bagScene = {
     game.bagReturnScene = data.returnScene ?? 'town';
     game.bagMemberIndex = 0;
     game.bagMessage = data.message ?? '';
+    game.bagQuery = '';
   },
 
   render(game) {
@@ -215,14 +234,28 @@ export const bagScene = {
       ).join('') +
       `</div>`;
 
+    const query = bagQueryText(game.bagQuery);
+    const allStacks = (s.inventory || []).filter((st) => isKnownItem(st.id));
+    const visibleStacks = filterStacksByQuery(allStacks, query);
+    const searchControl = `<div class="bag-search">` +
+      `<label for="bag-search-input">Search bag</label>` +
+      `<p id="bag-search-help" class="hint">Search item or recipe names, then choose Search.</p>` +
+      `<div class="bag-search-row"><input type="search" id="bag-search-input" maxlength="120" aria-describedby="bag-search-help" value="${esc(query)}">` +
+      `<button data-action="bagSearchApply">Search</button>` +
+      `<button data-action="bagSearchClear"${query ? '' : ' disabled'}>Clear search</button></div>` +
+      (query ? `<p class="bag-count" role="status">Showing ${visibleStacks.length} of ${allStacks.length} items.</p>` : '') +
+      `</div>`;
     const sections = TYPE_ORDER.map((type) => {
-      const stacks = sortStacks((s.inventory || []).filter(
+      const stacks = filterStacksByQuery(sortStacks((s.inventory || []).filter(
         (st) => isKnownItem(st.id) && getItem(st.id).type === type,
-      ), sortMode);
+      ), sortMode), query);
       if (!stacks.length) return '';
       const rows = stacks.map((st) => bagRow(getItem(st.id), st, member)).join('');
       return `<section class="bag-group" aria-label="${TYPE_TITLES[type]}"><h3>${TYPE_TITLES[type]}</h3><ul class="bag-list">${rows}</ul></section>`;
     }).join('');
+    const sectionsHtml = sections || (allStacks.length
+      ? `<p class="bag-empty">No items match &quot;${esc(query)}&quot;.</p>`
+      : '<p class="bag-empty">Your bag is empty.</p>');
 
     return `<main class="game-shell bag-screen">
       <h2>Bag</h2>
@@ -232,8 +265,9 @@ export const bagScene = {
       ${game.bagMessage ? `<p class="bag-message" role="status">${esc(game.bagMessage)}</p>` : ''}
       ${equippedSection}
       ${sortControl}
-      ${sections || '<p class="bag-empty">Your bag is empty.</p>'}
-      ${craftSection(s.inventory)}
+      ${searchControl}
+      ${sectionsHtml}
+      ${craftSection(s.inventory, query)}
       <div class="actions"><button data-action="recipes">Recipe book</button><button data-action="leave">Back</button></div>
     </main>`;
   },
@@ -247,6 +281,18 @@ export const bagScene = {
     bagSort(game, el) {
       const mode = el?.dataset?.arg;
       if (BAG_SORTS.includes(mode)) game.bagSort = mode;
+    },
+
+    bagSearchApply(game, el) {
+      if (!canFilterBag(game)) return;
+      const value = game.root?.querySelector?.('#bag-search-input')?.value;
+      if (typeof value !== 'string') return;
+      game.bagQuery = bagQueryText(value);
+    },
+
+    bagSearchClear(game) {
+      if (!canFilterBag(game)) return;
+      game.bagQuery = '';
     },
 
     use(game, el) {
