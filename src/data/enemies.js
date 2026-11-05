@@ -194,6 +194,7 @@ export const ENEMIES = {
     ability: { name: 'Searing Sting', chance: 0.35, mult: 1.5, status: 'bleeding', turns: 2 },
     windup: { name: 'Pincer Vise', chance: 0.15, mult: 1.8 },
     loot: [
+      { id: 'cinder_stinger', chance: 0.4, minQty: 1, maxQty: 1 },
       { id: 'sunscar_mantle', chance: 0.3, minQty: 1, maxQty: 1 },
       { id: 'spiced_broth', chance: 1, minQty: 1, maxQty: 2 },
       { id: 'relay_brass', chance: 0.5, minQty: 1, maxQty: 2 },

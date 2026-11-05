@@ -242,6 +242,12 @@ export const ITEMS = Object.freeze({
     price: 490, sellPrice: 245,
     description: 'A maelstrom plate layered with rings of Thunder Iron. Heavy enough to stand inside a squall and remain unmoved.',
   },
+  cinder_stinger: {
+    id: 'cinder_stinger', name: 'Cinder Stinger', type: TYPES.EQUIPMENT, slot: 'trinket',
+    stats: { atk: 3, def: 1, spd: 2 },
+    price: 260, sellPrice: 130,
+    description: 'The copper-dark stinger tip Cinderclaw leaves in the sand, bound in relay brass wire. It still holds a little of the dune’s heat.',
+  },
   squall_sigil: {
     id: 'squall_sigil', name: 'Squall Sigil', type: TYPES.EQUIPMENT, slot: 'trinket',
     stats: { atk: 2, mp: 10, spd: 4 },
