@@ -13,7 +13,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'Battles are turn-based. Choose Attack, a Skill, an Item, Defend or Flee, and your companions act after you.',
     'Defend halves damage to Wren during the next enemy action. Fleeing depends on speed and never works against a boss.',
     'Bosses grow fiercer once badly wounded. Watch for the warning line in the battle log.',
-    'The Tide Wraith, the Drowned Harbormaster, the Highwatch Warlord, the Relay Warden, Cinderclaw, the Stormcrown Tyrant, the Storm’s Heart and the Last Squall sometimes spend a turn gathering a heavy blow. A warning appears under the foe; Defend or a ward halves the strike that follows, and a stun breaks it entirely.',
+    'Every boss and field trial sometimes spends a turn gathering a heavy blow. A warning appears under the foe; Defend or a ward halves the strike that follows, and a stun breaks it entirely.',
     'The Beacon Charge gauge fills as Wren attacks, uses skills, defends and takes hits. When it is full, unleash a Beacon Burst: a def-ignoring blast that also clears bleeding and shock, usable even while shocked.',
     'After each victory, the battle summary tallies the rounds fought, damage dealt, damage your party took and any Beacon Bursts fired.',
     'If Wren falls, the patrol carries the party back to Greyhaven at half health, minus half your gold.',
