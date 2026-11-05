@@ -217,7 +217,7 @@ export const shopScene = {
         </div>
         ${
           mode === 'buy'
-            ? `${qtyPicker}<table aria-label="Items for sale">${buyRows}</table>`
+            ? `${qtyPicker}<table class="shop-buy" aria-label="Items for sale">${buyRows}</table>`
             : mode === 'sell'
               ? sellRows
                 ? `<table class="shop-sell" aria-label="Items available to sell">${sellRows}</table>`
