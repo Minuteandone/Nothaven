@@ -20,7 +20,9 @@ test('Cinderclaw is an optional plateau boss outside the drill yard and the Tria
   assert.ok(FIELD_TIPS.cinderclaw);
   assert.ok(!DRILL_FOES.includes('cinderclaw'));
   assert.ok(!FIELD_TRIALS.includes('cinderclaw'));
-  assert.ok(foeArt(e).includes('foe-art--crawler'));
+  const art = foeArt(e);
+  assert.ok(art.includes('foe-art--scorpion'));
+  assert.ok(art.includes('a giant copper-plated sand scorpion'));
   assertEggFree([e.name, e.intro, e.defeat, e.enrage.line, e.ability.name, e.windup.name, FIELD_TIPS.cinderclaw].join(' '), 'cinderclaw text');
 });
 
