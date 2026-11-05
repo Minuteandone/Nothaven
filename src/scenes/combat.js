@@ -95,6 +95,7 @@ export const combatScene = {
   onEnter(game, data = {}) {
     game.state.combat = createCombat({ ...data, difficulty: getDifficulty(game.state) });
     game.combatMenu = 'main';
+    delete game.combatItemTarget;
     const c = game.state.combat, hero = game.state.party[0];
     if (data.drill === true) { c.drill = true; c.encounterId = null; }
     if (c.drill === true && validGauntlet(data.gauntlet, c.enemy?.id)) {
@@ -114,11 +115,26 @@ export const combatScene = {
       party: game.state.party || [],
       inventory: game.state.inventory || [],
       menu: game.combatMenu || 'main',
+      itemTargetIndex: game.combatItemTarget === undefined ? 0 : game.state.party.indexOf(game.combatItemTarget),
     });
   },
 
   actions: {
-    menu(game, el) { game.combatMenu = el?.dataset?.arg || 'main'; },
+    menu(game, el) {
+      game.combatMenu = el?.dataset?.arg || 'main';
+      if (game.combatMenu === 'items') game.combatItemTarget = game.state.party[0];
+      else delete game.combatItemTarget;
+    },
+    itemTarget(game, el) {
+      const c = game.state.combat, arg = el?.dataset?.arg;
+      if (!c || c.over || game.combatMenu !== 'items'
+        || typeof arg !== 'string' || !/^(0|[1-9]\d*)$/.test(arg)) return;
+      const index = Number(arg);
+      if (!Number.isSafeInteger(index)) return;
+      const member = game.state.party[index];
+      if (!member || !(member.hp > 0)) return;
+      game.combatItemTarget = member;
+    },
     attack(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'attack' }, rng(game), game.state.party).lines); },
     burst(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'burst' }, rng(game), game.state.party).lines); },
     defend(game) { commit(game, heroAction(game.state.combat, game.state.party[0], { type: 'defend' }, rng(game), game.state.party).lines); },
@@ -130,14 +146,21 @@ export const combatScene = {
     },
     item(game, el) {
       const c = game.state.combat; if (!c || c.over) return;
-      const res = useConsumable(game.state.party[0], game.state.inventory || [], el?.dataset?.arg);
+      const hero = game.state.party[0];
+      const target = game.combatItemTarget === undefined ? hero : game.combatItemTarget;
+      // A removed or downed recipient must never silently redirect or revive.
+      if (!target || !game.state.party.includes(target) || !(target.hp > 0)) return;
+      const res = useConsumable(target, game.state.inventory || [], el?.dataset?.arg);
       if (!res.ok) { commit(game, [res.message]); return; }
-      Object.assign(game.state.party[0], res.actor);
+      Object.assign(target, res.actor);
       game.state.inventory = res.inv;
       const cure = res.effects?.cure;
-      if (cure) delete c.heroTimers[cure];
+      const timers = target === hero ? c.heroTimers
+        : (Object.prototype.hasOwnProperty.call(c.allyTimers || {}, target.id) ? c.allyTimers[target.id] : null);
+      if (cure && timers) delete timers[cure];
       game.combatMenu = 'main';
-      commit(game, [res.message, ...afterHeroAction(c, game.state.party[0], rng(game), game.state.party)]);
+      delete game.combatItemTarget;
+      commit(game, [`${target.name}: ${res.message}`, ...afterHeroAction(c, hero, rng(game), game.state.party)]);
     },
     finish(game) {
       if (game.state.combat && !game.state.combat.over) return; // never abandon an active fight
@@ -145,6 +168,7 @@ export const combatScene = {
       const { over, returnScene, encounterId, drill, gauntlet } = c;
       game.state.combat = null;
       game.combatMenu = 'main';
+      delete game.combatItemTarget;
       for (const m of game.state.party) { m.statuses = []; if (m.hp <= 0 && m !== game.state.party[0]) m.hp = 1; }
       if (drill === true && game.scenes?.drills) {
         if (over === 'defeat') {
