@@ -1,6 +1,6 @@
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { getEntityAt, getTileInfo } from '../map/mapState.js';
+import { getEntityAt, getTileInfo, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -204,6 +204,14 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           <span class="turn-badge">Explore</span>
         </div>
         <p class="zone-description">${escapeHTML(zone.description)}</p>
+        ${(() => {
+          const vantage = getZoneVantage(state, zone);
+          const prog = vantage.progress;
+          const objSummary = prog.totalObjectives > 0
+            ? `Threats cleared ${prog.encountersCleared}/${prog.encountersTotal} · Caches ${prog.cachesOpened}/${prog.cachesTotal}`
+            : 'Safe haven';
+          return `<p class="zone-recon-summary"><strong>${escapeHTML(vantage.condition.name)}</strong> · ${escapeHTML(vantage.landmark)} (${escapeHTML(String(vantage.elevation))}m) · ${escapeHTML(objSummary)}${vantage.fieldNote ? ` — ${escapeHTML(vantage.fieldNote)}` : ''}</p>`;
+        })()}
         ${zoneVista(zone)}
         ${mapGrid(zone, mapState)}
         ${terrainCompass(zone, mapState, characterShortcuts)}
