@@ -67,6 +67,8 @@ export const FEATS = Object.freeze([
     check: s => Number(heroOf(s)?.level) >= 20 }),
   Object.freeze({ id: 'cinderclaw', title: 'Dune Breaker', detail: 'Defeat Cinderclaw, the giant sand scorpion that waits below the Sunscar signal lift once the Spire is settled.',
     check: s => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary.cinderclaw : 0) > 0 }),
+  Object.freeze({ id: 'calibration', title: 'True Interval', detail: 'Carry a fresh Eye reference down to the Spire barometer and the Sunscar junction, then report Signal Calibration to Mara.',
+    check: s => flagsOf(s).calibration_reward === true }),
 ]);
 
 export function featStatus(state) {

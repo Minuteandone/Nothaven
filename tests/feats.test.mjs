@@ -16,7 +16,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   const s = createInitialState();
   s.story.stage = 'complete'; s.story.ending = 'share_signal';
   Object.assign(s.story.flags, { rescue_reward: true, relay_choice: 'route_network', victory_stormcrown_tyrant: true,
-    spire_reward: true, victory_storm_heart: true, victory_last_squall: true, watch_reward: true,
+    spire_reward: true, victory_storm_heart: true, victory_last_squall: true, watch_reward: true, calibration_reward: true,
     commission_tamsin_reward: true, commission_iven_reward: true, commission_bram_reward: true, commission_sela_reward: true });
   s.story.expedition = { active: null, completed: 3 };
   s.party = [{ ...s.party[0], level: 20 }, { id: 'bram' }, { id: 'iven' }];
@@ -208,6 +208,20 @@ test('Dune Breaker feat needs a Cinderclaw defeat and sits last', () => {
   assert.equal(done(), true);
   s.bestiary = null;
   assert.equal(done(), false, 'missing bestiary is safe');
-  assert.equal(FEATS[FEATS.length - 1].id, 'cinderclaw');
+  assert.equal(FEATS[FEATS.length - 2].id, 'cinderclaw');
   assert.ok(!FIELD_TRIALS.includes('cinderclaw'));
+});
+
+test('True Interval feat needs the paid Signal Calibration report and sits last', () => {
+  const s = createInitialState();
+  const done = () => featStatus(s).find(f => f.id === 'calibration').done;
+  assert.equal(done(), false);
+  Object.assign(s.story.flags, { watch_reward: true, calibration_accepted: true, calibration_reference: true, calibration_spire: true, calibration_relay: true });
+  assert.equal(done(), false, 'finished readings without the report do not count');
+  s.story.flags.calibration_reward = 'yes';
+  assert.equal(done(), false, 'strictly true');
+  s.story.flags.calibration_reward = true;
+  assert.equal(done(), true);
+  assert.equal(FEATS[FEATS.length - 1].id, 'calibration');
+  assert.equal(FEATS.length, 27);
 });
