@@ -21,6 +21,7 @@ import { installDisplayControls } from './ui/displayControls.js';
 import { installCombatControls } from './ui/combatControls.js';
 import { installExplorationControls } from './ui/explorationControls.js';
 import { installAnimations } from './ui/animations.js';
+import { installLedger } from './core/ledger.js';
 
 const game = new Game(document.getElementById('app'));
 game.registerScene('title', titleScene);
@@ -31,6 +32,7 @@ game.registerScene('ending', endingScene);
 game.registerScene('guide', guideScene);
 installStory(game);
 installProgression(game);
+installLedger(game); // Service Record tallies for real battles (drills are not counted)
 installMap(game); // registers the 'explore' scene
 installExplorationControls(game); // exploration-scoped Survey and nearby-action shortcuts
 installShop(game); // registers the 'shop' scene (Hesta's Goods)

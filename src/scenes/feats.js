@@ -3,6 +3,7 @@
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { MAX_PARTY } from '../party/companions.js';
 import { DRILL_FOES, drillRecord, gauntletRecord } from './drills.js';
+import { ledgerOf, SERVICE_ROWS } from '../core/ledger.js';
 
 const flagsOf = state => state?.story?.flags || {};
 const heroOf = state => (Array.isArray(state?.party) ? state.party[0] : null) || null;
@@ -28,6 +29,10 @@ export const FEATS = Object.freeze([
     check: s => flagsOf(s).victory_last_squall === true }),
   Object.freeze({ id: 'watch', title: 'Keeper of the Long Watch', detail: 'Take fresh readings at the harbor lamp, the Highwatch cairn and the forecast stand, then report them to Mara.',
     check: s => flagsOf(s).watch_reward === true }),
+  Object.freeze({ id: 'undaunted', title: 'Undaunted', detail: 'Win a battle after being carried home from a defeat.',
+    check: s => ledgerOf(s).comebacks >= 1 }),
+  Object.freeze({ id: 'steady_road', title: 'Steady Road', detail: 'Win fifteen real battles in a row without a defeat. Safe withdrawals do not break the run.',
+    check: s => ledgerOf(s).bestStreak >= 15 }),
   Object.freeze({ id: 'yard', title: 'Yard Champion', detail: 'Win a Sparring Drill against every boss in the Watch House yard.',
     check: s => DRILL_FOES.length > 0 && DRILL_FOES.every(id => drillRecord(s, id).wins >= 1) }),
   Object.freeze({ id: 'gauntlet', title: 'Unbroken Run', detail: 'Clear the full Yard Gauntlet against every yard boss without a single loss.',
@@ -79,6 +84,8 @@ export const featsScene = {
   render(game) {
     const rows = featStatus(game.state);
     const earned = rows.filter(r => r.done).length;
+    const ledger = ledgerOf(game.state);
+    const record = SERVICE_ROWS.map(r => `<div><dt>${escapeHTML(r.label)}</dt><dd>${ledger[r.key]}</dd></div>`).join('');
     const items = rows.map(r => `<li class="feat${r.done ? ' feat--done' : ''}">
         <span class="feat__mark" aria-hidden="true">${r.done ? '✦' : '·'}</span>
         <div><h2>${escapeHTML(r.title)}</h2><p>${escapeHTML(r.detail)}</p></div>
@@ -89,6 +96,11 @@ export const featsScene = {
       <section class="panel" aria-label="Feats earned">
         <p class="feats__count">${earned} of ${rows.length} feats earned</p>
         <ul class="feats__list">${items}</ul>
+      </section>
+      <section class="panel service-record" aria-labelledby="service-record-title">
+        <h2 id="service-record-title">Service record</h2>
+        <p class="service-record__note">Real battles only; Sparring Drills are not counted.</p>
+        <dl class="service-record__list">${record}</dl>
       </section>
       <div class="title-actions">${uiButton({ action: 'closeFeats', label: game.featsReturn === 'explore' ? 'Back to expedition' : 'Back to Greyhaven', iconName: 'compass', variant: 'primary' })}</div>
     </main>`;

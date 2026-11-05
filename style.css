@@ -1225,3 +1225,10 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
 .item-recipients button strong, .item-recipients button span { display: block; }
 .item-recipients button[aria-pressed="true"] { outline: 2px solid currentColor; outline-offset: -3px; }
 .item-recipient-note { margin: .25rem 0; overflow-wrap: anywhere; }
+
+/* Service Record on the Wardens' Feats page */
+.service-record__note { margin: .25rem 0 .75rem; opacity: .85; }
+.service-record__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .5rem; margin: 0; }
+.service-record__list div { display: flex; justify-content: space-between; gap: .75rem; min-width: 0; padding: .4rem .6rem; border: 1px solid rgba(148, 163, 184, .35); border-radius: 6px; }
+.service-record__list dt { overflow-wrap: anywhere; }
+.service-record__list dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }

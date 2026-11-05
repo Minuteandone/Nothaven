@@ -28,6 +28,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.bestiary.lenswarden = 1;
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
+  s.ledger = { victories: 20, comebacks: 1, bestStreak: 15 };
   assert.equal(featsEarned(s), FEATS.length);
 });
 
