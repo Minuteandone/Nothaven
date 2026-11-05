@@ -5,6 +5,8 @@ import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js'
 const BEASTS = new Set(['storm_rat', 'gale_hound', 'frost_wolf', 'briar_boar', 'old_tusk', 'frostmane']);
 const SPECTRES = new Set(['tide_wraith', 'squall_revenant', 'tempest_shade', 'last_squall', 'lens_wisp', 'rime_wight']);
 
+export const BESTIARY_COMPARISON_LIMIT = 3;
+
 const ART = {
   beast: {
     label: 'a wind-running beast',
@@ -42,6 +44,19 @@ function victoryCount(value) {
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
 }
 
+export function bestiaryComparisonIds(entries, compareIds = []) {
+  const records = Array.isArray(entries) ? entries.filter(entry => entry?.enemy) : [];
+  const requested = Array.isArray(compareIds) ? compareIds : [];
+  const selected = [];
+  for (const id of requested) {
+    if (typeof id !== 'string' || selected.includes(id)) continue;
+    const known = records.some(entry => entry.enemy.id === id && victoryCount(entry.count) > 0);
+    if (known) selected.push(id);
+    if (selected.length === BESTIARY_COMPARISON_LIMIT) break;
+  }
+  return selected;
+}
+
 function kindFor(enemy) {
   if (enemy.id === 'storm_heart') return 'heart';
   if (enemy.id === 'reef_crawler' || enemy.id === 'wrack_eel' || enemy.id === 'gloomfin') return 'crawler';
@@ -67,7 +82,30 @@ function stats(enemy) {
   return `<dl class="foe-stats" aria-label="Combat record">${values.map(([label, value]) => `<div><dt>${label}</dt><dd>${number(value)}</dd></div>`).join('')}</dl>`;
 }
 
-function knownEntry({ enemy, count }) {
+function comparisonCard({ enemy }) {
+  const ability = enemy.ability;
+  const details = ability
+    ? `${ability.status ? `Inflicts ${escapeHTML(ability.status)}. ` : ''}${Number.isFinite(Number(ability.chance)) ? `${Math.round(Number(ability.chance) * 100)}% use chance.` : ''}`
+    : 'No signature move recorded.';
+  return `<article class="comparison-card" data-comparison-enemy="${escapeHTML(enemy.id)}">
+    <div class="comparison-card__heading"><div><p class="eyebrow">${enemy.boss ? 'Boss record' : 'Patrol record'}</p><h3>${escapeHTML(enemy.name)}</h3></div>${uiButton({ action: 'removeComparedFoe', arg: enemy.id, label: 'Remove', variant: 'ghost', className: 'comparison-remove' })}</div>
+    ${stats(enemy)}
+    <div class="comparison-tactic"><h4>${escapeHTML(ability?.name || 'Signature move')}</h4><p>${details || 'No additional trigger details recorded.'}</p></div>
+    ${enemy.enrage ? `<p class="foe-phase"><strong>Second phase: grows enraged below ${Math.round(number(enemy.enrage.threshold) * 100)}% HP (+${number(enemy.enrage.atk)} ATK)</strong>.</p>` : ''}
+  </article>`;
+}
+
+function comparisonTray(records, selectedIds) {
+  const selected = selectedIds.map(id => records.find(entry => entry.enemy.id === id)).filter(Boolean);
+  const full = selected.length === BESTIARY_COMPARISON_LIMIT;
+  const status = `${selected.length}/${BESTIARY_COMPARISON_LIMIT} selected. ${full ? 'Tray full; remove a foe before adding another.' : selected.length ? 'Add another recorded foe or remove a selection.' : 'Choose recorded foes from the catalogue below.'}`;
+  return `<section class="panel bestiary-comparison" aria-labelledby="bestiary-comparison-title">
+    <div class="bestiary-comparison__heading"><div><p class="eyebrow">Side-by-side tactics</p><h2 id="bestiary-comparison-title">Tactical comparison</h2><p id="bestiary-comparison-status" role="status" aria-live="polite">${status}</p></div>${selected.length ? uiButton({ action: 'clearComparison', label: 'Clear comparison', variant: 'ghost', className: 'comparison-clear' }) : ''}</div>
+    ${selected.length ? `<div class="bestiary-comparison__grid">${selected.map(comparisonCard).join('')}</div>` : '<p class="comparison-empty">Use <strong>Compare</strong> on any recorded foe. You can compare up to three confirmed victories; unrecorded foes stay hidden.</p>'}
+  </section>`;
+}
+
+function knownEntry({ enemy, count }, selected = false, full = false) {
   const kind = kindFor(enemy);
   const defeats = victoryCount(count);
   const traits = Array.isArray(enemy.tags) ? enemy.tags : [];
@@ -88,6 +126,7 @@ function knownEntry({ enemy, count }) {
       ${loot.length ? `<div class="foe-spoils"><strong>Known spoils:</strong><ul>${loot.map(name => `<li>${escapeHTML(name)}</li>`).join('')}</ul></div>` : ''}
       ${tip ? `<p class="field-tip"><strong>Mara’s advice:</strong> ${escapeHTML(tip)}</p>` : ''}
       <p class="foe-defeats">${icon('shield')}<span><strong>Defeated: ${defeats}</strong> ${defeats === 1 ? 'confirmed victory' : 'confirmed victories'}</span></p>
+      <div class="foe-compare"><button type="button" class="action-button action-button--${selected ? 'ghost' : 'secondary'}" data-action="${selected ? 'removeComparedFoe' : 'compareFoe'}" data-arg="${escapeHTML(enemy.id)}" aria-pressed="${selected}" aria-describedby="bestiary-comparison-status"${full && !selected ? ' disabled title="Remove a foe from the full comparison tray first"' : ''}>${icon('journal')}<span>${selected ? 'Remove' : 'Compare'}</span></button></div>
     </div>
   </li>`;
 }
@@ -97,9 +136,10 @@ function unknownEntry({ enemy }) {
 }
 
 /** Presentation only: victory recording remains in installBestiary. */
-export function renderBestiary({ entries, returnScene = 'town' }) {
+export function renderBestiary({ entries, returnScene = 'town', compareIds = [] }) {
   const records = Array.isArray(entries) ? entries.filter(entry => entry?.enemy) : [];
   const known = records.filter(entry => victoryCount(entry.count) > 0);
+  const comparisonIds = bestiaryComparisonIds(records, compareIds);
   const victories = known.reduce((sum, entry) => sum + victoryCount(entry.count), 0);
   const bosses = known.filter(entry => entry.enemy.boss).length;
   const totalBosses = records.filter(entry => entry.enemy.boss).length;
@@ -110,8 +150,9 @@ export function renderBestiary({ entries, returnScene = 'town' }) {
       <div><p class="eyebrow">Field research</p><h2 id="bestiary-overview-title">Catalogue progress</h2><p>Entries: ${known.length}/${records.length}. Defeat a foe to preserve its tactics here; unknown names remain unrecorded.</p></div>
       <div class="bestiary-completion">${meter({ label: 'Journal completion', value: known.length, max: Math.max(1, records.length), tone: 'xp' })}<div class="bestiary-totals"><span><strong>${victories}</strong> victories</span><span><strong>${bosses}/${totalBosses}</strong> bosses recorded</span></div></div>
     </section>
+    ${comparisonTray(known, comparisonIds)}
     <section class="bestiary-catalogue" aria-labelledby="bestiary-catalogue-title"><div class="bestiary-catalogue-heading"><div><p class="eyebrow">Storm-road field notes</p><h2 id="bestiary-catalogue-title">Foe records</h2></div><p>${known.length ? `${known.length} revealed · ${records.length - known.length} unrecorded` : 'No foes recorded yet'}</p></div>
-      <ul class="bestiary-list">${records.map(entry => victoryCount(entry.count) > 0 ? knownEntry(entry) : unknownEntry(entry)).join('')}</ul>
+      <ul class="bestiary-list">${records.map(entry => victoryCount(entry.count) > 0 ? knownEntry(entry, comparisonIds.includes(entry.enemy.id), comparisonIds.length === BESTIARY_COMPARISON_LIMIT) : unknownEntry(entry)).join('')}</ul>
     </section>
     <nav class="bestiary-footer" aria-label="Leave field journal">${uiButton({ action: 'leave', label: returnLabel, iconName: returnScene === 'explore' ? 'map' : 'compass', variant: 'ghost' })}</nav>
   </main>`;

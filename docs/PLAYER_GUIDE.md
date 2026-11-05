@@ -17,7 +17,7 @@
 - Companions grow with the party. At **level 8** each masters a signature technique: Iven’s **Keeper’s Mend** heals 50% more, Bram’s **Bulwark Bash** triggers more often (35%) and hits harder, Sela’s **Bright Flare** deals 50% more damage, and Tamsin’s **Piercing Shot** fires more often (40%) at ×1.7 power.
 - Wren keeps learning into the postgame: **Rekindle** (level 15) revives every knocked-out ally at 40% health with conditions cleared, and **Skyfire Lance** (level 17) is an armour-piercing strike at 260% power. Rekindle does nothing (and costs no MP) if nobody has fallen, and like other support skills it is blocked while Wren is shocked.
 - Paid rests restore the active party and clear statuses. Bring remedies for bleeding and shock on longer trips. If Wren falls, defeat costs half your gold, rounded down, and returns the party to Greyhaven; quest progress remains.
-- The **Warden’s field journal** reveals enemy information after victories. Its field tips are useful preparation for rematches and related threats.
+- The **Warden’s field journal** reveals enemy information after victories. Its field tips are useful preparation for rematches and related threats. Use **Compare** on up to three recorded foes for a side-by-side tactical tray; Remove or Clear comparison changes no progress.
 - The town **Difficulty** button cycles Standard → Veteran → Story → Standard. Standard is unchanged; Story gives foes 75% HP and 80% attack, while Veteran gives them 130% HP and 120% attack with 125% gold. Values are rounded, the setting is saved, and it applies to newly started fights.
 - Music and sound are optional. Use the audio controls if you want them; the game does not require sound.
 

@@ -2,7 +2,7 @@
 // installBestiary(game) records victories (state.bestiary[enemyId] = count)
 // from the combat:victory event and registers the 'bestiary' scene.
 import { ENEMIES } from '../data/enemies.js';
-import { renderBestiary } from '../ui/bestiary.js';
+import { BESTIARY_COMPARISON_LIMIT, bestiaryComparisonIds, renderBestiary } from '../ui/bestiary.js';
 
 const own = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);
 
@@ -19,14 +19,30 @@ export function bestiaryEntries(state) {
   return Object.keys(ENEMIES).map((id) => ({ enemy: ENEMIES[id], count: own(book, id) && Number.isInteger(book[id]) ? book[id] : 0 }));
 }
 
+function currentComparison(game) {
+  return bestiaryComparisonIds(bestiaryEntries(game.state), game.bestiaryComparison);
+}
+
 export const bestiaryScene = {
   onEnter(game, data = {}) {
     game.bestiaryReturn = data.returnScene || game.bestiaryReturn || 'town';
   },
   render(game) {
-    return renderBestiary({ entries: bestiaryEntries(game.state), returnScene: game.bestiaryReturn || 'town' });
+    return renderBestiary({ entries: bestiaryEntries(game.state), returnScene: game.bestiaryReturn || 'town', compareIds: game.bestiaryComparison });
   },
   actions: {
+    compareFoe(game, el) {
+      const current = currentComparison(game);
+      if (current.length >= BESTIARY_COMPARISON_LIMIT || current.includes(el?.dataset?.arg)) {
+        game.bestiaryComparison = current;
+        return;
+      }
+      game.bestiaryComparison = bestiaryComparisonIds(bestiaryEntries(game.state), [...current, el?.dataset?.arg]);
+    },
+    removeComparedFoe(game, el) {
+      game.bestiaryComparison = currentComparison(game).filter(id => id !== el?.dataset?.arg);
+    },
+    clearComparison(game) { game.bestiaryComparison = []; },
     leave(game) { game.setScene(game.bestiaryReturn || 'town'); },
   },
 };
