@@ -1265,6 +1265,12 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
   font-size: 0.9em;
 }
 
+/* Shop availability hints on recipe ingredient checklists */
+.craft-source {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
 /* Separate manual checkpoints wrap without hiding text at large display scales. */
 .archive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; }
 .archive-card, .archive-confirm, .archive-preview, .archive-preview div { min-width: 0; overflow-wrap: anywhere; }
