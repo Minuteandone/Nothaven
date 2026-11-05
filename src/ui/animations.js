@@ -3,6 +3,19 @@
 
 let animContainer = null;
 
+/** True when the OS or the in-game setting asks for reduced motion. Safe outside a browser. */
+export function prefersReducedMotion() {
+  try {
+    if (typeof document !== 'undefined' && document.documentElement
+      && typeof document.documentElement.getAttribute === 'function'
+      && document.documentElement.getAttribute('data-motion') === 'reduced') return true;
+    if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+      return Boolean(window.matchMedia('(prefers-reduced-motion: reduce)')?.matches);
+    }
+  } catch { /* fall through */ }
+  return false;
+}
+
 function ensureContainer() {
   if (animContainer && document.contains(animContainer)) return animContainer;
   animContainer = document.createElement('div');
@@ -23,14 +36,15 @@ export function damagePopup(anchor, amount, kind = 'damage') {
   el.style.left = `${rect.left + rect.width / 2 - 20}px`;
   el.style.top = `${rect.top - 10}px`;
   container.appendChild(el);
+  // With reduced motion the CSS animation is off, so animationend never fires: remove on a timer.
+  if (prefersReducedMotion()) { setTimeout(() => el.remove(), 700); return; }
   el.addEventListener('animationend', () => el.remove(), { once: true });
 }
 
 /** Shake the game container briefly. */
 export function screenShake(intensity = 4, duration = 300) {
   // Respect OS and in-game reduced-motion preferences
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  if (document.documentElement.getAttribute('data-motion') === 'reduced') return;
+  if (prefersReducedMotion()) return;
   const app = document.getElementById('app');
   if (!app) return;
   app.style.transition = 'transform 0.05s ease';
@@ -58,7 +72,7 @@ export function tweenMeter(meterEl, newValue, maxValue, duration = 300) {
   const labels = meterEl.querySelector('.meter__labels');
   if (!fill) return;
   const newPercent = Math.round((newValue / maxValue) * 100);
-  fill.style.transition = `width ${duration}ms ease-out`;
+  fill.style.transition = prefersReducedMotion() ? 'none' : `width ${duration}ms ease-out`;
   fill.style.width = `${newPercent}%`;
   if (labels) {
     const parts = labels.querySelectorAll('span');
@@ -69,6 +83,7 @@ export function tweenMeter(meterEl, newValue, maxValue, duration = 300) {
 /** Crossfade between scenes. */
 export function crossfadeScene(container, newHTML, duration = 250) {
   if (!container) return;
+  if (prefersReducedMotion()) { container.innerHTML = newHTML; return; }
   container.style.opacity = '0';
   container.style.transition = `opacity ${duration}ms ease`;
   setTimeout(() => {
@@ -80,6 +95,7 @@ export function crossfadeScene(container, newHTML, duration = 250) {
 /** Flash red and fade out a defeated enemy element. */
 export function enemyDeathFade(enemyEl) {
   if (!enemyEl) return;
+  if (prefersReducedMotion()) { enemyEl.style.opacity = '0'; return; }
   enemyEl.style.transition = 'opacity 0.5s ease, filter 0.3s ease';
   enemyEl.style.filter = 'brightness(2) saturate(0)';
   setTimeout(() => { enemyEl.style.opacity = '0'; }, 300);
@@ -110,6 +126,8 @@ export const ANIM_CSS = `
   .damage-pop { animation: none; opacity: 0.8; }
   .meter__fill { transition: none !important; }
 }
+:root[data-motion="reduced"] .damage-pop { animation: none; opacity: 0.8; }
+:root[data-motion="reduced"] .meter__fill { transition: none !important; }
 `;
 
 let cssInjected = false;
