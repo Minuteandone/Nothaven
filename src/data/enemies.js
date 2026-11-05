@@ -205,6 +205,7 @@ export const ENEMIES = {
     defeat: 'The Harbormaster\'s lantern dims to a calm amber. He lowers it toward the harbor mouth, as if guiding one last ship home, and sinks beneath the waves.',
     enrage: { threshold: 0.5, atk: 2, chance: 0.55, line: 'The Harbormaster\'s lantern flares white as the tide surges back in. His chains whip faster!' },
     ability: { name: 'Anchor Chain', chance: 0.35, mult: 1.35, status: 'shocked', turns: 2 },
+    windup: { name: 'Undertow Heave', chance: 0.15, mult: 1.8 },
     loot: [
       { id: 'storm_tonic', chance: 1, minQty: 1, maxQty: 2 },
       { id: 'storm_glass', chance: 0.8, minQty: 1, maxQty: 3 },
