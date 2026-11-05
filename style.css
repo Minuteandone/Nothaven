@@ -811,6 +811,8 @@ em.enraged {
 /* Companion mastery line on muster cards */
 .companion-mastery { margin: 0.4rem 0; font-size: 0.9rem; opacity: 0.85; }
 .companion-mastery--done { opacity: 1; border-left: 3px solid currentColor; padding-left: 0.5rem; }
+/* Rare-drop tag on shop sell rows */
+.sell-scarce { color: var(--bad); font-size: 0.85em; }
 /* Keep inventory names, bulk-sale totals, and spare-gear controls usable on narrow screens. */
 @media (max-width: 560px) {
   .shop-sell, .shop-sell tbody, .shop-sell tr, .shop-sell td,

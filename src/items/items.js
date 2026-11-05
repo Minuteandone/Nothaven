@@ -299,7 +299,7 @@ export const ITEMS = Object.freeze({
   },
   stormcrown_shard: {
     id: 'stormcrown_shard', name: 'Stormcrown Shard', type: TYPES.MATERIAL,
-    price: 120, sellPrice: 60,
+    price: 120, sellPrice: 60, scarce: true,
     description: 'A splinter of the Tyrant\'s crown, still faintly warm and flickering with trapped lightning.',
   },
 });

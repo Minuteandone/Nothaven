@@ -3,7 +3,7 @@
 // equipment helpers in src/items/equipment.js. All rendered strings
 // are escaped; all state mutations go through the pure helpers.
 
-import { GREYHAVEN_SHOP, getShop, shopCatalog, buyItem, buyUpTo, sellItem } from '../items/shop.js';
+import { GREYHAVEN_SHOP, getShop, shopCatalog, buyItem, buyUpTo, sellItem, isScarceItem } from '../items/shop.js';
 import { getItem, isKnownItem, canEquip } from '../items/items.js';
 import { countItem } from '../items/inventory.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
@@ -113,13 +113,14 @@ export const shopScene = {
     const sellRows = sellableStacks(s.inventory)
       .map(({ stack, item }) => {
         const unit = sellPriceOf(item);
+        const scarce = isScarceItem(item.id);
         return `<tr>
-          <td><strong>${esc(item.name)}</strong> ×${stack.qty}
+          <td><strong>${esc(item.name)}</strong> ×${stack.qty}${scarce ? ' <small class="sell-scarce">rare drop</small>' : ''}
             ${item.stats ? `<br><small>${esc(statSummary(item.stats))}</small>` : ''}</td>
           <td style="white-space:nowrap;">${unit}g each</td>
           <td>
-            <button data-action="sell" data-arg="${esc(item.id)}">Sell 1</button>
-            ${stack.qty > 1 ? `<button data-action="sellAll" data-arg="${esc(item.id)}">Sell all (${unit * stack.qty}g)</button>` : ''}
+            <button data-action="sell" data-arg="${esc(item.id)}"${scarce ? ' aria-label="Sell 1 ' + esc(item.name) + ' (rare drop, hard to replace)"' : ''}>Sell 1</button>
+            ${stack.qty > 1 && !scarce ? `<button data-action="sellAll" data-arg="${esc(item.id)}">Sell all (${unit * stack.qty}g)</button>` : ''}
           </td>
         </tr>`;
       })
