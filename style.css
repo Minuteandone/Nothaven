@@ -1363,3 +1363,8 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
   display: block; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0;
   min-height: 8rem; resize: vertical; font: inherit; margin: .5rem 0 1rem;
 }
+
+/* Wardens' Feats filter */
+.feats__filters { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 .75rem; }
+.feats__filters [aria-pressed="true"] { border-color: var(--accent); background: var(--panel); font-weight: 700; }
+.feats__empty { color: var(--muted); margin: 0; }

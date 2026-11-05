@@ -219,6 +219,8 @@ The **Wardens' feats** panel lists milestones of your journey. Alongside the cha
 - **Calm in the Gale** — overcome any boss in a real battle while the Difficulty is set to Stormborn. Sparring drills do not count.
 - **Well Fitted** — have the Greyhaven forge bring both the weapon and armour fittings of one party member to +3.
 
+Use the **All**, **Earned** and **Not yet** buttons above the list to show only the feats you want; the earned count stays the same and the choice resets each time you open the panel.
+
 Below the feats, the **Service record** tallies your real battles: battles won, bosses overcome, times carried home, safe withdrawals, wins after a defeat, and your current and longest winning runs. Sparring Drills and the Yard Gauntlet are practice and are not counted.
 
 ### The field bag
