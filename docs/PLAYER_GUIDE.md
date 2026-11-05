@@ -230,3 +230,13 @@ Return to Greyhaven and explicitly claim the payment. This repeatable contract s
 ### Planning with the Recipe Book
 
 Use **All**, **Ready**, or **Missing** to narrow the Field Recipe Book, and type a recipe, ingredient, or output name before choosing **Search**. Search ignores letter case; **Clear search** keeps your availability filter. Filters use the last applied search, not unfinished typing. Reopening the book resets both choices. These controls only change the reference view: crafting still happens in the Bag or at a trader, and your journey save is unchanged.
+
+### Supply Lines: choose a survey route
+
+After explicitly reporting **Signal Calibration**, accept one optional **Supply Lines** route in Greyhaven. The route cannot be changed after acceptance; both pay **280 gold** on an explicit Greyhaven report. This is advance surveying for supply crews, not an escort with timers or convoy health.
+
+- **Coastal:** use Patrol in Saltmere until you defeat a new **Wrack Eel**, then inspect the **Harbor Lamp (4,5)**.
+- **Highland:** use Patrol in Highwatch until you defeat a new **Rime Wight**, then inspect the **Highwatch Cairn (4,1)**.
+- **Either route:** next use Patrol in Sunscar Relay until you defeat a new **Dust Marauder**, then inspect the **Relay Capacitor Junction (3,1)**. Return to Greyhaven and explicitly report **Supply Lines**.
+
+Steps must occur in that order after acceptance. Earlier victories, inspections, and unrelated foes do not count; repeating a completed step gives no extra credit. Save journey preserves the chosen route and completed steps. Talking alone never pays. Ordinary road threats, your original ending, and the relay’s chosen purpose remain unchanged.
