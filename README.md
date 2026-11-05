@@ -136,6 +136,12 @@ screen-reader or whole-game visual claims.
 
 `tests/campaign-integration.test.mjs` walks sixteen combinations of the original
 ending, early exploration, rescue order and relay service through the campaign.
+Supply Lines coverage splits eight Coastal and eight Highland surveys across those
+combinations: permanent acceptance, fresh regional patrol then station inspection,
+fresh Sunscar patrol then junction reading, explicit 280-gold reporting, and
+Save/load at each step. It checks premature inspections, unavailable/stale actions,
+conversation without payment, exact combat rewards, and preservation of older
+quests and expedition state.
 Signal Calibration coverage rejects acceptance before the Watch reward, walks to the
 Eye through two premature lower-station inspections, then takes fresh readings
 in downhill order. Each step survives save/load; explicit reporting pays 220 gold
