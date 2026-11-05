@@ -81,3 +81,7 @@ pattern. Reuse it end to end:
 ## Repo-wide content guard
 
 `tests/repoEggGuard.test.mjs` scans every file under `src/` and `docs/`, plus `style.css`, `index.html` and `README.md`, against the shared banned-word list in `tests/helpers/eggGuard.mjs`. It also rejects elliptical shapes (`<ellipse>`, `ellipse()`, and two-value `border-radius` with `/`) with no line exemptions. New content tests should `import { EGG_RE } from './helpers/eggGuard.mjs'` instead of copying a local regex. Vetted benign tokens (such as the main layout class name) are stripped token-by-token in the test, never by skipping whole lines.
+
+## Vista and portrait art shapes
+
+Scenic vistas (`src/ui/zoneArt.js`) and bestiary portraits (`src/ui/bestiary.js`) keep an angular, straight-line style. `tests/artShapeGuard.test.mjs` renders every vista and every foe portrait and fails if the art uses any element other than `<path>`, uses an arc command, fills a curved path, or adds a curved stroke that is not on the reviewed allowlist. To add a curved stroke, render it to an image, have a second reviewer look at the picture, and add its exact path data to the allowlist in the same merge request.
