@@ -3,7 +3,7 @@
 // equipment helpers in src/items/equipment.js. All rendered strings
 // are escaped; all state mutations go through the pure helpers.
 
-import { GREYHAVEN_SHOP, getShop, shopCatalog, buyItem, buyUpTo, sellItem, isScarceItem } from '../items/shop.js';
+import { GREYHAVEN_SHOP, getShop, shopCatalog, buyItem, buyUpTo, sellItem, isScarceItem, shopsStocking } from '../items/shop.js';
 import { getItem, isKnownItem, canEquip } from '../items/items.js';
 import { countItem } from '../items/inventory.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
@@ -124,10 +124,12 @@ export const shopScene = {
       .map(({ stack, item }) => {
         const unit = sellPriceOf(item);
         const scarce = isScarceItem(item.id);
+        const stock = shopsStocking(item.id);
+        const stockHint = stock.length ? `<small class="sell-stock">at ${esc(stock.join(' · '))} (${item.price}g)</small>` : '';
         return `<tr>
           <td><strong>${esc(item.name)}</strong> ×${stack.qty}${scarce ? ' <small class="sell-scarce">rare drop</small>' : ''}
             ${item.stats ? `<br><small>${esc(statSummary(item.stats))}</small>` : ''}</td>
-          <td style="white-space:nowrap;">${unit}g each</td>
+          <td style="white-space:nowrap;">${unit}g each${stockHint}</td>
           <td>
             <button data-action="sell" data-arg="${esc(item.id)}"${scarce ? ' aria-label="Sell 1 ' + esc(item.name) + ' (rare drop, hard to replace)"' : ''}>Sell 1</button>
             ${stack.qty > 1 && !scarce && buyQty > 1 ? `<button data-action="sellQty" data-arg="${esc(item.id)}" aria-label="Sell ${Math.min(buyQty, stack.qty)} ${esc(item.name)}"${buyQty >= stack.qty ? ' disabled' : ''}>Sell ${buyQty} (${unit * Math.min(buyQty, stack.qty)}g)</button>` : ''}
