@@ -13,9 +13,9 @@ function hero() {
   return h;
 }
 
-test('only the listed bosses define a windup', () => {
+test('every boss and field trial, and only those, define a windup', () => {
   const withWindup = Object.keys(ENEMIES).filter((id) => ENEMIES[id].windup).sort();
-  assert.deepEqual(withWindup, ['cinderclaw', 'drowned_harbormaster', 'last_squall', 'pass_warlord', 'relay_warden', 'storm_heart', 'stormcrown_tyrant', 'tide_wraith']);
+  assert.deepEqual(withWindup, ['cinderclaw', 'drowned_harbormaster', 'frostmane', 'gloomfin', 'last_squall', 'lenswarden', 'old_tusk', 'pass_warlord', 'relay_warden', 'storm_heart', 'stormcrown_tyrant', 'tide_wraith']);
   for (const id of withWindup) {
     const w = ENEMIES[id].windup;
     assert.ok(w.chance > 0 && w.chance < 0.5, id);
@@ -70,7 +70,7 @@ test('a stun breaks a gathered blow', () => {
 });
 
 test('foes without a windup never consume extra rng', () => {
-  const c = createCombat({ enemyId: 'old_tusk' });
+  const c = createCombat({ enemyId: 'rust_sentinel' });
   const h = hero();
   let calls = 0;
   const rng = () => { calls += 1; return 0.99; };
@@ -96,4 +96,15 @@ test('gathering spends Defend and one ward/aegis turn like any enemy action', ()
   const lines = enemyTurn(c, h, seq(0.5), [h]);
   assert.ok(lines.some((l) => /unleashes/.test(l)));
   assert.ok(!lines.some((l) => /braced/.test(l)));
+});
+
+test('every boss-flagged foe has a windup, and the field trials share one strength', () => {
+  for (const [id, e] of Object.entries(ENEMIES)) {
+    if (e.boss) assert.ok(e.windup, `${id} is a boss without a windup`);
+  }
+  for (const id of ['old_tusk', 'gloomfin', 'frostmane', 'lenswarden']) {
+    assert.equal(ENEMIES[id].windup.chance, 0.15, id);
+    assert.equal(ENEMIES[id].windup.mult, 1.7, id);
+    assertEggFree(ENEMIES[id].windup.name, id);
+  }
 });
