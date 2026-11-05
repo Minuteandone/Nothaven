@@ -248,6 +248,12 @@ export const ITEMS = Object.freeze({
     price: 260, sellPrice: 130,
     description: 'The copper-dark stinger tip Cinderclaw leaves in the sand, bound in relay brass wire. It still holds a little of the dune’s heat.',
   },
+  sparkrack_tine: {
+    id: 'sparkrack_tine', name: 'Sparkrack Tine', type: TYPES.EQUIPMENT, slot: 'trinket',
+    stats: { atk: 3, mp: 6, spd: 3 },
+    price: 320, sellPrice: 160,
+    description: 'A forked antler tine Thunderhoof sheds on the ridge road, wrapped in thunder iron wire. Blue sparks still jump between its points before a storm.',
+  },
   squall_sigil: {
     id: 'squall_sigil', name: 'Squall Sigil', type: TYPES.EQUIPMENT, slot: 'trinket',
     stats: { atk: 2, mp: 10, spd: 4 },
