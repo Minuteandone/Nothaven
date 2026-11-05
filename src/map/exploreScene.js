@@ -89,6 +89,7 @@ export const exploreScene = {
     const mapState = ensureMapState(game.state);
     return `${renderExploration({
       state: game.state,
+      characterShortcuts: characterShortcutsEnabled(game.root?.ownerDocument || globalThis.document),
       zone: getZone(mapState.zoneId),
       mapState,
       nearbyActions: getAvailableActions(game.state),

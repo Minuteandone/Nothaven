@@ -114,7 +114,7 @@ export function installDisplayControls(game, options = {}) {
       </label>
       <label class="display-option" for="display-character-shortcuts">
         <input id="display-character-shortcuts" data-display-shortcuts data-focus-key="display-character-shortcuts" type="checkbox">
-        <span><strong>Letter &amp; number shortcuts</strong><span>Use WASD, combat letters, and numbered actions. Turn off for speech input; arrow keys and buttons still work.</span></span>
+        <span><strong>Letter &amp; number shortcuts</strong><span>Use WASD, E, combat letters, and numbered actions. Turn off for speech input; arrow keys and buttons still work.</span></span>
       </label>
     </div>
     <div class="display-settings__footer">
@@ -168,10 +168,12 @@ export function installDisplayControls(game, options = {}) {
   const shortcutsHandler = () => {
     preferences = normalizeDisplayPreferences({ ...preferences, characterShortcuts: shortcuts.checked });
     commit(`Letter and number shortcuts ${preferences.characterShortcuts ? 'on' : 'off'}.`);
+    game.render?.();
   };
   const resetHandler = () => {
     preferences = normalizeDisplayPreferences(null);
     commit('Display settings reset to defaults.');
+    game.render?.();
   };
   const doneHandler = () => {
     panel.hidden = true;
