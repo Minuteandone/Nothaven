@@ -9,7 +9,7 @@ import { createInitialState } from '../src/state.js';
 import { RELAY_OUTPOST } from '../src/items/shop.js';
 
 // Extended egg vocabulary guard over everything these helpers can surface.
-import { EGG_RE } from './eggGuard.mjs';
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 function fakeGame() {
   return {

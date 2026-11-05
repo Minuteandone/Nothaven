@@ -11,7 +11,7 @@ import { grantRewards } from '../src/items/inventory.js';
 import { recipeBookEntries } from '../src/scenes/recipes.js';
 import { shopScene } from '../src/scenes/shop.js';
 
-import { EGG_RE } from './eggGuard.mjs';
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 const NEW_ITEMS = [
   { id: 'squall_cleaver', slot: 'weapon', stats: { atk: 24 }, price: 480, sellPrice: 240 },

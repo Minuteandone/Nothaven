@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import { readFileSync } from 'node:fs';
-import { assertEggFree } from './eggGuard.mjs';
+import { assertEggFree } from './helpers/eggGuard.mjs';
 
 test('style.css ships no egg vocabulary in selectors, values or comments', () => {
   const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');

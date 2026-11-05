@@ -7,7 +7,7 @@ import { combatScene } from '../src/scenes/combat.js';
 import { createInitialState } from '../src/state.js';
 import { migrateSave } from '../src/core/save.js';
 import { GROWTH, xpForLevel, xpToNext } from '../src/core/progression.js';
-import { assertEggFree } from './eggGuard.mjs';
+import { assertEggFree } from './helpers/eggGuard.mjs';
 
 const fixed = (v) => () => v;
 const seq = (...vals) => { let i = 0; return () => vals[i++ % vals.length]; };

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { guideScene, GUIDE_SECTIONS, skillRoadmap } from '../src/scenes/guide.js';
 import { titleScene } from '../src/scenes/title.js';
-import { assertEggFree } from './eggGuard.mjs';
+import { assertEggFree } from './helpers/eggGuard.mjs';
 import { SKILL_UNLOCKS } from '../src/combat/rules.js';
 
 if (!globalThis.localStorage) {

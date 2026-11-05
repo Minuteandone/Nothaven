@@ -8,7 +8,7 @@ import { shopScene } from '../src/scenes/shop.js';
 import { createInitialState } from '../src/state.js';
 import { grantRewards } from '../src/items/inventory.js';
 
-import { EGG_RE } from './eggGuard.mjs';
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 const NEW_ITEM_IDS = ['spiced_broth', 'relay_glaive', 'sunscar_mantle', 'signal_prism'];
 const NEW_RECIPE_IDS = ['forge_relay_glaive', 'weave_sunscar_mantle', 'cut_signal_prism', 'brew_spiced_broth'];

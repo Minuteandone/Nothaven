@@ -7,7 +7,7 @@ import { createInitialState } from '../src/state.js';
 import { grantRewards } from '../src/items/inventory.js';
 
 // Full egg-family guard (mirrors the repo-wide discipline for rendered prose).
-import { EGG_RE } from './eggGuard.mjs';
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 function fakeGame() {
   const game = {

@@ -7,7 +7,7 @@ import { RECIPES, validateRecipes, craft } from '../src/items/crafting.js';
 import { createInitialState } from '../src/state.js';
 import { grantRewards } from '../src/items/inventory.js';
 
-import { EGG_RE } from './eggGuard.mjs';
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 test('heartward_charm is a well-formed recipe-only trinket', () => {
   const it = getItem('heartward_charm');

@@ -6,7 +6,7 @@ import { createInitialState } from '../src/state.js';
 import { GREYHAVEN_SHOP, getShop, shopCatalog, buyUpTo } from '../src/items/shop.js';
 import { getItem } from '../src/items/items.js';
 
-import { EGG_RE } from './eggGuard.mjs';
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 function fakeGame() {
   const game = {

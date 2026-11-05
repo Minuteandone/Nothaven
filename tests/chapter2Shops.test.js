@@ -10,7 +10,7 @@ import { grantRewards } from '../src/items/inventory.js';
 import { interactWith } from '../src/map/index.js';
 import { ensureMapState } from '../src/map/mapState.js';
 
-import { EGG_RE } from './eggGuard.mjs';
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 function fakeGame() {
   const game = {

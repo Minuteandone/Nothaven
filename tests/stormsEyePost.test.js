@@ -8,7 +8,7 @@ import { shopScene } from '../src/scenes/shop.js';
 import { createInitialState } from '../src/state.js';
 import { grantRewards } from '../src/items/inventory.js';
 
-import { EGG_RE } from './eggGuard.mjs';
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 const NEW_ITEM_IDS = ['tempest_salve', 'tempest_edge', 'maelstrom_plate', 'stormeye_signet'];
 const NEW_RECIPE_IDS = ['forge_tempest_edge', 'hammer_maelstrom_plate', 'cut_stormeye_signet'];

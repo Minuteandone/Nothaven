@@ -8,7 +8,7 @@ import { shopScene } from '../src/scenes/shop.js';
 import { createInitialState } from '../src/state.js';
 import { grantRewards } from '../src/items/inventory.js';
 
-import { EGG_RE } from './eggGuard.mjs';
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 const NEW_ITEM_IDS = ['ember_broth', 'skyward_flask', 'stormforged_blade', 'stormcrown_plate', 'crownshard_focus'];
 const NEW_RECIPE_IDS = ['forge_stormforged_blade', 'hammer_stormcrown_plate', 'cut_crownshard_focus', 'distill_skyward_flask'];
