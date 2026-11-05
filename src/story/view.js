@@ -1,3 +1,4 @@
+import { getCalibrationJournal, calibrationAvailable, calibrationReady, CALIBRATION_GOLD } from './calibration.js';
 import { getWatchJournal, watchAvailable, watchReady, WATCH_GOLD } from './watch.js';
 import { getHeartJournal, heartReady, HEART_GOLD } from './heart.js';
 import { COMMISSIONS, getCommission, commissionProgress, commissionObjective } from './commissions.js';
@@ -31,6 +32,7 @@ export function createStoryUI(getLocation = game => game.state.location) {
       const spire = getSpireJournal(state)[0];
       const heart = getHeartJournal(state)[0];
       const watch = getWatchJournal(state)[0];
+      const calibration = getCalibrationJournal(state)[0];
       const expedition = getExpeditionJournal(state)[0];
       const active = activeExpedition(state);
       const commissions = COMMISSIONS.map(c => commissionProgress(state, c.id)).filter(c => c.available);
@@ -45,6 +47,7 @@ export function createStoryUI(getLocation = game => game.state.location) {
         ${location === 'greyhaven' && spire?.status === 'active' ? `<section aria-label="Above the Gathering Storm"><h3>Above the Gathering Storm</h3><p>${escape(spire.objective)}</p>${!state.flags.spire_accepted ? '<button data-action="storySpire" data-arg="accept">Accept Mara’s summit survey</button>' : spireReady(state) ? `<button data-action="storySpire" data-arg="report">Report the summit survey for ${SPIRE_GOLD} gold</button>` : ''}</section>` : ''}
         ${location === 'greyhaven' && heart?.status === 'active' ? `<section aria-label="The Storm’s Heart"><h3>The Storm’s Heart</h3><p>${escape(heart.objective)}</p>${!state.flags.heart_accepted ? '<button data-action="storyHeart" data-arg="accept">Accept Mara’s Storm’s Eye expedition</button>' : heartReady(state) ? `<button data-action="storyHeart" data-arg="report">Report the Storm’s Eye expedition for ${HEART_GOLD} gold</button>` : ''}</section>` : ''}
         ${location === 'greyhaven' && watch?.status === 'active' ? `<section aria-label="The Long Watch"><h3>The Long Watch</h3><p>${escape(watch.objective)}</p>${state.flags.watch_accepted !== true ? '<button data-action="storyWatch" data-arg="accept">Accept The Long Watch survey</button>' : watchReady(state) ? `<button data-action="storyWatch" data-arg="report">Report the three readings for ${WATCH_GOLD} gold</button>` : ''}</section>` : ''}
+        ${location === 'greyhaven' && calibration?.status === 'active' ? `<section aria-label="Signal Calibration"><h3>Signal Calibration</h3><p>${escape(calibration.objective)}</p>${state.flags.calibration_accepted !== true ? '<button data-action="storyCalibration" data-arg="accept">Accept Signal Calibration</button>' : calibrationReady(state) ? `<button data-action="storyCalibration" data-arg="report">Report Signal Calibration for ${CALIBRATION_GOLD} gold</button>` : ''}</section>` : ''}
         ${location === 'greyhaven' && expedition ? `<section aria-label="Greyhaven Expedition Board"><h3>Greyhaven Expedition Board</h3><p>${escape(expedition.objective)}</p>${active ? `${active.progress === active.goal ? `<button data-action="storyExpedition" data-arg="claim">Claim ${active.gold} gold for ${escape(active.title)}</button>` : ''}<button data-action="storyExpedition" data-arg="cancel">Cancel patrol — discard progress without payment</button>` : EXPEDITIONS.filter(c => expeditionAvailable(state, c.id)).map(c => `<button data-action="storyExpedition" data-arg="${c.id}">Accept ${escape(c.title)} — ${c.goal} ${escape(c.enemyName)} for ${c.gold} gold</button>`).join('')}</section>` : ''}
         ${location === 'greyhaven' && commissions.length ? `<details class="companion-commissions"><summary>Companion commissions</summary><p>Optional personal requests. Earlier accomplishments count; no companion must occupy a party slot.</p>${commissions.map(c => `<section aria-label="${escape(c.title)}"><h3>${escape(c.name)}: ${escape(c.title)}${c.complete ? ' (complete)' : ''}</h3><p>${escape(commissionObjective(state, c.id))}</p>${!c.accepted && !c.complete ? `<button data-action="storyCommissionAccept" data-arg="${c.id}">Accept ${escape(c.name)}’s request — ${c.gold} gold</button>` : c.ready ? `<button data-action="storyCommissionReport" data-arg="${c.id}">Report to ${escape(c.name)} for ${c.gold} gold</button>` : ''}</section>`).join('')}</details>` : ''}
         ${relayChoices.length ? `<section aria-labelledby="relay-choice-heading"><h3 id="relay-choice-heading">Who will the inland relay serve?</h3><p>Choose one permanent benefit and receive 100 gold. This cannot be changed in this save. Your original beacon decision remains unchanged.</p>${relayChoices.map(choice => `<div class="story-choice"><p>${escape(choice.description)}</p><button data-action="storyRelayChoose" data-arg="${escape(choice.id)}">${escape(choice.label)}</button></div>`).join('')}</section>` : ''}
@@ -77,6 +80,16 @@ export function createStoryUI(getLocation = game => game.state.location) {
         if (!['accept', 'report'].includes(action)) return;
         game.storyDialogue = null;
         dispatchStoryEvent(game, { type: `heart-${action}` });
+      },
+      storyCalibration(game, element) {
+        if (getLocation(game) !== 'greyhaven' || game.state.combat) return;
+        const action = element?.dataset?.arg;
+        if (!['accept', 'report'].includes(action)) return;
+        const story = game.state.story;
+        if (!calibrationAvailable(story) || story.flags.calibration_reward === true) return;
+        if (action === 'accept' ? story.flags.calibration_accepted === true : !calibrationReady(story)) return;
+        game.storyDialogue = null;
+        dispatchStoryEvent(game, { type: `calibration-${action}` });
       },
       storyWatch(game, element) {
         if (getLocation(game) !== 'greyhaven') return;

@@ -1,3 +1,4 @@
+import { applyCalibrationEvent, getCalibrationJournal, getCalibrationDialogue } from './calibration.js';
 import { applyWatchEvent, getWatchJournal, getWatchDialogue } from './watch.js';
 import { applyHeartEvent, getHeartJournal, getHeartDialogue } from './heart.js';
 import { applyCommissionEvent, getCommissionJournal } from './commissions.js';
@@ -103,7 +104,8 @@ export function applyStoryEvent(previous = createStoryState(), event) {
   const commission = applyCommissionEvent(expedition.state, event);
   const heart = applyHeartEvent(commission.state, event);
   const watch = applyWatchEvent(heart.state, event);
-  return { state: watch.state, rewards: [...rewards, ...rescue.rewards, ...relay.rewards, ...spire.rewards, ...expedition.rewards, ...commission.rewards, ...heart.rewards, ...watch.rewards], log: [...log, ...rescue.log, ...relay.log, ...spire.log, ...expedition.log, ...commission.log, ...heart.log, ...watch.log] };
+  const calibration = applyCalibrationEvent(watch.state, event);
+  return { state: calibration.state, rewards: [...rewards, ...rescue.rewards, ...relay.rewards, ...spire.rewards, ...expedition.rewards, ...commission.rewards, ...heart.rewards, ...watch.rewards, ...calibration.rewards], log: [...log, ...rescue.log, ...relay.log, ...spire.log, ...expedition.log, ...commission.log, ...heart.log, ...watch.log, ...calibration.log] };
 }
 
 const OBJECTIVES = {
@@ -145,6 +147,7 @@ export function getJournal(state = createStoryState()) {
   journal.push(...getSpireJournal(state));
   journal.push(...getHeartJournal(state));
   journal.push(...getWatchJournal(state));
+  journal.push(...getCalibrationJournal(state));
   journal.push(...getExpeditionJournal(state));
   journal.push(...getCommissionJournal(state));
   return journal;
@@ -166,6 +169,8 @@ export function getEndingSummary(state) {
 export function getDialogue(state = createStoryState(), npcId) {
   const settler = getSettlerDialogue(state, npcId);
   if (settler) return settler;
+  const calibration = getCalibrationDialogue(state, npcId);
+  if (calibration) return calibration;
   const watch = getWatchDialogue(state, npcId);
   if (watch) return watch;
   const heart = getHeartDialogue(state, npcId);
