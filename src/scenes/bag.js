@@ -9,7 +9,7 @@ import { useConsumable } from '../items/consumables.js';
 import { recipesUsingItem, listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
 import { countItem } from '../items/inventory.js';
 import { craftInField } from '../map/mapState.js';
-import { sellValueOf } from '../items/shop.js';
+import { sellValueOf, shopsStocking } from '../items/shop.js';
 import { FITTING_SLOTS, MAX_FITTING, fittingLevel, fittingEffectText } from '../items/forge.js';
 
 const esc = (v) =>
@@ -112,7 +112,9 @@ function craftSection(inv) {
     const checklist = (recipe.inputs || []).map((input) => {
       const have = countItem(inv, input.id);
       const label = isKnownItem(input.id) ? getItem(input.id).name : input.id;
-      return `<li class="${have >= input.qty ? 'have' : 'need'}">${esc(label)} ×${input.qty} <small>(have ${have})</small></li>`;
+      const sources = shopsStocking(input.id);
+      const sourceHint = sources.length ? ` <small class="craft-source">at ${esc(sources.join(' · '))}</small>` : '';
+      return `<li class="${have >= input.qty ? 'have' : 'need'}">${esc(label)} ×${input.qty} <small>(have ${have})</small>${sourceHint}</li>`;
     }).join('');
     const outputs = (recipe.outputs || []).map((out) => {
       const item = isKnownItem(out.id) ? getItem(out.id) : null;
