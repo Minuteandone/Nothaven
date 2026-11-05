@@ -31,6 +31,7 @@ test('story and veteran scale hp, atk and gold without mutating ENEMIES', () => 
 test('cycling difficulty survives a save migration', () => {
   const s = createInitialState();
   assert.equal(cycleDifficulty(s), 'veteran');
+  assert.equal(cycleDifficulty(s), 'stormborn');
   assert.equal(cycleDifficulty(s), 'story');
   assert.equal(cycleDifficulty(s), 'standard');
   cycleDifficulty(s);
@@ -50,4 +51,17 @@ test('town shows the difficulty button and combat uses the chosen preset', async
   game.rng = () => 0.5;
   combatScene.onEnter(game, { enemyId: 'storm_rat' });
   assert.equal(game.state.combat.enemy.hp, Math.round(ENEMIES.storm_rat.hp * 1.3));
+});
+
+test('stormborn scales foes hardest and is labelled in combat', async () => {
+  const { difficultyNote } = await import('../src/ui/combat.js');
+  const base = createCombat({ enemyId: 'relay_warden' }).enemy;
+  const vet = createCombat({ enemyId: 'relay_warden', difficulty: 'veteran' }).enemy;
+  const sb = createCombat({ enemyId: 'relay_warden', difficulty: 'stormborn' });
+  assert.equal(sb.enemy.hp, Math.round(base.hp * 1.6));
+  assert.equal(sb.enemy.atk, Math.round(base.atk * 1.4));
+  assert.equal(sb.enemy.gold, Math.round(base.gold * 1.5));
+  assert.ok(sb.enemy.hp > vet.hp && sb.enemy.atk > vet.atk);
+  assert.equal(difficultyNote(sb), ' · Stormborn mode');
+  assert.equal(DIFFICULTIES.stormborn.label, 'Stormborn');
 });
