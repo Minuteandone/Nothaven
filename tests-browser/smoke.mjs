@@ -284,8 +284,68 @@ try {
       assert.deepEqual(await state(), journalState, 'Remove/re-add/Clear must not change progress');
       await fit('earned-bestiary'); await click('leave');
       assert.deepEqual(await state(), beforeJournal, 'Back must restore the whole expedition state');
+      // Three manual checkpoints, earned through the same fresh-game route.
+      const archiveOriginal = await state();
+      const archiveKey = id => `stormhaven.archive.v1.${id}`;
+      const stored = key => page.evaluate(key => localStorage.getItem(key), key);
+      const quickSave = await stored('stormhaven-save');
+      await click('openArchive');
+      const archiveOpen = { ...archiveOriginal, scene: 'archive' };
+      assert.deepEqual(await state(), archiveOpen);
+      for (const id of ['1', '2']) {
+        await click('saveArchive', id);
+        assert.deepEqual(JSON.parse(await stored(archiveKey(id))).state, archiveOriginal);
+      }
+      const slotOne = await stored(archiveKey('1'));
+      await page.locator('[aria-controls="display-settings"]').click();
+      await page.locator('[data-display-scale]').selectOption('130');
+      await page.locator('[data-display-done]').click();
+      await fit('earned-archive-text-130');
+      const archiveButtons = await page.locator('.archive-buttons button').evaluateAll(buttons => buttons.map(button => {
+        const rect = button.getBoundingClientRect();
+        return { left: rect.left, right: rect.right, height: rect.height, client: button.clientWidth, scroll: button.scrollWidth };
+      }));
+      assert.equal(archiveButtons.length, 9);
+      for (const button of archiveButtons) {
+        assert.ok(button.left >= 0 && button.right <= width && button.height >= 44);
+        assert.ok(button.scroll <= button.client + 1, 'archive control text must not overflow');
+      }
+      assert.deepEqual(await state(), archiveOpen);
+      await click('saveArchive', '1'); await click('cancelArchive');
+      assert.equal(await stored(archiveKey('1')), slotOne);
+      await click('leaveArchive'); assert.deepEqual(await state(), archiveOriginal);
+      await click('moveWest');
+      const archiveChanged = await state();
+      assert.equal(archiveChanged.scene, 'explore');
+      assert.equal(archiveChanged.map.x, archiveOriginal.map.x - 1, 'ordinary westward step creates a distinct checkpoint');
+      await click('openArchive'); await click('saveArchive', '3');
+      assert.deepEqual(JSON.parse(await stored(archiveKey('3'))).state, archiveChanged);
+      const changedOpen = await state();
+      await click('loadArchive', '1'); await click('cancelArchive');
+      assert.deepEqual(await state(), changedOpen);
+      await click('loadArchive', '1'); await click('confirmArchive');
+      assert.deepEqual(await state(), archiveOriginal, 'archive load restores the entire earned expedition');
+      await click('openArchive');
+      await click('saveArchive', '3'); await click('confirmArchive');
+      assert.deepEqual(JSON.parse(await stored(archiveKey('3'))).state, archiveOriginal);
+      const slotTwo = await stored(archiveKey('2'));
+      await click('deleteArchive', '2'); await click('cancelArchive');
+      assert.equal(await stored(archiveKey('2')), slotTwo);
+      await click('deleteArchive', '2'); await click('confirmArchive');
+      assert.equal(await stored(archiveKey('2')), null);
+      assert.equal(await stored('stormhaven-save'), quickSave);
+      await click('leaveArchive'); assert.deepEqual(await state(), archiveOriginal);
+      await page.reload(); await click('archive');
+      assert.equal(await page.locator('[data-action="saveArchive"]:disabled').count(), 3);
+      await click('loadArchive', '1'); await click('confirmArchive');
+      assert.deepEqual(await state(), archiveOriginal, 'Title archive load restores the whole expedition');
+      assert.equal(await stored('stormhaven-save'), quickSave);
+      await page.locator('[aria-controls="display-settings"]').click();
+      await page.locator('[data-display-scale]').selectOption('100');
+      await page.locator('[data-display-done]').click();
+      assert.deepEqual(await state(), archiveOriginal);
       assert.deepEqual(errors, []);
-      console.log(`PASS ${width}px: navigation, filters, purchase, save/reload, shortcut opt-out/persistence/re-enable, combat shortcuts, full chronicle, earned ridge victory/comparison; browser errors []`);
+      console.log(`PASS ${width}px: navigation, filters, purchase, save/reload, shortcut opt-out/persistence/re-enable, combat shortcuts, full chronicle, earned ridge victory/comparison, archive confirmations/round-trip; browser errors []`);
     } catch (error) {
       await page.screenshot({ path: path.join(artifacts, `${width}-failure.png`), fullPage: true }).catch(() => {});
       console.error(`FAIL ${width}px; browser errors: ${JSON.stringify(errors)}`);
