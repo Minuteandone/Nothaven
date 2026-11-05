@@ -4,6 +4,7 @@ import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { MAX_PARTY } from '../party/companions.js';
 import { DRILL_FOES, drillRecord, gauntletRecord } from './drills.js';
 import { ledgerOf, SERVICE_ROWS } from '../core/ledger.js';
+import { FITTING_SLOTS, MAX_FITTING, fittingLevel } from '../items/forge.js';
 
 const flagsOf = state => state?.story?.flags || {};
 const heroOf = state => (Array.isArray(state?.party) ? state.party[0] : null) || null;
@@ -33,6 +34,9 @@ export const FEATS = Object.freeze([
     check: s => ledgerOf(s).comebacks >= 1 }),
   Object.freeze({ id: 'steady_road', title: 'Steady Road', detail: 'Win fifteen real battles in a row without a defeat. Safe withdrawals do not break the run.',
     check: s => ledgerOf(s).bestStreak >= 15 }),
+  Object.freeze({ id: 'fitted', title: 'Well Fitted', detail: 'Have the Greyhaven forge bring both the weapon and armour fittings of one party member to +3.',
+    check: s => [...(Array.isArray(s?.party) ? s.party : []), ...(s?.reserve && typeof s.reserve === 'object' ? Object.values(s.reserve) : [])]
+      .some(m => FITTING_SLOTS.every(slot => fittingLevel(m, slot) >= MAX_FITTING)) }),
   Object.freeze({ id: 'yard', title: 'Yard Champion', detail: 'Win a Sparring Drill against every boss in the Watch House yard.',
     check: s => DRILL_FOES.length > 0 && DRILL_FOES.every(id => drillRecord(s, id).wins >= 1) }),
   Object.freeze({ id: 'gauntlet', title: 'Unbroken Run', detail: 'Clear the full Yard Gauntlet against every yard boss without a single loss.',

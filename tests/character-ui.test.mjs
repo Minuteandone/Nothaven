@@ -143,3 +143,34 @@ test('portrait is original accessible path-only artwork with no image dependency
   assert.ok(!/<(?:circle|ellipse|image)\b/i.test(art));
   assert.ok(!/<script\b|onerror=|onload=/i.test(art));
 });
+
+test('character sheet counts forge fittings in gear stats and shows them on gear cards', () => {
+  const state = createInitialState();
+  const hero = state.party[0];
+  hero.equipment = { ...(hero.equipment || {}), weapon: 'iron_sword', armor: 'leather_armor' };
+  const plain = renderCharacter({ member: structuredClone(hero) });
+  assert.doesNotMatch(plain, /equipment-card__fitting/);
+  hero.temper = { weapon: 2, armor: 3 };
+  const before = structuredClone(hero);
+  const html = renderCharacter({ member: hero });
+  assert.deepEqual(hero, before, 'rendering must not mutate the member');
+  assert.match(html, /data-fitting-level="2">Forge fitting \+2 of 3 · \+4 atk<\/p>/);
+  assert.match(html, /data-fitting-level="3">Forge fitting \+3 of 3 · \+3 def, \+12 HP<\/p>/);
+  const atkRow = (s) => s.match(/<th scope="row">Attack<\/th>[\s\S]*?<\/tr>/)?.[0] || '';
+  const nums = (row) => [...row.matchAll(/<td[^>]*>(?:<strong>)?\+?(-?\d+)/g)].map(m => Number(m[1]));
+  const [baseP, gearP, effP] = nums(atkRow(plain));
+  const [baseF, gearF, effF] = nums(atkRow(html));
+  assert.equal(baseF, baseP);
+  assert.equal(gearF, gearP + 4);
+  assert.equal(effF, effP + 4);
+});
+
+test('fitting on an empty slot is shown as inactive and adds nothing', () => {
+  const state = createInitialState();
+  const hero = state.party[0];
+  hero.equipment = {};
+  hero.temper = { weapon: 1, armor: 'x' };
+  const html = renderCharacter({ member: hero });
+  assert.match(html, /Forge fitting \+1 of 3 · inactive until something is equipped/);
+  assert.equal((html.match(/equipment-card__fitting/g) || []).length, 1);
+});

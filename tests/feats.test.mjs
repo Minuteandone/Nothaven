@@ -29,6 +29,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
   s.ledger = { victories: 20, comebacks: 1, bestStreak: 15 };
+  s.party[0].temper = { weapon: 3, armor: 3 };
   assert.equal(featsEarned(s), FEATS.length);
 });
 
@@ -180,4 +181,18 @@ test('Trial Warden feat needs all four field trials in the bestiary', () => {
   assert.equal(ids.indexOf('trials'), ids.indexOf('lenswarden') + 1);
   const row = FEATS.find(f => f.id === 'trials');
   assert.doesNotMatch(`${row.title} ${row.detail}`, EGG_RE);
+});
+
+test('Well Fitted needs both fittings at +3 on the same member, in party or reserve', () => {
+  const earned = s => featStatus(s).find(f => f.id === 'fitted').done;
+  const s = createInitialState();
+  assert.equal(earned(s), false);
+  s.party[0].temper = { weapon: 3, armor: 2 };
+  assert.equal(earned(s), false);
+  s.party.push({ id: 'iven', temper: { weapon: 0, armor: 3 } });
+  assert.equal(earned(s), false, 'split across members does not count');
+  s.party[0].temper = { weapon: 3, armor: '3' };
+  assert.equal(earned(s), false, 'non-integer levels are ignored');
+  s.reserve = { bram: { id: 'bram', temper: { weapon: 3, armor: 3 } } };
+  assert.equal(earned(s), true);
 });
