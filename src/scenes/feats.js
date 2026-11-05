@@ -71,6 +71,8 @@ export const FEATS = Object.freeze([
     check: s => flagsOf(s).calibration_reward === true }),
   Object.freeze({ id: 'thunderhoof', title: 'Stampede Stopped', detail: 'Defeat Thunderhoof, the storm-charged elk that roams the ridge road once Signal Calibration is paid.',
     check: s => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary.thunderhoof : 0) > 0 }),
+  Object.freeze({ id: 'stormborn', title: 'Calm in the Gale', detail: 'Overcome any boss in a real battle while the Difficulty is set to Stormborn.',
+    check: s => ledgerOf(s).stormbornBossVictories >= 1 }),
 ]);
 
 export function featStatus(state) {

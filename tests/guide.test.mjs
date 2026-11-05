@@ -61,3 +61,7 @@ test('guide Thunderhoof tip names its Sparkrack Tine drop', async () => {
   assert.match(text, /Thunderhoof[^']*Sparkrack Tine/);
   assert.equal(ITEMS.sparkrack_tine.name, 'Sparkrack Tine');
 });
+
+test('guide difficulty tip names the Calm in the Gale feat', () => {
+  assert.match(JSON.stringify(GUIDE_SECTIONS), /overcoming any boss on Stormborn earns the Calm in the Gale feat/);
+});
