@@ -61,8 +61,31 @@ function resolveDrillVictory(game, lines) {
   if (ups.length) game.bus.emit('party:levelup', { lines: ups });
 }
 
+/** Current HP of the foe and each party member, for floating damage numbers. */
+export function hpSnapshot(game) {
+  const c = game?.state?.combat;
+  const hp = (u) => Math.max(0, Number(u?.hp) || 0);
+  return { enemy: hp(c?.enemy), party: (game?.state?.party || []).map(hp) };
+}
+
+/** Compare against the last snapshot and announce HP changes as `combat:hp`. Transient: never saved. */
+export function emitHpChanges(game) {
+  const before = game.combatHp;
+  const after = hpSnapshot(game);
+  game.combatHp = after;
+  if (!before) return [];
+  const changes = [];
+  if (after.enemy !== before.enemy) changes.push({ target: 'enemy', delta: after.enemy - before.enemy });
+  after.party.forEach((v, i) => {
+    if (i < before.party.length && v !== before.party[i]) changes.push({ target: i, delta: v - before.party[i] });
+  });
+  if (changes.length) game.bus?.emit?.('combat:hp', { changes });
+  return changes;
+}
+
 function commit(game, lines) {
   const c = game.state.combat;
+  emitHpChanges(game);
   if (c.over === 'victory' && !c.rewards) resolveVictory(game, lines);
   c.log.push(...lines);
   if (c.log.length > 40) c.log.splice(0, c.log.length - 40);
@@ -107,6 +130,7 @@ export const combatScene = {
     if ((c.enemy.spd || 0) > heroStats(hero).spd) {
       c.log.push(`${c.enemy.name} moves first!`, ...enemyTurn(c, hero, rng(game), game.state.party));
     }
+    game.combatHp = hpSnapshot(game);
   },
   render(game) {
     const c = game.state.combat;
