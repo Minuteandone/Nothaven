@@ -52,6 +52,86 @@ try {
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width, `${label}: horizontal overflow at ${width}`);
       await page.screenshot({ path: path.join(artifacts, `${width}-${label}.png`), fullPage: true });
     };
+    const checkBagSearch = async () => {
+      const town = await state();
+      const quick = await page.evaluate(() => localStorage.getItem('stormhaven-save'));
+      await click('bag');
+      const bag = await state();
+      const inventoryNames = page.locator('.bag-group:not([aria-label="Equipped"]) .bag-list .bag-name');
+      const recipes = page.locator('.craft-table tr');
+      const allRecipes = await recipes.count();
+      const allNames = await inventoryNames.allTextContents();
+      assert.deepEqual(allNames, ['Trail Rations ×3'], 'search uses genuinely purchased supplies');
+      assert.ok(allRecipes > 0, 'recipe catalogue is present');
+      const unchanged = async () => {
+        assert.deepEqual(await state(), bag, 'Bag search/sort must preserve the whole journey state');
+        assert.equal(await page.evaluate(() => localStorage.getItem('stormhaven-save')), quick);
+      };
+      const search = async query => {
+        await page.locator('#bag-search-input').fill(query);
+        await click('bagSearchApply');
+        await unchanged();
+      };
+      const searchFit = async label => {
+        await fit(label);
+        const controls = await page.locator('.bag-search-row input,.bag-search-row button').evaluateAll(nodes => nodes.map(node => {
+          const r = node.getBoundingClientRect();
+          return r.left >= 0 && r.right <= innerWidth + 1 && r.height >= 44
+            && (node.tagName === 'INPUT' || node.scrollWidth <= node.clientWidth + 1);
+        }));
+        assert.equal(controls.length, 3);
+        assert.ok(controls.every(Boolean), 'search controls and button text must fit; single-line input may scroll internally');
+      };
+      for (const scale of ['115', '130']) {
+        await page.locator('[aria-controls="display-settings"]').click();
+        await page.locator('[data-display-scale]').selectOption(scale);
+        await page.locator('[data-display-done]').click();
+        await search('  TrAiL RaTiOnS  ');
+        assert.equal(await page.locator('#bag-search-input').inputValue(), 'TrAiL RaTiOnS');
+        assert.deepEqual(await inventoryNames.allTextContents(), allNames);
+        assert.equal(await recipes.count(), 2, 'rations match both broth/chowder ingredient recipes');
+        await click('bagSort', 'value');
+        await unchanged();
+        assert.equal(await page.locator('#bag-search-input').inputValue(), 'TrAiL RaTiOnS');
+        assert.equal(await page.locator('[data-action="bagSort"][data-arg="value"]').getAttribute('aria-pressed'), 'true');
+        await search('storm glass');
+        assert.equal(await inventoryNames.count(), 0);
+        assert.equal(await recipes.count(), 10, 'ingredient search includes recipes without owning that ingredient');
+        await searchFit(`bag-search-glass-${scale}`);
+        const longQuery = 'x'.repeat(120);
+        await search(longQuery);
+        assert.equal(await inventoryNames.count(), 0);
+        assert.equal(await recipes.count(), 0);
+        assert.ok((await page.locator('.bag-empty').textContent()).includes(longQuery));
+        await searchFit(`bag-search-long-${scale}`);
+        const glyphs = await page.locator('.bag-empty').evaluate(node => {
+          const range = document.createRange(); range.selectNodeContents(node);
+          return [...range.getClientRects()].map(r => ({ left: r.left, right: r.right }));
+        });
+        assert.ok(glyphs.length > 0 && glyphs.every(r => r.left >= 0 && r.right <= width + 1), 'visible no-match text must wrap inside the viewport');
+        await search('<img src=x onerror=alert(1)>');
+        assert.equal(await page.locator('.bag-empty img').count(), 0, 'query markup is escaped');
+        assert.ok((await page.locator('.bag-empty').textContent()).includes('<img src=x onerror=alert(1)>'));
+        await click('bagSearchClear');
+        await unchanged();
+        assert.equal(await page.locator('#bag-search-input').inputValue(), '');
+        assert.deepEqual(await inventoryNames.allTextContents(), allNames);
+        assert.equal(await recipes.count(), allRecipes);
+        assert.equal(await page.locator('[data-action="bagSort"][data-arg="value"]').getAttribute('aria-pressed'), 'true');
+        await search('storm glass'); await click('leave');
+        assert.deepEqual(await state(), town);
+        await click('bag');
+        assert.equal(await page.locator('#bag-search-input').inputValue(), '', 'reopening resets the transient query');
+        assert.equal(await page.locator('[data-action="bagSort"][data-arg="value"]').getAttribute('aria-pressed'), 'true');
+        await unchanged();
+        await searchFit(`bag-search-reopened-${scale}`);
+      }
+      await page.locator('[aria-controls="display-settings"]').click();
+      await page.locator('[data-display-scale]').selectOption('100');
+      await page.locator('[data-display-done]').click();
+      await unchanged(); await click('leave');
+      assert.deepEqual(await state(), town);
+    };
     const readOnlyVisit = async (action, title) => {
       const before = await progress();
       // Bag rendering initializes missing empty slots; this changes only our
@@ -120,6 +200,7 @@ try {
       await page.reload(); await click('continue');
       assert.equal((await state()).gold, 2);
       assert.equal((await state()).inventory.find(item => item.id === 'rations').qty, 3);
+      await checkBagSearch();
       await click('explore');
       const inField = await progress();
       await click('openQuests'); await click('filterQuests', 'all'); await click('leave');
@@ -345,7 +426,7 @@ try {
       await page.locator('[data-display-done]').click();
       assert.deepEqual(await state(), archiveOriginal);
       assert.deepEqual(errors, []);
-      console.log(`PASS ${width}px: navigation, filters, purchase, save/reload, shortcut opt-out/persistence/re-enable, combat shortcuts, full chronicle, earned ridge victory/comparison, archive confirmations/round-trip; browser errors []`);
+      console.log(`PASS ${width}px: navigation, filters, purchase, save/reload, readonly Bag search/recipe filters/long-query wrapping, shortcut opt-out/persistence/re-enable, combat shortcuts, full chronicle, earned ridge victory/comparison, archive confirmations/round-trip; browser errors []`);
     } catch (error) {
       await page.screenshot({ path: path.join(artifacts, `${width}-failure.png`), fullPage: true }).catch(() => {});
       console.error(`FAIL ${width}px; browser errors: ${JSON.stringify(errors)}`);

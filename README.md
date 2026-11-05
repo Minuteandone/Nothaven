@@ -125,6 +125,13 @@ The portable smoke also compares its one genuinely defeated Ridge Bandit at 115%
 and 130% text size, then checks Remove/re-add/Clear and Back without progress changes.
 This fresh route does not claim three-card comparison coverage.
 
+The smoke also searches the Bag containing its genuinely purchased rations at
+115% and 130% text size in all three viewports. It checks item/recipe matching,
+sort retention, Clear, reset on reopening, escaped query text, and a 120-character
+unbroken no-match query with both document and visible-text bounds. Whole journey
+state and the raw quick save stay unchanged; this does not test crafting or make
+screen-reader or whole-game visual claims.
+
 ## Earned campaign regression
 
 `tests/campaign-integration.test.mjs` walks sixteen combinations of the original
