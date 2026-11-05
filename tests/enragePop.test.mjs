@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createCombat, checkBossPhase } from '../src/combat/rules.js';
 import { emitEnrage } from '../src/scenes/combat.js';
 import { installAnimations } from '../src/ui/animations.js';
+import { readFileSync } from 'node:fs';
 
 function makeBus() {
   const h = {};
@@ -66,4 +67,10 @@ test('installAnimations listens for combat:enrage and cleans up', () => {
   assert.doesNotThrow(() => bus.emit('combat:enrage', {}), 'Node (no document) is safe');
   off();
   assert.equal((bus.h['combat:enrage'] || []).length, 0);
+});
+
+test('both guides mention the Enraged! flash', () => {
+  for (const f of ['src/scenes/guide.js', 'docs/PLAYER_GUIDE.md']) {
+    assert.match(readFileSync(new URL(`../${f}`, import.meta.url), 'utf8'), /Enraged!/, f);
+  }
 });
