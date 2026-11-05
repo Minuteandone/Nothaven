@@ -1,3 +1,4 @@
+import { companionTactic } from '../party/tactics.js';
 // Combat rules for Beacon of Stormhaven. Pure-ish functions over a combat
 // object and the party; randomness is injected (`rng`) so tests are deterministic.
 import { ENEMIES } from '../data/enemies.js';
@@ -436,7 +437,7 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
   const e = c.enemy;
   const shocked = hasStatus(m, 'shocked'); // shocked allies can't channel MP techniques
   const master = hasMastery(m);
-  if (m.role === 'keeper' && !shocked) {
+  if (m.role === 'keeper' && !shocked && companionTactic(m) !== 'conserve') {
     const hurt = (party || []).filter((p) => p && p.hp > 0 && p.hp < heroStats(p).maxHp / 2)
       .sort((a, b) => a.hp / heroStats(a).maxHp - b.hp / heroStats(b).maxHp)[0];
     if (hurt && (m.mp || 0) >= SKILLS.mend.mp) {
@@ -465,7 +466,7 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
     }
     return lines;
   }
-  if (m.role === 'signaler' && !shocked && (m.mp || 0) >= 3) {
+  if (m.role === 'signaler' && !shocked && companionTactic(m) !== 'conserve' && (m.mp || 0) >= 3) {
     m.mp -= 3;
     const base = 5 + (m.level || 1) * 2 + randInt(rng, 0, 2);
     const d = master ? Math.floor(base * 1.5) : base;
