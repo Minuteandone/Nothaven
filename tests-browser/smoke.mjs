@@ -386,7 +386,15 @@ try {
         const rect = button.getBoundingClientRect();
         return { left: rect.left, right: rect.right, height: rect.height, client: button.clientWidth, scroll: button.scrollWidth };
       }));
-      assert.equal(archiveButtons.length, 9);
+      assert.deepEqual(await page.locator('.archive-buttons button').evaluateAll(buttons =>
+        buttons.map(button => [button.dataset.action, button.dataset.arg || ''])), [
+        ['previewArchiveImport', '1'], ['previewArchiveImport', '2'], ['previewArchiveImport', '3'],
+        ['clearArchiveImport', ''],
+        ...['1', '2', '3'].flatMap(id => [
+          ['saveArchive', id], ['loadArchive', id], ['exportArchive', id], ['deleteArchive', id],
+        ]),
+      ], 'archive exposes all original checkpoint actions and explicit transfer destinations');
+      assert.equal(archiveButtons.length, 16);
       for (const button of archiveButtons) {
         assert.ok(button.left >= 0 && button.right <= width && button.height >= 44);
         assert.ok(button.scroll <= button.client + 1, 'archive control text must not overflow');
