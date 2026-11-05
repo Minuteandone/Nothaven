@@ -105,3 +105,10 @@ Each zone defines a baseline field condition in `src/map/zones.js`, resolved dyn
 - **`clear` (Broken Skies)**: `stormcrown_spire` and `storms_eye` once `victory_storm_heart` is recorded.
 
 Surveying the area (`exploreScene.actions.waitTurn`, keyboard `E`) appends the active condition name and summary to the exploration log without mutating story or party state.
+
+## Zone Vantage & Recon Progress (`getZoneProgress`, `getZoneVantage`)
+
+Each zone defines a `vantage` metadata block (`{ landmark, elevation, surveyNote, fieldNote }`) in `src/map/zones.js`.
+- `getZoneProgress(gameState, zoneOrId)` returns a read-only summary `{ zoneId, visited, encountersCleared, encountersTotal, cachesOpened, cachesTotal, completedObjectives, totalObjectives, percent }` without mutating `gameState`.
+- `getZoneVantage(gameState, zoneOrId)` combines the zone's `vantage` metadata with its active weather `condition` and `progress`.
+- `renderExploration` displays a read-only `.zone-recon-summary` line with the active condition name, vantage landmark and elevation, threat/cache completion counts, and field note.

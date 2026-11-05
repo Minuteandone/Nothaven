@@ -92,6 +92,68 @@ export function getZoneCondition(gameState, zoneOrId = null) {
   return ZONE_CONDITIONS[resolvedZone?.condition] || ZONE_CONDITIONS.sheltered;
 }
 
+export function getZoneProgress(gameState, zoneOrId = null) {
+  const resolvedZone =
+    typeof zoneOrId === 'string'
+      ? getZone(zoneOrId)
+      : zoneOrId && typeof zoneOrId === 'object'
+        ? zoneOrId
+        : getZone(gameState?.map?.zoneId || gameState?.location || 'greyhaven');
+  const cleared = gameState?.map?.clearedEncounters || {};
+  const completed = gameState?.map?.completedInteractions || {};
+  const visited = Boolean(gameState?.map?.visitedZones?.[resolvedZone.id]);
+  const encounters = Array.isArray(resolvedZone.encounters) ? resolvedZone.encounters : [];
+  const caches = (Array.isArray(resolvedZone.interactables) ? resolvedZone.interactables : []).filter(
+    (inter) => inter && (inter.kind === 'cache' || inter.type === 'cache')
+  );
+  const encountersTotal = encounters.length;
+  const encountersCleared = encounters.filter((enc) => Boolean(cleared[enc.id])).length;
+  const cachesTotal = caches.length;
+  const cachesOpened = caches.filter((inter) => Boolean(completed[inter.id])).length;
+  const totalObjectives = encountersTotal + cachesTotal;
+  const completedObjectives = encountersCleared + cachesOpened;
+  const percent =
+    totalObjectives > 0
+      ? Math.round((completedObjectives / totalObjectives) * 100)
+      : visited
+        ? 100
+        : 0;
+  return {
+    zoneId: resolvedZone.id,
+    visited,
+    encountersCleared,
+    encountersTotal,
+    cachesOpened,
+    cachesTotal,
+    completedObjectives,
+    totalObjectives,
+    percent,
+  };
+}
+
+export function getZoneVantage(gameState, zoneOrId = null) {
+  const resolvedZone =
+    typeof zoneOrId === 'string'
+      ? getZone(zoneOrId)
+      : zoneOrId && typeof zoneOrId === 'object'
+        ? zoneOrId
+        : getZone(gameState?.map?.zoneId || gameState?.location || 'greyhaven');
+  const vantage = resolvedZone?.vantage || {
+    landmark: resolvedZone?.name || 'Frontier Vantage',
+    elevation: 0,
+    surveyNote: '',
+    fieldNote: '',
+  };
+  return {
+    landmark: vantage.landmark,
+    elevation: vantage.elevation,
+    surveyNote: vantage.surveyNote,
+    fieldNote: vantage.fieldNote,
+    condition: getZoneCondition(gameState, resolvedZone),
+    progress: getZoneProgress(gameState, resolvedZone),
+  };
+}
+
 
 export function getEffectiveRandomEncounterChance(gameState, zone) {
   const base = typeof zone?.randomEncounterChance === 'number' ? zone.randomEncounterChance : 0;
