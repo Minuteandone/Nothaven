@@ -15,7 +15,7 @@ function hero() {
 
 test('only the listed bosses define a windup', () => {
   const withWindup = Object.keys(ENEMIES).filter((id) => ENEMIES[id].windup).sort();
-  assert.deepEqual(withWindup, ['drowned_harbormaster', 'last_squall', 'pass_warlord', 'relay_warden', 'storm_heart', 'stormcrown_tyrant']);
+  assert.deepEqual(withWindup, ['cinderclaw', 'drowned_harbormaster', 'last_squall', 'pass_warlord', 'relay_warden', 'storm_heart', 'stormcrown_tyrant']);
   for (const id of withWindup) {
     const w = ENEMIES[id].windup;
     assert.ok(w.chance > 0 && w.chance < 0.5, id);
