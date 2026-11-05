@@ -20,6 +20,7 @@ import { installCharacter } from './scenes/character.js';
 import { installDisplayControls } from './ui/displayControls.js';
 import { installCombatControls } from './ui/combatControls.js';
 import { installExplorationControls } from './ui/explorationControls.js';
+import { installAnimations } from './ui/animations.js';
 
 const game = new Game(document.getElementById('app'));
 game.registerScene('title', titleScene);
@@ -44,5 +45,6 @@ installRecipeBook(game); // registers the 'recipes' scene (Field Recipe Book)
 installEnding(game); // after installStory so the story state is already updated
 installAudio(game); // creates no AudioContext until the player explicitly enables sound
 installDisplayControls(game); // device-local interface preferences; no game-state changes
+installAnimations(game); // combat + level-up screen effects (shake/fade/popups)
 game.setScene('title');
 window.game = game; // handy for debugging
