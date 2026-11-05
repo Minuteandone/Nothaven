@@ -93,6 +93,19 @@ export function emitWindupBreak(game, lines) {
   return broke;
 }
 
+/** True the first time this fight's foe enters its enrage phase (and survives the blow).
+ *  Announces `combat:enrage`. Tracks the last-seen state in transient `game.combatEnraged`; never saved. */
+export function emitEnrage(game) {
+  const c = game?.state?.combat;
+  if (!game || !c) return false;
+  const now = c.enraged === true;
+  const before = game.combatEnraged === true;
+  game.combatEnraged = now;
+  if (!now || before || c.over === 'victory' || !(Number(c.enemy?.hp) > 0)) return false;
+  game.bus?.emit?.('combat:enrage', {});
+  return true;
+}
+
 /** Lines that report a windup release landing on a defending or warded hero. Captures the hero name. */
 const WINDUP_BRACED_RE = /unleashes .+! (.+) takes \d+, braced against the worst of it\./;
 
@@ -113,6 +126,7 @@ function commit(game, lines) {
   emitHpChanges(game);
   emitWindupBreak(game, lines);
   emitWindupBraced(game, lines);
+  emitEnrage(game);
   if (c.over === 'victory' && !c.rewards) resolveVictory(game, lines);
   c.log.push(...lines);
   if (c.log.length > 40) c.log.splice(0, c.log.length - 40);
@@ -158,6 +172,7 @@ export const combatScene = {
       c.log.push(`${c.enemy.name} moves first!`, ...enemyTurn(c, hero, rng(game), game.state.party));
     }
     game.combatHp = hpSnapshot(game);
+    game.combatEnraged = c.enraged === true;
   },
   render(game) {
     const c = game.state.combat;
