@@ -77,3 +77,7 @@ pattern. Reuse it end to end:
   string.
 - Align every docs claim (player guide, map README) with the code before
   requesting review.
+
+## Repo-wide content guard
+
+A repo-wide content test in `tests/` scans every file under `src/` and `docs/`, plus `style.css`, `index.html` and `README.md`, against the canonical banned-word helper that also lives in `tests/`. It also rejects elliptical shapes (`<ellipse>`, `ellipse()`, and two-value `border-radius` with `/`) with no line exemptions. New content tests should import that shared helper instead of copying a local regex. Vetted benign tokens (such as the main layout class name) are stripped token-by-token in the test, never by skipping whole lines.
