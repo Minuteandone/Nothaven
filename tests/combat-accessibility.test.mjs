@@ -33,9 +33,9 @@ function fakeButton(action, { arg = null, disabled = false, card = false, ariaDi
   };
 }
 
-function fakeRoot(buttons, { displayOpen = false } = {}) {
+function fakeRoot(buttons, { displayOpen = false, characterShortcuts = true } = {}) {
   return {
-    ownerDocument: { querySelector: selector => displayOpen && selector === '.display-settings:not([hidden])' ? {} : null },
+    ownerDocument: { documentElement: { getAttribute: name => name === 'data-character-shortcuts' ? (characterShortcuts ? 'on' : 'off') : null }, querySelector: selector => displayOpen && selector === '.display-settings:not([hidden])' ? {} : null },
     querySelectorAll: selector => selector === 'button[data-action]' ? buttons : [],
   };
 }
@@ -166,4 +166,67 @@ test('bootstrap installs keyboard controls after combat registration and before 
   const installation = main.indexOf('installCombatControls(game);');
   const title = main.indexOf("game.setScene('title');");
   assert.ok(registration >= 0 && installation > registration && title > installation);
+});
+
+
+test('character shortcut opt-out blocks every letter and numbered card while preserving Escape and native clicks', () => {
+  const bindings = [
+    ['KeyA', fakeButton('attack')],
+    ['KeyS', fakeButton('menu', { arg: 'skills' })],
+    ['KeyI', fakeButton('menu', { arg: 'items' })],
+    ['KeyD', fakeButton('defend')],
+    ['KeyF', fakeButton('flee')],
+    ['KeyB', fakeButton('burst')],
+    ['KeyC', fakeButton('finish')],
+  ];
+  const back = fakeButton('menu', { arg: 'main' });
+  const buttons = [...bindings.map(([, button]) => button), back];
+  const normal = fakeRoot(buttons);
+  const off = fakeRoot(buttons, { characterShortcuts: false });
+  for (const [code, button] of bindings) {
+    assert.equal(combatShortcutTarget(normal, key(code)), button, `${code} enabled`);
+    assert.equal(combatShortcutTarget(off, key(code)), null, `${code} disabled`);
+  }
+  assert.equal(combatShortcutTarget(off, key('', { key: 'a' })), null);
+  for (const action of ['skill', 'item']) {
+    const cards = Array.from({ length: 9 }, (_, i) => fakeButton(action, { arg: String(i), card: true }));
+    for (let i = 1; i <= 9; i++) {
+      for (const code of [`Digit${i}`, `Numpad${i}`]) {
+        assert.equal(combatShortcutTarget(fakeRoot(cards), key(code)), cards[i - 1]);
+        assert.equal(combatShortcutTarget(fakeRoot(cards, { characterShortcuts: false }), key(code)), null);
+      }
+    }
+  }
+  assert.equal(combatShortcutTarget(off, key('Escape')), back);
+  buttons[0].click();
+  assert.equal(buttons[0].clicks, 1, 'the ordinary action button remains usable');
+});
+
+test('installed combat listener reads opt-out live without swallowing disabled commands', () => {
+  const attack = fakeButton('attack');
+  const back = fakeButton('menu', { arg: 'main' });
+  const root = fakeRoot([attack, back]);
+  let enabled = false;
+  root.ownerDocument.documentElement.getAttribute = () => enabled ? 'on' : 'off';
+  const listeners = new Map();
+  const window = {
+    addEventListener: (name, fn) => listeners.set(name, fn),
+    removeEventListener: name => listeners.delete(name),
+  };
+  const cleanup = installCombatControls({ root, state: { scene: 'combat' } }, { window });
+  const off = key('KeyA');
+  listeners.get('keydown')(off);
+  assert.equal(attack.clicks, 0);
+  assert.equal(off.prevented, undefined);
+  const escape = key('Escape');
+  listeners.get('keydown')(escape);
+  assert.equal(back.clicks, 1);
+  assert.equal(escape.prevented, true);
+  enabled = true;
+  const on = key('KeyA');
+  listeners.get('keydown')(on);
+  assert.equal(attack.clicks, 1);
+  assert.equal(on.prevented, true);
+  cleanup();
+  assert.equal(listeners.size, 0);
 });

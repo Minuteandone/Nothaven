@@ -1,6 +1,6 @@
 export const DISPLAY_STORAGE_KEY = 'stormhaven.display.v1';
 export const TEXT_SCALES = Object.freeze([100, 115, 130]);
-export const DEFAULT_DISPLAY_PREFERENCES = Object.freeze({ textScale: 100, highContrast: false, reducedMotion: false });
+export const DEFAULT_DISPLAY_PREFERENCES = Object.freeze({ textScale: 100, highContrast: false, reducedMotion: false, characterShortcuts: true });
 
 const DISPLAY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg>';
 
@@ -11,7 +11,13 @@ export function normalizeDisplayPreferences(value) {
     textScale: TEXT_SCALES.includes(scale) ? scale : 100,
     highContrast: input.highContrast === true,
     reducedMotion: input.reducedMotion === true,
+    characterShortcuts: input.characterShortcuts !== false,
   };
+}
+
+/** Character commands can be disabled without disabling native keyboard navigation. */
+export function characterShortcutsEnabled(doc) {
+  return doc?.documentElement?.getAttribute?.('data-character-shortcuts') !== 'off';
 }
 
 export function loadDisplayPreferences(storage) {
@@ -40,6 +46,7 @@ export function applyDisplayPreferences(doc, value) {
     root.setAttribute('data-text-size', String(preferences.textScale));
     root.setAttribute('data-contrast', preferences.highContrast ? 'high' : 'standard');
     root.setAttribute('data-motion', preferences.reducedMotion ? 'reduced' : 'default');
+    root.setAttribute('data-character-shortcuts', preferences.characterShortcuts ? 'on' : 'off');
   }
   return preferences;
 }
@@ -49,9 +56,10 @@ function clearAppliedPreferences(doc) {
   root?.removeAttribute?.('data-text-size');
   root?.removeAttribute?.('data-contrast');
   root?.removeAttribute?.('data-motion');
+  root?.removeAttribute?.('data-character-shortcuts');
 }
 
-/** Install persistent, presentation-only controls into the existing game-control dock. */
+/** Install persistent, interface controls into the existing game-control dock. */
 export function installDisplayControls(game, options = {}) {
   const doc = options.document || globalThis.document;
   const dock = doc?.querySelector?.('.audio-dock');
@@ -84,7 +92,7 @@ export function installDisplayControls(game, options = {}) {
   panel.setAttribute('aria-labelledby', 'display-settings-title');
   panel.innerHTML = `
     <div class="display-settings__header">
-      <div><h2 id="display-settings-title">Display &amp; motion</h2><p>Adjust the interface without changing your journey. Settings are saved on this device.</p></div>
+      <div><h2 id="display-settings-title">Display &amp; controls</h2><p>Adjust the interface without changing your journey. Settings are saved on this device.</p></div>
       <button type="button" class="audio-toggle" data-display-done>Done</button>
     </div>
     <div class="display-settings__options">
@@ -104,6 +112,10 @@ export function installDisplayControls(game, options = {}) {
         <input id="display-reduced-motion" data-display-motion data-focus-key="display-reduced-motion" type="checkbox">
         <span><strong>Reduce motion</strong><span>Stops pulsing and shortens transitions. Device settings are always respected.</span></span>
       </label>
+      <label class="display-option" for="display-character-shortcuts">
+        <input id="display-character-shortcuts" data-display-shortcuts data-focus-key="display-character-shortcuts" type="checkbox">
+        <span><strong>Letter &amp; number shortcuts</strong><span>Use WASD, E, combat letters, and numbered actions. Turn off for speech input; arrow keys and buttons still work.</span></span>
+      </label>
     </div>
     <div class="display-settings__footer">
       <button type="button" class="action-button action-button--ghost" data-display-reset>Reset display</button>
@@ -114,6 +126,7 @@ export function installDisplayControls(game, options = {}) {
   const scale = panel.querySelector('[data-display-scale]');
   const contrast = panel.querySelector('[data-display-contrast]');
   const motion = panel.querySelector('[data-display-motion]');
+  const shortcuts = panel.querySelector('[data-display-shortcuts]');
   const reset = panel.querySelector('[data-display-reset]');
   const done = panel.querySelector('[data-display-done]');
   const status = panel.querySelector('[data-display-status]');
@@ -122,6 +135,7 @@ export function installDisplayControls(game, options = {}) {
     scale.value = String(preferences.textScale);
     contrast.checked = preferences.highContrast;
     motion.checked = preferences.reducedMotion;
+    shortcuts.checked = preferences.characterShortcuts;
     toggle.setAttribute('aria-expanded', String(!panel.hidden));
     dock.dataset.display = panel.hidden ? 'closed' : 'open';
   }
@@ -151,9 +165,15 @@ export function installDisplayControls(game, options = {}) {
     preferences = normalizeDisplayPreferences({ ...preferences, reducedMotion: motion.checked });
     commit(`Reduced motion ${preferences.reducedMotion ? 'on' : 'off'}.`);
   };
+  const shortcutsHandler = () => {
+    preferences = normalizeDisplayPreferences({ ...preferences, characterShortcuts: shortcuts.checked });
+    commit(`Letter and number shortcuts ${preferences.characterShortcuts ? 'on' : 'off'}.`);
+    game.render?.();
+  };
   const resetHandler = () => {
     preferences = normalizeDisplayPreferences(null);
     commit('Display settings reset to defaults.');
+    game.render?.();
   };
   const doneHandler = () => {
     panel.hidden = true;
@@ -171,6 +191,7 @@ export function installDisplayControls(game, options = {}) {
   scale.addEventListener('change', scaleHandler);
   contrast.addEventListener('change', contrastHandler);
   motion.addEventListener('change', motionHandler);
+  shortcuts.addEventListener('change', shortcutsHandler);
   reset.addEventListener('click', resetHandler);
   done.addEventListener('click', doneHandler);
   doc.addEventListener('keydown', keyHandler);
@@ -185,6 +206,7 @@ export function installDisplayControls(game, options = {}) {
       scale.removeEventListener('change', scaleHandler);
       contrast.removeEventListener('change', contrastHandler);
       motion.removeEventListener('change', motionHandler);
+      shortcuts.removeEventListener('change', shortcutsHandler);
       reset.removeEventListener('click', resetHandler);
       done.removeEventListener('click', doneHandler);
       doc.removeEventListener('keydown', keyHandler);

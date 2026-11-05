@@ -43,6 +43,6 @@ installCharacter(game); // registers Wren's read-only character sheet
 installRecipeBook(game); // registers the 'recipes' scene (Field Recipe Book)
 installEnding(game); // after installStory so the story state is already updated
 installAudio(game); // creates no AudioContext until the player explicitly enables sound
-installDisplayControls(game); // presentation preferences only; no game-state changes
+installDisplayControls(game); // device-local interface preferences; no game-state changes
 game.setScene('title');
 window.game = game; // handy for debugging

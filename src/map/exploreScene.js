@@ -1,3 +1,4 @@
+import { characterShortcutsEnabled } from '../ui/displayControls.js';
 import { saveGame } from '../state.js';
 import { createStoryState, getDialogue } from '../story/index.js';
 import { createStoryUI } from '../story/view.js';
@@ -88,6 +89,7 @@ export const exploreScene = {
     const mapState = ensureMapState(game.state);
     return `${renderExploration({
       state: game.state,
+      characterShortcuts: characterShortcutsEnabled(game.root?.ownerDocument || globalThis.document),
       zone: getZone(mapState.zoneId),
       mapState,
       nearbyActions: getAvailableActions(game.state),
@@ -208,11 +210,18 @@ export function installMap(game, options = {}) {
   };
   game.bus.on('combat:victory', onCombatVictory);
 
+  const doc = options.document || game.root?.ownerDocument || globalThis.document;
+  const view = options.window || doc?.defaultView || globalThis.window;
   let keyHandler = null;
-  if (options.enableKeyboard !== false && typeof window !== 'undefined' && window.addEventListener) {
+  if (options.enableKeyboard !== false && view?.addEventListener) {
     keyHandler = (e) => {
       if (game.state?.scene !== 'explore') return;
-      if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+      if (e.defaultPrevented || e.repeat || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (e.target?.isContentEditable || e.target?.closest?.('[contenteditable="true"]')
+        || ['INPUT', 'TEXTAREA', 'SELECT'].includes(String(e.target?.tagName || '').toUpperCase())) return;
+      if (doc?.querySelector?.('.display-settings:not([hidden])')) return;
+      const code = e.code || ({ w: 'KeyW', a: 'KeyA', s: 'KeyS', d: 'KeyD' }[String(e.key || '').toLowerCase()] || e.key);
+      if (!characterShortcutsEnabled(doc) && !String(code).startsWith('Arrow')) return;
       const keyMap = {
         ArrowUp: 'moveNorth',
         KeyW: 'moveNorth',
@@ -223,20 +232,20 @@ export function installMap(game, options = {}) {
         ArrowRight: 'moveEast',
         KeyD: 'moveEast',
       };
-      const actionName = keyMap[e.code] || keyMap[e.key];
+      const actionName = keyMap[code];
       if (actionName && exploreScene.actions[actionName]) {
         e.preventDefault();
         exploreScene.actions[actionName](game);
         game.render();
       }
     };
-    window.addEventListener('keydown', keyHandler);
+    view.addEventListener('keydown', keyHandler);
   }
 
   const cleanup = () => {
     game.bus.off('combat:victory', onCombatVictory);
-    if (keyHandler && typeof window !== 'undefined' && window.removeEventListener) {
-      window.removeEventListener('keydown', keyHandler);
+    if (keyHandler && view?.removeEventListener) {
+      view.removeEventListener('keydown', keyHandler);
     }
     installedGames.delete(game);
   };

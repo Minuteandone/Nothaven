@@ -67,7 +67,7 @@ function shortcutGuide() {
     ['F', 'Flee'], ['B', 'Beacon Burst'], ['1–9', 'Choose a listed skill or item'],
     ['Esc', 'Back to commands'], ['C', 'Continue after battle'],
   ];
-  return `<details class="shortcut-guide"><summary>Keyboard commands</summary><dl class="shortcut-guide__grid">${bindings.map(([key, label]) => `<div><dt><kbd>${key}</kbd></dt><dd>${label}</dd></div>`).join('')}</dl><p>Shortcuts never activate disabled commands. Text fields and modified key presses are ignored.</p></details>`;
+  return `<details class="shortcut-guide"><summary>Keyboard commands</summary><dl class="shortcut-guide__grid">${bindings.map(([key, label]) => `<div><dt><kbd>${key}</kbd></dt><dd>${label}</dd></div>`).join('')}</dl><p class="character-shortcuts-off">Letter and number shortcuts are off. Use buttons; Escape still returns to commands.</p><p>Turn letter and number shortcuts on or off in Display settings. Shortcuts never activate disabled commands. Text fields and modified key presses are ignored.</p></details>`;
 }
 
 function commandCard({ action, arg, name, meta, description, iconName = 'focus', disabled = false, shortcut = null }) {

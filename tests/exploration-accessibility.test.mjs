@@ -6,7 +6,7 @@ import { ensureMapState, getAvailableActions, getVisitedZones, getZone } from '.
 import { renderExploration } from '../src/ui/exploration.js';
 import { explorationShortcutTarget, installExplorationControls } from '../src/ui/explorationControls.js';
 
-function renderAt({ x = 2, y = 3, nearbyActions, zoneId = 'greyhaven' } = {}) {
+function renderAt({ x = 2, y = 3, nearbyActions, zoneId = 'greyhaven', characterShortcuts = true } = {}) {
   const state = createInitialState();
   const mapState = ensureMapState(state);
   mapState.zoneId = zoneId;
@@ -15,6 +15,7 @@ function renderAt({ x = 2, y = 3, nearbyActions, zoneId = 'greyhaven' } = {}) {
   const before = JSON.stringify(mapState);
   const html = renderExploration({
     state,
+    characterShortcuts,
     zone: getZone(zoneId),
     mapState,
     nearbyActions: nearbyActions ?? getAvailableActions(state),
@@ -187,4 +188,51 @@ test('bootstrap installs exploration controls after map registration and before 
   const map = main.indexOf('installMap(game);');
   const title = main.indexOf("game.setScene('title');");
   assert.ok(map >= 0 && installation > map && title > installation);
+});
+
+
+test('character opt-out renders arrow-only metadata without letter or nearby-number hints', () => {
+  const html = renderAt({ characterShortcuts: false, nearbyActions: [{ kind: 'talk', id: 'mara', label: 'Talk to Warden Mara' }] });
+  assert.match(html, /Letter and number shortcuts are off/);
+  for (const arrow of ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']) {
+    assert.ok(html.includes(`aria-keyshortcuts="${arrow}"`));
+  }
+  assert.ok(!/aria-keyshortcuts="[WASDE1-9](?: |")/.test(html));
+  assert.ok(!html.includes('class="key-hint"'));
+  assert.ok(!html.includes('<kbd aria-hidden="true">'));
+  assert.match(html, /data-action="waitTurn"/);
+  assert.match(html, /class="action-button action-button--[a-z]+ nearby-action"/);
+});
+
+test('exploration opt-out blocks Survey and all numbered positions live without preventing native input', () => {
+  const survey = fakeButton('waitTurn');
+  const nearby = Array.from({ length: 9 }, () => fakeButton('mapTalk', { nearby: true }));
+  const root = fakeRoot([survey, ...nearby]);
+  let enabled = true;
+  root.ownerDocument.documentElement = { getAttribute: () => enabled ? 'on' : 'off' };
+  const bindings = [['KeyE', survey], ...nearby.flatMap((button, i) => [[`Digit${i + 1}`, button], [`Numpad${i + 1}`, button]])];
+  for (const [code, button] of bindings) assert.equal(explorationShortcutTarget(root, key(code)), button);
+  enabled = false;
+  for (const [code] of bindings) assert.equal(explorationShortcutTarget(root, key(code)), null);
+  assert.equal(explorationShortcutTarget(root, key('', { key: 'e' })), null);
+  assert.equal(explorationShortcutTarget(root, key('', { key: '1' })), null);
+  const listeners = new Map();
+  const window = {
+    addEventListener: (name, fn) => listeners.set(name, fn),
+    removeEventListener: name => listeners.delete(name),
+  };
+  const cleanup = installExplorationControls({ root, state: { scene: 'explore' } }, { window });
+  const off = key('KeyE');
+  listeners.get('keydown')(off);
+  assert.equal(survey.clicks, 0);
+  assert.equal(off.prevented, undefined);
+  survey.click();
+  assert.equal(survey.clicks, 1);
+  enabled = true;
+  const on = key('KeyE');
+  listeners.get('keydown')(on);
+  assert.equal(survey.clicks, 2);
+  assert.equal(on.prevented, true);
+  cleanup();
+  assert.equal(listeners.size, 0);
 });
