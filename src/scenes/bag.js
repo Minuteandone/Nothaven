@@ -10,6 +10,7 @@ import { recipesUsingItem, listRecipes, recipeInputsMet, recipeSummary } from '.
 import { countItem } from '../items/inventory.js';
 import { craftInField } from '../map/mapState.js';
 import { sellValueOf } from '../items/shop.js';
+import { FITTING_SLOTS, MAX_FITTING, fittingLevel, fittingEffectText } from '../items/forge.js';
 
 const esc = (v) =>
   String(v ?? '').replace(/[&<>"']/g, (c) =>
@@ -34,6 +35,14 @@ function statSummary(stats) {
   if (stats.mp) parts.push(`MP+${stats.mp}`);
   if (stats.spd) parts.push(`SPD+${stats.spd}`);
   return parts.join(' · ');
+}
+
+/** Forge fitting badge for an equipped weapon/armour slot (empty when unfitted). */
+function fittingNote(member, slot) {
+  if (!FITTING_SLOTS.includes(slot)) return '';
+  const level = fittingLevel(member, slot);
+  if (level <= 0) return '';
+  return ` <span class="bag-fitting" data-fitting-level="${level}">Fitting +${level} of ${MAX_FITTING} · ${esc(fittingEffectText(slot, level))}</span>`;
 }
 
 /** Active party member for bag operations, clamped into range (hero default). */
@@ -149,6 +158,7 @@ export const bagScene = {
             `<li class="bag-row">` +
             `<span class="bag-name">${esc(item?.name ?? id)}</span>` +
             ` <span class="bag-desc">${esc(label)}</span>` +
+            fittingNote(member, slot) +
             ` <span class="bag-controls"><button data-action="unequip" data-arg="${esc(slot)}">Unequip ${esc(label)}</button></span>` +
             `</li>`
           );
