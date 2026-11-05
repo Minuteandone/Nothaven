@@ -219,6 +219,7 @@ export const ENEMIES = {
       { id: 'storm_glass', chance: 0.6, minQty: 1, maxQty: 2 },
       { id: 'ember_broth', chance: 1, minQty: 1, maxQty: 2 },
       { id: 'relay_brass', chance: 0.5, minQty: 1, maxQty: 2 },
+      { id: 'sparkrack_tine', chance: 0.35, minQty: 1, maxQty: 1 },
     ],
   },
   pass_warlord: {
