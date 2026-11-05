@@ -1232,3 +1232,10 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
 .service-record__list div { display: flex; justify-content: space-between; gap: .75rem; min-width: 0; padding: .4rem .6rem; border: 1px solid rgba(148, 163, 184, .35); border-radius: 6px; }
 .service-record__list dt { overflow-wrap: anywhere; }
 .service-record__list dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Companion tactics retain native button interaction at large text sizes. */
+.companion-tactic, .tactics-note { min-width: 0; overflow-wrap: anywhere; }
+.companion-tactic h3 { margin: .25rem 0; }
+.companion-tactic__buttons { display: flex; flex-wrap: wrap; gap: .5rem; }
+.companion-tactic__buttons button { min-width: 0; min-height: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.companion-tactic__buttons button[aria-pressed="true"] { outline: 2px solid currentColor; outline-offset: -3px; }

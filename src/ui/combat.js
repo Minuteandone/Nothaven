@@ -1,3 +1,5 @@
+import { companionTactic } from '../party/tactics.js';
+import { isCompanionId } from '../party/companions.js';
 import { BEACON_CHARGE_MAX, chargeReady, battleSummary } from '../combat/rules.js';
 import { heroStats, knownSkills } from '../combat/rules.js';
 import { getItem, TYPES } from '../items/items.js';
@@ -63,7 +65,7 @@ function commandButton({ shortcut = null, ...options }) {
 
 function shortcutGuide() {
   const bindings = [
-    ['A', 'Attack'], ['S', 'Skills'], ['I', 'Items'], ['D', 'Defend'],
+    ['A', 'Attack'], ['S', 'Skills'], ['I', 'Items'], ['T', 'Tactics'], ['D', 'Defend'],
     ['F', 'Flee'], ['B', 'Beacon Burst'], ['1–9', 'Choose a listed skill or item'],
     ['Esc', 'Back to commands'], ['C', 'Continue after battle'],
   ];
@@ -89,6 +91,14 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
     })).join('');
     return `<div class="actions command-list" role="group" aria-label="Skill actions">${skills || '<p class="empty-state">No skills learned yet.</p>'}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
   }
+  if (menu === 'tactics') {
+    const allies = party.slice(1).filter(member => member && isCompanionId(member.id));
+    const rows = allies.map(member => `<div class="companion-tactic" role="group" aria-label="${escapeHTML(member.name)} tactics">
+      <h3>${escapeHTML(member.name)}${member.hp > 0 ? '' : ' · Down'}</h3>
+      <div class="companion-tactic__buttons">${[['auto', 'Automatic'], ['conserve', 'Conserve MP']].map(([value, label]) => `<button type="button" data-action="setTactic" data-arg="${escapeHTML(member.id)}:${value}" aria-pressed="${companionTactic(member) === value}"${member.hp > 0 ? '' : ' disabled'}>${label}</button>`).join('')}</div>
+    </div>`).join('');
+    return `<div class="actions command-list" role="group" aria-label="Companion tactics"><p class="tactics-note">Automatic uses each companion’s usual techniques. Conserve MP replaces Mend, Spark and Signal Flare with ordinary attacks; free techniques remain available. Changes cost no turn and are kept when you save.</p>${rows || '<p>No companions are in the party.</p>'}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
+  }
   if (menu === 'items') {
     const recipient = Number.isInteger(itemTargetIndex) ? party[itemTargetIndex] : null;
     const validRecipient = Boolean(recipient && recipient.hp > 0);
@@ -113,6 +123,7 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
     ${commandButton({ action: 'attack', label: 'Attack', iconName: 'sword', variant: 'primary', className: 'command-button', shortcut: 'A' })}
     ${commandButton({ action: 'menu', arg: 'skills', label: `Skills · ${knownSkills(hero).length}`, iconName: 'focus', className: 'command-button', shortcut: 'S' })}
     ${commandButton({ action: 'menu', arg: 'items', label: `Items · ${usableCount}`, iconName: 'bag', className: 'command-button', shortcut: 'I' })}
+    ${commandButton({ action: 'menu', arg: 'tactics', label: 'Tactics', iconName: 'focus', className: 'command-button', disabled: !party.slice(1).some(member => member && isCompanionId(member.id) && member.hp > 0), shortcut: 'T' })}
     ${commandButton({ action: 'defend', label: 'Defend', iconName: 'shield', className: 'command-button', shortcut: 'D' })}
     ${commandButton({ action: 'flee', label: 'Flee', iconName: 'compass', variant: 'danger', disabled: Boolean(combat.enemy.boss), className: 'command-button command-button--flee', shortcut: 'F' })}
     <p class="command-hint">${combat.enemy.boss ? 'Boss encounters must be fought to resolution.' : 'Attack or use a skill to press the advantage. Defend halves incoming damage.'}</p>
@@ -135,8 +146,8 @@ export function difficultyNote(combat) {
 export function renderCombat({ combat, party, inventory = [], menu = 'main', itemTargetIndex = 0 }) {
   const hero = party[0];
   const round = Math.max(1, number(combat.turn, 1));
-  const phase = combat.over ? 'Resolved' : menu === 'skills' ? 'Choose a skill' : menu === 'items' ? 'Choose an item' : 'Your command';
-  const commandTitle = combat.over ? 'Encounter resolved' : menu === 'skills' ? 'Skills & techniques' : menu === 'items' ? 'Field supplies' : 'Choose your action';
+  const phase = combat.over ? 'Resolved' : menu === 'skills' ? 'Choose a skill' : menu === 'items' ? 'Choose an item' : menu === 'tactics' ? 'Set companion tactics' : 'Your command';
+  const commandTitle = combat.over ? 'Encounter resolved' : menu === 'skills' ? 'Skills & techniques' : menu === 'items' ? 'Field supplies' : menu === 'tactics' ? 'Companion tactics' : 'Choose your action';
   const chronicleLines = Array.isArray(combat.log) ? combat.log : [];
   const logLines = chronicleLines.slice(-8);
   return `<div class="game-shell combat-screen" data-combat-state="${safeClass(combat.over || 'active')}">
