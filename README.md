@@ -129,6 +129,10 @@ This fresh route does not claim three-card comparison coverage.
 
 `tests/campaign-integration.test.mjs` walks sixteen combinations of the original
 ending, early exploration, rescue order and relay service through the campaign.
+Signal Calibration coverage rejects acceptance before the Watch reward, walks to the
+Eye through two premature lower-station inspections, then takes fresh readings
+in downhill order. Each step survives save/load; explicit reporting pays 220 gold
+once while preserving the earlier story, relay choice, party, inventory and records.
 Cinderclaw coverage approaches its Sunscar tile before the Spire payment, checks
 that both encounter actions refuse without moving or consuming map RNG, then
 returns after payment with earned equipment and allies for a real fight. It checks

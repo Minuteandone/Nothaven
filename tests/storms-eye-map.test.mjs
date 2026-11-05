@@ -159,7 +159,9 @@ test('anchor records and the destination unlock survive real save replacement', 
   globalThis.localStorage = { setItem: (_, value) => { saved = value; }, getItem: () => saved };
   try {
     let state = stateIn();
-    for (const anchor of zone.interactables.filter(i => i.kind === 'quest')) {
+    const anchors = ['eye_anchor_west', 'eye_anchor_east'].map(id => zone.interactables.find(i => i.id === id));
+    assert.ok(anchors.every(Boolean));
+    for (const anchor of anchors) {
       recordEncounterVictory(state, anchor.requiresEncounterCleared);
       state.map.x = anchor.x; state.map.y = anchor.y;
       interactWith(state, 'interact', anchor.id);
