@@ -112,3 +112,10 @@ Each zone defines a `vantage` metadata block (`{ landmark, elevation, surveyNote
 - `getZoneProgress(gameState, zoneOrId)` returns a read-only summary `{ zoneId, visited, encountersCleared, encountersTotal, cachesOpened, cachesTotal, completedObjectives, totalObjectives, percent }` without mutating `gameState`.
 - `getZoneVantage(gameState, zoneOrId)` combines the zone's `vantage` metadata with its active weather `condition` and `progress`.
 - `renderExploration` displays a read-only `.zone-recon-summary` line with the active condition name, vantage landmark and elevation, threat/cache completion counts, and field note.
+
+## Frontier Route Wayfinder & Trail Atlas (`cartography`, `getZoneConnections`, `findZoneRoute`, `getFrontierAtlas`)
+
+- Each zone defines `cartography` metadata (`sectorCode`, `surveyMarker`, `beaconBearing`, `routeNote`, `atlasEntry`) in `src/map/zones.js`.
+- `getZoneConnections(gameState, zoneOrId)` returns a read-only array of exits from the zone with `{ id, label, x, y, toZone, toZoneName, toSpawn, requiresStoryFlag, unlocked }` without mutating state.
+- `findZoneRoute(gameState, fromZoneId, toZoneId, options)` performs a pure breadth-first search across unlocked routes (or all routes when `{ ignoreLocks: true }`) and returns `{ reachable, fromZoneId, toZoneId, hops, zones, steps }`.
+- `getFrontierAtlas(gameState)` aggregates exploration progress, weather conditions, vantage metadata, cartography notes, and route connections across all 9 zones in `ZONE_ORDER`.

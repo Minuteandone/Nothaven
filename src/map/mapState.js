@@ -107,9 +107,9 @@ export function getZoneProgress(gameState, zoneOrId = null) {
     (inter) => inter && (inter.kind === 'cache' || inter.type === 'cache')
   );
   const encountersTotal = encounters.length;
-  const encountersCleared = encounters.filter((enc) => Boolean(cleared[enc.id])).length;
+  const encountersCleared = encounters.filter((enc) => Boolean(cleared[enc.encounterId || enc.id])).length;
   const cachesTotal = caches.length;
-  const cachesOpened = caches.filter((inter) => Boolean(completed[inter.id])).length;
+  const cachesOpened = caches.filter((inter) => Boolean(completed[inter.interactionId || inter.id])).length;
   const totalObjectives = encountersTotal + cachesTotal;
   const completedObjectives = encountersCleared + cachesOpened;
   const percent =
@@ -151,6 +151,167 @@ export function getZoneVantage(gameState, zoneOrId = null) {
     fieldNote: vantage.fieldNote,
     condition: getZoneCondition(gameState, resolvedZone),
     progress: getZoneProgress(gameState, resolvedZone),
+  };
+}
+
+export function getZoneConnections(gameState, zoneOrId = null) {
+  const resolvedZone =
+    typeof zoneOrId === 'string'
+      ? getZone(zoneOrId)
+      : zoneOrId && typeof zoneOrId === 'object'
+        ? zoneOrId
+        : getZone(gameState?.map?.zoneId || gameState?.location || 'greyhaven');
+  const flags = gameState?.story?.flags || {};
+  const exits = Array.isArray(resolvedZone?.exits) ? resolvedZone.exits : [];
+  return exits.map((ex) => {
+    const targetZone = ZONES[ex.toZone] || null;
+    const requiredFlag = ex.requiresStoryFlag || targetZone?.requiresStoryFlag || null;
+    const unlocked = !requiredFlag || Boolean(flags[requiredFlag]);
+    return {
+      id: ex.id,
+      label: ex.label,
+      x: ex.x,
+      y: ex.y,
+      toZone: ex.toZone,
+      toZoneName: targetZone?.name || ex.toZone,
+      toSpawn: ex.toSpawn || null,
+      requiresStoryFlag: requiredFlag,
+      unlocked,
+    };
+  });
+}
+
+export function findZoneRoute(gameState, fromZoneId, toZoneId, options = {}) {
+  const ignoreLocks = Boolean(options?.ignoreLocks);
+  if (
+    typeof fromZoneId !== 'string' ||
+    typeof toZoneId !== 'string' ||
+    !ZONES[fromZoneId] ||
+    !ZONES[toZoneId]
+  ) {
+    return {
+      reachable: false,
+      fromZoneId: fromZoneId || null,
+      toZoneId: toZoneId || null,
+      hops: 0,
+      zones: [],
+      steps: [],
+    };
+  }
+  if (fromZoneId === toZoneId) {
+    return {
+      reachable: true,
+      fromZoneId,
+      toZoneId,
+      hops: 0,
+      zones: [fromZoneId],
+      steps: [],
+    };
+  }
+
+  const queue = [{ zoneId: fromZoneId, zones: [fromZoneId], steps: [] }];
+  const seen = new Set([fromZoneId]);
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    const connections = getZoneConnections(gameState, current.zoneId);
+    for (const conn of connections) {
+      if (!conn.toZone || !ZONES[conn.toZone]) continue;
+      if (!ignoreLocks && !conn.unlocked) continue;
+      if (seen.has(conn.toZone)) continue;
+      const nextZones = [...current.zones, conn.toZone];
+      const nextSteps = [
+        ...current.steps,
+        {
+          fromZone: current.zoneId,
+          toZone: conn.toZone,
+          toZoneName: conn.toZoneName,
+          viaExitId: conn.id,
+          viaLabel: conn.label,
+        },
+      ];
+      if (conn.toZone === toZoneId) {
+        return {
+          reachable: true,
+          fromZoneId,
+          toZoneId,
+          hops: nextSteps.length,
+          zones: nextZones,
+          steps: nextSteps,
+        };
+      }
+      seen.add(conn.toZone);
+      queue.push({ zoneId: conn.toZone, zones: nextZones, steps: nextSteps });
+    }
+  }
+
+  return {
+    reachable: false,
+    fromZoneId,
+    toZoneId,
+    hops: 0,
+    zones: [],
+    steps: [],
+  };
+}
+
+export function getFrontierAtlas(gameState) {
+  const flags = gameState?.story?.flags || {};
+  let visitedCount = 0;
+  let clearedZones = 0;
+  let totalEncounters = 0;
+  let clearedEncounters = 0;
+  let totalCaches = 0;
+  let openedCaches = 0;
+
+  const entries = ZONE_ORDER.map((zoneId) => {
+    const zone = getZone(zoneId);
+    const progress = getZoneProgress(gameState, zone);
+    const condition = getZoneCondition(gameState, zone);
+    const vantage = getZoneVantage(gameState, zone);
+    const connections = getZoneConnections(gameState, zone);
+    const cartography = zone.cartography || {
+      sectorCode: '',
+      surveyMarker: zone.name,
+      beaconBearing: 0,
+      routeNote: '',
+      atlasEntry: '',
+    };
+    const unlocked = !zone.requiresStoryFlag || Boolean(flags[zone.requiresStoryFlag]);
+    if (progress.visited) visitedCount += 1;
+    if (progress.percent === 100) clearedZones += 1;
+    totalEncounters += progress.encountersTotal;
+    clearedEncounters += progress.encountersCleared;
+    totalCaches += progress.cachesTotal;
+    openedCaches += progress.cachesOpened;
+    return {
+      zoneId: zone.id,
+      name: zone.name,
+      dangerLevel: zone.dangerLevel ?? zone.danger ?? 0,
+      visited: progress.visited,
+      unlocked,
+      condition,
+      vantage: {
+        landmark: vantage.landmark,
+        elevation: vantage.elevation,
+        surveyNote: vantage.surveyNote,
+        fieldNote: vantage.fieldNote,
+      },
+      cartography: { ...cartography },
+      progress,
+      connections,
+    };
+  });
+
+  return {
+    visitedCount,
+    totalZones: ZONE_ORDER.length,
+    clearedZones,
+    totalEncounters,
+    clearedEncounters,
+    totalCaches,
+    openedCaches,
+    entries,
   };
 }
 
