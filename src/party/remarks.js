@@ -4,6 +4,7 @@
 
 const LINES = {
   tamsin: {
+    cinderclaw: 'Cinderclaw dug in so fast I lost its trail twice. Next time I am watching the sand, not the sky.',
     frostmane: 'Frostmane ran faster than any wolf I have ever chased. I still got there first. Mostly.',
     trials: 'Tusk, Gloomfin, Frostmane and that brass guardian. Four old legends, four roads, and not one of them got the better of us. I am writing this down for the next scouts.',
     lenswarden: 'That brass guardian tracked me with every prism it had. Turns out light is easy to dodge if you keep moving.',
@@ -21,6 +22,7 @@ const LINES = {
     rescued: 'Both roads are open again. I counted the caravans this morning and ran out of fingers.',
   },
   iven: {
+    cinderclaw: 'I measured the trench Cinderclaw left below the lift. Forty paces. I am not putting that number in the report to Mara; she would only worry.',
     frostmane: 'Frost was still on my sleeves when we came down from the bastion. I wrote the whole fight down before it melted.',
     trials: 'Every old terror on the frontier has been met and turned back. Mara says the Watch House has not had a full trial roll since her own training days.',
     lenswarden: 'The Lenswarden kept the old opticians’ vault for a century. I copied their notes before we left; the beacon lens was only one of their ideas.',
@@ -38,6 +40,7 @@ const LINES = {
     rescued: 'Saltmere sent spare copper wire and Highwatch sent star charts. I may never sleep again.',
   },
   bram: {
+    cinderclaw: 'That scorpion’s pincers closed on my shield like a dockside winch. The shield held. My arm is still deciding.',
     frostmane: 'I have braced a shield against winter gales off the harbor. Frostmane hit harder than any of them, and it still went home first.',
     trials: 'Four trials, four scars on this shield. Harbor folk will be telling those stories over chowder for years, and they will get every detail wrong.',
     lenswarden: 'A shield is a fine mirror, it turns out. That brass guardian did not enjoy its own beam coming back at it.',
@@ -55,6 +58,7 @@ const LINES = {
     rescued: 'The harbor watch is back on the breakwater. I owe you a proper meal at the Saltmere Post.',
   },
   sela: {
+    cinderclaw: 'The relay crews can run the signal lift without listening for scraping under the sand now. Cinderclaw burrowed off west and has not come back.',
     frostmane: 'Rusk’s sentries stand their night watches without flinching at every howl now. The packs scattered once Frostmane fled, and the cairn fires burn steady.',
     trials: 'Ridge, ruins, coast and heights, all four trials answered. Highwatch drills its recruits on lesser tales than ours now.',
     lenswarden: 'Every prism in that vault was cut by hand. I would like to study them properly someday, without one of them trying to blind me.',
@@ -80,6 +84,7 @@ export function companionRemark(id, story = {}, bestiary = {}) {
   if (f.victory_last_squall === true && set.squall) return set.squall;
   if (f.watch_reward === true && set.watch) return set.watch;
   if (f.victory_storm_heart === true && set.heart) return set.heart;
+  if (f.spire_reward && Number(bestiary?.cinderclaw) > 0 && set.cinderclaw) return set.cinderclaw;
   if ((f.spire_summit || f.spire_victory || f.victory_stormcrown_tyrant) && set.spire) return set.spire;
   const relay = story?.flags?.relay_choice;
   if ((relay === 'shelter_network' || relay === 'route_network') && set[relay]) return set[relay];

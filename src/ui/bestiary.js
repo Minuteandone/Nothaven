@@ -59,7 +59,7 @@ export function bestiaryComparisonIds(entries, compareIds = []) {
 
 function kindFor(enemy) {
   if (enemy.id === 'storm_heart') return 'heart';
-  if (enemy.id === 'reef_crawler' || enemy.id === 'wrack_eel' || enemy.id === 'gloomfin') return 'crawler';
+  if (enemy.id === 'reef_crawler' || enemy.id === 'wrack_eel' || enemy.id === 'gloomfin' || enemy.id === 'cinderclaw') return 'crawler';
   if (BEASTS.has(enemy.id)) return 'beast';
   if (SPECTRES.has(enemy.id)) return 'spectre';
   if (Array.isArray(enemy.tags) && enemy.tags.includes('construct')) return 'construct';
