@@ -1258,3 +1258,9 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
   font-size: 0.9em;
   color: var(--accent, #d2a84f);
 }
+
+/* Forge fittings in the bag */
+.bag-fitting {
+  color: var(--accent);
+  font-size: 0.9em;
+}
