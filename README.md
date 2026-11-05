@@ -160,3 +160,13 @@ Patrol using earned allies, gear and supplies. It checks exact 400 XP per member
 unchanged story and drill records, Finish/save-load persistence and stale-action
 rejection. All sixteen routes include this optional fight before the Last Squall;
 fixed randomness does not establish its first-availability difficulty.
+
+Glacierward coverage checks the unpaid Calibration gate in Highwatch with direct
+encounter and southward movement actions, no map RNG or scene/story/victory events,
+and no state change beyond the refusal log. All sixteen routes then physically
+reach and defeat the optional colossus after Thunderhoof using earned party levels,
+gear and supplies. Checks cover exact 440 XP per member, 260 gold and deterministic
+loot minus actual tonic use; one victory event; Finish/save-load and stale-action
+rejection; unchanged older story, reserve and drill records; and exclusion from
+the seven drills and four Field Trials. This is one deterministic Standard tactical
+path, not a balance survey, browser, accessibility or visual test.
