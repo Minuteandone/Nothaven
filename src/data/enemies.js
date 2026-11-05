@@ -264,6 +264,7 @@ export const ENEMIES = {
     defeat: 'The crown of lightning gutters and goes dark. The Tyrant sinks to one knee as the clouds above the spire finally begin to thin.',
     enrage: { threshold: 0.4, atk: 4, chance: 0.5, line: 'The Stormcrown Tyrant raises both arms and calls the whole thunderhead down upon the spire!' },
     ability: { name: 'Tempest Call', chance: 0.35, mult: 1.45, status: 'shocked', turns: 2 },
+    windup: { name: 'Crown of Thunder', chance: 0.18, mult: 2 },
     loot: [
       { id: 'thunder_iron', chance: 1, minQty: 2, maxQty: 3 },
       { id: 'storm_tonic', chance: 1, minQty: 2, maxQty: 2 },
@@ -296,6 +297,7 @@ export const ENEMIES = {
     defeat: 'The core flickers, shrinks and finally scatters into a warm, quiet rain. For the first time in living memory, the sky above Stormcrown is clear.',
     enrage: { threshold: 0.4, atk: 5, chance: 0.5, line: 'The Storm’s Heart spins faster, pulling every cloud on the horizon into its howling core!' },
     ability: { name: 'Eye of the Tempest', chance: 0.35, mult: 1.5, status: 'shocked', turns: 2 },
+    windup: { name: 'Gathering Vortex', chance: 0.18, mult: 2 },
     loot: [
       { id: 'thunder_iron', chance: 1, minQty: 3, maxQty: 4 },
       { id: 'stormcrown_shard', chance: 1, minQty: 2, maxQty: 2 },
@@ -309,6 +311,7 @@ export const ENEMIES = {
     defeat: 'The Last Squall unravels into a long, low rumble that rolls away over the mountains and does not return.',
     enrage: { threshold: 0.35, atk: 6, chance: 0.5, line: 'The Last Squall draws in the remnants of every storm it has ever known!' },
     ability: { name: 'Rolling Thunder', chance: 0.35, mult: 1.6, status: 'shocked', turns: 2 },
+    windup: { name: 'Rolling Front', chance: 0.18, mult: 2 },
     loot: [
       { id: 'thunder_iron', chance: 1, minQty: 4, maxQty: 5 },
       { id: 'stormcrown_shard', chance: 1, minQty: 2, maxQty: 2 },
