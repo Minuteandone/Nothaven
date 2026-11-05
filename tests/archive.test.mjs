@@ -9,6 +9,7 @@ import { titleScene } from '../src/scenes/title.js';
 import { townScene } from '../src/scenes/town.js';
 import { exploreScene } from '../src/map/exploreScene.js';
 import { ensureMapState } from '../src/map/mapState.js';
+import { createCompanionMember, dismissCompanion } from '../src/party/companions.js';
 
 const key = id => `stormhaven.archive.v1.${id}`;
 const date = () => new Date('2026-11-05T17:00:00.000Z');
@@ -28,7 +29,15 @@ const copy = value => structuredClone(value);
 
 test('three archive slots preserve optional journey data and the independent quick save', () => {
   const store = storage(), s = state('explore');
-  s.party[0].tactic = 'conserve'; s.ledger = { victories: 7 }; s.reserves = { sela: { id: 'sela', tactic: 'conserve' } };
+  s.ledger = { victories: 7 };
+  s.party[0].temper = { weapon: 2, armor: 1 };
+  const sela = createCompanionMember('sela', 4);
+  sela.tactic = 'conserve'; sela.temper = { weapon: 1, armor: 2 };
+  const bram = createCompanionMember('bram', 4);
+  bram.tactic = 'conserve'; bram.temper = { weapon: 3, armor: 3 };
+  s.party.push(sela, bram);
+  assert.equal(dismissCompanion(s, 'bram').ok, true);
+  assert.deepEqual(s.reserve, { bram });
   s.story.ending = 'protect_town'; s.map.x = 3; s.map.y = 2;
   const before = copy(s); store.setItem('stormhaven-save', 'original quick save');
   for (const id of ARCHIVE_SLOTS) {
@@ -36,6 +45,10 @@ test('three archive slots preserve optional journey data and the independent qui
     const read = readArchiveSlot(id, store);
     assert.equal(read.status, 'ready'); assert.equal(read.savedAt, date().toISOString());
     assert.deepEqual(read.state, migrateSave(copy(s), createInitialState));
+    assert.deepEqual(read.state.reserve, { bram });
+    assert.deepEqual(read.state.party[0].temper, { weapon: 2, armor: 1 });
+    assert.deepEqual(read.state.party[1], sela);
+    assert.equal(Object.hasOwn(read.state, 'reserves'), false);
   }
   assert.deepEqual(s, before); assert.equal(store.getItem('stormhaven-save'), 'original quick save');
   assert.equal(store.data.size, 4);

@@ -100,7 +100,10 @@ and a real ridge patrol victory. Combat uses actual keyboard shortcuts for menus
 Attack, and Continue; disabled Burst, modifiers, and the display-overlay guard
 must not change state. It checks horizontal overflow, read-only screens and the
 full retained battle chronicle, actual purchase totals, victory summary, recorded
-defeat, and saved progress.
+defeat, and saved progress. After the earned Ridge victory, it also checks three
+manual archive slots, 130% text layout, overwrite/load/delete confirmations and
+cancellation, exact whole-journey restoration including a Title reload, and
+unchanged quick-save bytes.
 Only randomness is controlled; stats, items, positions, story facts, and victories
 are never injected. This short new-game route is **not** the full campaign,
 postgame, cross-browser, accessibility, or balance test suite.
