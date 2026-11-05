@@ -15,7 +15,7 @@ function hero() {
 
 test('only the listed bosses define a windup', () => {
   const withWindup = Object.keys(ENEMIES).filter((id) => ENEMIES[id].windup).sort();
-  assert.deepEqual(withWindup, ['last_squall', 'pass_warlord', 'relay_warden', 'storm_heart', 'stormcrown_tyrant']);
+  assert.deepEqual(withWindup, ['drowned_harbormaster', 'last_squall', 'pass_warlord', 'relay_warden', 'storm_heart', 'stormcrown_tyrant']);
   for (const id of withWindup) {
     const w = ENEMIES[id].windup;
     assert.ok(w.chance > 0 && w.chance < 0.5, id);
@@ -70,7 +70,7 @@ test('a stun breaks a gathered blow', () => {
 });
 
 test('foes without a windup never consume extra rng', () => {
-  const c = createCombat({ enemyId: 'drowned_harbormaster' });
+  const c = createCombat({ enemyId: 'tide_wraith' });
   const h = hero();
   let calls = 0;
   const rng = () => { calls += 1; return 0.99; };
