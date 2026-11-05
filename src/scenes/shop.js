@@ -153,12 +153,14 @@ export const shopScene = {
     const craftRows = listRecipes()
       .map((recipe) => {
         const { ok: met, missing } = recipeInputsMet(s.inventory, recipe);
+        const usesScarce = (recipe.inputs || []).some((input) => isScarceItem(input.id));
         const checklist = recipe.inputs
           .map(({ id, qty }) => {
             const have = Math.min(qty, countItem(s.inventory, id));
             const it = isKnownItem(id) ? getItem(id) : null;
             const label = it ? it.name : id;
-            return `<li class="${have >= qty ? 'have' : 'need'}">${esc(label)} ×${qty} <small>(have ${have})</small></li>`;
+            const scarceNote = isScarceItem(id) ? ' <small class="craft-scarce">rare drop</small>' : '';
+            return `<li class="${have >= qty ? 'have' : 'need'}">${esc(label)} ×${qty} <small>(have ${have})</small>${scarceNote}</li>`;
           })
           .join('');
         const outputs = recipe.outputs
@@ -175,7 +177,7 @@ export const shopScene = {
             <small>Needs: ${esc(recipeSummary(recipe))}</small></td>
           <td><ul class="craft-checklist">${checklist}</ul></td>
           <td><strong>${outputs}</strong></td>
-          <td><button data-action="craft" data-arg="${esc(recipe.id)}" ${met ? '' : 'disabled'}>Craft</button></td>
+          <td><button data-action="craft" data-arg="${esc(recipe.id)}" ${met ? '' : 'disabled'}>Craft</button>${usesScarce ? '' : ` <button data-action="craftAll" data-arg="${esc(recipe.id)}" ${met ? '' : 'disabled'}>Craft all</button>`}</td>
         </tr>`;
       })
       .join('');
@@ -351,6 +353,31 @@ export const shopScene = {
       } else {
         game.shopMessage = res.messages.join(' ');
       }
+    },
+    craftAll(game, el) {
+      const recipeId = el?.dataset?.arg;
+      if (!recipeId) return;
+      const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
+      const recipe = getRecipeSafe(recipeId);
+      if (recipe && (recipe.inputs || []).some((input) => isScarceItem(input.id))) {
+        game.shopMessage = 'Craft all is disabled for recipes that use rare drops.';
+        return;
+      }
+      const first = craft(game.state.inventory, recipeId);
+      if (!first?.ok) {
+        game.shopMessage = (first?.messages || ['Crafting failed.']).join(' ');
+        return;
+      }
+      let n = 1;
+      let inv = first.inv;
+      while (n < 99) {
+        const res = craft(inv, recipeId);
+        if (!res?.ok) break;
+        inv = res.inv;
+        n += 1;
+      }
+      game.state.inventory = inv;
+      game.shopMessage = `${shop.name} — crafted ${recipe ? recipe.name : recipeId} x${n}.`;
     },
     leave(game) {
       game.setScene(game.shopReturnScene || 'town');
