@@ -7,6 +7,7 @@ import { combatScene } from '../src/scenes/combat.js';
 import { createInitialState } from '../src/state.js';
 import { migrateSave } from '../src/core/save.js';
 import { GROWTH, xpForLevel, xpToNext } from '../src/core/progression.js';
+import { assertEggFree } from './eggGuard.mjs';
 
 const fixed = (v) => () => v;
 const seq = (...vals) => { let i = 0; return () => vals[i++ % vals.length]; };
@@ -140,8 +141,9 @@ test('companions and reserve survive save migration', () => {
 });
 
 test('companion text contains no egg references', () => {
-  const text = JSON.stringify(COMPANIONS).toLowerCase();
-  for (const w of ['egg', 'yolk', 'hatch', 'nest', 'chick', 'omelet', 'shell', 'hen ']) assert.ok(!text.includes(w), w);
+  // Word-boundary guard from the shared module: catches 'henhouse', 'the hen.'
+  // and compound smuggling ('eggshell') that the old substring list missed.
+  assertEggFree(JSON.stringify(COMPANIONS), 'COMPANIONS data');
 });
 
 test('enemy specials can target companions and inflict their status', () => {

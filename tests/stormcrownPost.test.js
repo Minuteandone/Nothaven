@@ -8,7 +8,7 @@ import { shopScene } from '../src/scenes/shop.js';
 import { createInitialState } from '../src/state.js';
 import { grantRewards } from '../src/items/inventory.js';
 
-const EGG_RE = /\b(eggs?|yolks?|shells?|hatch\w*|nests?|chicks?|chickens?|hens?|omelet\w*|scrambl\w*|humpty|benedict|faberg\w*|clutch|incubat\w*|ovum|oeuf|huevo|quail|poach\w*|fried|devil\w*|albumen|easter|roosters?|goose|oval|ovoid|sunny|boil\w*|crack\w*|whisk|cackl\w*|pearl|golden|basket|peeps?|quiche|meringue|custard|frittata)\b/i;
+import { EGG_RE } from './eggGuard.mjs';
 
 const NEW_ITEM_IDS = ['ember_broth', 'skyward_flask', 'stormforged_blade', 'stormcrown_plate', 'crownshard_focus'];
 const NEW_RECIPE_IDS = ['forge_stormforged_blade', 'hammer_stormcrown_plate', 'cut_crownshard_focus', 'distill_skyward_flask'];

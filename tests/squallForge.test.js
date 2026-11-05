@@ -11,7 +11,7 @@ import { grantRewards } from '../src/items/inventory.js';
 import { recipeBookEntries } from '../src/scenes/recipes.js';
 import { shopScene } from '../src/scenes/shop.js';
 
-const EGG_RE = /\b(eggs?|yolks?|shells?|hatch\w*|nests?|chicks?|chickens?|hens?|omelet\w*|scrambl\w*|humpty|benedict|faberg\w*|clutch|incubat\w*|ovum|oeuf|huevo|quail|poach\w*|fried|devil\w*|albumen|easter|roosters?|goose|oval|ovoid|sunny|boil\w*|crack\w*|whisk|cackl\w*|pearl|golden|basket|peeps?|quiche|meringue|custard|frittata)\b/i;
+import { EGG_RE } from './eggGuard.mjs';
 
 const NEW_ITEMS = [
   { id: 'squall_cleaver', slot: 'weapon', stats: { atk: 24 }, price: 480, sellPrice: 240 },
