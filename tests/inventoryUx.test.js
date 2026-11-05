@@ -9,7 +9,7 @@ import { createInitialState } from '../src/state.js';
 import { RELAY_OUTPOST } from '../src/items/shop.js';
 
 // Extended egg vocabulary guard over everything these helpers can surface.
-const EGG_RE = /\b(eggs?|nests?|nest(ed|ing)?|hatch(ed|ing|es|lings?)?|yolk|chickens?|roosters?|hen|easter|scrambl(e|ed|ing)|omelet(te)?s?|peep(s|ing)?|shells?|shell(ed|ing)?|albumen|ovoid|quiche|meringue|custard|poach(ed|ing)?|frittata|boil\w*|crack\w*|whisk|cackl\w*|pearl|golden|basket|quail|goose|sunny|fried|devil\w*|clutch|incubat\w*|humpty|benedict|faberg\w*|ovum|oeuf|huevo)\b/i;
+import { EGG_RE } from './eggGuard.mjs';
 
 function fakeGame() {
   return {
