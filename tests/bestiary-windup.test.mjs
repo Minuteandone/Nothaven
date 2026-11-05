@@ -18,7 +18,7 @@ for (const enemy of bosses) {
     assert.equal(occurrences(html, `${Math.round(enemy.windup.chance * 100)}% chance to begin gathering.`), 2);
     assert.equal(occurrences(html, `×${enemy.windup.mult} ATK strike at Wren on its next action.`), 2);
     assert.equal(occurrences(html, 'Gathers for one enemy action'), 2);
-    assert.equal(occurrences(html, 'After the warning, Defend or a ward halves the strike; stunning the foe interrupts it.'), 2);
+    assert.equal(occurrences(html, 'After the warning, Defend or a ward halves the strike; stunning the foe or landing a Stillpoint Strike interrupts it.'), 2);
     assert.deepEqual(input, before);
     assertEggFree(html, 'known windup reference');
   });
