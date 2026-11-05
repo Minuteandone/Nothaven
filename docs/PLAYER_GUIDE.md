@@ -207,3 +207,7 @@ The **Wardens' feats** panel lists milestones of your journey. Alongside the cha
 - **Well Fitted** — have the Greyhaven forge bring both the weapon and armour fittings of one party member to +3.
 
 Below the feats, the **Service record** tallies your real battles: battles won, bosses overcome, times carried home, safe withdrawals, wins after a defeat, and your current and longest winning runs. Sparring Drills and the Yard Gauntlet are practice and are not counted.
+
+### Planning with the Recipe Book
+
+Use **All**, **Ready**, or **Missing** to narrow the Field Recipe Book, and type a recipe, ingredient, or output name before choosing **Search**. Search ignores letter case; **Clear search** keeps your availability filter. Filters use the last applied search, not unfinished typing. Reopening the book resets both choices. These controls only change the reference view: crafting still happens in the Bag or at a trader, and your journey save is unchanged.
