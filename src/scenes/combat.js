@@ -83,9 +83,20 @@ export function emitHpChanges(game) {
   return changes;
 }
 
+/** Lines that report a gathered windup being broken (by a stun or Stillpoint Strike). */
+const WINDUP_BREAK_RE = /scatters before it can land!|^The stun breaks .+ gathered /;
+
+/** True when this action's log broke the foe's gathered windup. Announces `combat:windupbreak`. */
+export function emitWindupBreak(game, lines) {
+  const broke = Array.isArray(lines) && lines.some((l) => WINDUP_BREAK_RE.test(String(l)));
+  if (broke) game?.bus?.emit?.('combat:windupbreak', {});
+  return broke;
+}
+
 function commit(game, lines) {
   const c = game.state.combat;
   emitHpChanges(game);
+  emitWindupBreak(game, lines);
   if (c.over === 'victory' && !c.rewards) resolveVictory(game, lines);
   c.log.push(...lines);
   if (c.log.length > 40) c.log.splice(0, c.log.length - 40);

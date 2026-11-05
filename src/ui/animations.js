@@ -32,7 +32,7 @@ export function damagePopup(anchor, amount, kind = 'damage') {
   const rect = anchor.getBoundingClientRect();
   const el = document.createElement('span');
   el.className = `damage-pop damage-pop--${kind}`;
-  el.textContent = kind === 'miss' ? 'Miss' : kind === 'heal' ? `+${amount}` : kind === 'level' ? `Lv ${amount}!` : `${amount}`;
+  el.textContent = kind === 'miss' ? 'Miss' : kind === 'heal' ? `+${amount}` : kind === 'level' ? `Lv ${amount}!` : kind === 'break' ? 'Break!' : `${amount}`;
   el.style.left = `${rect.left + rect.width / 2 - 20}px`;
   el.style.top = `${rect.top - 10}px`;
   container.appendChild(el);
@@ -144,6 +144,7 @@ export const ANIM_CSS = `
 .damage-pop--heal { color: #22c55e; text-shadow: 0 0 4px rgba(34,197,94,0.4); }
 .damage-pop--miss { color: #94a3b8; font-style: italic; }
 .damage-pop--level { color: #facc15; font-size: 1.3rem; margin-top: -22px; text-shadow: 0 0 6px rgba(250,204,21,0.55); }
+.damage-pop--break { color: #38bdf8; font-size: 1.35rem; margin-top: -26px; letter-spacing: 0.04em; text-shadow: 0 0 6px rgba(56,189,248,0.6); }
 @keyframes popUp {
   0% { opacity: 1; transform: translateY(0) scale(1); }
   30% { opacity: 1; transform: translateY(-12px) scale(1.15); }
@@ -169,7 +170,7 @@ export function injectAnimCSS() {
 
 /** Wire animations to game events. Returns a cleanup function.
  *  Hooks combat:victory (shake + enemy card fade), combat:defeat, and party:levelup for screen effects,
- *  and combat:hp for floating damage and healing numbers.
+ *  combat:hp for floating damage and healing numbers, and combat:windupbreak for a "Break!" popup.
  *  Crossfade is handled by the engine — call crossfadeScene() directly from
  *  engine.setScene() if desired. */
 export function installAnimations(game) {
@@ -211,15 +212,24 @@ export function installAnimations(game) {
     }, 0);
   }
 
+  // Float a blue "Break!" over the foe when a stun or Stillpoint Strike scatters its gathered blow.
+  function onWindupBreak() {
+    screenShake(2, 150);
+    if (typeof document === 'undefined') return;
+    setTimeout(() => damagePopup(combatAnchor('enemy'), 0, 'break'), 0);
+  }
+
   bus.on('combat:victory', onVictory);
   bus.on('combat:defeat', onDefeat);
   bus.on('party:levelup', onLevelUp);
   bus.on('combat:hp', onHp);
+  bus.on('combat:windupbreak', onWindupBreak);
 
   return () => {
     bus.off('combat:victory', onVictory);
     bus.off('combat:defeat', onDefeat);
     bus.off('party:levelup', onLevelUp);
     bus.off('combat:hp', onHp);
+    bus.off('combat:windupbreak', onWindupBreak);
   };
 }
