@@ -152,6 +152,16 @@ export function sellValueOf(item) {
 }
 
 /**
+ * True when an item is flagged scarce in the catalog: rare enough that bulk
+ * selling it deserves a second thought (e.g. boss/rare-drop materials).
+ * @param {string} itemId
+ * @returns {boolean}
+ */
+export function isScarceItem(itemId) {
+  return isKnownItem(itemId) && getItem(itemId).scarce === true;
+}
+
+/**
  * Sell one or more of an item from the inventory for its sellPrice.
  * @param {{gold: number, inventory: Array<{id:string,qty:number}>}} state
  * @param {string} itemId
