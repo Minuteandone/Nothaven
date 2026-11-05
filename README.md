@@ -139,3 +139,11 @@ returns after payment with earned equipment and allies for a real fight. It chec
 260 XP per member, 140 gold, deterministic loot, Dune Breaker, unchanged Trial
 Warden/drill eligibility, one-time rewards, and save/load persistence. This fixed-RNG
 route is a regression check, not a first-availability difficulty estimate.
+
+Thunderhoof coverage checks its Ridge gate before Calibration payment with both
+encounter controls and no map RNG or events, then fights it after Signal Line
+Patrol using earned allies, gear and supplies. It checks exact 400 XP per member,
+240 gold and deterministic loot minus used tonics, a single victory event,
+unchanged story and drill records, Finish/save-load persistence and stale-action
+rejection. All sixteen routes include this optional fight before the Last Squall;
+fixed randomness does not establish its first-availability difficulty.
