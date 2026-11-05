@@ -11,12 +11,51 @@ export const TILE_TYPES = {
   '*': { id: 'beacon', name: 'Beacon Brazier', walkable: true, glyph: '✦' },
 };
 
+export const ZONE_CONDITIONS = Object.freeze({
+  sheltered: Object.freeze({
+    id: 'sheltered',
+    name: 'Lantern Shelter',
+    summary: 'Harbor walls and brazier lanterns break the coastal gale.',
+  }),
+  squall: Object.freeze({
+    id: 'squall',
+    name: 'Coastal Squall',
+    summary: 'Salt-heavy squalls lash the exposed cliffs and flooded causeways.',
+  }),
+  gale: Object.freeze({
+    id: 'gale',
+    name: 'Headland Gale',
+    summary: 'Crosswinds howl through the ruins and high signal towers.',
+  }),
+  rime: Object.freeze({
+    id: 'rime',
+    name: 'Rime Front',
+    summary: 'Freezing mountain downdrafts coat the pass and inland relay in rime.',
+  }),
+  tempest: Object.freeze({
+    id: 'tempest',
+    name: 'Arcing Tempest',
+    summary: 'Grounded lightning and pressure shear sweep the upper spire.',
+  }),
+  maelstrom: Object.freeze({
+    id: 'maelstrom',
+    name: 'Maelstrom Eye',
+    summary: 'Violent barometric eddies spiral around the storm core.',
+  }),
+  clear: Object.freeze({
+    id: 'clear',
+    name: 'Broken Skies',
+    summary: 'The great storm has parted, leaving steady coastal winds and clear sightlines.',
+  }),
+});
+
 export const ZONES = {
   greyhaven: {
     id: 'greyhaven',
     name: 'Greyhaven',
     subtitle: 'Storm-Battered Frontier Town',
     dangerLevel: 0,
+    condition: 'sheltered',
     description:
       'Lanterns sway against the gale in Greyhaven’s cobbled square. Beyond the eastern gate, the ridge road climbs toward the shattered observatory.',
     width: 9,
@@ -142,6 +181,7 @@ export const ZONES = {
     name: 'Ridge Road',
     subtitle: 'Wind-Lashed Cliffside Ascent',
     dangerLevel: 1,
+    condition: 'squall',
     description:
       'Slick switchbacks hug the cliff above a roaring abyss. Fallen masonry and storm beasts choke the narrow pass toward the observatory.',
     width: 9,
@@ -266,6 +306,7 @@ export const ZONES = {
     name: 'Observatory Ruins',
     subtitle: 'Shattered Astral Dome',
     dangerLevel: 2,
+    condition: 'gale',
     description:
       'Lightning flickers across warped brass arcs and collapsed vaults. The great refractory lens rests within the upper sanctum.',
     width: 9,
@@ -409,6 +450,7 @@ export const ZONES = {
     name: 'Beacon Tower',
     subtitle: 'High Spire of the Stormwatch',
     dangerLevel: 1,
+    condition: 'gale',
     description:
       'At the pinnacle of the cliff, the great bronze housing stands cold above the clouds. From here, a relit beam can shield Greyhaven alone or signal distant settlements across the frontier.',
     width: 9,
@@ -495,6 +537,7 @@ export const ZONES = {
     name: 'Saltmere Coast',
     subtitle: 'Flooded Fishing Settlement',
     dangerLevel: 2,
+    condition: 'squall',
     description:
       'Spray-drenched boardwalks and storm-battered cottages cling to the tidal cove of Saltmere. Beyond the breakwater, creatures driven ashore by the gale threaten the stranded fisherfolk.',
     width: 9,
@@ -637,6 +680,7 @@ export const ZONES = {
     name: 'Highwatch Pass',
     subtitle: 'Wind-Scoured Mountain Outpost',
     dangerLevel: 2,
+    condition: 'rime',
     description:
       'Frost-rimmed ramparts and stone signal cairns guard the upper pass at Highwatch. Cut off by rockslides, the outpost defenders hold the timber palisade against raiders and rogue constructs.',
     width: 9,
@@ -774,6 +818,7 @@ export const ZONES = {
     name: 'Sunscar Relay',
     subtitle: 'Inland Signal Station',
     dangerLevel: 3,
+    condition: 'rime',
     description:
       'Scorched sandstone terraces and copper-wound signal pylons rise across the inland plateau of Sunscar Relay. Restoring the station’s capacitor junction and master console will link Greyhaven’s beacon to the interior.',
     width: 9,
@@ -908,6 +953,7 @@ export const ZONES = {
     subtitle: 'Summit of the Storm',
     danger: 4,
     dangerLevel: 4,
+    condition: 'tempest',
     description:
       'Lightning-split basalt steps and ancient survey buttresses climb into the heart of the perpetual squall at Stormcrown Spire. Recovering the lost storm-survey records and defeating the Stormcrown Tyrant at the summit will secure the frontier skies.',
     width: 9,
@@ -1061,6 +1107,7 @@ export const ZONES = {
     name: 'The Storm’s Eye',
     subtitle: 'Lightning Anchors and the Living Core',
     dangerLevel: 5,
+    condition: 'maelstrom',
     requiresStoryFlag: 'spire_reward',
     travelRequirementMessage: 'Report the summit survey in Greyhaven before entering the Storm’s Eye.',
     description: 'Beyond the summit, two lightning anchors hold a suspended causeway around a living storm. Ground the western and eastern anchors before challenging the core; the lower platform offers supplies and a signal lift home.',

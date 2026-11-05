@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import { createInitialState } from '../src/state.js';
 import { installStory } from '../src/story/integration.js';
 import {
+  ZONE_CONDITIONS,
   ZONES,
   ZONE_ORDER,
+  getZoneCondition,
   ensureMapState,
   exploreScene,
   getClearedEncounters,
@@ -736,4 +738,45 @@ test('map keyboard opt-out preserves arrows and buttons and respects editing and
   assert.equal(press('ArrowRight').prevented, undefined);
   cleanup();
   assert.equal(listeners.size, 0);
+});
+
+test('every zone defines a valid baseline condition and getZoneCondition reacts to story flags without mutating state', () => {
+  for (const zoneId of ZONE_ORDER) {
+    const zone = ZONES[zoneId];
+    assert.ok(zone.condition && ZONE_CONDITIONS[zone.condition], `${zoneId} has valid baseline condition`);
+  }
+
+  const game = makeMockGame();
+  const snapshot = JSON.stringify(game.state);
+  assert.equal(getZoneCondition(game.state, 'greyhaven').id, 'sheltered');
+  assert.equal(getZoneCondition(game.state, 'ridge_road').id, 'squall');
+  assert.equal(getZoneCondition(game.state, 'observatory_ruins').id, 'gale');
+  assert.equal(getZoneCondition(game.state, 'beacon_tower').id, 'gale');
+  assert.equal(getZoneCondition(game.state, 'saltmere_coast').id, 'squall');
+  assert.equal(getZoneCondition(game.state, 'highwatch_pass').id, 'rime');
+  assert.equal(getZoneCondition(game.state, 'sunscar_relay').id, 'rime');
+  assert.equal(getZoneCondition(game.state, 'stormcrown_spire').id, 'tempest');
+  assert.equal(getZoneCondition(game.state, 'storms_eye').id, 'maelstrom');
+  assert.equal(JSON.stringify(game.state), snapshot, 'getZoneCondition must not mutate gameState');
+
+  // Relighting the beacon via story completion/ending shifts beacon_tower to sheltered
+  game.state.story = { version: 1, stage: 'complete', ending: 'protect_town', flags: {} };
+  assert.equal(getZoneCondition(game.state, 'beacon_tower').id, 'sheltered');
+  game.state.story = { version: 1, stage: 'complete', ending: 'share_signal', flags: {} };
+  assert.equal(getZoneCondition(game.state, 'beacon_tower').id, 'sheltered');
+  game.state.story = { version: 1, stage: 'briefing', ending: null, flags: { beacon_lit: true } };
+  assert.equal(getZoneCondition(game.state, 'beacon_tower').id, 'sheltered');
+
+  // Defeating the Storm Heart shifts stormcrown_spire and storms_eye to clear (Broken Skies)
+  game.state.story.flags.victory_storm_heart = true;
+  assert.equal(getZoneCondition(game.state, 'stormcrown_spire').id, 'clear');
+  assert.equal(getZoneCondition(game.state, 'storms_eye').id, 'clear');
+  assert.equal(getZoneCondition(game.state, 'highwatch_pass').id, 'rime');
+
+  // waitTurn survey logs active zone condition name and summary
+  travelToZone(game.state, 'highwatch_pass');
+  game.setScene('explore', { zoneId: 'highwatch_pass' });
+  exploreScene.actions.waitTurn(game);
+  const lastLog = game.state.map.log.at(-1);
+  assert.match(lastLog, /Rime Front: Freezing mountain downdrafts coat the pass and inland relay in rime\./);
 });

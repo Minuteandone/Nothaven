@@ -91,3 +91,17 @@ Provides 9×7 tile-grid exploration, multi-zone navigation, NPC/object proximity
   array / `requirementMessage`. Blocking emits no visit/victory/interaction facts.
 
 - Optional Postgame Superboss: `eye_last_squall` (`last_squall`, `The Last Squall`) at `(4, 1)` in `storms_eye` requires story flag `heart_reward === true`.
+
+## Zone Weather & Field Conditions (`ZONE_CONDITIONS`)
+
+Each zone defines a baseline field condition in `src/map/zones.js`, resolved dynamically via `getZoneCondition(gameState, zoneOrId)` in `src/map/mapState.js`:
+
+- **`sheltered` (Lantern Shelter)**: `greyhaven` (and `beacon_tower` once the Headland Beacon is relit via `story.stage === 'complete'` / `story.ending` set to `'protect_town'` or `'share_signal'`, or `flags.beacon_lit`).
+- **`squall` (Coastal Squall)**: `ridge_road`, `saltmere_coast`.
+- **`gale` (Headland Gale)**: `observatory_ruins`, `beacon_tower` (before the beacon is relit).
+- **`rime` (Rime Front)**: `highwatch_pass`, `sunscar_relay`.
+- **`tempest` (Arcing Tempest)**: `stormcrown_spire` (before `victory_storm_heart`).
+- **`maelstrom` (Maelstrom Eye)**: `storms_eye` (before `victory_storm_heart`).
+- **`clear` (Broken Skies)**: `stormcrown_spire` and `storms_eye` once `victory_storm_heart` is recorded.
+
+Surveying the area (`exploreScene.actions.waitTurn`, keyboard `E`) appends the active condition name and summary to the exploration log without mutating story or party state.
