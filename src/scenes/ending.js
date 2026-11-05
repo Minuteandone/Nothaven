@@ -1,3 +1,4 @@
+import { ledgerOf } from '../core/ledger.js';
 // Ending / credits scene. Shown once when the story reaches stage 'complete',
 // and again as a finale with epilogue after the Stormcrown Spire report.
 const ENDINGS = {
@@ -28,6 +29,35 @@ export function epilogueLines(state) {
   if (f.spire_reward) lines.push(SPIRE_EPILOGUE);
   if (f.heart_reward === true) lines.push(HEART_EPILOGUE);
   return lines;
+}
+
+/** Postgame deeds, in the order a warden usually meets them. Shown under “Beyond the storm”. */
+export const POSTGAME_DEEDS = [
+  { id: 'last_squall', test: (f) => f.victory_last_squall === true,
+    text: 'The Last Squall has rolled away over the mountains, and the high passes breathe easier.' },
+  { id: 'long_watch', test: (f) => f.watch_reward === true,
+    text: 'The Long Watch is kept, and the beacon’s keepers sleep in shifts again.' },
+  { id: 'cinderclaw', test: (f, b) => b.cinderclaw > 0,
+    text: 'Cinderclaw no longer stalks the Sunscar dunes; caravans cross by daylight.' },
+  { id: 'calibration', test: (f) => f.calibration_reward === true,
+    text: 'The signal line hums in true interval from the Eye to the Sunscar junction.' },
+  { id: 'thunderhoof', test: (f, b) => b.thunderhoof > 0,
+    text: 'Thunderhoof’s stampede is stopped, and the ridge road is quiet underfoot.' },
+  { id: 'supply', test: (f) => f.supply_reward === true,
+    text: 'Your Supply Lines survey is filed: the chosen route is scouted and the relay junction checked.' },
+  { id: 'glacierward', test: (f, b) => b.glacierward_colossus > 0,
+    text: 'The Glacierward Colossus stands thawed and silent at Highwatch Pass.' },
+  { id: 'stormborn', test: (f, b, l) => l.stormbornBossVictories >= 1,
+    text: 'A Stormborn victory is entered in the Service Record: a calm kept in the fiercest gale.' },
+];
+
+/** Postgame deed lines the player has earned, in POSTGAME_DEEDS order. */
+export function postgameLines(state) {
+  const f = state?.story?.flags && typeof state.story.flags === 'object' ? state.story.flags : {};
+  const raw = state?.bestiary && typeof state.bestiary === 'object' ? state.bestiary : {};
+  const b = new Proxy({}, { get: (_, k) => Number(raw[k]) || 0 });
+  const l = ledgerOf(state);
+  return POSTGAME_DEEDS.filter((d) => d.test(f, b, l)).map((d) => d.text);
 }
 
 export function isFinale(state) {
@@ -62,6 +92,7 @@ export const endingScene = {
       ${isFinale(s) ? '<h1>Stormhaven Endures</h1><p class="finale-sub">' + esc(info.title) + '</p>' : `<h1>${esc(info.title)}</h1>`}
       <p>${esc(info.text)}</p>
       ${epilogueLines(s).map((l) => `<p class="epilogue">${esc(l)}</p>`).join('')}
+      ${postgameLines(s).length ? `<h3>Beyond the storm</h3><ul class="postgame-deeds">${postgameLines(s).map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}
       <h3>Your journey</h3>
       <ul>
         <li>${esc(hero.name || 'Hero')} reached level ${Number(hero.level) || 1}</li>
