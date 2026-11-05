@@ -1310,3 +1310,10 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
   .windup-cue { animation: none; }
 }
 html[data-motion="reduced"] .windup-cue { animation: none; }
+
+/* Read-only Recipe Book planning controls */
+.recipe-tools { min-width: 0; margin: 1rem 0; }
+.recipe-filters, .recipe-search-row { display: flex; flex-wrap: wrap; gap: .5rem; min-width: 0; }
+.recipe-tools button { min-height: 44px; min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.recipe-tools label { display: block; margin-top: .75rem; }
+.recipe-search-row input { flex: 1 1 14rem; min-width: 0; max-width: 100%; min-height: 44px; box-sizing: border-box; font: inherit; }
