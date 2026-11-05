@@ -191,6 +191,7 @@ export const ENEMIES = {
     defeat: 'The Warlord drives his halberd into the snow and kneels. "Highwatch is yours to guard now," he rasps, and fades into the sleet.',
     enrage: { threshold: 0.5, atk: 3, chance: 0.5, line: 'The Highwatch Warlord tears off his frozen helm and roars for the pass to hold. His blows grow heavier!' },
     ability: { name: 'Sweeping Halberd', chance: 0.35, mult: 1.4, status: 'bleeding', turns: 3 },
+    windup: { name: 'Overhead Cleave', chance: 0.15, mult: 1.8 },
     loot: [
       { id: 'iron_sword', chance: 0.5, minQty: 1, maxQty: 1 },
       { id: 'bandage', chance: 1, minQty: 1, maxQty: 2 },
@@ -234,6 +235,7 @@ export const ENEMIES = {
     defeat: 'The Relay Warden folds back into its cradle with a long mechanical sigh. Its coils cool from blue to dull copper, and the console beyond flickers to life.',
     enrage: { threshold: 0.5, atk: 3, chance: 0.5, line: 'The Relay Warden vents a gout of blue sparks and overclocks its coils. Its strikes come harder!' },
     ability: { name: 'Overcharge Beam', chance: 0.35, mult: 1.4, status: 'shocked', turns: 2 },
+    windup: { name: 'Coil Surge', chance: 0.15, mult: 1.8 },
     loot: [
       { id: 'relay_brass', chance: 1, minQty: 2, maxQty: 3 },
       { id: 'sunscar_glass', chance: 0.8, minQty: 1, maxQty: 2 },
