@@ -27,6 +27,57 @@ test('installAnimations returns a no-op cleanup when the game has no bus', () =>
   assert.equal(installAnimations(null)(), undefined);
 });
 
+
+test('installAnimations wires combat:defeat for screenShake', () => {
+  // Minimal DOM mocks for Node test environment
+  const origDoc = globalThis.document;
+  const origWin = globalThis.window;
+  globalThis.document = {
+    createElement() { return { setAttribute() {}, appendChild() {} }; },
+    head: { appendChild() {} },
+    body: { appendChild() {} },
+    contains() { return false; },
+    getElementById() { return null; },
+    documentElement: { getAttribute() { return null; } },
+    querySelector() { return null; }
+  };
+  globalThis.window = {
+    matchMedia() { return { matches: true }; }  // prefers-reduced-motion → short-circuit return
+  };
+  
+  try {
+    const listeners = {};
+    const mockBus = {
+      on(event, fn) {
+        if (!listeners[event]) listeners[event] = [];
+        listeners[event].push(fn);
+      },
+      emit(event, data) {
+        if (listeners[event]) listeners[event].forEach(fn => fn(data));
+      },
+      off() {}
+    };
+    const game = { bus: mockBus, state: { player: { hp: 1, maxHp: 30 } } };
+    
+    const cleanup = installAnimations(game);
+    assert.equal(typeof cleanup, 'function');
+    
+    // Verify combat:defeat listener was registered
+    assert.ok(listeners['combat:defeat'], 'combat:defeat listener should be registered');
+    assert.equal(listeners['combat:defeat'].length, 1);
+    
+    // Emit combat:defeat — screenShake returns early due to reduced-motion match
+    assert.doesNotThrow(() => {
+      listeners['combat:defeat'][0]({ reason: 'hp' });
+    });
+    
+    cleanup();
+  } finally {
+    globalThis.document = origDoc;
+    globalThis.window = origWin;
+  }
+});
+
 test('effect helpers are functions and are DOM-guarded', () => {
   assert.equal(typeof damagePopup, 'function');
   assert.equal(typeof screenShake, 'function');
