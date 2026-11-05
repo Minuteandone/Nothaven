@@ -429,12 +429,113 @@ try {
       await click('loadArchive', '1'); await click('confirmArchive');
       assert.deepEqual(await state(), archiveOriginal, 'Title archive load restores the whole expedition');
       assert.equal(await stored('stormhaven-save'), quickSave);
+      // Transfer only the checkpoint earned above, never injected progress or storage.
+      const journeyStorage = p => p.evaluate(() => Object.fromEntries(Object.entries(localStorage)
+        .filter(([key]) => key === 'stormhaven-save' || key.startsWith('stormhaven.archive.'))));
+      const transferFit = async p => {
+        assert.equal(await p.evaluate(() => document.documentElement.scrollWidth), width);
+        const controls = await p.locator('.archive-transfer textarea, .archive-transfer button, .archive-buttons button')
+          .evaluateAll(elements => elements.filter(el => !el.disabled).map(el => {
+            const r = el.getBoundingClientRect();
+            return { left: r.left, right: r.right, height: r.height };
+          }));
+        assert.ok(controls.length > 0);
+        for (const r of controls) assert.ok(r.left >= 0 && r.right <= width && r.height >= 44,
+          `transfer control fits and remains usable: ${JSON.stringify(r)}`);
+      };
+      await click('openArchive');
+      const sourceLive = await state(), sourceStorage = await journeyStorage(page);
+      await click('exportArchive', '1');
+      const exportBox = page.locator('#archive-export-text');
+      const transferText = await exportBox.inputValue(), transferEnvelope = JSON.parse(transferText);
+      assert.deepEqual(transferEnvelope, JSON.parse(sourceStorage[archiveKey('1')]));
+      assert.equal(await exportBox.getAttribute('readonly'), '');
+      await exportBox.focus(); await exportBox.press('Control+a');
+      assert.equal(await exportBox.evaluate(el => el.selectionEnd - el.selectionStart), transferText.length);
+      assert.deepEqual(await journeyStorage(page), sourceStorage);
+      assert.deepEqual(await state(), sourceLive);
+      await transferFit(page);
+      await page.locator('#archive-import-text').fill('</textarea><img src=x onerror=alert(1)>');
+      await click('previewArchiveImport', '3');
+      assert.equal(await page.locator('#app img[src=x]').count(), 0);
+      assert.equal(await page.locator('.archive-confirm').count(), 0);
+      assert.deepEqual(await journeyStorage(page), sourceStorage);
+      assert.deepEqual(await state(), sourceLive);
+      await click('clearArchiveImport'); await click('leaveArchive');
+      assert.deepEqual(await state(), archiveOriginal);
+      await click('openArchive');
+      assert.equal(await page.locator('#archive-import-text').inputValue(), '');
+      assert.equal(await exportBox.count(), 0);
+      await click('leaveArchive');
+      assert.deepEqual(await state(), archiveOriginal);
+
+      const targetContext = await browser.newContext({ viewport: { width, height: 800 } });
+      await targetContext.tracing.start({ screenshots: true, snapshots: true });
+      const targetPage = await targetContext.newPage(), transferErrors = [];
+      targetPage.setDefaultTimeout(10_000);
+      targetPage.on('pageerror', error => transferErrors.push(error.message));
+      const targetClick = (action, arg) => targetPage.locator(`[data-action="${action}"]${arg === undefined ? '' : `[data-arg="${arg}"]`}`).first().click();
+      const targetState = () => targetPage.evaluate(() => structuredClone(window.game.state));
+      try {
+        await targetPage.addInitScript(() => { Math.random = () => 0.5; });
+        await targetPage.goto(base);
+        await targetPage.locator('[aria-controls="display-settings"]').click();
+        await targetPage.locator('[data-display-scale]').selectOption('130');
+        await targetPage.locator('[data-display-done]').click();
+        await targetClick('archive');
+        const titleArchive = await targetState();
+        assert.deepEqual(await journeyStorage(targetPage), {}, 'receiving context starts with no journey');
+        assert.equal(await targetPage.locator('[data-action="saveArchive"]:disabled').count(), 3);
+        const paste = targetPage.locator('#archive-import-text');
+        await paste.fill(transferText); await targetClick('previewArchiveImport', '2');
+        assert.match(await targetPage.locator('.archive-confirm').innerText(), /Confirm import slot 2/);
+        assert.match(await targetPage.locator('.archive-confirm').innerText(), /Incoming journey/);
+        assert.deepEqual(await targetState(), titleArchive);
+        assert.deepEqual(await journeyStorage(targetPage), {});
+        await transferFit(targetPage);
+        await targetClick('cancelArchive');
+        assert.equal(await paste.inputValue(), transferText);
+        assert.deepEqual(await journeyStorage(targetPage), {});
+        assert.deepEqual(await targetState(), titleArchive);
+        await targetClick('previewArchiveImport', '2');
+        await paste.fill('{not the preview');
+        await targetClick('confirmArchive');
+        const importedStorage = await journeyStorage(targetPage);
+        assert.deepEqual(Object.keys(importedStorage), [archiveKey('2')]);
+        assert.deepEqual(JSON.parse(importedStorage[archiveKey('2')]), transferEnvelope,
+          'confirmation imports the captured preview, preserving the whole checkpoint and timestamp');
+        assert.deepEqual(await targetState(), titleArchive, 'import does not load or change the live journey');
+        assert.equal(await paste.inputValue(), '');
+        await transferFit(targetPage);
+        await paste.fill(transferText); await targetClick('previewArchiveImport', '2');
+        assert.deepEqual(await journeyStorage(targetPage), importedStorage);
+        await targetClick('cancelArchive');
+        assert.deepEqual(await journeyStorage(targetPage), importedStorage);
+        assert.deepEqual(await targetState(), titleArchive);
+        await targetPage.screenshot({ path: path.join(artifacts, `${width}-archive-transfer.png`), fullPage: true });
+        await targetPage.reload(); await targetClick('archive');
+        assert.equal(await paste.inputValue(), '');
+        assert.deepEqual(await journeyStorage(targetPage), importedStorage);
+        await targetClick('loadArchive', '2'); await targetClick('confirmArchive');
+        assert.deepEqual(await targetState(), transferEnvelope.state, 'separate confirmed Load resumes the whole imported journey');
+        assert.deepEqual(await journeyStorage(targetPage), importedStorage, 'Load never writes a quick save or another slot');
+        assert.deepEqual(transferErrors, []);
+      } catch (error) {
+        await targetPage.screenshot({ path: path.join(artifacts, `${width}-archive-transfer-failure.png`), fullPage: true }).catch(() => {});
+        console.error(`FAIL transfer ${width}px; browser errors: ${JSON.stringify(transferErrors)}`);
+        throw error;
+      } finally {
+        try { await targetContext.tracing.stop({ path: path.join(artifacts, `${width}-archive-transfer-trace.zip`) }); }
+        finally { await targetContext.close(); }
+      }
+      assert.deepEqual(await journeyStorage(page), sourceStorage, 'receiving context cannot alter source storage');
+      assert.deepEqual(await state(), archiveOriginal);
       await page.locator('[aria-controls="display-settings"]').click();
       await page.locator('[data-display-scale]').selectOption('100');
       await page.locator('[data-display-done]').click();
       assert.deepEqual(await state(), archiveOriginal);
       assert.deepEqual(errors, []);
-      console.log(`PASS ${width}px: navigation, filters, purchase, save/reload, readonly Bag search/recipe filters/long-query wrapping, shortcut opt-out/persistence/re-enable, combat shortcuts, full chronicle, earned ridge victory/comparison, archive confirmations/round-trip; browser errors []`);
+      console.log(`PASS ${width}px: navigation, filters, purchase, save/reload, readonly Bag search/recipe filters/long-query wrapping, shortcut opt-out/persistence/re-enable, combat shortcuts, full chronicle, earned ridge victory/comparison, archive confirmations/round-trip and independent-context portable transfer; browser errors []`);
     } catch (error) {
       await page.screenshot({ path: path.join(artifacts, `${width}-failure.png`), fullPage: true }).catch(() => {});
       console.error(`FAIL ${width}px; browser errors: ${JSON.stringify(errors)}`);

@@ -170,3 +170,18 @@ loot minus actual tonic use; one victory event; Finish/save-load and stale-actio
 rejection; unchanged older story, reserve and drill records; and exclusion from
 the seven drills and four Field Trials. This is one deterministic Standard tactical
 path, not a balance survey, browser, accessibility or visual test.
+
+The browser smoke also exports its genuinely earned Ridge checkpoint through the
+Archive textarea and selects the whole text, then manually fills that text into
+an independent, initially empty browser context. At 130% text and all three
+widths it checks explicit destination preview, cancel, confirmation of the captured
+preview despite later paste-box edits, exact checkpoint/timestamp preservation,
+reload, and a separate confirmed Load. Malformed markup is refused, leaving the
+source archive and live journey unchanged; transfer controls fit at least 44px.
+Only the chosen destination archive key may be created: neither a quick save nor
+other slots are written, and import does not automatically resume the journey.
+This uses native export/select-all and Playwright textarea fill, not the operating
+system clipboard, downloads, or cloud synchronization. Separate transfer traces
+and screenshots use the `archive-transfer` filename prefix after the width. It
+remains a Chromium smoke check, not a full campaign, screen-reader, cross-browser,
+visual-design, or balance evaluation.
