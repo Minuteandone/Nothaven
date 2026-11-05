@@ -383,7 +383,7 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
         c.enemy.hp = Math.max(0, c.enemy.hp - d);
         lines.push(`${hero.name} finds the stillpoint and strikes for ${d}!`);
         if (c.windup) {
-          lines.push(`${c.enemy.name}’s gathered ${c.windup.name || c.enemy.windup?.name || 'blow'} scatters!`);
+          lines.push(`${c.windup.name || c.enemy.windup?.name || 'The heavy blow'} scatters before it can land!`);
           c.windup = null;
         }
       } else if (sk.kind === 'cleanse') {
