@@ -49,3 +49,17 @@ test('companions remark on Cinderclaw only after the Spire is paid and the foe i
     assertEggFree(line, `${id} remark`);
   }
 });
+
+test('Cinderclaw can drop the unique Cinder Stinger trinket, which no shop stocks', async () => {
+  const { SHOPS } = await import('../src/items/shop.js');
+  const item = getItem('cinder_stinger');
+  assert.equal(item.slot, 'trinket');
+  assert.deepEqual(item.stats, { atk: 3, def: 1, spd: 2 });
+  const drop = ENEMIES.cinderclaw.loot.find((l) => l.id === 'cinder_stinger');
+  assert.ok(drop && drop.chance > 0 && drop.chance < 1);
+  for (const [id, enemy] of Object.entries(ENEMIES)) {
+    if (id !== 'cinderclaw') assert.ok(!(enemy.loot || []).some((l) => l.id === 'cinder_stinger'), id);
+  }
+  assert.ok(!JSON.stringify(SHOPS).includes('cinder_stinger'));
+  assertEggFree(`${item.name} ${item.description}`, 'cinder stinger');
+});
