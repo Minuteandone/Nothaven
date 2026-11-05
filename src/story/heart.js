@@ -10,7 +10,7 @@ export function heartReady(story) {
     && f.eye_anchor_west && f.eye_anchor_east && f.victory_storm_heart);
 }
 export function heartAftermath(story) {
-  return `${spireAftermath(story)} The great storm over Stormcrown breaks. Grounded lightning anchors and the fallen Storm Heart leave fewer wandering threats on Stormcrown Spire and in the Storm’s Eye. Ordinary weather and fixed foes remain; patrols and forecasts still matter.`;
+  return `${spireAftermath(story)} The great storm over Stormcrown breaks. Grounded lightning anchors and the fallen Storm Heart leave fewer wandering threats on Stormcrown Spire and in the Storm’s Eye. Ordinary weather and fixed foes remain; patrols and forecasts still matter. The yoke of the storm is lifted, yet vigilance endures.`;
 }
 
 /** Exact map facts survive early exploration; only a deliberate report pays. */

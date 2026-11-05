@@ -13,7 +13,7 @@ export function watchReady(story) {
     && READINGS.every(reading => story.flags[reading.flag] === true);
 }
 export function watchAftermath() {
-  return 'Saltmere’s harbor readings, Highwatch’s wind records, and the observatory’s measurements now share one timetable. Forecasts guide the next watch; ordinary storms and road threats remain.';
+  return 'Saltmere’s harbor readings, Highwatch’s wind records, and the observatory’s measurements now share one timetable. Forecasts guide the next watch; ordinary storms and road threats remain. The fledgling forecast network will strengthen with each season.';
 }
 
 /** Only fresh inspections after explicit acceptance count. No map-history credit. */
