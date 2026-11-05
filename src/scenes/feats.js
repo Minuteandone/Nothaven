@@ -65,6 +65,8 @@ export const FEATS = Object.freeze([
     check: s => Number(heroOf(s)?.level) >= 10 }),
   Object.freeze({ id: 'legend', title: 'Legend of Stormhaven', detail: 'Bring Wren to level 20.',
     check: s => Number(heroOf(s)?.level) >= 20 }),
+  Object.freeze({ id: 'cinderclaw', title: 'Dune Breaker', detail: 'Defeat Cinderclaw, the giant sand scorpion that waits below the Sunscar signal lift once the Spire is settled.',
+    check: s => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary.cinderclaw : 0) > 0 }),
 ]);
 
 export function featStatus(state) {
