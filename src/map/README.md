@@ -43,6 +43,7 @@ Provides 9×7 tile-grid exploration, multi-zone navigation, NPC/object proximity
   - Story Rescue Encounter: `highwatch_rescue` (`frost_wolf`) at `(5, 3)`.
   - Optional Encounters: `highwatch_construct` (`rockslide_golem`) at `(7, 1)`, `highwatch_warlord` (`pass_warlord` boss) at `(1, 1)`.
   - Optional Boss Encounter: `highwatch_frostmane` (`frostmane`) at `(1, 5)`, requires story flag `rescue_reward`.
+  - Optional Boss Encounter: `highwatch_glacierward` (`glacierward_colossus`) at `(5, 5)`, requires story flag `calibration_reward`.
   - Random Encounters (12%): `frost_wolf`, `rockslide_golem`, `ridge_bandit`, `rime_wight`.
   - Interactables: `highwatch_supply_cache` at `(7, 5)`, `highwatch_cairn` at `(4, 1)`.
   - Exits: West Switchback `(0, 3)` → `ridge_road`; East Gate `(8, 3)` → `sunscar_relay`.

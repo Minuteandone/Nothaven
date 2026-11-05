@@ -15,7 +15,7 @@ function hero() {
 
 test('every boss and field trial, and only those, define a windup', () => {
   const withWindup = Object.keys(ENEMIES).filter((id) => ENEMIES[id].windup).sort();
-  assert.deepEqual(withWindup, ['cinderclaw', 'drowned_harbormaster', 'frostmane', 'gloomfin', 'last_squall', 'lenswarden', 'old_tusk', 'pass_warlord', 'relay_warden', 'storm_heart', 'stormcrown_tyrant', 'thunderhoof', 'tide_wraith']);
+  assert.deepEqual(withWindup, ['cinderclaw', 'drowned_harbormaster', 'frostmane', 'glacierward_colossus', 'gloomfin', 'last_squall', 'lenswarden', 'old_tusk', 'pass_warlord', 'relay_warden', 'storm_heart', 'stormcrown_tyrant', 'thunderhoof', 'tide_wraith']);
   for (const id of withWindup) {
     const w = ENEMIES[id].windup;
     assert.ok(w.chance > 0 && w.chance < 0.5, id);
