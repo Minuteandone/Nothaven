@@ -28,6 +28,9 @@ export function damagePopup(anchor, amount, kind = 'damage') {
 
 /** Shake the game container briefly. */
 export function screenShake(intensity = 4, duration = 300) {
+  // Respect OS and in-game reduced-motion preferences
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (document.documentElement.getAttribute('data-motion') === 'reduced') return;
   const app = document.getElementById('app');
   if (!app) return;
   app.style.transition = 'transform 0.05s ease';
