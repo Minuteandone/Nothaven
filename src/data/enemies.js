@@ -129,6 +129,7 @@ export const ENEMIES = {
     ],
   },
   old_tusk: {
+    windup: { name: 'Tusk Charge', chance: 0.15, mult: 1.7 },
     id: 'old_tusk', name: 'Old Tusk', hp: 130, atk: 15, def: 6, spd: 5, xp: 85, gold: 55,
     boss: true,
     drill: false,
@@ -143,6 +144,7 @@ export const ENEMIES = {
     ],
   },
   gloomfin: {
+    windup: { name: 'Riptide Lunge', chance: 0.15, mult: 1.7 },
     id: 'gloomfin', name: 'Gloomfin', hp: 150, atk: 16, def: 6, spd: 7, xp: 95, gold: 60,
     boss: true,
     drill: false,
@@ -157,6 +159,7 @@ export const ENEMIES = {
     ],
   },
   lenswarden: {
+    windup: { name: 'Focused Glare', chance: 0.15, mult: 1.7 },
     id: 'lenswarden', name: 'The Lenswarden', hp: 170, atk: 16, def: 9, spd: 6, xp: 110, gold: 70,
     tags: ['construct'],
     boss: true,
@@ -172,6 +175,7 @@ export const ENEMIES = {
     ],
   },
   frostmane: {
+    windup: { name: 'Avalanche Pounce', chance: 0.15, mult: 1.7 },
     id: 'frostmane', name: 'Frostmane', hp: 160, atk: 17, def: 7, spd: 8, xp: 105, gold: 65,
     boss: true,
     drill: false,
