@@ -93,10 +93,26 @@ export function emitWindupBreak(game, lines) {
   return broke;
 }
 
+/** Lines that report a windup release landing on a defending or warded hero. Captures the hero name. */
+const WINDUP_BRACED_RE = /unleashes .+! (.+) takes \d+, braced against the worst of it\./;
+
+/** True when this action's log shows a braced windup release. Announces `combat:windupbraced {target}`. */
+export function emitWindupBraced(game, lines) {
+  if (!Array.isArray(lines)) return false;
+  let match = null;
+  for (const l of lines) { match = WINDUP_BRACED_RE.exec(String(l)); if (match) break; }
+  if (!match) return false;
+  const party = game?.state?.party || [];
+  const idx = party.findIndex((u) => u?.name === match[1]);
+  game?.bus?.emit?.('combat:windupbraced', { target: idx >= 0 ? idx : 0 });
+  return true;
+}
+
 function commit(game, lines) {
   const c = game.state.combat;
   emitHpChanges(game);
   emitWindupBreak(game, lines);
+  emitWindupBraced(game, lines);
   if (c.over === 'victory' && !c.rewards) resolveVictory(game, lines);
   c.log.push(...lines);
   if (c.log.length > 40) c.log.splice(0, c.log.length - 40);
