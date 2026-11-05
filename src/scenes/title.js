@@ -1,6 +1,6 @@
 import { createInitialState, loadGame, hasSave } from '../state.js';
 import { beaconArt, sceneHeader, uiButton } from '../ui/components.js';
-import { ZONES, ensureMapState, travelToZone } from '../map/index.js';
+import { resumeJourney } from '../core/resume.js';
 
 function clearStoryTransients(game) {
   game.storyDialogue = null;
@@ -8,7 +8,7 @@ function clearStoryTransients(game) {
 }
 
 export const titleScene = {
-  render() {
+  render(game) {
     return `<main class="game-shell title-screen">
       <div class="title-layout">
         <section class="title-copy">
@@ -16,6 +16,7 @@ export const titleScene = {
           <div class="title-actions">
             ${uiButton({ action: 'newGame', label: 'New journey', iconName: 'compass', variant: 'primary' })}
             ${uiButton({ action: 'continue', label: 'Continue', iconName: 'save', disabled: !hasSave() })}
+            ${game?.scenes?.archive ? uiButton({ action: 'archive', label: 'Journey archive', iconName: 'save', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'guide', label: 'How to play', iconName: 'journal', variant: 'ghost' })}
           </div>
           <p class="save-note">Single player <span aria-hidden="true">•</span> Your progress is saved on this device</p>
@@ -25,25 +26,13 @@ export const titleScene = {
     </main>`;
   },
   actions: {
+    archive(game) { if (game.state.scene === 'title' && game.scenes?.archive && !game.state.combat) game.setScene('archive', { returnScene: 'title' }); },
     guide(game) { if (game.scenes?.guide) game.setScene('guide', { returnScene: 'title' }); },
     newGame(game) { game.state = createInitialState(); clearStoryTransients(game); game.setScene('town'); },
     continue(game) {
       const s = loadGame();
       if (!s) return;
-      game.state = s;
-      clearStoryTransients(game);
-
-      const canResumeExploration = s.scene === 'explore'
-        && s.map
-        && ZONES[s.map.zoneId]
-        && s.map.zoneId === s.location;
-      if (canResumeExploration) {
-        ensureMapState(s);
-        game.setScene('explore');
-      } else {
-        travelToZone(s, 'greyhaven', 'default');
-        game.setScene('town', { message: 'Your expedition resumes in Greyhaven.' });
-      }
+      resumeJourney(game, s);
     },
   },
 };

@@ -171,7 +171,7 @@ function explorationShortcutGuide(characterShortcuts) {
   </details>`;
 }
 
-export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '', hasQuestJournal = false, hasCharacter = false, hasFeats = false, characterShortcuts = true }) {
+export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '', hasArchive = false, hasQuestJournal = false, hasCharacter = false, hasFeats = false, characterShortcuts = true }) {
   const contextButtons = (nearbyActions || [])
     .filter(action => NEARBY_ACTION_TYPES[action?.kind])
     .map((action, index) => nearbyActionButton(action, index, characterShortcuts)).join('');
@@ -245,6 +245,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           <div class="explore-utilities">
             ${hasCharacter ? uiButton({ action: 'openCharacter', label: 'Character Sheet', iconName: 'journal', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'openBag', label: 'Open Bag', iconName: 'bag', variant: 'ghost' })}
+            ${hasArchive ? uiButton({ action: 'openArchive', label: 'Journey Archive', iconName: 'save', variant: 'ghost' }) : ''}
             ${hasQuestJournal ? uiButton({ action: 'openQuests', label: 'Journey Journal', iconName: 'journal', variant: 'ghost' }) : ''}
             ${hasFeats ? uiButton({ action: 'openFeats', label: 'Wardens’ Feats', iconName: 'beacon', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'openJournal', label: 'Field Journal', iconName: 'journal', variant: 'ghost' })}
