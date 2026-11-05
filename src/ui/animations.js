@@ -126,6 +126,8 @@ export const ANIM_CSS = `
   .damage-pop { animation: none; opacity: 0.8; }
   .meter__fill { transition: none !important; }
 }
+:root[data-motion="reduced"] .damage-pop { animation: none; opacity: 0.8; }
+:root[data-motion="reduced"] .meter__fill { transition: none !important; }
 `;
 
 let cssInjected = false;

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { prefersReducedMotion, crossfadeScene, enemyDeathFade, tweenMeter, screenShake, damagePopup } from '../src/ui/animations.js';
+import { ANIM_CSS, prefersReducedMotion, crossfadeScene, enemyDeathFade, tweenMeter, screenShake, damagePopup } from '../src/ui/animations.js';
 
 function withEnv({ media = false, attr = null } = {}, fn) {
   const origDoc = globalThis.document, origWin = globalThis.window;
@@ -63,4 +63,9 @@ test('damagePopup cleans itself up on a timer when reduced (no animationend)', (
     assert.ok(scheduled, 'removal scheduled');
     assert.equal(scheduled.ms, 700);
   } finally { globalThis.setTimeout = origST; }
+});
+
+test('ANIM_CSS also honours the in-game data-motion=reduced toggle', () => {
+  assert.match(ANIM_CSS, /:root\[data-motion="reduced"\] \.damage-pop \{ animation: none;/);
+  assert.match(ANIM_CSS, /:root\[data-motion="reduced"\] \.meter__fill \{ transition: none !important; \}/);
 });
