@@ -1264,6 +1264,112 @@ function thunderhoofJourney(game) {
   walkExit(game, 'greyhaven');
 }
 
+function glacierwardLockedJourney(game) {
+  assert.equal(game.state.map.zoneId, 'highwatch_pass');
+  assert.notEqual(game.state.story.flags.calibration_reward, true);
+  walkTo(game, 5, 4);
+  const before = structuredClone(game.state), events = [];
+  const capture = event => events.push(event);
+  sceneBus.on('scene:enter', capture);
+  game.bus.on('story:event', capture);
+  game.bus.on('combat:victory', capture);
+  let rolls = 0;
+  game.mapRng = () => { rolls++; return 0.5; };
+  try {
+    for (const [action, arg] of [['mapEncounter', 'highwatch_glacierward'], ['moveSouth']]) {
+      act(game, action, arg);
+      assert.deepEqual({ ...game.state, map: { ...game.state.map, log: before.map.log } }, before,
+        'unpaid Calibration gate changes only the explanatory map log');
+      assert.equal(rolls, 0);
+      assert.deepEqual(events, []);
+    }
+  } finally {
+    delete game.mapRng;
+    sceneBus.off('scene:enter', capture);
+    game.bus.off('story:event', capture);
+    game.bus.off('combat:victory', capture);
+  }
+}
+
+function glacierwardJourney(game) {
+  assert.equal(game.state.scene, 'explore');
+  assert.equal(game.state.map.zoneId, 'greyhaven');
+  assert.equal(game.state.story.flags.calibration_reward, true);
+  assert.equal(game.state.story.flags.victory_last_squall, undefined);
+  act(game, 'toTownScene');
+  const restGold = game.state.gold;
+  act(game, 'rest');
+  assert.equal(game.state.gold, restGold - (game.state.story.flags.relay_choice === 'shelter_network' ? 2 : 5));
+  act(game, 'explore'); walkExit(game, 'ridge_road'); walkExit(game, 'highwatch_pass'); walkTo(game, 5, 4);
+  assert.deepEqual(game.state.party.map(member => member.id), ['hero', 'bram', 'sela']);
+  assert.ok(game.state.party.every(member => member.level >= 16), 'levels earned through actual encounters');
+  assert.equal(game.state.bestiary.glacierward_colossus, undefined);
+  assert.equal(DRILL_FOES.length, 7);
+  assert.equal(DRILL_FOES.includes('glacierward_colossus'), false);
+  assert.deepEqual(FIELD_TRIALS, ['old_tusk', 'gloomfin', 'frostmane', 'lenswarden']);
+  const before = structuredClone(game.state);
+  const protectedKeys = ['story', 'flags', 'reserve', 'drillRecords', 'drillGauntlet'];
+  const trialWarden = featStatus(before).find(feat => feat.id === 'trials').done;
+  const victories = [], capture = event => victories.push(structuredClone(event));
+  game.bus.on('combat:victory', capture);
+  try {
+    act(game, 'moveSouth');
+    assert.equal(game.state.scene, 'combat');
+    const combat = game.state.combat;
+    assert.equal(combat.encounterId, 'highwatch_glacierward');
+    assert.equal(combat.enemy.id, 'glacierward_colossus');
+    assert.equal(combat.enemy.maxHp, 1500);
+    assert.deepEqual([combat.enemy.atk, combat.enemy.def, combat.enemy.spd], [48, 16, 6]);
+    assert.notEqual(combat.drill, true);
+    let tonicsUsed = 0;
+    for (let turn = 0; !combat.over && turn < 100; turn++) {
+      if (combat.charge >= 100) act(game, 'burst');
+      else if (game.state.party[0].mp < 8) {
+        assert.ok(countItem(game.state.inventory, 'storm_tonic') > 0, 'only earned tonics are available');
+        act(game, 'item', 'storm_tonic'); tonicsUsed++;
+      } else if (game.state.party.some(member => member.hp > 0 && member.hp < member.maxHp * 0.55)) {
+        act(game, 'skill', 'rallying_light');
+      } else if (!(combat.aegisTurns > 0)) act(game, 'skill', 'beacon_aegis');
+      else act(game, 'attack');
+    }
+    assert.equal(combat.over, 'victory', 'earned post-Calibration party wins Glacierward with native tactics');
+    const loot = [{ id: 'thunder_iron', qty: 2 }, { id: 'storm_glass', qty: 2 }, { id: 'relay_brass', qty: 2 }, { id: 'spiced_broth', qty: 2 }];
+    assert.deepEqual(combat.rewards, { xp: 440, gold: 260, items: loot });
+    const spentInventory = before.inventory.map(stack => stack.id === 'storm_tonic'
+      ? { ...stack, qty: stack.qty - tonicsUsed } : stack).filter(stack => stack.qty > 0);
+    const rewarded = grantRewards(spentInventory, loot);
+    assert.equal(rewarded.ok, true);
+    const book = { ...before.bestiary, glacierward_colossus: 1 };
+    const assertRewards = () => {
+      assert.equal(game.state.gold, before.gold + 260);
+      game.state.party.forEach((member, index) => assert.equal(member.xp, before.party[index].xp + 440));
+      assert.deepEqual(game.state.inventory, rewarded.inv);
+      assert.deepEqual(game.state.bestiary, book);
+      for (const key of protectedKeys) assert.deepEqual(game.state[key], before[key]);
+      assert.equal(featStatus(game.state).find(feat => feat.id === 'trials').done, trialWarden);
+      assert.deepEqual(victories, [{ enemyId: 'glacierward_colossus', encounterId: 'highwatch_glacierward' }]);
+    };
+    assertRewards();
+    act(game, 'finish');
+    assert.equal(game.state.scene, 'explore');
+    assert.equal(game.state.combat, null);
+    assert.equal(game.state.map.activeEncounterId, null);
+    assert.deepEqual(game.state.map.clearedEncounters, { ...before.map.clearedEncounters, highwatch_glacierward: true });
+    assert.deepEqual(game.state.map.completedInteractions, before.map.completedInteractions);
+    assertRewards();
+    checkpoint(game, 'complete');
+    assertRewards();
+    const cleared = structuredClone(game.state);
+    act(game, 'mapEncounter', 'highwatch_glacierward');
+    assert.deepEqual({ ...game.state, map: { ...game.state.map, log: cleared.map.log } }, cleared,
+      'a stale cleared Glacierward action cannot replay the fight or rewards');
+    assertRewards();
+  } finally {
+    game.bus.off('combat:victory', capture);
+  }
+  walkExit(game, 'ridge_road'); walkExit(game, 'greyhaven');
+}
+
 function calibrationJourney(game) {
   assert.equal(game.state.map.zoneId, 'greyhaven');
   assert.equal(game.state.story.flags.watch_reward, true);
@@ -1279,7 +1385,8 @@ function calibrationJourney(game) {
   for (const flag of fields) assert.equal(game.state.story.flags[flag], undefined, 'no historical reading credit');
   act(game, 'storyCalibration', 'report'); assert.equal(game.state.gold, gold);
   walkExit(game, 'ridge_road'); thunderhoofLockedJourney(game);
-  for (const zone of ['highwatch_pass', 'sunscar_relay']) walkExit(game, zone);
+  walkExit(game, 'highwatch_pass'); glacierwardLockedJourney(game);
+  walkExit(game, 'sunscar_relay');
   walkTo(game, 3, 1); act(game, 'mapInteract', 'relay_junction');
   assert.equal(game.state.story.flags.calibration_relay, undefined, 'junction read on ascent is premature');
   walkExit(game, 'stormcrown_spire');
@@ -1959,6 +2066,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         supplyLinesJourney(game, first);
         signalLineJourney(game, early);
         thunderhoofJourney(game);
+        glacierwardJourney(game);
         squallJourney(game);
         drillJourney(game);
         gauntletJourney(game);
