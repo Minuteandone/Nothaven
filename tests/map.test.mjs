@@ -6,9 +6,13 @@ import {
   ZONE_CONDITIONS,
   ZONES,
   ZONE_ORDER,
+  getZone,
   getZoneCondition,
   getZoneProgress,
   getZoneVantage,
+  getZoneConnections,
+  findZoneRoute,
+  getFrontierAtlas,
   ensureMapState,
   exploreScene,
   getClearedEncounters,
@@ -826,4 +830,54 @@ test('getZoneProgress and getZoneVantage track encounters and caches without mut
   assert.match(html, /Coastal Squall/);
   assert.match(html, /Upper Switchback Milestone \(144m\)/);
   assert.match(html, /Threats cleared 1\/3 · Caches 1\/1/);
+});
+
+test('Frontier wayfinder connections, route planner, and atlas summary are pure and accurate', () => {
+  const { state } = makeMockGame();
+  for (const zoneId of ZONE_ORDER) {
+    const z = getZone(zoneId);
+    assert.ok(z.cartography, `Zone ${zoneId} should define cartography metadata`);
+    assert.equal(typeof z.cartography.sectorCode, 'string');
+    assert.ok(z.cartography.sectorCode.length > 0);
+    assert.equal(typeof z.cartography.surveyMarker, 'string');
+    assert.ok(z.cartography.surveyMarker.length > 0);
+    assert.equal(typeof z.cartography.beaconBearing, 'number');
+    assert.equal(typeof z.cartography.routeNote, 'string');
+    assert.ok(z.cartography.routeNote.length > 0);
+    assert.equal(typeof z.cartography.atlasEntry, 'string');
+    assert.ok(z.cartography.atlasEntry.length > 0);
+  }
+
+  const spireConnsLocked = getZoneConnections(state, 'stormcrown_spire');
+  const eyeConnLocked = spireConnsLocked.find((c) => c.toZone === 'storms_eye');
+  assert.ok(eyeConnLocked);
+  assert.equal(eyeConnLocked.unlocked, false);
+  assert.equal(eyeConnLocked.requiresStoryFlag, 'spire_reward');
+
+  // Route from greyhaven to sunscar_relay is unlocked by default (greyhaven -> ridge_road -> highwatch_pass -> sunscar_relay)
+  const routeToRelay = findZoneRoute(state, 'greyhaven', 'sunscar_relay');
+  assert.equal(routeToRelay.reachable, true);
+  assert.equal(routeToRelay.hops, 3);
+  assert.deepEqual(routeToRelay.zones, ['greyhaven', 'ridge_road', 'highwatch_pass', 'sunscar_relay']);
+
+  // Route to storms_eye is locked until spire_reward is set, unless ignoreLocks is true
+  const lockedEyeRoute = findZoneRoute(state, 'greyhaven', 'storms_eye');
+  assert.equal(lockedEyeRoute.reachable, false);
+  const unlockedOverrideRoute = findZoneRoute(state, 'greyhaven', 'storms_eye', { ignoreLocks: true });
+  assert.equal(unlockedOverrideRoute.reachable, true);
+  assert.equal(unlockedOverrideRoute.hops, 5);
+
+  state.story.flags.spire_reward = true;
+  const openEyeRoute = findZoneRoute(state, 'greyhaven', 'storms_eye');
+  assert.equal(openEyeRoute.reachable, true);
+  assert.equal(openEyeRoute.hops, 5);
+
+  // Atlas summary aggregates across all 9 zones without mutating state
+  const rawState = { party: [{ id: 'hero', name: 'Warden', hp: 30, maxHp: 30 }], story: { flags: {} } };
+  const atlas = getFrontierAtlas(rawState);
+  assert.equal(rawState.map, undefined, 'getFrontierAtlas must not mutate rawState');
+  assert.equal(atlas.totalZones, 9);
+  assert.equal(atlas.entries.length, 9);
+  assert.equal(atlas.entries[0].zoneId, 'greyhaven');
+  assert.equal(atlas.entries[0].cartography.sectorCode, 'GH-012');
 });

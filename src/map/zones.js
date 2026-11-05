@@ -62,6 +62,13 @@ export const ZONES = {
       surveyNote: 'Ember-lit lanterns warm the harbor stones and dry the watch-house timber.',
       fieldNote: 'Safe harbor walls keep roaming packs outside the gates.',
     },
+    cartography: {
+      sectorCode: 'GH-012',
+      surveyMarker: 'First Harbor Benchmark',
+      beaconBearing: 180,
+      routeNote: 'Outbound stone roads branch east to the cliffs and south to the harbor piers.',
+      atlasEntry: 'Basalt breakwater walls shelter the frontier town and its central watch house.',
+    },
     description:
       'Lanterns sway against the gale in Greyhaven’s cobbled square. Beyond the eastern gate, the ridge road climbs toward the shattered observatory.',
     width: 9,
@@ -194,6 +201,13 @@ export const ZONES = {
       surveyNote: 'Along the cliff trail, wind-scoured milestones mark the climb toward the headland.',
       fieldNote: 'Cliffside brush conceals bandit lookouts near the central bend.',
     },
+    cartography: {
+      sectorCode: 'RR-024',
+      surveyMarker: 'Ridgeway Stone Cairn',
+      beaconBearing: 12,
+      routeNote: 'Milestones along the ridge guide travelers between the town gate and the high pass.',
+      atlasEntry: 'Overhanging granite bluffs border the wind-swept highway above the coast.',
+    },
     description:
       'Slick switchbacks hug the cliff above a roaring abyss. Fallen masonry and storm beasts choke the narrow pass toward the observatory.',
     width: 9,
@@ -324,6 +338,13 @@ export const ZONES = {
       elevation: 288,
       surveyNote: 'Shattered brass ribs frame the sea horizon around the old prism dome.',
       fieldNote: 'Ruined dome vaults hold spare brass fittings and archival logs.',
+    },
+    cartography: {
+      sectorCode: 'OR-144',
+      surveyMarker: 'Index Meridian Plate',
+      beaconBearing: 24,
+      routeNote: 'Elevated flagstones link the lower cliff steps to the upper headland causeway.',
+      atlasEntry: 'Instruments of brass and glass remain inside the fractured dome chambers.',
     },
     description:
       'Lightning flickers across warped brass arcs and collapsed vaults. The great refractory lens rests within the upper sanctum.',
@@ -475,6 +496,13 @@ export const ZONES = {
       surveyNote: 'Towering granite steps rise above the surf toward the headland lantern cradle.',
       fieldNote: 'Ascend only after stocking tonics for the upper lantern platform.',
     },
+    cartography: {
+      sectorCode: 'BT-366',
+      surveyMarker: 'East Parapet Plumb',
+      beaconBearing: 360,
+      routeNote: 'Lantern stairs and the signal lift connect the headland crown back to town.',
+      atlasEntry: 'Light from the headland cradle reaches every vessel along the outer shoals.',
+    },
     description:
       'At the pinnacle of the cliff, the great bronze housing stands cold above the clouds. From here, a relit beam can shield Greyhaven alone or signal distant settlements across the frontier.',
     width: 9,
@@ -567,6 +595,13 @@ export const ZONES = {
       elevation: 6,
       surveyNote: 'Ebbing tidewater laps against the timber piers and sunken breakwater stones.',
       fieldNote: 'Marshy shoals slow foot travel between the flooded piers.',
+    },
+    cartography: {
+      sectorCode: 'SC-006',
+      surveyMarker: 'Drowned Pier Tide-Post',
+      beaconBearing: 348,
+      routeNote: 'Estuary boardwalks trace the flooded shoreline south of the harbor causeway.',
+      atlasEntry: 'Embankments of stacked stone protect the trading post from rising surf.',
     },
     description:
       'Spray-drenched boardwalks and storm-battered cottages cling to the tidal cove of Saltmere. Beyond the breakwater, creatures driven ashore by the gale threaten the stranded fisherfolk.',
@@ -717,6 +752,13 @@ export const ZONES = {
       surveyNote: 'Rime-frosted cairns line the narrow mountain road toward the inland basin.',
       fieldNote: 'Bitter crosswinds funnel through the narrow watchtower gorge.',
     },
+    cartography: {
+      sectorCode: 'HP-072',
+      surveyMarker: 'Escarpment Wind-Vane',
+      beaconBearing: 72,
+      routeNote: 'Timber trestles span the mountain gorge between the ridge and the inland basin.',
+      atlasEntry: 'Drift-ice and slate scree cover the upper outpost approaches.',
+    },
     description:
       'Frost-rimmed ramparts and stone signal cairns guard the upper pass at Highwatch. Cut off by rockslides, the outpost defenders hold the timber palisade against raiders and rogue constructs.',
     width: 9,
@@ -861,6 +903,13 @@ export const ZONES = {
       surveyNote: 'Exposed copper conduits hum across the wind-carved canyon floor.',
       fieldNote: 'Long signal cables link the junction box to the master console.',
     },
+    cartography: {
+      sectorCode: 'SR-108',
+      surveyMarker: 'Gorge Conduit Pylon',
+      beaconBearing: 108,
+      routeNote: 'Telegraph poles mark the canyon trail from the pass to the upper switchback.',
+      atlasEntry: 'Engineers maintain the inland junction that routes power across the frontier.',
+    },
     description:
       'Scorched sandstone terraces and copper-wound signal pylons rise across the inland plateau of Sunscar Relay. Restoring the station’s capacitor junction and master console will link Greyhaven’s beacon to the interior.',
     width: 9,
@@ -1001,6 +1050,13 @@ export const ZONES = {
       elevation: 773,
       surveyNote: 'Granite lightning rods crown the summit ridge where the upper gale converges.',
       fieldNote: 'Elevated stone bridges connect the twin barometer pillars.',
+    },
+    cartography: {
+      sectorCode: 'SS-288',
+      surveyMarker: 'Granite Apex Obelisk',
+      beaconBearing: 144,
+      routeNote: 'Exposed stone ramps wind from the relay switchback toward the summit array.',
+      atlasEntry: 'Gales converge around the twin barometer vaults below the summit ridge.',
     },
     description:
       'Lightning-split basalt steps and ancient survey buttresses climb into the heart of the perpetual squall at Stormcrown Spire. Recovering the lost storm-survey records and defeating the Stormcrown Tyrant at the summit will secure the frontier skies.',
@@ -1161,6 +1217,13 @@ export const ZONES = {
       elevation: 900,
       surveyNote: 'Grounding pylons anchor the shattered causeway at the center of the maelstrom.',
       fieldNote: 'Dual grounding pylons must be primed before the core stabilizes.',
+    },
+    cartography: {
+      sectorCode: 'SE-216',
+      surveyMarker: 'Storm-Core Datum Ring',
+      beaconBearing: 216,
+      routeNote: 'Suspended lightning bridges cross the maelstrom from the summit to the central core.',
+      atlasEntry: 'Grounded copper pylons steady the platform surrounding the tempest core.',
     },
     requiresStoryFlag: 'spire_reward',
     travelRequirementMessage: 'Report the summit survey in Greyhaven before entering the Storm’s Eye.',
