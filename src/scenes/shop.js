@@ -8,6 +8,7 @@ import { getItem, isKnownItem, canEquip } from '../items/items.js';
 import { countItem } from '../items/inventory.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
 import { listRecipes, recipeInputsMet, recipeSummary, craft, recipesUsingItem } from '../items/crafting.js';
+import { tradesFor, tradeInputsMet, performTrade } from '../items/trade.js';
 
 const esc = (v) =>
   String(v ?? '').replace(/[&<>"']/g, (c) =>
@@ -63,7 +64,7 @@ function activeMember(game) {
 
 export const shopScene = {
   onEnter(game, data) {
-    game.shopMode = ['sell', 'craft'].includes(data?.mode) ? data.mode : 'buy';
+    game.shopMode = ['sell', 'craft', 'trade'].includes(data?.mode) ? data.mode : 'buy';
     game.shopMessage = data?.message || '';
     game.shopReturnScene = data?.returnScene || 'town';
     game.shopMemberIndex = 0;
@@ -75,7 +76,7 @@ export const shopScene = {
     const s = game.state;
     const hero = s.party[0];
     const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
-    const mode = ['sell', 'craft'].includes(game.shopMode) ? game.shopMode : 'buy';
+    const mode = ['sell', 'craft', 'trade'].includes(game.shopMode) ? game.shopMode : 'buy';
     const gold = s.gold ?? 0;
     const buyQty = normalizeShopQty(game.shopQty);
     const { member, index, party } = activeMember(game);
@@ -159,6 +160,24 @@ export const shopScene = {
       .join('');
 
 
+    const tradeOffers = tradesFor(shop.id);
+    const tradeRows = tradeOffers
+      .map((trade) => {
+        const { ok: met, missing } = tradeInputsMet(s.inventory, trade);
+        const giveText = trade.give.map((stack) => `${stack.qty} ${esc(getItem(stack.id)?.name || stack.id)}`).join(', ');
+        const receiveText = `${trade.receive.qty} ${esc(getItem(trade.receive.id)?.name || trade.receive.id)}`;
+        const giveValue = trade.give.reduce((sum, stack) => sum + (getItem(stack.id)?.price || 0) * stack.qty, 0);
+        const receiveValue = (getItem(trade.receive.id)?.price || 0) * trade.receive.qty;
+        const shortfall = met
+          ? ''
+          : `<small class="trade-shortfall">Needs: ${missing.map((m) => `${m.qty} ${esc(getItem(m.id)?.name || m.id)} (have ${m.have})`).join(', ')}</small>`;
+        return `<tr>
+          <td><strong>${esc(trade.name)}</strong><br><small>${giveText} &rarr; ${receiveText}</small><br><small class="trade-value">Worth ${giveValue}g &rarr; ${receiveValue}g</small>${shortfall}</td>
+          <td><button data-action="trade" data-arg="${esc(trade.id)}" ${met ? '' : 'disabled'}>Trade</button></td>
+        </tr>`;
+      })
+      .join('');
+
     const craftRows = listRecipes()
       .map((recipe) => {
         const { ok: met, missing } = recipeInputsMet(s.inventory, recipe);
@@ -214,6 +233,7 @@ export const shopScene = {
           <button class="shop-tab${mode === 'buy' ? ' shop-tab--active' : ''}" data-action="setMode" data-arg="buy" ${mode === 'buy' ? 'aria-current="true"' : ''}>Buy</button>
           <button class="shop-tab${mode === 'sell' ? ' shop-tab--active' : ''}" data-action="setMode" data-arg="sell" ${mode === 'sell' ? 'aria-current="true"' : ''}>Sell</button>
           <button class="shop-tab${mode === 'craft' ? ' shop-tab--active' : ''}" data-action="setMode" data-arg="craft" ${mode === 'craft' ? 'aria-current="true"' : ''}>Craft</button>
+          ${tradeOffers.length ? `<button class="shop-tab${mode === 'trade' ? ' shop-tab--active' : ''}" data-action="setMode" data-arg="trade" ${mode === 'trade' ? 'aria-current="true"' : ''}>Trade</button>` : ''}
         </div>
         ${
           mode === 'buy'
@@ -222,7 +242,11 @@ export const shopScene = {
               ? sellRows
                 ? `<table class="shop-sell" aria-label="Items available to sell">${sellRows}</table>`
                 : '<p>You carry nothing Hesta would pay for.</p>'
-              : `<table class="craft-table" aria-label="Crafting recipes">${craftRows}</table>`
+              : mode === 'trade'
+                ? tradeRows
+                  ? `<table class="shop-trade" aria-label="Trade offers">${tradeRows}</table>`
+                  : '<p>No trades are on offer right now.</p>'
+                : `<table class="craft-table" aria-label="Crafting recipes">${craftRows}</table>`
         }
         <h3>Wardrobe${party.length > 1 ? ` — ${esc(member.name)}` : ''}</h3>
         ${
@@ -246,7 +270,19 @@ export const shopScene = {
   actions: {
     setMode(game, el) {
       const arg = el?.dataset?.arg;
-      game.shopMode = ['sell', 'craft'].includes(arg) ? arg : 'buy';
+      game.shopMode = ['sell', 'craft', 'trade'].includes(arg) ? arg : 'buy';
+    },
+    trade(game, el) {
+      const id = el?.dataset?.arg;
+      if (!id) return;
+      const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
+      if (!tradesFor(shop.id).some((t) => t.id === id)) {
+        game.shopMessage = 'That trade is not offered here.';
+        return;
+      }
+      const res = performTrade(game.state.inventory, id);
+      game.shopMessage = res.message;
+      if (res.ok) game.state.inventory = res.inv;
     },
     shopQty(game, el) {
       const arg = el?.dataset?.arg;

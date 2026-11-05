@@ -699,6 +699,9 @@ em.enraged {
 .shop-qty { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin: 0 0 .6rem; }
 .shop-qty span[aria-live] { color: var(--muted); font-size: .8rem; }
 .shop-qty button { min-width: 2.2rem; justify-content: center; }
+/* Trade-tab offers (src/scenes/shop.js trade mode). */
+.trade-value { color: var(--muted); font-size: 0.85em; }
+.trade-shortfall { color: var(--bad); font-size: 0.85em; }
 .craft-checklist { list-style: none; margin: .25rem 0; padding: 0; }
 .craft-checklist .have { color: var(--good); }
 .craft-checklist .need { color: var(--bad); }
@@ -821,12 +824,13 @@ em.enraged {
 /* Keep inventory names, bulk-sale totals, and spare-gear controls usable on narrow screens. */
 @media (max-width: 560px) {
   .shop-buy, .shop-buy tbody, .shop-buy tr, .shop-buy td,
+  .shop-trade, .shop-trade tbody, .shop-trade tr, .shop-trade td,
   .shop-sell, .shop-sell tbody, .shop-sell tr, .shop-sell td,
   .shop-wardrobe, .shop-wardrobe tbody, .shop-wardrobe tr, .shop-wardrobe td { display: block; }
-  .shop-buy, .shop-sell, .shop-wardrobe { width: 100%; }
-  .shop-buy tr, .shop-sell tr, .shop-wardrobe tr { border-top: 1px solid var(--line-soft); padding: .6rem 0; }
-  .shop-buy td, .shop-sell td, .shop-wardrobe td { padding: .15rem 0; overflow-wrap: anywhere; }
-  .shop-buy button, .shop-sell button, .shop-wardrobe button { max-width: 100%; margin-inline: 0; white-space: normal; }
+  .shop-buy, .shop-sell, .shop-wardrobe, .shop-trade { width: 100%; }
+  .shop-buy tr, .shop-sell tr, .shop-wardrobe tr, .shop-trade tr { border-top: 1px solid var(--line-soft); padding: .6rem 0; }
+  .shop-buy td, .shop-sell td, .shop-wardrobe td, .shop-trade td { padding: .15rem 0; overflow-wrap: anywhere; }
+  .shop-buy button, .shop-sell button, .shop-wardrobe button, .shop-trade button { max-width: 100%; margin-inline: 0; white-space: normal; }
 }
 
 
