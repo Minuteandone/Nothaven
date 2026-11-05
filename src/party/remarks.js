@@ -7,6 +7,7 @@ import { ledgerOf } from '../core/ledger.js';
 const LINES = {
   tamsin: {
     stormborn: 'You set the frontier to its hardest and still walked back through the gate. I stopped counting the bruises and started counting the wins.',
+    glacierward: 'That Colossus swung like the whole south wall had decided to walk. When it knelt, I swear the pass went ten degrees warmer.',
     thunderhoof: 'Thunderhoof ran the ridge bend like it owned the road. I counted its stride from the switchback; we will not be racing that one again.',
     calibration: 'Eye, Spire and Sunscar keep one signal interval now. I timed the flashes from the ridge and they matched my count to the beat.',
     cinderclaw: 'Cinderclaw dug in so fast I lost its trail twice. Next time I am watching the sand, not the sky.',
@@ -28,6 +29,7 @@ const LINES = {
   },
   iven: {
     stormborn: 'I logged our Stormborn battle beside the old storm tables. By every number we should have lost; I have checked the sums three times.',
+    glacierward: 'The Glacierward Colossus was built from the same survey stone as our old benchmarks. I would give a month of readings to see its original plans.',
     thunderhoof: 'Those antlers threw sparks hot enough to fuse my lens clips. I am keeping one of the scorched tines for the observatory shelf.',
     calibration: 'The three stations finally keep the same interval. I checked my pocket timer against them; it was only a little bit wrong.',
     cinderclaw: 'I measured the trench Cinderclaw left below the lift. Forty paces. I am not putting that number in the report to Mara; she would only worry.',
@@ -49,6 +51,7 @@ const LINES = {
   },
   bram: {
     stormborn: 'Stormborn foes hit like a winter sea against the harbor wall. My shield rang for an hour, and I would still stand there again tomorrow.',
+    glacierward: 'I have held a wall against winter storms, but never one that punched back. My arm still hums from that Glacier Slam.',
     thunderhoof: 'I braced for that stampede like a breakwater braces for a spring tide. Next time I would rather be the tide.',
     calibration: 'Ona timed the harbor lamp against the new interval and it lined up on the first try. She looked almost disappointed.',
     cinderclaw: 'That scorpion’s pincers closed on my shield like a dockside winch. The shield held. My arm is still deciding.',
@@ -70,6 +73,7 @@ const LINES = {
   },
   sela: {
     stormborn: 'Highwatch runners heard we beat a boss on Stormborn and begged to train on the steepest slope. Rusk said yes before I could warn them.',
+    glacierward: 'Rusk says the Colossus guarded Highwatch long before the beacon was lit. Now it rests by the south wall, and the runners leave it a lantern each night.',
     thunderhoof: 'The ridge runners can take the lower bend again without listening for hoofbeats in the thunder. The scorch marks will fade by spring.',
     calibration: 'Runners can read the flashes from any cairn now and trust the timing. I still count them under my breath anyway.',
     cinderclaw: 'The relay crews can run the signal lift without listening for scraping under the sand now. Cinderclaw burrowed off west and has not come back.',
@@ -96,6 +100,7 @@ export function companionRemark(id, story = {}, bestiary = {}, ledger = {}) {
   const set = LINES[id];
   const f = story?.flags || {};
   if (ledgerOf({ ledger }).stormbornBossVictories >= 1 && set.stormborn) return set.stormborn;
+  if (f.calibration_reward === true && Number(bestiary?.glacierward_colossus) > 0 && set.glacierward) return set.glacierward;
   if (f.calibration_reward === true && Number(bestiary?.thunderhoof) > 0 && set.thunderhoof) return set.thunderhoof;
   if (f.calibration_reward === true && set.calibration) return set.calibration;
   if (f.victory_last_squall === true && set.squall) return set.squall;

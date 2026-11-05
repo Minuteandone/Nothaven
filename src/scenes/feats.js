@@ -73,6 +73,8 @@ export const FEATS = Object.freeze([
     check: s => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary.thunderhoof : 0) > 0 }),
   Object.freeze({ id: 'stormborn', title: 'Calm in the Gale', detail: 'Overcome any boss in a real battle while the Difficulty is set to Stormborn.',
     check: s => ledgerOf(s).stormbornBossVictories >= 1 }),
+  Object.freeze({ id: 'glacierward', title: 'Thaw the Sentinel', detail: 'Defeat the Glacierward Colossus, the ice-plated Highwatch guardian that wakes once Signal Calibration is paid.',
+    check: s => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary.glacierward_colossus : 0) > 0 }),
 ]);
 
 export function featStatus(state) {
