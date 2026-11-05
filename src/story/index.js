@@ -1,3 +1,4 @@
+import { applySupplyLineEvent, getSupplyLineJournal, getSupplyLineDialogue } from './supplyLines.js';
 import { applyCalibrationEvent, getCalibrationJournal, getCalibrationDialogue } from './calibration.js';
 import { applyWatchEvent, getWatchJournal, getWatchDialogue } from './watch.js';
 import { applyHeartEvent, getHeartJournal, getHeartDialogue } from './heart.js';
@@ -105,7 +106,8 @@ export function applyStoryEvent(previous = createStoryState(), event) {
   const heart = applyHeartEvent(commission.state, event);
   const watch = applyWatchEvent(heart.state, event);
   const calibration = applyCalibrationEvent(watch.state, event);
-  return { state: calibration.state, rewards: [...rewards, ...rescue.rewards, ...relay.rewards, ...spire.rewards, ...expedition.rewards, ...commission.rewards, ...heart.rewards, ...watch.rewards, ...calibration.rewards], log: [...log, ...rescue.log, ...relay.log, ...spire.log, ...expedition.log, ...commission.log, ...heart.log, ...watch.log, ...calibration.log] };
+  const supplyLine = applySupplyLineEvent(calibration.state, event);
+  return { state: supplyLine.state, rewards: [...rewards, ...rescue.rewards, ...relay.rewards, ...spire.rewards, ...expedition.rewards, ...commission.rewards, ...heart.rewards, ...watch.rewards, ...calibration.rewards, ...supplyLine.rewards], log: [...log, ...rescue.log, ...relay.log, ...spire.log, ...expedition.log, ...commission.log, ...heart.log, ...watch.log, ...calibration.log, ...supplyLine.log] };
 }
 
 const OBJECTIVES = {
@@ -148,6 +150,7 @@ export function getJournal(state = createStoryState()) {
   journal.push(...getHeartJournal(state));
   journal.push(...getWatchJournal(state));
   journal.push(...getCalibrationJournal(state));
+  journal.push(...getSupplyLineJournal(state));
   journal.push(...getExpeditionJournal(state));
   journal.push(...getCommissionJournal(state));
   return journal;
@@ -169,6 +172,8 @@ export function getEndingSummary(state) {
 export function getDialogue(state = createStoryState(), npcId) {
   const settler = getSettlerDialogue(state, npcId);
   if (settler) return settler;
+  const supplyLine = getSupplyLineDialogue(state, npcId);
+  if (supplyLine) return supplyLine;
   const calibration = getCalibrationDialogue(state, npcId);
   if (calibration) return calibration;
   const watch = getWatchDialogue(state, npcId);
