@@ -45,6 +45,7 @@ export const ENEMIES = {
   tide_wraith: {
     id: 'tide_wraith', name: 'Tide Wraith', hp: 50, atk: 10, def: 4, spd: 6, xp: 50, gold: 30,
     boss: true,
+    windup: { name: 'Breaker Surge', chance: 0.15, mult: 1.6 },
     intro: 'Seawater and lightning knot together into a Tide Wraith at the foot of the beacon!',
     defeat: 'The Tide Wraith unravels into harmless rain. Far above, the beacon housing stops shuddering.',
     enrage: { threshold: 0.5, atk: 2, chance: 0.5, line: 'The Tide Wraith draws the whole storm into itself, arcing with lightning!' },
