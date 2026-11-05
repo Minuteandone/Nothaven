@@ -150,9 +150,26 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   if (hasStatus(e, 'stunned')) {
     e.statuses = e.statuses.filter((s) => s !== 'stunned');
     lines.push(`${e.name} is stunned and loses its turn.`);
+    if (c.windup) {
+      c.windup = null;
+      lines.push(`The stun breaks ${e.name}’s gathered ${e.windup?.name || 'strike'}!`);
+    }
     return lines;
   }
   lines.push(...checkBossPhase(c));
+  // Telegraphed heavy blow: a boss with a `windup` spends one turn gathering,
+  // then strikes the hero next turn. Defend or a ward halves it; a stun breaks it.
+  // rng is only consumed for enemies that define `windup`, keeping seeded runs stable.
+  if (c.windup && e.windup) return releaseWindup(c, hero, rng, lines);
+  if (e.windup && rng() < (e.windup.chance ?? 0)) {
+    c.windup = { name: e.windup.name };
+    lines.push(`${e.name} begins gathering ${e.windup.name}! Brace yourself: Defend or a ward will blunt the blow.`);
+    // Gathering is the enemy's action, so one-action defenses expire as usual.
+    c.defending = false;
+    if (c.wardTurns > 0) c.wardTurns -= 1;
+    if (c.aegisTurns > 0) c.aegisTurns -= 1;
+    return lines;
+  }
   // Pick a target among living party members (rng is only consumed with 2+ targets).
   const living = (party || [hero]).filter((m) => m && m.hp > 0);
   const target = living.length > 1 ? living[Math.floor(rng() * living.length) % living.length] : hero;
@@ -203,6 +220,30 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   if (c.aegisTurns > 0) c.aegisTurns -= 1;
   if (hero.hp <= 0) { c.over = 'defeat'; lines.push(`${hero.name} collapses...`); }
   return lines;
+}
+
+function releaseWindup(c, hero, rng, lines) {
+  const e = c.enemy;
+  const w = e.windup;
+  c.windup = null;
+  const hs = heroStats(hero);
+  const warded = c.defending || c.wardTurns > 0 || (c.aegisTurns || 0) > 0;
+  const d = physicalDamage(e.atk, hs.def, rng, { mult: w.mult ?? 2, warded });
+  const lost = Math.min(d, hero.hp);
+  hero.hp = Math.max(0, hero.hp - d);
+  noteTaken(c, lost);
+  chargeFromHit(c, d, hs.maxHp);
+  lines.push(`${e.name} unleashes ${w.name}! ${hero.name} takes ${d}${warded ? ', braced against the worst of it' : ''}.`);
+  c.defending = false;
+  if (c.wardTurns > 0) c.wardTurns -= 1;
+  if (c.aegisTurns > 0) c.aegisTurns -= 1;
+  if (hero.hp <= 0) { c.over = 'defeat'; lines.push(`${hero.name} collapses...`); }
+  return lines;
+}
+
+/** True while the enemy is gathering a telegraphed blow for next turn. */
+export function enemyWindingUp(c) {
+  return Boolean(c && c.windup && !c.over && c.enemy && c.enemy.hp > 0);
 }
 
 /** Per-companion status timers live in c.allyTimers[memberId]. */
