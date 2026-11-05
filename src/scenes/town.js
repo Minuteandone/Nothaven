@@ -1,3 +1,5 @@
+import { unpinQuest } from '../story/pinnedQuest.js';
+import { renderPinnedQuest } from '../ui/pinnedQuest.js';
 import { restPrice } from '../story/relay.js';
 import { DIFFICULTIES, cycleDifficulty, getDifficulty } from '../combat/difficulty.js';
 import { saveGame } from '../state.js';
@@ -19,6 +21,7 @@ export const townScene = {
       ${sceneHeader({ eyebrow: 'Beacon Ward', title: 'Greyhaven', subtitle: 'A frontier town holding fast beneath a restless sky.', iconName: 'beacon' })}
       <div class="town-resource-row">${resourceChip({ iconName: 'coin', label: 'Gold', value: s.gold })}<span class="location-status"><span class="status-dot"></span> Shelter available</span></div>
       ${partyStatus(s.party)}
+      ${renderPinnedQuest(s, { journalAction: 'questJournal', hasJournal: Boolean(game.scenes?.quests) })}
       <div class="town-grid">
         <article class="panel story-panel">
           <p class="eyebrow">The road ahead</p>
@@ -55,6 +58,7 @@ export const townScene = {
     </main>`;
   },
   actions: {
+    unpinObjective(game, el) { if (game.state.scene === 'town' && !game.state.combat) unpinQuest(game.state, el?.dataset?.arg); },
     archive(game) { if (game.state.scene === 'town' && game.scenes?.archive && !game.state.combat) game.setScene('archive', { returnScene: 'town' }); },
     rest(game) {
       const s = game.state, price = restPrice(s.story); if (s.gold < price) return;

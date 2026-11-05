@@ -1,3 +1,4 @@
+import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
 import { getEntityAt, getTileInfo, getZoneVantage } from '../map/mapState.js';
@@ -197,6 +198,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
       <span class="location-status"><span class="status-dot"></span>One move per turn · Keyboard: ${characterShortcuts ? 'WASD or arrow keys' : 'arrow keys'}</span>
     </div>
     ${partyStatus(state.party)}
+    ${renderPinnedQuest(state, { journalAction: 'openQuests', hasJournal: hasQuestJournal })}
     <div class="explore-layout">
       <section class="panel exploration-map-panel" aria-labelledby="zone-map-title">
         <div class="section-heading">
