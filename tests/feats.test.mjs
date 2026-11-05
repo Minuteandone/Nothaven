@@ -26,6 +26,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.bestiary.gloomfin = 1;
   s.bestiary.frostmane = 1;
   s.bestiary.lenswarden = 1;
+  s.bestiary.cinderclaw = 1;
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
   s.ledger = { victories: 20, comebacks: 1, bestStreak: 15 };
@@ -195,4 +196,18 @@ test('Well Fitted needs both fittings at +3 on the same member, in party or rese
   assert.equal(earned(s), false, 'non-integer levels are ignored');
   s.reserve = { bram: { id: 'bram', temper: { weapon: 3, armor: 3 } } };
   assert.equal(earned(s), true);
+});
+
+test('Dune Breaker feat needs a Cinderclaw defeat and sits last', () => {
+  const s = createInitialState();
+  const done = () => featStatus(s).find(f => f.id === 'cinderclaw').done;
+  assert.equal(done(), false);
+  s.bestiary = { cinderclaw: 0, old_tusk: 1, gloomfin: 1, frostmane: 1, lenswarden: 1 };
+  assert.equal(done(), false, 'the four field trials do not count');
+  s.bestiary.cinderclaw = 1;
+  assert.equal(done(), true);
+  s.bestiary = null;
+  assert.equal(done(), false, 'missing bestiary is safe');
+  assert.equal(FEATS[FEATS.length - 1].id, 'cinderclaw');
+  assert.ok(!FIELD_TRIALS.includes('cinderclaw'));
 });
