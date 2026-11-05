@@ -1275,6 +1275,17 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
   font-size: 0.9em;
 }
 
+/* Sort control on the Bag screen */
+.bag-sort {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  margin: .75rem 0;
+}
+.bag-sort-label { color: var(--muted); font-size: 0.9em; }
+.bag-sort button[aria-pressed="true"] { border-color: var(--accent); background: var(--panel); font-weight: 700; }
+
 /* Separate manual checkpoints wrap without hiding text at large display scales. */
 .archive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; }
 .archive-card, .archive-confirm, .archive-preview, .archive-preview div { min-width: 0; overflow-wrap: anywhere; }
