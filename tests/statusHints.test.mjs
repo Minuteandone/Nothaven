@@ -12,6 +12,8 @@ test('every combat status has a readable label and hint', () => {
   assert.equal(statusLabel('shocked'), 'Shocked');
   assert.equal(statusLabel('mystery'), 'mystery');
   assert.equal(statusLabel(undefined), 'Unknown');
+  assert.equal(statusLabel('constructor'), 'constructor');
+  assert.equal(statusLabel('toString'), 'toString');
 });
 
 test('status hint text stays content-clean', () => {
