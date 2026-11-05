@@ -95,7 +95,7 @@ function windupDetails(enemy, comparison = false) {
       !Number.isFinite(w.mult) || w.mult <= 0) return '';
   const tag = comparison ? 'div' : 'section';
   const className = comparison ? 'comparison-tactic' : 'foe-tactic';
-  return `<${tag} class="${className} foe-windup"><h4>Windup: ${escapeHTML(w.name)}</h4><p>${escapeHTML(Math.round(w.chance * 100))}% chance to begin gathering. Gathers for one enemy action, then aims a ×${escapeHTML(w.mult)} ATK strike at Wren on its next action. After the warning, Defend or a ward halves the strike; stunning the foe interrupts it.</p></${tag}>`;
+  return `<${tag} class="${className} foe-windup"><h4>Windup: ${escapeHTML(w.name)}</h4><p>${escapeHTML(Math.round(w.chance * 100))}% chance to begin gathering. Gathers for one enemy action, then aims a ×${escapeHTML(w.mult)} ATK strike at Wren on its next action. After the warning, Defend or a ward halves the strike; stunning the foe or landing a Stillpoint Strike interrupts it.</p></${tag}>`;
 }
 
 function comparisonCard({ enemy }) {
