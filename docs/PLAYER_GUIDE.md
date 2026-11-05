@@ -219,7 +219,7 @@ Below the feats, the **Service record** tallies your real battles: battles won, 
 
 ### The field bag
 
-The bag screen holds the whole party's supplies and is reachable from town and the field. Member tabs choose whose stat line, gear comparisons and Equip buttons apply to; each stack lists its total sell value, and consumables can be used on the selected member without leaving the screen. Sort buttons above the item groups reorder stacks by type, name, or total sell value; the default order stays the way items were gathered.
+The bag screen holds the whole party's supplies and is reachable from town and the field. Member tabs choose whose stat line, gear comparisons and Equip buttons apply to; each stack lists its total sell value, and consumables can be used on the selected member without leaving the screen. Sort buttons above the item groups reorder stacks by type, name, or total sell value; the default order stays the way items were gathered. A search box above the groups narrows both the item groups and the craft table by name; search ignores letter case, and reopening the bag clears it.
 
 ### Signal Line Patrol
 
