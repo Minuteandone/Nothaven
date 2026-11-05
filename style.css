@@ -1185,3 +1185,33 @@ html[data-contrast="high"] .terrain-compass__heading p, html[data-contrast="high
 html[data-character-shortcuts="off"] .character-shortcuts-off { display: block; }
 html[data-character-shortcuts="off"] .combat-screen button:not([data-action="menu"][data-arg="main"]) .key-hint,
 html[data-character-shortcuts="off"] .combat-screen .shortcut-guide__grid { display: none; }
+
+/* Recorded foes can be compared without changing combat or journal progress. */
+.bestiary-comparison { margin: 0 0 2rem; }
+.bestiary-comparison__heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; }
+.bestiary-comparison__heading h2 { margin: .15rem 0 .45rem; }
+.bestiary-comparison__heading p { margin: .3rem 0; }
+.bestiary-comparison__heading .comparison-clear { flex: none; }
+.comparison-empty { margin: .75rem 0 0; color: var(--muted); line-height: 1.55; }
+.bestiary-comparison__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: .8rem; margin-top: 1rem; }
+.comparison-card { min-width: 0; padding: .85rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-strong); }
+.comparison-card__heading { display: flex; align-items: start; justify-content: space-between; gap: .5rem; }
+.comparison-card__heading h3 { margin: .15rem 0; color: var(--accent-bright); overflow-wrap: anywhere; }
+.comparison-card__heading .eyebrow { margin: 0; }
+.comparison-card__heading .comparison-remove { flex: none; min-height: 44px; padding-inline: .65rem; }
+.comparison-tactic { margin-top: .75rem; padding-top: .65rem; border-top: 1px solid var(--line-soft); }
+.comparison-tactic h4 { margin: 0 0 .35rem; overflow-wrap: anywhere; }
+.comparison-tactic p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.5; overflow-wrap: anywhere; }
+.foe-compare { margin-top: .8rem; }
+.foe-compare .action-button { width: 100%; justify-content: center; }
+html[data-contrast="high"] .comparison-card { border-color: #fff; background: #000; }
+@media (max-width: 520px) {
+  .bestiary-comparison__heading { flex-direction: column; }
+  .bestiary-comparison__heading .comparison-clear { width: 100%; justify-content: center; }
+  .bestiary-comparison__grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 360px) {
+  .bestiary-comparison { padding: .85rem; }
+  .comparison-card__heading { flex-wrap: wrap; }
+  .comparison-card__heading .comparison-remove { width: 100%; justify-content: center; }
+}
