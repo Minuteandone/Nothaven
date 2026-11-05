@@ -203,6 +203,7 @@ export const combatScene = {
         game.setScene(game.scenes?.town ? 'town' : 'title', { message, combatResult: 'defeat', encounterId });
         return;
       }
+      if (over === 'fled') game.bus.emit('combat:escape', { enemyId: c.enemy?.id });
       const message = over === 'victory' ? 'You return victorious.' : 'You slip away.';
       const target = game.scenes?.[returnScene] ? returnScene : 'town';
       game.setScene(target, { message, combatResult: over, encounterId });
