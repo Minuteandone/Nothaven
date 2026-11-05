@@ -88,6 +88,20 @@ test('fleeing a real battle emits combat:escape; drill exits do not', () => {
   assert.equal(events.length, 1);
 });
 
+test('repeating Finish or finishing with no battle never adds an escape', () => {
+  const state = createInitialState();
+  const bus = { handlers: {}, on(e, f) { (this.handlers[e] ||= []).push(f); }, emit(e, p) { for (const f of this.handlers[e] || []) f(p); } };
+  const game = { state, combatMenu: 'main', scenes: { town: {}, drills: {} }, bus, setScene() {} };
+  installLedger(game);
+  state.combat = { over: 'fled', enemy: { id: 'storm_rat' }, returnScene: 'town', encounterId: null };
+  combatScene.actions.finish(game);
+  assert.equal(ledgerOf(state).escapes, 1);
+  assert.equal(state.combat, null);
+  combatScene.actions.finish(game);
+  combatScene.actions.finish(game);
+  assert.equal(ledgerOf(state).escapes, 1);
+});
+
 test('feats page shows an escaped, egg-free service record', () => {
   const state = createInitialState();
   recordVictory(state, 'tide_wraith');
