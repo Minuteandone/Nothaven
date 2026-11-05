@@ -97,6 +97,7 @@ export const exploreScene = {
       nearbyActions: getAvailableActions(game.state),
       visitedZones: getVisitedZones(game.state),
       storyHtml: storyUI.render(game),
+      hasArchive: Boolean(game.scenes?.archive),
       hasQuestJournal: Boolean(game.scenes?.quests),
       hasCharacter: Boolean(game.scenes?.character),
       hasFeats: Boolean(game.scenes?.feats),
@@ -104,6 +105,7 @@ export const exploreScene = {
   },
 
   actions: {
+    openArchive(game) { if (game.state.scene === 'explore' && game.scenes?.archive && !game.state.combat) game.setScene('archive', { returnScene: 'explore' }); },
     ...storyUI.actions,
     moveNorth(game) {
       handleActionResult(game, movePlayer(game.state, 0, -1, { rng: game.mapRng || Math.random }));

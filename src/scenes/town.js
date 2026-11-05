@@ -45,6 +45,7 @@ export const townScene = {
             ${game.scenes?.recipes ? uiButton({ action: 'recipes', label: 'Field recipe book', iconName: 'focus', variant: 'ghost' }) : ''}
             ${game.scenes?.ending && s.flags?.endingShown ? uiButton({ action: 'chronicle', label: 'Read the chronicle', iconName: 'journal', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'explore', label: 'Explore the wilds', iconName: 'map', variant: 'primary' })}
+            ${game.scenes?.archive ? uiButton({ action: 'archive', label: 'Journey archive', iconName: 'save', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'save', label: 'Save journey', iconName: 'save', variant: 'ghost' })}
             ${uiButton({ action: 'difficulty', label: `Difficulty: ${DIFFICULTIES[getDifficulty(s)].label}`, iconName: 'shield', variant: 'ghost' })}
           </div>
@@ -54,6 +55,7 @@ export const townScene = {
     </main>`;
   },
   actions: {
+    archive(game) { if (game.state.scene === 'town' && game.scenes?.archive && !game.state.combat) game.setScene('archive', { returnScene: 'town' }); },
     rest(game) {
       const s = game.state, price = restPrice(s.story); if (s.gold < price) return;
       s.gold -= price; s.party.forEach(p => { const st = effectiveStats(p); p.hp = st.maxHp || p.maxHp; p.mp = st.maxMp || p.maxMp; p.statuses = []; });

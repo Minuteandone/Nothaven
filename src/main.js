@@ -22,6 +22,7 @@ import { installDisplayControls } from './ui/displayControls.js';
 import { installCombatControls } from './ui/combatControls.js';
 import { installExplorationControls } from './ui/explorationControls.js';
 import { installAnimations } from './ui/animations.js';
+import { installJourneyArchive } from './scenes/archive.js';
 import { installLedger } from './core/ledger.js';
 
 const game = new Game(document.getElementById('app'));
@@ -31,6 +32,7 @@ game.registerScene('combat', combatScene);
 installCombatControls(game); // combat-scoped shortcuts click existing enabled buttons
 game.registerScene('ending', endingScene);
 game.registerScene('guide', guideScene);
+installJourneyArchive(game);
 installStory(game);
 installProgression(game);
 installLedger(game); // Service Record tallies for real battles (drills are not counted)

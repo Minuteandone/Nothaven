@@ -1264,3 +1264,14 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
   color: var(--accent);
   font-size: 0.9em;
 }
+
+/* Separate manual checkpoints wrap without hiding text at large display scales. */
+.archive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; }
+.archive-card, .archive-confirm, .archive-preview, .archive-preview div { min-width: 0; overflow-wrap: anywhere; }
+.archive-preview { margin: 0 0 1rem; }
+.archive-preview div { margin-bottom: .5rem; }
+.archive-preview dt { color: var(--muted); font-size: .8em; }
+.archive-preview dd { margin: .15rem 0 0; }
+.archive-buttons { display: flex; flex-wrap: wrap; gap: .5rem; }
+.archive-buttons button { min-width: 0; min-height: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.archive-confirm { margin: 1rem 0; border-color: var(--accent); }
