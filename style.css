@@ -1283,6 +1283,14 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
   font-size: 0.9em;
 }
 
+/* Buy-back hints on shop sell rows */
+.sell-stock {
+  display: block;
+  color: var(--muted);
+  font-size: 0.9em;
+  white-space: normal;
+}
+
 /* Sort control on the Bag screen */
 .bag-sort {
   display: flex;
