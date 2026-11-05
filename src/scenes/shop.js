@@ -174,7 +174,7 @@ export const shopScene = {
           : `<small class="trade-shortfall">Needs: ${missing.map((m) => `${m.qty} ${esc(getItem(m.id)?.name || m.id)} (have ${m.have})`).join(', ')}</small>`;
         return `<tr>
           <td><strong>${esc(trade.name)}</strong><br><small>${giveText} &rarr; ${receiveText}</small><br><small class="trade-value">Worth ${giveValue}g &rarr; ${receiveValue}g</small>${shortfall}</td>
-          <td><button data-action="trade" data-arg="${esc(trade.id)}" ${met ? '' : 'disabled'}>Trade</button></td>
+          <td><button data-action="trade" data-arg="${esc(trade.id)}" ${met ? '' : 'disabled'}>Trade</button> <button data-action="tradeAll" data-arg="${esc(trade.id)}" ${met ? '' : 'disabled'}>Trade all</button></td>
         </tr>`;
       })
       .join('');
@@ -291,6 +291,31 @@ export const shopScene = {
       const res = performTrade(game.state.inventory, id);
       game.shopMessage = res.message;
       if (res.ok) game.state.inventory = res.inv;
+    },
+    tradeAll(game, el) {
+      const id = el?.dataset?.arg;
+      if (!id) return;
+      const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
+      const trade = tradesFor(shop.id).find((t) => t.id === id);
+      if (!trade) {
+        game.shopMessage = 'That trade is not offered here.';
+        return;
+      }
+      const first = performTrade(game.state.inventory, id);
+      if (!first.ok) {
+        game.shopMessage = first.message;
+        return;
+      }
+      let n = 1;
+      let inv = first.inv;
+      while (n < 99) {
+        const res = performTrade(inv, id);
+        if (!res.ok) break;
+        inv = res.inv;
+        n += 1;
+      }
+      game.state.inventory = inv;
+      game.shopMessage = `${shop.name} — traded ${trade.name} x${n}.`;
     },
     shopQty(game, el) {
       const arg = el?.dataset?.arg;
