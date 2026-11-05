@@ -7,7 +7,7 @@ import { createInitialState } from '../src/state.js';
 import { grantRewards } from '../src/items/inventory.js';
 
 // Full egg-family guard (mirrors the repo-wide discipline for rendered prose).
-const EGG_RE = /\b(eggs?|nests?|nest(ed|ing)?|hatch(ed|ing|es|lings?)?|yolk|chickens?|roosters?|hen|easter|scrambl(e|ed|ing)|omelet(te)?s?|peep(s|ing)?|shells?|shell(ed|ing)?|albumen|oval|ovoid|quiche|meringue|custard|poach(ed|ing)?|frittata|boil\w*|crack\w*|whisk|cackl\w*|pearl|golden|basket|quail|goose|sunny|fried|devil\w*|clutch|incubat\w*|humpty|benedict|faberg\w*|ovum|oeuf|huevo)\b/i;
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 function fakeGame() {
   const game = {
