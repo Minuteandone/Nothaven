@@ -30,7 +30,7 @@ export const questJournalScene = {
     const entries = selected === 'all' ? all : all.filter(entry => entry.status === selected);
     const active = all.filter(entry => entry.status === 'active').length;
     const completed = all.filter(entry => entry.status === 'complete').length;
-    const empty = selected === 'active' ? 'No active objectives in your journal.' : selected === 'complete' ? 'No completed objectives yet.' : 'No journal entries yet.';
+    const empty = selected === 'active' ? 'No active objectives in your journal.' : selected === 'complete' ? 'No completed objectives yet.' : 'A flock of dispatches gathered from every road. No journal entries yet.';
     return `<main class="game-shell quest-journal">
       ${sceneHeader({ title: 'Journey Journal', subtitle: 'Review your current objectives and the roads you have already opened.', iconName: 'journal' })}
       <section class="panel" aria-label="Journey objectives">
