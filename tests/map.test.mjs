@@ -7,6 +7,8 @@ import {
   ZONES,
   ZONE_ORDER,
   getZoneCondition,
+  getZoneProgress,
+  getZoneVantage,
   ensureMapState,
   exploreScene,
   getClearedEncounters,
@@ -779,4 +781,49 @@ test('every zone defines a valid baseline condition and getZoneCondition reacts 
   exploreScene.actions.waitTurn(game);
   const lastLog = game.state.map.log.at(-1);
   assert.match(lastLog, /Rime Front: Freezing mountain downdrafts coat the pass and inland relay in rime\./);
+});
+
+test('getZoneProgress and getZoneVantage track encounters and caches without mutating state and render in exploration UI', () => {
+  for (const zoneId of ZONE_ORDER) {
+    const zone = ZONES[zoneId];
+    assert.ok(zone.vantage && typeof zone.vantage.landmark === 'string', `${zoneId} has vantage landmark`);
+    assert.ok(Number.isInteger(zone.vantage.elevation) && zone.vantage.elevation > 0, `${zoneId} has elevation`);
+    assert.ok(typeof zone.vantage.surveyNote === 'string' && zone.vantage.surveyNote.length > 10, `${zoneId} has surveyNote`);
+    assert.ok(typeof zone.vantage.fieldNote === 'string' && zone.vantage.fieldNote.length > 10, `${zoneId} has fieldNote`);
+  }
+
+  const game = makeMockGame();
+  const snapshot = JSON.stringify(game.state);
+  const ridgeProg0 = getZoneProgress(game.state, 'ridge_road');
+  assert.equal(ridgeProg0.encountersCleared, 0);
+  assert.equal(ridgeProg0.encountersTotal, 3);
+  assert.equal(ridgeProg0.cachesOpened, 0);
+  assert.equal(ridgeProg0.cachesTotal, 1);
+  assert.equal(ridgeProg0.percent, 0);
+  assert.equal(JSON.stringify(game.state), snapshot, 'getZoneProgress must not mutate gameState');
+
+  const vantage0 = getZoneVantage(game.state, 'beacon_tower');
+  assert.equal(vantage0.landmark, 'Narrow Belfry Parapet');
+  assert.equal(vantage0.elevation, 366);
+  assert.equal(vantage0.condition.id, 'gale');
+  assert.equal(JSON.stringify(game.state), snapshot, 'getZoneVantage must not mutate gameState');
+
+  // Clearing an encounter and opening a cache updates getZoneProgress
+  recordEncounterVictory(game.state, 'ridge_patrol');
+  game.state.map.completedInteractions.ridge_supply_cache = true;
+  const ridgeProg1 = getZoneProgress(game.state, 'ridge_road');
+  assert.equal(ridgeProg1.encountersCleared, 1);
+  assert.equal(ridgeProg1.cachesOpened, 1);
+  assert.equal(ridgeProg1.completedObjectives, 2);
+  assert.equal(ridgeProg1.totalObjectives, 4);
+  assert.equal(ridgeProg1.percent, 50);
+
+  // Render exploration includes .zone-recon-summary with active weather, landmark, and progress
+  travelToZone(game.state, 'ridge_road');
+  game.setScene('explore', { zoneId: 'ridge_road' });
+  const html = exploreScene.render(game);
+  assert.match(html, /class="zone-recon-summary"/);
+  assert.match(html, /Coastal Squall/);
+  assert.match(html, /Upper Switchback Milestone \(144m\)/);
+  assert.match(html, /Threats cleared 1\/3 · Caches 1\/1/);
 });

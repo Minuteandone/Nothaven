@@ -4,6 +4,8 @@ export {
   ensureMapState,
   getZone,
   getZoneCondition,
+  getZoneProgress,
+  getZoneVantage,
   getTileChar,
   getTileInfo,
   isWalkable,

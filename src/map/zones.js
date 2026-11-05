@@ -56,6 +56,12 @@ export const ZONES = {
     subtitle: 'Storm-Battered Frontier Town',
     dangerLevel: 0,
     condition: 'sheltered',
+    vantage: {
+      landmark: 'Seaward Lantern Pier',
+      elevation: 12,
+      surveyNote: 'Ember-lit lanterns warm the harbor stones and dry the watch-house timber.',
+      fieldNote: 'Safe harbor walls keep roaming packs outside the gates.',
+    },
     description:
       'Lanterns sway against the gale in Greyhaven’s cobbled square. Beyond the eastern gate, the ridge road climbs toward the shattered observatory.',
     width: 9,
@@ -182,6 +188,12 @@ export const ZONES = {
     subtitle: 'Wind-Lashed Cliffside Ascent',
     dangerLevel: 1,
     condition: 'squall',
+    vantage: {
+      landmark: 'Upper Switchback Milestone',
+      elevation: 144,
+      surveyNote: 'Along the cliff trail, wind-scoured milestones mark the climb toward the headland.',
+      fieldNote: 'Cliffside brush conceals bandit lookouts near the central bend.',
+    },
     description:
       'Slick switchbacks hug the cliff above a roaring abyss. Fallen masonry and storm beasts choke the narrow pass toward the observatory.',
     width: 9,
@@ -307,6 +319,12 @@ export const ZONES = {
     subtitle: 'Shattered Astral Dome',
     dangerLevel: 2,
     condition: 'gale',
+    vantage: {
+      landmark: 'North Brass Astrolabe',
+      elevation: 288,
+      surveyNote: 'Shattered brass ribs frame the sea horizon around the old prism dome.',
+      fieldNote: 'Ruined dome vaults hold spare brass fittings and archival logs.',
+    },
     description:
       'Lightning flickers across warped brass arcs and collapsed vaults. The great refractory lens rests within the upper sanctum.',
     width: 9,
@@ -451,6 +469,12 @@ export const ZONES = {
     subtitle: 'High Spire of the Stormwatch',
     dangerLevel: 1,
     condition: 'gale',
+    vantage: {
+      landmark: 'Narrow Belfry Parapet',
+      elevation: 366,
+      surveyNote: 'Towering granite steps rise above the surf toward the headland lantern cradle.',
+      fieldNote: 'Ascend only after stocking tonics for the upper lantern platform.',
+    },
     description:
       'At the pinnacle of the cliff, the great bronze housing stands cold above the clouds. From here, a relit beam can shield Greyhaven alone or signal distant settlements across the frontier.',
     width: 9,
@@ -538,6 +562,12 @@ export const ZONES = {
     subtitle: 'Flooded Fishing Settlement',
     dangerLevel: 2,
     condition: 'squall',
+    vantage: {
+      landmark: 'Yawl Mooring Breakwater',
+      elevation: 6,
+      surveyNote: 'Ebbing tidewater laps against the timber piers and sunken breakwater stones.',
+      fieldNote: 'Marshy shoals slow foot travel between the flooded piers.',
+    },
     description:
       'Spray-drenched boardwalks and storm-battered cottages cling to the tidal cove of Saltmere. Beyond the breakwater, creatures driven ashore by the gale threaten the stranded fisherfolk.',
     width: 9,
@@ -681,6 +711,12 @@ export const ZONES = {
     subtitle: 'Wind-Scoured Mountain Outpost',
     dangerLevel: 2,
     condition: 'rime',
+    vantage: {
+      landmark: 'Summit Watch Cairn',
+      elevation: 504,
+      surveyNote: 'Rime-frosted cairns line the narrow mountain road toward the inland basin.',
+      fieldNote: 'Bitter crosswinds funnel through the narrow watchtower gorge.',
+    },
     description:
       'Frost-rimmed ramparts and stone signal cairns guard the upper pass at Highwatch. Cut off by rockslides, the outpost defenders hold the timber palisade against raiders and rogue constructs.',
     width: 9,
@@ -819,6 +855,12 @@ export const ZONES = {
     subtitle: 'Inland Signal Station',
     dangerLevel: 3,
     condition: 'rime',
+    vantage: {
+      landmark: 'Inland Copper Mast',
+      elevation: 612,
+      surveyNote: 'Exposed copper conduits hum across the wind-carved canyon floor.',
+      fieldNote: 'Long signal cables link the junction box to the master console.',
+    },
     description:
       'Scorched sandstone terraces and copper-wound signal pylons rise across the inland plateau of Sunscar Relay. Restoring the station’s capacitor junction and master console will link Greyhaven’s beacon to the interior.',
     width: 9,
@@ -954,6 +996,12 @@ export const ZONES = {
     danger: 4,
     dangerLevel: 4,
     condition: 'tempest',
+    vantage: {
+      landmark: 'Dais of the Conduit',
+      elevation: 773,
+      surveyNote: 'Granite lightning rods crown the summit ridge where the upper gale converges.',
+      fieldNote: 'Elevated stone bridges connect the twin barometer pillars.',
+    },
     description:
       'Lightning-split basalt steps and ancient survey buttresses climb into the heart of the perpetual squall at Stormcrown Spire. Recovering the lost storm-survey records and defeating the Stormcrown Tyrant at the summit will secure the frontier skies.',
     width: 9,
@@ -1108,6 +1156,12 @@ export const ZONES = {
     subtitle: 'Lightning Anchors and the Living Core',
     dangerLevel: 5,
     condition: 'maelstrom',
+    vantage: {
+      landmark: 'East Grounding Causeway',
+      elevation: 900,
+      surveyNote: 'Grounding pylons anchor the shattered causeway at the center of the maelstrom.',
+      fieldNote: 'Dual grounding pylons must be primed before the core stabilizes.',
+    },
     requiresStoryFlag: 'spire_reward',
     travelRequirementMessage: 'Report the summit survey in Greyhaven before entering the Storm’s Eye.',
     description: 'Beyond the summit, two lightning anchors hold a suspended causeway around a living storm. Ground the western and eastern anchors before challenging the core; the lower platform offers supplies and a signal lift home.',
