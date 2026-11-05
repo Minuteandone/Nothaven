@@ -32,7 +32,7 @@ export function damagePopup(anchor, amount, kind = 'damage') {
   const rect = anchor.getBoundingClientRect();
   const el = document.createElement('span');
   el.className = `damage-pop damage-pop--${kind}`;
-  el.textContent = kind === 'miss' ? 'Miss' : kind === 'heal' ? `+${amount}` : `${amount}`;
+  el.textContent = kind === 'miss' ? 'Miss' : kind === 'heal' ? `+${amount}` : kind === 'level' ? `Lv ${amount}!` : `${amount}`;
   el.style.left = `${rect.left + rect.width / 2 - 20}px`;
   el.style.top = `${rect.top - 10}px`;
   container.appendChild(el);
@@ -49,6 +49,22 @@ export function combatAnchor(target) {
   if (!Number.isInteger(i) || i < 0) return null;
   const cards = document.querySelectorAll('.party-units .unit');
   return cards && cards[i] ? cards[i] : null;
+}
+
+/** Party indexes and new levels from `party:levelup` lines ("NAME reached level N! …").
+ *  Only the highest level per member is kept, so a double level-up shows one popup. */
+export function levelUpTargets(party, lines) {
+  if (!Array.isArray(party) || !Array.isArray(lines)) return [];
+  const best = new Map();
+  for (const line of lines) {
+    const m = /^(.+?) reached level (\d+)!/.exec(String(line));
+    if (!m) continue;
+    const index = party.findIndex((p) => p && p.name === m[1]);
+    if (index < 0) continue;
+    const level = Number(m[2]);
+    if (!best.has(index) || best.get(index) < level) best.set(index, level);
+  }
+  return [...best].map(([index, level]) => ({ index, level })).sort((a, b) => a.index - b.index);
 }
 
 /** Shake the game container briefly. */
@@ -127,6 +143,7 @@ export const ANIM_CSS = `
 .damage-pop--crit { color: #f59e0b; font-size: 1.6rem; text-shadow: 0 0 8px rgba(245,158,11,0.6); }
 .damage-pop--heal { color: #22c55e; text-shadow: 0 0 4px rgba(34,197,94,0.4); }
 .damage-pop--miss { color: #94a3b8; font-style: italic; }
+.damage-pop--level { color: #facc15; font-size: 1.3rem; margin-top: -22px; text-shadow: 0 0 6px rgba(250,204,21,0.55); }
 @keyframes popUp {
   0% { opacity: 1; transform: translateY(0) scale(1); }
   30% { opacity: 1; transform: translateY(-12px) scale(1.15); }
@@ -167,7 +184,19 @@ export function installAnimations(game) {
     setTimeout(() => enemyDeathFade(combatAnchor('enemy')), 0);
   }
   function onDefeat() { screenShake(8, 500); }
-  function onLevelUp() { screenShake(2, 200); }
+  // Float a gold "Lv N!" over each member who levelled, once the victory screen has rendered.
+  function onLevelUp(payload) {
+    screenShake(2, 200);
+    if (typeof document === 'undefined') return;
+    const ups = levelUpTargets(game.state?.party, payload?.lines);
+    if (!ups.length) return;
+    setTimeout(() => {
+      for (const up of ups) {
+        const anchor = combatAnchor(up.index);
+        if (anchor) damagePopup(anchor, up.level, 'level');
+      }
+    }, 0);
+  }
   // Float damage (red) and healing (green) numbers over the unit cards once the
   // engine has re-rendered the combat screen after the action.
   function onHp(payload) {
