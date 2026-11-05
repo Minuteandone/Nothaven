@@ -1159,6 +1159,111 @@ function watchJourney(game, early, first) {
   assert.deepEqual(game.state.inventory, inventory); assert.deepEqual(game.state.bestiary, bestiary);
 }
 
+function thunderhoofLockedJourney(game) {
+  assert.equal(game.state.map.zoneId, 'ridge_road');
+  assert.notEqual(game.state.story.flags.calibration_reward, true);
+  walkTo(game, 6, 3);
+  const before = structuredClone(game.state), events = [];
+  const capture = event => events.push(event);
+  sceneBus.on('scene:enter', capture);
+  game.bus.on('story:event', capture);
+  game.bus.on('combat:victory', capture);
+  let rolls = 0;
+  game.mapRng = () => { rolls++; return 0.5; };
+  try {
+    for (const [action, arg] of [['mapEncounter', 'ridge_thunderhoof'], ['moveSouth']]) {
+      act(game, action, arg);
+      assert.deepEqual({ ...game.state, map: { ...game.state.map, log: before.map.log } }, before,
+        'unpaid Calibration gate changes only the explanatory map log');
+      assert.equal(rolls, 0);
+      assert.deepEqual(events, []);
+    }
+  } finally {
+    delete game.mapRng;
+    sceneBus.off('scene:enter', capture);
+    game.bus.off('story:event', capture);
+    game.bus.off('combat:victory', capture);
+  }
+}
+
+function thunderhoofJourney(game) {
+  assert.equal(game.state.scene, 'explore');
+  assert.equal(game.state.map.zoneId, 'greyhaven');
+  assert.equal(game.state.story.flags.calibration_reward, true);
+  assert.equal(game.state.story.flags.victory_last_squall, undefined);
+  act(game, 'toTownScene');
+  const restGold = game.state.gold;
+  act(game, 'rest');
+  assert.equal(game.state.gold, restGold - (game.state.story.flags.relay_choice === 'shelter_network' ? 2 : 5));
+  act(game, 'explore'); walkExit(game, 'ridge_road'); walkTo(game, 6, 3);
+  assert.deepEqual(game.state.party.map(member => member.id), ['hero', 'bram', 'sela']);
+  assert.equal(game.state.bestiary.thunderhoof, undefined);
+  assert.equal(DRILL_FOES.length, 7);
+  assert.equal(DRILL_FOES.includes('thunderhoof'), false);
+  assert.deepEqual(FIELD_TRIALS, ['old_tusk', 'gloomfin', 'frostmane', 'lenswarden']);
+  const before = structuredClone(game.state);
+  const protectedKeys = ['story', 'flags', 'reserve', 'drillRecords', 'drillGauntlet'];
+  const trialWarden = featStatus(before).find(feat => feat.id === 'trials').done;
+  const victories = [], capture = event => victories.push(structuredClone(event));
+  game.bus.on('combat:victory', capture);
+  try {
+    act(game, 'moveSouth');
+    assert.equal(game.state.scene, 'combat');
+    const combat = game.state.combat;
+    assert.equal(combat.encounterId, 'ridge_thunderhoof');
+    assert.equal(combat.enemy.id, 'thunderhoof');
+    assert.equal(combat.enemy.maxHp, 1300);
+    assert.deepEqual([combat.enemy.atk, combat.enemy.def, combat.enemy.spd], [46, 13, 9]);
+    assert.notEqual(combat.drill, true);
+    let tonicsUsed = 0;
+    for (let turn = 0; !combat.over && turn < 100; turn++) {
+      if (combat.charge >= 100) act(game, 'burst');
+      else if (game.state.party[0].mp < 8) {
+        assert.ok(countItem(game.state.inventory, 'storm_tonic') > 0, 'only earned tonics are available');
+        act(game, 'item', 'storm_tonic'); tonicsUsed++;
+      } else if (game.state.party.some(member => member.hp > 0 && member.hp < member.maxHp * 0.55)) {
+        act(game, 'skill', 'rallying_light');
+      } else if (!(combat.aegisTurns > 0)) act(game, 'skill', 'beacon_aegis');
+      else act(game, 'attack');
+    }
+    assert.equal(combat.over, 'victory', 'earned post-Calibration party wins Thunderhoof with native tactics');
+    const loot = [{ id: 'thunder_iron', qty: 3 }, { id: 'storm_glass', qty: 2 }, { id: 'ember_broth', qty: 2 }];
+    assert.deepEqual(combat.rewards, { xp: 400, gold: 240, items: loot });
+    const spentInventory = before.inventory.map(stack => stack.id === 'storm_tonic'
+      ? { ...stack, qty: stack.qty - tonicsUsed } : stack).filter(stack => stack.qty > 0);
+    const rewarded = grantRewards(spentInventory, loot);
+    assert.equal(rewarded.ok, true);
+    const book = { ...before.bestiary, thunderhoof: 1 };
+    const assertRewards = () => {
+      assert.equal(game.state.gold, before.gold + 240);
+      game.state.party.forEach((member, index) => assert.equal(member.xp, before.party[index].xp + 400));
+      assert.deepEqual(game.state.inventory, rewarded.inv);
+      assert.deepEqual(game.state.bestiary, book);
+      for (const key of protectedKeys) assert.deepEqual(game.state[key], before[key]);
+      assert.equal(featStatus(game.state).find(feat => feat.id === 'trials').done, trialWarden);
+      assert.deepEqual(victories, [{ enemyId: 'thunderhoof', encounterId: 'ridge_thunderhoof' }]);
+    };
+    assertRewards();
+    act(game, 'finish');
+    assert.equal(game.state.scene, 'explore');
+    assert.equal(game.state.combat, null);
+    assert.equal(game.state.map.activeEncounterId, null);
+    assert.deepEqual(game.state.map.clearedEncounters, { ...before.map.clearedEncounters, ridge_thunderhoof: true });
+    assert.deepEqual(game.state.map.completedInteractions, before.map.completedInteractions);
+    assertRewards();
+    checkpoint(game, 'complete');
+    assertRewards();
+    const cleared = structuredClone(game.state);
+    act(game, 'mapEncounter', 'ridge_thunderhoof');
+    assert.deepEqual({ ...game.state, map: { ...game.state.map, log: cleared.map.log } }, cleared,
+      'a stale cleared Thunderhoof action cannot replay the fight or rewards');
+    assertRewards();
+  } finally {
+    game.bus.off('combat:victory', capture);
+  }
+  walkExit(game, 'greyhaven');
+}
+
 function calibrationJourney(game) {
   assert.equal(game.state.map.zoneId, 'greyhaven');
   assert.equal(game.state.story.flags.watch_reward, true);
@@ -1173,7 +1278,8 @@ function calibrationJourney(game) {
   act(game, 'storyCalibration', 'accept'); checkpoint(game, 'complete');
   for (const flag of fields) assert.equal(game.state.story.flags[flag], undefined, 'no historical reading credit');
   act(game, 'storyCalibration', 'report'); assert.equal(game.state.gold, gold);
-  for (const zone of ['ridge_road', 'highwatch_pass', 'sunscar_relay']) walkExit(game, zone);
+  walkExit(game, 'ridge_road'); thunderhoofLockedJourney(game);
+  for (const zone of ['highwatch_pass', 'sunscar_relay']) walkExit(game, zone);
   walkTo(game, 3, 1); act(game, 'mapInteract', 'relay_junction');
   assert.equal(game.state.story.flags.calibration_relay, undefined, 'junction read on ascent is premature');
   walkExit(game, 'stormcrown_spire');
@@ -1753,6 +1859,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         watchJourney(game, early, first);
         calibrationJourney(game);
         signalLineJourney(game, early);
+        thunderhoofJourney(game);
         squallJourney(game);
         drillJourney(game);
         gauntletJourney(game);
