@@ -136,7 +136,7 @@ export function chargeMeter(combat) {
   return `<div class="beacon-charge${value >= BEACON_CHARGE_MAX ? ' beacon-charge--ready' : ''}">${meter({ label: 'Beacon Charge', value, max: BEACON_CHARGE_MAX, tone: 'xp' })}</div>`;
 }
 
-const DIFFICULTY_NOTES = { story: 'Story mode', veteran: 'Veteran mode' };
+const DIFFICULTY_NOTES = { story: 'Story mode', veteran: 'Veteran mode', stormborn: 'Stormborn mode' };
 /** Shows the active preset only when it differs from Standard. */
 export function difficultyNote(combat) {
   const id = combat?.difficulty;
