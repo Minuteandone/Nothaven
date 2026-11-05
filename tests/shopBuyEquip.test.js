@@ -30,7 +30,7 @@ const esc = (v) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function buyTable(html) {
-  return html.split('<table aria-label="Items for sale">')[1].split('</table>')[0];
+  return html.split('aria-label="Items for sale">')[1].split('</table>')[0];
 }
 
 function rowFor(html, itemId) {

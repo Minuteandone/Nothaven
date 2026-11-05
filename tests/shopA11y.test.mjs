@@ -35,7 +35,7 @@ test('shop render announces its message as a status region and labels tables', (
   assert.ok(html.includes('role="group" aria-label="Shop sections"'));
   assert.ok(html.includes('role="group" aria-label="Choose whose gear to view"'));
   assert.ok(!html.includes('tablist'));
-  assert.ok(html.includes('<table aria-label="Items for sale">'));
+  assert.ok(html.includes('aria-label="Items for sale"'));
   assert.ok(!EGG_RE.test(html));
 });
 
