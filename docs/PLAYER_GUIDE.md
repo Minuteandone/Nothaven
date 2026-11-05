@@ -128,6 +128,10 @@ Take **fresh readings after accepting** at all three repeatable stations, in any
 
 Old inspections do **not** count, unlike the earlier companion requests. You can save between readings. Return to Greyhaven and explicitly **report the three readings for 180 gold once**; conversation alone neither accepts nor pays. The completed journal records the shared forecast timetable. This survey changes no ending, combat difficulty, or encounter rate; ordinary storms and road threats remain.
 
+#### Optional ordered survey: Signal Calibration
+
+After **reporting The Long Watch and receiving its reward**, explicitly accept **Signal Calibration** in Greyhaven. Take fresh readings in order: **Eye Reference Gauge** on the Storm’s Eye lower platform (3,5), **Eastern Barometer Logbook** on Stormcrown Spire’s eastern parapet (7,3), then **Relay Capacitor Junction** on Sunscar’s northern terrace (3,1). Earlier or out-of-order inspections do not count; the Journey Journal always identifies the next step. Return to Greyhaven and explicitly report for **220 gold**. Talking alone pays nothing. The survey changes no ending, beacon reach, relay benefit, or combat statistics.
+
 ### Optional companion commissions
 
 Expand **Companion commissions** in Greyhaven. Each unlocks with its companion; you do **not** need that companion recruited or in the active party. Accept, complete both tasks, and explicitly report in Greyhaven.

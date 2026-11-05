@@ -1139,6 +1139,9 @@ function watchJourney(game, early, first) {
   }
   assert.match(getJournal(game.state.story).find(q => q.id === 'long_watch').objective, /explicitly report/);
   act(game, 'storyTalk', 'mara'); assert.equal(game.state.gold, gold, 'conversation never pays');
+  const beforeWatchPay = structuredClone(game.state);
+  act(game, 'storyCalibration', 'accept');
+  assert.deepEqual(game.state, beforeWatchPay, 'unpaid Watch cannot unlock calibration');
   act(game, 'storyWatch', 'report');
   assert.equal(game.state.gold, gold + 180);
   assert.equal(game.state.story.flags.watch_reward, true);
@@ -1154,6 +1157,62 @@ function watchJourney(game, early, first) {
   assert.equal(game.state.story.ending, prior.ending); assert.deepEqual(game.state.story.expedition, prior.expedition);
   assert.deepEqual(game.state.flags, endingFlags); assert.deepEqual(game.state.party, party);
   assert.deepEqual(game.state.inventory, inventory); assert.deepEqual(game.state.bestiary, bestiary);
+}
+
+function calibrationJourney(game) {
+  assert.equal(game.state.map.zoneId, 'greyhaven');
+  assert.equal(game.state.story.flags.watch_reward, true);
+  assert.equal(game.state.story.flags.victory_last_squall, undefined);
+  const prior = structuredClone(game.state.story), gold = game.state.gold;
+  const protectedState = () => structuredClone(Object.fromEntries(Object.entries(game.state)
+    .filter(([key]) => !['story', 'gold', 'map', 'location', 'scene', 'log'].includes(key))));
+  const protectedBefore = protectedState();
+  const fields = ['calibration_reference', 'calibration_spire', 'calibration_relay'];
+  act(game, 'storyTalk', 'mara');
+  assert.equal(game.state.story.flags.calibration_accepted, undefined, 'talk never accepts');
+  act(game, 'storyCalibration', 'accept'); checkpoint(game, 'complete');
+  for (const flag of fields) assert.equal(game.state.story.flags[flag], undefined, 'no historical reading credit');
+  act(game, 'storyCalibration', 'report'); assert.equal(game.state.gold, gold);
+  for (const zone of ['ridge_road', 'highwatch_pass', 'sunscar_relay']) walkExit(game, zone);
+  walkTo(game, 3, 1); act(game, 'mapInteract', 'relay_junction');
+  assert.equal(game.state.story.flags.calibration_relay, undefined, 'junction read on ascent is premature');
+  walkExit(game, 'stormcrown_spire');
+  walkTo(game, 7, 3); act(game, 'mapInteract', 'survey_records_b');
+  assert.equal(game.state.story.flags.calibration_spire, undefined, 'barometer read on ascent is premature');
+  walkExit(game, 'storms_eye');
+  const inspect = (id, x, y, index) => {
+    walkTo(game, x, y); act(game, 'mapInteract', id);
+    assert.equal(game.state.story.flags[fields[index]], true);
+    assert.equal(fields.filter(flag => game.state.story.flags[flag] === true).length, index + 1);
+    assert.equal(game.state.gold, gold);
+    checkpoint(game, 'complete');
+    const story = structuredClone(game.state.story);
+    act(game, 'mapInteract', id);
+    act(game, 'storyCalibration', 'report'); act(game, 'storyCalibration', 'accept');
+    assert.deepEqual(game.state.story, story, 'repeat inspection and stale outside controls do nothing');
+    assert.equal(game.state.gold, gold);
+  };
+  inspect('eye_reference_gauge', 3, 5, 0);
+  assert.equal(game.state.map.completedInteractions.eye_reference_gauge, undefined, 'gauge remains repeatable');
+  walkExit(game, 'stormcrown_spire');
+  inspect('survey_records_b', 7, 3, 1);
+  walkExit(game, 'sunscar_relay');
+  inspect('relay_junction', 3, 1, 2);
+  walkExit(game, 'greyhaven');
+  assert.match(getJournal(game.state.story).find(q => q.id === 'signal_calibration').objective, /explicitly report.*220 gold/);
+  act(game, 'storyTalk', 'mara'); assert.equal(game.state.gold, gold, 'talk never pays');
+  act(game, 'storyCalibration', 'report');
+  assert.equal(game.state.gold, gold + 220); assert.equal(game.state.story.flags.calibration_reward, true);
+  assert.equal(game.state.scene, 'explore', 'no ending is replayed');
+  checkpoint(game, 'complete');
+  const paid = structuredClone(game.state);
+  act(game, 'storyCalibration', 'report'); act(game, 'storyCalibration', 'accept');
+  assert.deepEqual(game.state, paid, 'saved reward and stale acceptance are whole-state no-ops');
+  assert.equal(getJournal(game.state.story).find(q => q.id === 'signal_calibration').status, 'complete');
+  assert.deepEqual(protectedState(), protectedBefore);
+  const oldStory = structuredClone(game.state.story);
+  for (const key of ['calibration_accepted', ...fields, 'calibration_reward']) delete oldStory.flags[key];
+  assert.deepEqual(oldStory, prior, 'old ending, relay purpose, quests and expedition stay unchanged');
 }
 
 // These are real refights of bosses defeated earlier in this same campaign.
@@ -1624,6 +1683,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         companionJourney(game, early, first);
         heartJourney(game, early, first);
         watchJourney(game, early, first);
+        calibrationJourney(game);
         squallJourney(game);
         drillJourney(game);
         gauntletJourney(game);

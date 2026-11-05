@@ -1212,6 +1212,11 @@ export const ZONES = {
         description: 'You secure the eastern grounding chain. Its copper links carry the remaining shield current away from the core.',
       },
       {
+        id: 'eye_reference_gauge', interactionId: 'eye_reference_gauge', name: 'Eye Reference Gauge',
+        kind: 'quest', x: 3, y: 5, symbol: '✦', once: false,
+        description: 'A sheltered timing rule records the interval between distant signal flashes. Its slate can hold a fresh reference for the stations below.',
+      },
+      {
         id: 'eye_supply_cache', interactionId: 'eye_supply_cache', name: 'High Expedition Supply Cache',
         kind: 'cache', x: 2, y: 5, symbol: '▣', once: true,
         rewards: [{ id: 'storm_tonic', qty: 1 }, { id: 'ember_broth', qty: 1 }, { id: 'thunder_iron', qty: 1 }],
