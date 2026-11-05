@@ -84,7 +84,7 @@ export function companionRemark(id, story = {}, bestiary = {}) {
   if (f.victory_last_squall === true && set.squall) return set.squall;
   if (f.watch_reward === true && set.watch) return set.watch;
   if (f.victory_storm_heart === true && set.heart) return set.heart;
-  if (f.spire_reward && Number(bestiary?.cinderclaw) > 0 && set.cinderclaw) return set.cinderclaw;
+  if (f.spire_reward === true && Number(bestiary?.cinderclaw) > 0 && set.cinderclaw) return set.cinderclaw;
   if ((f.spire_summit || f.spire_victory || f.victory_stormcrown_tyrant) && set.spire) return set.spire;
   const relay = story?.flags?.relay_choice;
   if ((relay === 'shelter_network' || relay === 'route_network') && set[relay]) return set[relay];
