@@ -1290,6 +1290,15 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
 .bag-sort-label { color: var(--muted); font-size: 0.9em; }
 .bag-sort button[aria-pressed="true"] { border-color: var(--accent); background: var(--panel); font-weight: 700; }
 
+/* Bag search mirrors the recipe-book search row; mid-file so tail sections stay conflict-free. */
+.bag-search { min-width: 0; margin: .75rem 0; }
+.bag-search label { display: block; }
+.bag-search .hint { color: var(--muted); font-size: 0.9em; margin: .15rem 0 .4rem; }
+.bag-search-row { display: flex; flex-wrap: wrap; gap: .5rem; min-width: 0; }
+.bag-search-row input { flex: 1 1 14rem; min-width: 0; max-width: 100%; min-height: 44px; box-sizing: border-box; font: inherit; }
+.bag-search-row button { min-height: 44px; min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.bag-count { color: var(--muted); font-size: 0.9em; margin: .4rem 0 0; }
+
 /* Separate manual checkpoints wrap without hiding text at large display scales. */
 .archive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; }
 .archive-card, .archive-confirm, .archive-preview, .archive-preview div { min-width: 0; overflow-wrap: anywhere; }
