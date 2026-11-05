@@ -48,6 +48,27 @@ function victoryCount(value) {
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
 }
 
+export function bestiaryQueryText(value) {
+  return typeof value === 'string' ? value.trim().slice(0, 120) : '';
+}
+
+export function bestiaryFilterName(value) {
+  return ['all', 'bosses', 'regular'].includes(value) ? value : 'all';
+}
+
+export function filterBestiaryEntries(entries, filter = 'all', query = '') {
+  const category = bestiaryFilterName(filter);
+  const text = bestiaryQueryText(query).toLowerCase();
+  return (Array.isArray(entries) ? entries : []).filter(entry => {
+    if (!entry?.enemy) return false;
+    if (category === 'bosses' && !entry.enemy.boss) return false;
+    if (category === 'regular' && entry.enemy.boss) return false;
+    if (!text) return true;
+    return Number.isInteger(entry.count) && entry.count > 0 &&
+      typeof entry.enemy.name === 'string' && entry.enemy.name.toLowerCase().includes(text);
+  });
+}
+
 export function bestiaryComparisonIds(entries, compareIds = []) {
   const records = Array.isArray(entries) ? entries.filter(entry => entry?.enemy) : [];
   const requested = Array.isArray(compareIds) ? compareIds : [];
@@ -154,8 +175,11 @@ function unknownEntry({ enemy }) {
 }
 
 /** Presentation only: victory recording remains in installBestiary. */
-export function renderBestiary({ entries, returnScene = 'town', compareIds = [] }) {
+export function renderBestiary({ entries, returnScene = 'town', compareIds = [], filter = 'all', query = '' }) {
   const records = Array.isArray(entries) ? entries.filter(entry => entry?.enemy) : [];
+  const category = bestiaryFilterName(filter);
+  const text = bestiaryQueryText(query);
+  const shown = filterBestiaryEntries(records, category, text);
   const known = records.filter(entry => victoryCount(entry.count) > 0);
   const comparisonIds = bestiaryComparisonIds(records, compareIds);
   const victories = known.reduce((sum, entry) => sum + victoryCount(entry.count), 0);
@@ -170,7 +194,14 @@ export function renderBestiary({ entries, returnScene = 'town', compareIds = [] 
     </section>
     ${comparisonTray(known, comparisonIds)}
     <section class="bestiary-catalogue" aria-labelledby="bestiary-catalogue-title"><div class="bestiary-catalogue-heading"><div><p class="eyebrow">Storm-road field notes</p><h2 id="bestiary-catalogue-title">Foe records</h2></div><p>${known.length ? `${known.length} revealed · ${records.length - known.length} unrecorded` : 'No foes recorded yet'}</p></div>
-      <ul class="bestiary-list">${records.map(entry => victoryCount(entry.count) > 0 ? knownEntry(entry, comparisonIds.includes(entry.enemy.id), comparisonIds.length === BESTIARY_COMPARISON_LIMIT) : unknownEntry(entry)).join('')}</ul>
+      <div class="bestiary-tools">
+        <div class="bestiary-filters" role="group" aria-label="Foe category">${[['all', 'All'], ['bosses', 'Bosses'], ['regular', 'Regular']].map(([id, label]) => `<button type="button" data-action="bestiaryFilter" data-arg="${id}" aria-pressed="${category === id}">${label}</button>`).join('')}</div>
+        <label for="bestiary-search">Search recorded foes</label>
+        <p id="bestiary-search-help" class="hint">Search recorded foe names, then choose Search. Unknown foes stay hidden; clear the search to show their placeholders.</p>
+        <div class="bestiary-search-row"><input id="bestiary-search" type="search" maxlength="120" value="${escapeHTML(text)}" aria-describedby="bestiary-search-help"><button type="button" data-action="searchBestiary">Search</button><button type="button" data-action="clearBestiarySearch" ${text ? '' : 'disabled'}>Clear search</button></div>
+        <p role="status">Showing ${shown.length} of ${records.length} foes.</p>
+      </div>
+      ${shown.length ? `<ul class="bestiary-list">${shown.map(entry => victoryCount(entry.count) > 0 ? knownEntry(entry, comparisonIds.includes(entry.enemy.id), comparisonIds.length === BESTIARY_COMPARISON_LIMIT) : unknownEntry(entry)).join('')}</ul>` : '<p class="bestiary-empty">No foes match these choices.</p>'}
     </section>
     <nav class="bestiary-footer" aria-label="Leave field journal">${uiButton({ action: 'leave', label: returnLabel, iconName: returnScene === 'explore' ? 'map' : 'compass', variant: 'ghost' })}</nav>
   </main>`;
