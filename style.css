@@ -696,6 +696,9 @@ em.enraged {
 .shop-tabs { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .6rem; }
 .shop-tab { min-width: 5.5rem; text-align: center; justify-content: center; }
 .shop-tab--active { border-color: var(--accent); background: var(--accent); color: #15202b; }
+.shop-qty { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin: 0 0 .6rem; }
+.shop-qty span[aria-live] { color: var(--muted); font-size: .8rem; }
+.shop-qty button { min-width: 2.2rem; justify-content: center; }
 .craft-checklist { list-style: none; margin: .25rem 0; padding: 0; }
 .craft-checklist .have { color: var(--good); }
 .craft-checklist .need { color: var(--bad); }
