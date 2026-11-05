@@ -813,6 +813,8 @@ em.enraged {
 .companion-mastery--done { opacity: 1; border-left: 3px solid currentColor; padding-left: 0.5rem; }
 /* Rare-drop tag on shop sell rows */
 .sell-scarce { color: var(--bad); font-size: 0.85em; }
+/* Rare-drop tag on bag craft checklists */
+.craft-scarce { color: var(--bad); font-size: 0.85em; }
 /* Keep inventory names, bulk-sale totals, and spare-gear controls usable on narrow screens. */
 @media (max-width: 560px) {
   .shop-sell, .shop-sell tbody, .shop-sell tr, .shop-sell td,

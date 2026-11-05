@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { bagScene } from '../src/scenes/bag.js';
 import { createInitialState } from '../src/state.js';
 import { listRecipes } from '../src/items/crafting.js';
+import { isScarceItem } from '../src/items/shop.js';
 
 import { assertEggFree } from './helpers/eggGuard.mjs';
 
@@ -72,7 +73,7 @@ test('craft all records a single exploration log entry, not one per craft', () =
   assert.equal(crafted.length, 1, `expected one log line, got ${crafted.length}`);
 });
 
-test('every recipe row offers a Craft all button that mirrors Craft availability', () => {
+test('every non-scarce recipe row offers a Craft all button that mirrors Craft availability', () => {
   const game = fakeGame();
   game.state.inventory = [
     { id: 'healing_herb', qty: 2 },
@@ -82,7 +83,9 @@ test('every recipe row offers a Craft all button that mirrors Craft availability
   const html = bagScene.render(game);
   const recipes = listRecipes();
   const craftAllButtons = (html.match(/data-action="craftAll"/g) || []).length;
-  assert.equal(craftAllButtons, recipes.length, 'one Craft all button per recipe');
+  const bulkEligible = recipes.filter((r) => !(r.inputs || []).some((i) => isScarceItem(i.id)));
+  assert.ok(bulkEligible.length < recipes.length, 'some recipes are exempt from Craft all');
+  assert.equal(craftAllButtons, bulkEligible.length, 'one Craft all button per non-scarce recipe');
   // Affordable recipe: both buttons enabled and adjacent in the same cell.
   const row = html.split('<tr>').find((chunk) => chunk.includes('data-arg="distill_tonic"'));
   assert.ok(row, 'distill_tonic row rendered');
@@ -91,6 +94,14 @@ test('every recipe row offers a Craft all button that mirrors Craft availability
   const missing = html.split('<tr>').find((chunk) => chunk.includes('data-arg="reforge_blade"'));
   assert.ok(missing, 'reforge_blade row rendered');
   assert.match(missing, /data-action="craftAll" data-arg="reforge_blade" disabled/);
+  // Scarce recipe: the Craft all button is suppressed entirely and the
+  // checklist tags the rare-drop input instead.
+  const scarce = html.split('<tr>').find((chunk) => chunk.includes('data-arg="cut_crownshard_focus"'));
+  assert.ok(scarce, 'cut_crownshard_focus row rendered');
+  assert.match(scarce, /data-action="craft" data-arg="cut_crownshard_focus"( disabled)?>Craft<\/button>/);
+  assert.doesNotMatch(scarce, /data-action="craftAll" data-arg="cut_crownshard_focus"/);
+  assert.match(scarce, /craft-scarce/);
+  assert.match(scarce, /rare drop/);
 });
 
 test('craft all render stays free of egg words', () => {
