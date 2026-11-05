@@ -200,7 +200,7 @@ Greyhaven's **Sparring drills** board lets you refight the yard bosses you have 
 
 Once **three** drills are unlocked, the **Yard Gauntlet** opens beside them: face every unlocked drill boss back to back, with wounds and spent MP carrying over between bouts. Losing ends the run but costs nothing — no gold is lost and the party stands back up. Your best run (foes beaten in one attempt) is recorded.
 
-The **Wardens' feats** panel lists milestones of your journey. Alongside the chapter milestones it tracks thirteen yard, road, forge and record achievements:
+The **Wardens' feats** panel lists milestones of your journey. Alongside the chapter milestones it tracks fourteen yard, road, forge and record achievements:
 
 - **Yard Champion** — win a Sparring Drill against every boss in the Watch House yard.
 - **Unbroken Run** — clear the full Yard Gauntlet against every yard boss without a single loss.
@@ -212,6 +212,7 @@ The **Wardens' feats** panel lists milestones of your journey. Alongside the cha
 - **Trial Warden** — overcome all four optional field trials (Old Tusk, Gloomfin, Frostmane and the Lenswarden).
 - **Dune Breaker** — defeat Cinderclaw, the optional Sunscar plateau trial described above. It does not count toward Trial Warden.
 - **Stampede Stopped** — defeat Thunderhoof, the optional ridge trial unlocked by paid Signal Calibration. It does not count toward Trial Warden.
+- **Thaw the Sentinel** — defeat the Glacierward Colossus, the optional Highwatch Pass trial unlocked by paid Signal Calibration. It does not count toward Trial Warden.
 - **Undaunted** — win a battle after being carried home from a defeat.
 - **Steady Road** — win fifteen real battles in a row without a defeat. Fleeing does not break the run.
 - **Calm in the Gale** — overcome any boss in a real battle while the Difficulty is set to Stormborn. Sparring drills do not count.
