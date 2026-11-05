@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game } from '../src/engine.js';
+import { bus as sceneBus } from '../src/events.js';
 import { saveGame, loadGame } from '../src/state.js';
 import { combatScene } from '../src/scenes/combat.js';
 import { installDrills, DRILL_FOES, gauntletQueue } from '../src/scenes/drills.js';
-import { featStatus } from '../src/scenes/feats.js';
+import { featStatus, FIELD_TRIALS } from '../src/scenes/feats.js';
 import { effectiveStats } from '../src/items/equipment.js';
 import { installBag } from '../src/scenes/bag.js';
 import { getJournal } from '../src/story/index.js';
@@ -624,6 +625,98 @@ function relayJourney(game, choice, early) {
   assert.equal(game.state.bestiary.relay_warden, 1);
 }
 
+function cinderclawLockedJourney(game) {
+  assert.notEqual(game.state.story.flags.spire_reward, true);
+  walkExit(game, 'sunscar_relay');
+  walkTo(game, 3, 5);
+  const before = structuredClone(game.state);
+  const events = [];
+  const capture = event => events.push(event);
+  sceneBus.on('scene:enter', capture);
+  game.bus.on('story:event', capture);
+  let rolls = 0;
+  game.mapRng = () => { rolls++; return 0.5; };
+  try {
+    for (const [action, arg] of [['mapEncounter', 'sunscar_cinderclaw'], ['moveEast']]) {
+      act(game, action, arg);
+      assert.deepEqual({ ...game.state, map: { ...game.state.map, log: before.map.log } }, before,
+        'unpaid Spire gate changes only the explanatory map log');
+    }
+    assert.equal(rolls, 0);
+    assert.deepEqual(events, []);
+  } finally {
+    delete game.mapRng;
+    sceneBus.off('scene:enter', capture);
+    game.bus.off('story:event', capture);
+  }
+  walkExit(game, 'stormcrown_spire');
+}
+
+function cinderclawJourney(game) {
+  assert.equal(game.state.scene, 'explore');
+  assert.equal(game.state.map.zoneId, 'greyhaven');
+  assert.equal(game.state.story.flags.spire_reward, true);
+  act(game, 'toTownScene');
+  const restGold = game.state.gold;
+  act(game, 'rest');
+  assert.equal(game.state.gold, restGold - (game.state.story.flags.relay_choice === 'shelter_network' ? 2 : 5));
+  act(game, 'explore');
+  walkExit(game, 'ridge_road'); walkExit(game, 'highwatch_pass'); walkExit(game, 'sunscar_relay');
+  walkTo(game, 3, 5);
+  assert.equal(game.state.bestiary.cinderclaw, undefined);
+  assert.equal(DRILL_FOES.includes('cinderclaw'), false);
+  assert.equal(DRILL_FOES.length, 7);
+  assert.deepEqual(FIELD_TRIALS, ['old_tusk', 'gloomfin', 'frostmane', 'lenswarden']);
+  const before = structuredClone(game.state);
+  const trialWarden = featStatus(before).find(f => f.id === 'trials').done;
+  assert.equal(featStatus(before).find(f => f.id === 'cinderclaw').done, false);
+  const protectedKeys = ['story', 'flags', 'drillRecords', 'drillGauntlet', 'reserve'];
+  act(game, 'moveEast');
+  assert.equal(game.state.scene, 'combat');
+  const combat = game.state.combat;
+  assert.equal(combat.encounterId, 'sunscar_cinderclaw');
+  assert.equal(combat.enemy.id, 'cinderclaw');
+  assert.equal(combat.enemy.maxHp, 440);
+  assert.deepEqual([combat.enemy.atk, combat.enemy.def, combat.enemy.spd], [29, 10, 6]);
+  assert.notEqual(combat.drill, true);
+  for (let turn = 0; !game.state.combat.over && turn < 100; turn++) act(game, 'attack');
+  assert.equal(game.state.combat.over, 'victory', 'earned post-Spire gear and recruited allies win Cinderclaw');
+  assert.equal(game.state.gold, before.gold + 140);
+  game.state.party.forEach((m, i) => assert.equal(m.xp, before.party[i].xp + 260));
+  const loot = [{ id: 'spiced_broth', qty: 2 }];
+  assert.deepEqual(game.state.combat.rewards.items, loot);
+  const inventory = structuredClone(before.inventory);
+  for (const drop of loot) {
+    const stack = inventory.find(item => item.id === drop.id);
+    if (stack) stack.qty += drop.qty;
+    else inventory.push({ ...drop });
+  }
+  const book = { ...before.bestiary, cinderclaw: 1 };
+  assert.deepEqual(game.state.inventory, inventory);
+  assert.deepEqual(game.state.bestiary, book);
+  for (const key of protectedKeys) assert.deepEqual(game.state[key], before[key]);
+  assert.equal(featStatus(game.state).find(f => f.id === 'trials').done, trialWarden);
+  assert.equal(featStatus(game.state).find(f => f.id === 'cinderclaw').done, true);
+  act(game, 'finish');
+  assert.equal(game.state.scene, 'explore');
+  assert.equal(game.state.combat, null);
+  assert.equal(game.state.map.activeEncounterId, null);
+  assert.deepEqual(game.state.map.clearedEncounters, { ...before.map.clearedEncounters, sunscar_cinderclaw: true });
+  assert.deepEqual(game.state.map.completedInteractions, before.map.completedInteractions);
+  assert.deepEqual(game.state.inventory, inventory);
+  assert.deepEqual(game.state.bestiary, book);
+  assert.equal(game.state.gold, before.gold + 140);
+  game.state.party.forEach((m, i) => assert.equal(m.xp, before.party[i].xp + 260));
+  for (const key of protectedKeys) assert.deepEqual(game.state[key], before[key]);
+  checkpoint(game, 'complete');
+  assert.equal(featStatus(game.state).find(f => f.id === 'cinderclaw').done, true);
+  const cleared = structuredClone(game.state);
+  act(game, 'mapEncounter', 'sunscar_cinderclaw');
+  assert.deepEqual({ ...game.state, map: { ...game.state.map, log: cleared.map.log } }, cleared,
+    'a stale cleared-encounter action cannot repeat combat or rewards');
+  walkExit(game, 'greyhaven');
+}
+
 function spireJourney(game, choice, early) {
   const ending = game.state.story.ending;
   act(game, 'leave'); // field journal → town
@@ -684,6 +777,7 @@ function spireJourney(game, choice, early) {
   act(game, 'mapTravel', 'storms_eye');
   assert.equal(game.state.map.zoneId, 'stormcrown_spire');
   assert.equal(game.state.story.flags.heart_visit, undefined);
+  cinderclawLockedJourney(game);
   const beforeReport = game.state.gold;
   act(game, 'storySpire', 'report');
   assert.equal(game.state.gold, beforeReport, 'stale report outside town cannot pay');
@@ -774,6 +868,7 @@ function spireJourney(game, choice, early) {
   assert.equal(game.state.story.ending, ending);
   assert.equal(game.state.story.flags.relay_choice, choice);
   checkpoint(game, 'complete');
+  cinderclawJourney(game);
 }
 
 function companionJourney(game, early, first) {
