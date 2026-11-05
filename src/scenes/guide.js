@@ -30,7 +30,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'Shops sell gear for each region, and the bag lets you equip it and use supplies. Shops and the field craft upgrades from salvaged materials. The shop Craft tab has a Craft all button that repeats a recipe while materials last. Sort buttons above the bag groups reorder stacks by type, name, or total sell value. The Buy tab’s quantity stepper picks how many the Buy button purchases at once (up to 99), while Buy 5 and Buy &amp; equip stay unchanged. A search box above the bag groups narrows both the item groups and the craft table by name; reopening the bag clears it. Trading posts at Saltmere and the Relay Outpost add a Trade tab that swaps common materials for glass at rates that favor the shop; rare drops are never tradable.',
   ] }),
   Object.freeze({ title: 'Settings and saving', lines: [
-    'The Difficulty button in Greyhaven switches between Story, Standard, Veteran and Stormborn foes at any time.',
+    'The Difficulty button in Greyhaven switches between Story, Standard, Veteran and Stormborn foes at any time; overcoming any boss on Stormborn earns the Calm in the Gale feat.',
     'Use Save journey in town to keep your progress on this device, and Continue on the title screen to return.',
     'Sound is muted by default. The audio controls let you turn on the storm ambience and adjust the volume.',
     'The Journey Journal lists every active task, the Character Sheet shows gear and effective stats, and Wardens’ Feats records the milestones of your journey — all open from Greyhaven or the expedition screen.',
