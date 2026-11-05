@@ -28,6 +28,10 @@ const ART = {
     label: 'an armored reef crawler',
     body: '<path fill="#111d2a" d="m43 112 25-45 42-20 45 13 31 48-27 21H70Z"/><path fill="#486b72" d="m70 74 40-19 38 12 19 31-44 19-54-14Z"/><path fill="#233d49" d="m84 70 27-8 28 9-12 27-34-3Z"/><path fill="none" stroke="#a8d3c3" stroke-width="5" d="m65 79-33-17-14 18 29 22M159 76l34-19 16 17-27 25M72 111l-23 23M100 119l-10 19M148 115l20 22"/><path fill="#d5b56d" d="m86 80 8-3-3 8Zm46-2 8 4-8 4Z"/>',
   },
+  scorpion: {
+    label: 'a giant copper-plated sand scorpion',
+    body: '<path fill="#111d2a" d="m64 114 20-26 38-9 38 5 22 15-5 17-40 9-48-2Z"/><path fill="#6b4a3a" d="m88 95 32-8 34 5 17 10-31 7-42-3Z"/><path fill="none" stroke="#2a1d17" stroke-width="3" d="M106 90l-3 20M126 88v23M146 91l3 20"/><path fill="none" stroke="#3a2a22" stroke-width="10" stroke-linejoin="round" d="m174 104 20-24 6-30-11-22-21-5"/><path fill="none" stroke="#8a5d44" stroke-width="4" stroke-linejoin="round" d="m174 104 20-24 6-30-11-22-21-5"/><path fill="#e0794a" d="m170 23-20 8 14 9Z"/><path fill="none" stroke="#f0b27a" stroke-width="2" d="m146 22-8-6M144 33l-10 2M152 44l-6 8"/><path fill="#111d2a" d="m84 96-26-14-22 2 8 8-18 2 16 10 22-2Z"/><path fill="#6b4a3a" d="m60 88-20-12-14 4 6 6 22 8Z"/><path fill="#111d2a" d="m82 108-26 4-20 14 12 2-10 12 20-8 18-12Z"/><path fill="#6b4a3a" d="m54 118-14 10-4 8 12-6 12-8Z"/><path fill="none" stroke="#a07a5a" stroke-width="3" d="m98 121-12 18M114 124l-5 20M136 124l5 20M154 120l13 17"/><path fill="#d5b56d" d="m80 98 7-3-1 7Zm2 8 7 1-5 5Z"/>',
+  },
   heart: {
     label: 'an angular lightning vortex',
     body: '<path fill="#142535" d="m120 16 53 38-14 63-42 24-48-34-9-57Z"/><path fill="#385b71" d="m120 29 35 32-11 43-29 23-32-29-7-38Z"/><path fill="#d5b56d" d="m123 39 12 33 24 5-28 15-10 28-8-31-25-11 27-9Z"/><path fill="none" stroke="#a8d3d9" stroke-width="3" d="M49 31 25 63l21-3-19 32M188 22l24 32-19-2 20 35M44 125l-18 13M190 121l23 15"/>',
@@ -59,7 +63,8 @@ export function bestiaryComparisonIds(entries, compareIds = []) {
 
 function kindFor(enemy) {
   if (enemy.id === 'storm_heart') return 'heart';
-  if (enemy.id === 'reef_crawler' || enemy.id === 'wrack_eel' || enemy.id === 'gloomfin' || enemy.id === 'cinderclaw') return 'crawler';
+  if (enemy.id === 'reef_crawler' || enemy.id === 'wrack_eel' || enemy.id === 'gloomfin') return 'crawler';
+  if (enemy.id === 'cinderclaw') return 'scorpion';
   if (BEASTS.has(enemy.id)) return 'beast';
   if (SPECTRES.has(enemy.id)) return 'spectre';
   if (Array.isArray(enemy.tags) && enemy.tags.includes('construct')) return 'construct';
