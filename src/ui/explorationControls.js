@@ -1,3 +1,5 @@
+import { characterShortcutsEnabled } from './displayControls.js';
+
 const installedGames = new WeakMap();
 
 function codeFor(event) {
@@ -35,6 +37,7 @@ export function explorationShortcutTarget(root, event) {
   const doc = root.ownerDocument;
   if (doc?.querySelector?.('.display-settings:not([hidden])')) return null;
 
+  if (!characterShortcutsEnabled(doc)) return null;
   const code = codeFor(event);
   const buttons = Array.from(root.querySelectorAll?.('button[data-action]') || []);
   if (code === 'KeyE') {

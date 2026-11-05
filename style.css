@@ -1179,3 +1179,9 @@ html[data-contrast="high"] .terrain-compass__heading p, html[data-contrast="high
   .terrain-compass ul { grid-template-columns: 1fr; }
   .terrain-compass li { grid-template-columns: minmax(5rem, .55fr) minmax(0, 1.45fr); }
 }
+
+/* Character shortcuts can be disabled without hiding native controls or Escape. */
+.character-shortcuts-off { display: none; }
+html[data-character-shortcuts="off"] .character-shortcuts-off { display: block; }
+html[data-character-shortcuts="off"] .combat-screen button:not([data-action="menu"][data-arg="main"]) .key-hint,
+html[data-character-shortcuts="off"] .combat-screen .shortcut-guide__grid { display: none; }

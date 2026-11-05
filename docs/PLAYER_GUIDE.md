@@ -6,6 +6,7 @@
 
 - Choose **New journey**, speak to Warden Mara in Greyhaven, and read the quest journal below the main panels. You can also speak to Iven and Tamsin for context.
 - **Explore the wilds** opens the map. Use its movement buttons, WASD, or the arrow keys. Nearby actions appear as you approach people, landmarks, enemies, and exits.
+- **Display settings → Letter & number shortcuts** can turn off WASD, E (Survey), combat letters, and numbered actions for speech input or personal preference. Arrow movement, Escape, and native buttons still work. This device-local preference is separate from your saved journey; Reset display turns these shortcuts back on.
 - Walk to new regions to discover them before using their travel shortcuts. Some passages also require quest progress.
 - **Inspect landmarks and open caches explicitly.** Standing on a chest is not the same as taking its supplies. Read nearby action labels when you reach an objective.
 - Use **Save journey** in town or **Save Game** while exploring. Saves are local to this browser/device; **Continue** on the title screen resumes your saved journey. Do not rely on automatic saving or cross-device synchronization.
