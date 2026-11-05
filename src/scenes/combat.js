@@ -164,7 +164,8 @@ export const combatScene = {
     },
     finish(game) {
       if (game.state.combat && !game.state.combat.over) return; // never abandon an active fight
-      const c = game.state.combat || { over: 'fled', returnScene: 'town', encounterId: null };
+      const real = game.state.combat;
+      const c = real || { over: 'fled', returnScene: 'town', encounterId: null };
       const { over, returnScene, encounterId, drill, gauntlet } = c;
       game.state.combat = null;
       game.combatMenu = 'main';
@@ -203,6 +204,7 @@ export const combatScene = {
         game.setScene(game.scenes?.town ? 'town' : 'title', { message, combatResult: 'defeat', encounterId });
         return;
       }
+      if (real && over === 'fled') game.bus.emit('combat:escape', { enemyId: c.enemy?.id });
       const message = over === 'victory' ? 'You return victorious.' : 'You slip away.';
       const target = game.scenes?.[returnScene] ? returnScene : 'town';
       game.setScene(target, { message, combatResult: over, encounterId });
