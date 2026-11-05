@@ -89,18 +89,38 @@ export function featsEarned(state) {
   return featStatus(state).filter(f => f.done).length;
 }
 
+export const FEAT_FILTERS = ['all', 'earned', 'pending'];
+const FEAT_FILTER_LABELS = { all: 'All', earned: 'Earned', pending: 'Not yet' };
+const FEAT_FILTER_EMPTY = { earned: 'No feats earned yet. Your first victories will start this list.', pending: 'Every feat is earned. The whole frontier knows your name.' };
+
+export function featFilterOf(value) {
+  return FEAT_FILTERS.includes(value) ? value : 'all';
+}
+
+export function filterFeatRows(rows, filter) {
+  const f = featFilterOf(filter);
+  const list = Array.isArray(rows) ? rows : [];
+  if (f === 'earned') return list.filter(r => r?.done === true);
+  if (f === 'pending') return list.filter(r => r?.done !== true);
+  return list.slice();
+}
+
 const returnScene = (game, value) => ['town', 'explore'].includes(value) && game.scenes?.[value] ? value : 'town';
 
 export const featsScene = {
   onEnter(game, data = {}) {
     game.featsReturn = returnScene(game, data.returnScene);
+    game.featsFilter = 'all';
   },
   render(game) {
     const rows = featStatus(game.state);
     const earned = rows.filter(r => r.done).length;
     const ledger = ledgerOf(game.state);
     const record = SERVICE_ROWS.map(r => `<div><dt>${escapeHTML(r.label)}</dt><dd>${ledger[r.key]}</dd></div>`).join('');
-    const items = rows.map(r => `<li class="feat${r.done ? ' feat--done' : ''}">
+    const filter = featFilterOf(game.featsFilter);
+    const shown = filterFeatRows(rows, filter);
+    const filters = FEAT_FILTERS.map(id => `<button type="button" class="action-button action-button--ghost" data-action="filterFeats" data-arg="${id}" aria-pressed="${id === filter}">${FEAT_FILTER_LABELS[id]}</button>`).join('');
+    const items = shown.map(r => `<li class="feat${r.done ? ' feat--done' : ''}">
         <span class="feat__mark" aria-hidden="true">${r.done ? '✦' : '·'}</span>
         <div><h2>${escapeHTML(r.title)}</h2><p>${escapeHTML(r.detail)}</p></div>
         <span class="feat__status">${r.done ? 'Earned' : 'Not yet'}</span>
@@ -109,7 +129,8 @@ export const featsScene = {
       ${sceneHeader({ eyebrow: 'Watch House records', title: 'Wardens’ Feats', subtitle: 'Milestones of your journey across the storm frontier.', iconName: 'beacon' })}
       <section class="panel" aria-label="Feats earned">
         <p class="feats__count">${earned} of ${rows.length} feats earned</p>
-        <ul class="feats__list">${items}</ul>
+        <div class="feats__filters" role="group" aria-label="Show feats">${filters}</div>
+        ${shown.length ? `<ul class="feats__list">${items}</ul>` : `<p class="feats__empty">${escapeHTML(FEAT_FILTER_EMPTY[filter] || '')}</p>`}
       </section>
       <section class="panel service-record" aria-labelledby="service-record-title">
         <h2 id="service-record-title">Service record</h2>
@@ -120,7 +141,10 @@ export const featsScene = {
     </main>`;
   },
   actions: {
-    closeFeats(game) { game.setScene(returnScene(game, game.featsReturn)); },
+    filterFeats(game, el) {
+      game.featsFilter = featFilterOf(el?.dataset?.arg);
+    },
+    closeFeats(game) { delete game.featsFilter; game.setScene(returnScene(game, game.featsReturn)); },
   },
 };
 
