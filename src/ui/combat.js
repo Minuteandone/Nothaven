@@ -86,7 +86,7 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
   if (menu === 'skills') {
     const skills = knownSkills(hero).map((skill, index) => commandCard({
       action: 'skill', arg: skill.id, name: skill.name, meta: `${skill.mp} MP`,
-      description: skill.description, iconName: skill.kind === 'heal' || skill.kind === 'party_heal' || skill.kind === 'revive' ? 'heart' : (skill.kind === 'ward' || skill.kind === 'party_ward') ? 'shield' : 'focus',
+      description: skill.description, iconName: skill.kind === 'heal' || skill.kind === 'party_heal' || skill.kind === 'revive' || skill.kind === 'vigil' ? 'heart' : (skill.kind === 'ward' || skill.kind === 'party_ward') ? 'shield' : 'focus',
       disabled: hero.mp < skill.mp, shortcut: index < 9 ? String(index + 1) : null,
     })).join('');
     return `<div class="actions command-list" role="group" aria-label="Skill actions">${skills || '<p class="empty-state">No skills learned yet.</p>'}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
