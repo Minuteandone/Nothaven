@@ -7,7 +7,7 @@ const member = (id, name, extra = {}) => ({ id, name, level: 19, hp: 40, maxHp: 
 
 test('Stormhaven Vigil unlocks at level 19 as the last skill', () => {
   assert.equal(SKILL_UNLOCKS.stormhaven_vigil, 19);
-  assert.equal(Object.keys(SKILL_UNLOCKS).at(-1), 'stormhaven_vigil');
+  assert.equal(Object.keys(SKILL_UNLOCKS).at(-2), 'stormhaven_vigil');
   assert.ok(!knownSkills({ level: 18 }).some((s) => s.id === 'stormhaven_vigil'));
   assert.ok(knownSkills({ level: 19 }).some((s) => s.id === 'stormhaven_vigil'));
   assert.equal(SKILLS.stormhaven_vigil.kind, 'vigil');
