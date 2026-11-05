@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { guideScene, GUIDE_SECTIONS, skillRoadmap } from '../src/scenes/guide.js';
 import { titleScene } from '../src/scenes/title.js';
+import { assertEggFree } from './helpers/eggGuard.mjs';
 import { SKILL_UNLOCKS } from '../src/combat/rules.js';
 
 if (!globalThis.localStorage) {
@@ -43,7 +44,13 @@ test('field-trial guidance names all four trials, the feat, and stays egg-free',
     'guide pins the explicit payment gate over both settlements'
   );
   assert.ok(drill.includes('Trial Warden'), 'guide names the Trial Warden feat');
-  const eggRe = /\b(eggs?|yolks?|shells?|hatch\w*|nests?|chicks?|hens?|omelet\w*|scrambl\w*|clutch|poach\w*|fried|boil\w*|cackl\w*|easter|pearl|golden|basket|quail|goose|peeps?)\b/i;
   const prose = GUIDE_SECTIONS.flatMap((s) => [s.title, ...s.lines]).join(' ');
-  assert.equal(eggRe.test(prose), false, 'no egg vocabulary in guide prose');
+  assertEggFree(prose, 'guide prose');
+});
+
+test('guide scaffolding — header, roadmap and buttons — stays egg-free', () => {
+  // Covers everything render() emits beyond GUIDE_SECTIONS: eyebrow, scene
+  // title, subtitle, skill-roadmap rows and button labels. Attribute values
+  // are stripped by the shared guard, so the benign game-shell class is fine.
+  assertEggFree(guideScene.render(), 'guide rendered HTML (scaffolding included)');
 });

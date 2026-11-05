@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { companionRemark } from '../src/party/remarks.js';
 
 const IDS = ['tamsin', 'iven', 'bram', 'sela'];
-const EGG_RE = /\b(egg|yolk|shell|hatch|nest|chick|hen|omelet|scrambl|benedict|faberge|easter|cackle|poach|albumen)\w*/i;
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 test('companions remark on Old Tusk after the rescues, before the relay choice', () => {
   for (const id of IDS) {

@@ -8,7 +8,7 @@ import { createInitialState } from '../src/state.js';
 import { grantRewards } from '../src/items/inventory.js';
 import { ITEMS, canEquip } from '../src/items/items.js';
 
-const EGG_RE = /\b(eggs?|nests?|nest(ed|ing)?|hatch(ed|ing|es|lings?)?|yolk|chickens?|roosters?|hen|easter|scrambl(e|ed|ing)|omelet(te)?s?|peep(s|ing)?|shells?|shell(ed|ing)?|albumen|ovoid|quiche|meringue|custard|poach(ed|ing)?|frittata|boil\w*|whisk\w*|cackl\w*|pearl|golden|basket|quail|goose|oval|sunny|fried|devil\w*|clutch|incubat\w*|humpty|benedict|faberg\w*|ovum|oeuf|huevo)\b/i;
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 function shopGame() {
   const game = {

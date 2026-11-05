@@ -10,7 +10,7 @@ import { grantRewards } from '../src/items/inventory.js';
 import { interactWith } from '../src/map/index.js';
 import { ensureMapState } from '../src/map/mapState.js';
 
-const EGG_RE = /\b(eggs?|yolks?|shells?|hatch\w*|nests?|chicks?|chickens?|hens?|omelet\w*|scrambl\w*|humpty|benedict|faberg\w*|clutch|incubat\w*|ovum|oeuf|huevo|quail|poach\w*|fried|devil\w*|albumen|easter|roosters?|goose|oval|ovoid|sunny|boil\w*|crack\w*|whisk|cackl\w*|pearl|golden|basket|peeps?|quiche|meringue|custard|frittata)\b/i;
+import { EGG_RE } from './helpers/eggGuard.mjs';
 
 function fakeGame() {
   const game = {
