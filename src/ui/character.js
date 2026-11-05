@@ -1,6 +1,7 @@
 import { MAX_LEVEL, xpForLevel, xpToNext } from '../core/progression.js';
 import { effectiveStats, totalStats } from '../items/equipment.js';
 import { getItem } from '../items/items.js';
+import { FITTING_SLOTS, MAX_FITTING, fittingEffectText, fittingLevel } from '../items/forge.js';
 import { SKILLS, SKILL_UNLOCKS, knownSkills } from '../combat/rules.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
 
@@ -74,9 +75,13 @@ function equipmentCard(member, slot, label, iconName) {
   const item = safeItem(id);
   const name = item ? item.name : id ? 'Unrecognized equipment' : `No ${label.toLowerCase()} equipped`;
   const description = item ? itemBonuses(item) : id ? 'This item is not in the current equipment registry.' : 'This slot is open for future gear.';
+  const fitted = FITTING_SLOTS.includes(slot) ? fittingLevel(member, slot) : 0;
+  const fittingLine = fitted
+    ? `<p class="equipment-card__fitting" data-fitting-level="${fitted}">Forge fitting +${fitted} of ${MAX_FITTING}${id ? ` · ${escapeHTML(fittingEffectText(slot, fitted))}` : ' · inactive until something is equipped'}</p>`
+    : '';
   return `<article class="equipment-card" data-equipment-slot="${slot}">
     <div class="equipment-card__icon">${icon(iconName)}</div>
-    <div><p class="eyebrow">${label}</p><h3>${escapeHTML(name)}</h3><p>${escapeHTML(description)}</p></div>
+    <div><p class="eyebrow">${label}</p><h3>${escapeHTML(name)}</h3><p>${escapeHTML(description)}</p>${fittingLine}</div>
   </article>`;
 }
 
@@ -110,6 +115,7 @@ export function renderCharacter({ member = {}, returnScene = 'town' } = {}) {
     atk: number(source.atk), def: number(source.def), maxHp: number(source.maxHp),
     maxMp: number(source.maxMp), spd: number(source.spd),
     equipment: source.equipment && typeof source.equipment === 'object' ? source.equipment : {},
+    temper: source.temper && typeof source.temper === 'object' ? source.temper : {},
   };
   const effective = effectiveStats(safeMember);
   const bonus = totalStats(safeMember);

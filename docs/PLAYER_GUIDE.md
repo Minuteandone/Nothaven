@@ -185,7 +185,7 @@ Greyhaven's **Sparring drills** board lets you refight the yard bosses you have 
 
 Once **three** drills are unlocked, the **Yard Gauntlet** opens beside them: face every unlocked drill boss back to back, with wounds and spent MP carrying over between bouts. Losing ends the run but costs nothing — no gold is lost and the party stands back up. Your best run (foes beaten in one attempt) is recorded.
 
-The **Wardens' feats** panel lists milestones of your journey. Alongside the chapter milestones it tracks ten yard, road and record achievements:
+The **Wardens' feats** panel lists milestones of your journey. Alongside the chapter milestones it tracks eleven yard, road, forge and record achievements:
 
 - **Yard Champion** — win a Sparring Drill against every boss in the Watch House yard.
 - **Unbroken Run** — clear the full Yard Gauntlet against every yard boss without a single loss.
@@ -197,5 +197,6 @@ The **Wardens' feats** panel lists milestones of your journey. Alongside the cha
 - **Trial Warden** — overcome all four optional field trials (Old Tusk, Gloomfin, Frostmane and the Lenswarden).
 - **Undaunted** — win a battle after being carried home from a defeat.
 - **Steady Road** — win fifteen real battles in a row without a defeat. Fleeing does not break the run.
+- **Well Fitted** — have the Greyhaven forge bring both the weapon and armour fittings of one party member to +3.
 
 Below the feats, the **Service record** tallies your real battles: battles won, bosses overcome, times carried home, safe withdrawals, wins after a defeat, and your current and longest winning runs. Sparring Drills and the Yard Gauntlet are practice and are not counted.
