@@ -209,6 +209,7 @@ The **Wardens' feats** panel lists milestones of your journey. Alongside the cha
 - **Vault Keeper** — defeat the Lenswarden, the optional Observatory Ruins trial described above.
 - **Trial Warden** — overcome all four optional field trials (Old Tusk, Gloomfin, Frostmane and the Lenswarden).
 - **Dune Breaker** — defeat Cinderclaw, the optional Sunscar plateau trial described above. It does not count toward Trial Warden.
+- **Stampede Stopped** — defeat Thunderhoof, the optional ridge trial unlocked by paid Signal Calibration. It does not count toward Trial Warden.
 - **Undaunted** — win a battle after being carried home from a defeat.
 - **Steady Road** — win fifteen real battles in a row without a defeat. Fleeing does not break the run.
 - **Well Fitted** — have the Greyhaven forge bring both the weapon and armour fittings of one party member to +3.

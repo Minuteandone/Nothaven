@@ -69,6 +69,8 @@ export const FEATS = Object.freeze([
     check: s => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary.cinderclaw : 0) > 0 }),
   Object.freeze({ id: 'calibration', title: 'True Interval', detail: 'Carry a fresh Eye reference down to the Spire barometer and the Sunscar junction, then report Signal Calibration to Mara.',
     check: s => flagsOf(s).calibration_reward === true }),
+  Object.freeze({ id: 'thunderhoof', title: 'Stampede Stopped', detail: 'Defeat Thunderhoof, the storm-charged elk that roams the ridge road once Signal Calibration is paid.',
+    check: s => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary.thunderhoof : 0) > 0 }),
 ]);
 
 export function featStatus(state) {

@@ -27,6 +27,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.bestiary.frostmane = 1;
   s.bestiary.lenswarden = 1;
   s.bestiary.cinderclaw = 1;
+  s.bestiary.thunderhoof = 1;
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
   s.ledger = { victories: 20, comebacks: 1, bestStreak: 15 };
@@ -208,7 +209,7 @@ test('Dune Breaker feat needs a Cinderclaw defeat and sits last', () => {
   assert.equal(done(), true);
   s.bestiary = null;
   assert.equal(done(), false, 'missing bestiary is safe');
-  assert.equal(FEATS[FEATS.length - 2].id, 'cinderclaw');
+  assert.equal(FEATS[FEATS.length - 3].id, 'cinderclaw');
   assert.ok(!FIELD_TRIALS.includes('cinderclaw'));
 });
 
@@ -222,6 +223,19 @@ test('True Interval feat needs the paid Signal Calibration report and sits last'
   assert.equal(done(), false, 'strictly true');
   s.story.flags.calibration_reward = true;
   assert.equal(done(), true);
-  assert.equal(FEATS[FEATS.length - 1].id, 'calibration');
-  assert.equal(FEATS.length, 27);
+  assert.equal(FEATS[FEATS.length - 2].id, 'calibration');
+  assert.equal(FEATS.length, 28);
+});
+
+test('Stampede Stopped feat needs a recorded Thunderhoof victory and sits last', () => {
+  const s = createInitialState();
+  const done = () => featStatus(s).find(f => f.id === 'thunderhoof').done;
+  assert.equal(done(), false);
+  s.bestiary = { thunderhoof: 0, cinderclaw: 1 };
+  assert.equal(done(), false);
+  s.bestiary.thunderhoof = 1;
+  assert.equal(done(), true);
+  assert.equal(FEATS[FEATS.length - 1].id, 'thunderhoof');
+  assert.equal(FEATS[FEATS.length - 1].title, 'Stampede Stopped');
+  assert.equal(FEATS.length, 28);
 });

@@ -4,6 +4,7 @@
 
 const LINES = {
   tamsin: {
+    thunderhoof: 'Thunderhoof ran the ridge bend like it owned the road. I counted its stride from the switchback; we will not be racing that one again.',
     calibration: 'Eye, Spire and Sunscar keep one signal interval now. I timed the flashes from the ridge and they matched my count to the beat.',
     cinderclaw: 'Cinderclaw dug in so fast I lost its trail twice. Next time I am watching the sand, not the sky.',
     frostmane: 'Frostmane ran faster than any wolf I have ever chased. I still got there first. Mostly.',
@@ -23,6 +24,7 @@ const LINES = {
     rescued: 'Both roads are open again. I counted the caravans this morning and ran out of fingers.',
   },
   iven: {
+    thunderhoof: 'Those antlers threw sparks hot enough to fuse my lens clips. I am keeping one of the scorched tines for the observatory shelf.',
     calibration: 'The three stations finally keep the same interval. I checked my pocket timer against them; it was only a little bit wrong.',
     cinderclaw: 'I measured the trench Cinderclaw left below the lift. Forty paces. I am not putting that number in the report to Mara; she would only worry.',
     frostmane: 'Frost was still on my sleeves when we came down from the bastion. I wrote the whole fight down before it melted.',
@@ -42,6 +44,7 @@ const LINES = {
     rescued: 'Saltmere sent spare copper wire and Highwatch sent star charts. I may never sleep again.',
   },
   bram: {
+    thunderhoof: 'I braced for that stampede like a breakwater braces for a spring tide. Next time I would rather be the tide.',
     calibration: 'Ona timed the harbor lamp against the new interval and it lined up on the first try. She looked almost disappointed.',
     cinderclaw: 'That scorpion’s pincers closed on my shield like a dockside winch. The shield held. My arm is still deciding.',
     frostmane: 'I have braced a shield against winter gales off the harbor. Frostmane hit harder than any of them, and it still went home first.',
@@ -61,6 +64,7 @@ const LINES = {
     rescued: 'The harbor watch is back on the breakwater. I owe you a proper meal at the Saltmere Post.',
   },
   sela: {
+    thunderhoof: 'The ridge runners can take the lower bend again without listening for hoofbeats in the thunder. The scorch marks will fade by spring.',
     calibration: 'Runners can read the flashes from any cairn now and trust the timing. I still count them under my breath anyway.',
     cinderclaw: 'The relay crews can run the signal lift without listening for scraping under the sand now. Cinderclaw burrowed off west and has not come back.',
     frostmane: 'Rusk’s sentries stand their night watches without flinching at every howl now. The packs scattered once Frostmane fled, and the cairn fires burn steady.',
@@ -85,6 +89,7 @@ export function companionRemark(id, story = {}, bestiary = {}) {
   if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(LINES, id)) return '';
   const set = LINES[id];
   const f = story?.flags || {};
+  if (f.calibration_reward === true && Number(bestiary?.thunderhoof) > 0 && set.thunderhoof) return set.thunderhoof;
   if (f.calibration_reward === true && set.calibration) return set.calibration;
   if (f.victory_last_squall === true && set.squall) return set.squall;
   if (f.watch_reward === true && set.watch) return set.watch;
