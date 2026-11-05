@@ -130,6 +130,7 @@ export const shopScene = {
           <td style="white-space:nowrap;">${unit}g each</td>
           <td>
             <button data-action="sell" data-arg="${esc(item.id)}"${scarce ? ' aria-label="Sell 1 ' + esc(item.name) + ' (rare drop, hard to replace)"' : ''}>Sell 1</button>
+            ${stack.qty > 1 && !scarce && buyQty > 1 ? `<button data-action="sellQty" data-arg="${esc(item.id)}" aria-label="Sell ${Math.min(buyQty, stack.qty)} ${esc(item.name)}"${buyQty >= stack.qty ? ' disabled' : ''}>Sell ${buyQty} (${unit * Math.min(buyQty, stack.qty)}g)</button>` : ''}
             ${stack.qty > 1 && !scarce ? `<button data-action="sellAll" data-arg="${esc(item.id)}">Sell all (${unit * stack.qty}g)</button>` : ''}
           </td>
         </tr>`;
@@ -217,6 +218,13 @@ export const shopScene = {
           <small>The Buy button purchases this many at once; Buy 5 and Buy &amp; equip are unchanged.</small>
         </div>`;
 
+    const sellPicker = `<div class="shop-qty" role="group" aria-label="Sell quantity">
+          <span aria-live="polite">Sell quantity ×${buyQty}</span>
+          <button data-action="shopQty" data-arg="dec" aria-label="Decrease sell quantity"${buyQty <= 1 ? ' disabled' : ''}>&minus;</button>
+          <button data-action="shopQty" data-arg="inc" aria-label="Increase sell quantity"${buyQty >= SHOP_BUY_QTY_MAX ? ' disabled' : ''}>+</button>
+          <small>The Sell N button sells this many from a stack; Sell 1 and Sell all are unchanged, and rare drops stay sell-one-at-a-time.</small>
+        </div>`;
+
     return `
       <div class="panel">
         <h2>${esc(shop.name)}</h2>
@@ -240,7 +248,7 @@ export const shopScene = {
             ? `${qtyPicker}<table class="shop-buy" aria-label="Items for sale">${buyRows}</table>`
             : mode === 'sell'
               ? sellRows
-                ? `<table class="shop-sell" aria-label="Items available to sell">${sellRows}</table>`
+                ? `${sellPicker}<table class="shop-sell" aria-label="Items available to sell">${sellRows}</table>`
                 : '<p>You carry nothing Hesta would pay for.</p>'
               : mode === 'trade'
                 ? tradeRows
@@ -347,6 +355,27 @@ export const shopScene = {
       const id = el?.dataset?.arg;
       if (!id) return;
       const res = sellItem(game.state, id, 1);
+      game.shopMessage = res.message;
+      if (res.ok) {
+        game.state.gold = res.state.gold;
+        game.state.inventory = res.state.inventory;
+      }
+    },
+    sellQty(game, el) {
+      const id = el?.dataset?.arg;
+      if (!id) return;
+      if (isScarceItem(id)) {
+        game.shopMessage = 'Rare drops can only be sold one at a time.';
+        return;
+      }
+      const want = normalizeShopQty(game.shopQty);
+      const have = countItem(game.state.inventory, id);
+      const qty = Math.min(want, have);
+      if (qty < 1) {
+        game.shopMessage = 'Nothing left to sell.';
+        return;
+      }
+      const res = sellItem(game.state, id, qty);
       game.shopMessage = res.message;
       if (res.ok) {
         game.state.gold = res.state.gold;
