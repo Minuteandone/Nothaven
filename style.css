@@ -1251,3 +1251,10 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
 .forge__max, .forge__have { opacity: .8; font-size: .9em; }
 .forge__reason { color: #fbbf24; }
 .forge__message { font-weight: 600; }
+
+/* Forge fittings on the character sheet */
+.equipment-card__fitting {
+  margin: 0.25rem 0 0;
+  font-size: 0.9em;
+  color: var(--accent, #d2a84f);
+}
