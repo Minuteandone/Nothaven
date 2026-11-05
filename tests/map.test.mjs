@@ -803,7 +803,7 @@ test('getZoneProgress and getZoneVantage track encounters and caches without mut
   assert.equal(JSON.stringify(game.state), snapshot, 'getZoneProgress must not mutate gameState');
 
   const vantage0 = getZoneVantage(game.state, 'beacon_tower');
-  assert.equal(vantage0.landmark, 'Narrow Belfry Parapet');
+  assert.equal(vantage0.landmark, 'Belfry Parapet');
   assert.equal(vantage0.elevation, 366);
   assert.equal(vantage0.condition.id, 'gale');
   assert.equal(JSON.stringify(game.state), snapshot, 'getZoneVantage must not mutate gameState');
@@ -824,6 +824,6 @@ test('getZoneProgress and getZoneVantage track encounters and caches without mut
   const html = exploreScene.render(game);
   assert.match(html, /class="zone-recon-summary"/);
   assert.match(html, /Coastal Squall/);
-  assert.match(html, /Upper Switchback Milestone \(144m\)/);
+  assert.match(html, /Ridge Switchback Milestone \(144m\)/);
   assert.match(html, /Threats cleared 1\/3 · Caches 1\/1/);
 });
