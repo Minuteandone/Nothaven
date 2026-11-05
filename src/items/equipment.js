@@ -5,6 +5,7 @@
 
 import { ITEMS, getItem, canEquip } from './items.js';
 import { addItem, removeItem } from './inventory.js';
+import { fittingBonus } from './forge.js';
 
 /** @returns {{weapon: string|null, armor: string|null, trinket: string|null}} */
 export function createEquipment() {
@@ -81,7 +82,8 @@ export function unequipItem(actor, inv, slot) {
 }
 
 /**
- * Sum of equipment stat bonuses across all three slots.
+ * Sum of equipment stat bonuses across all three slots, plus forge fittings
+ * (src/items/forge.js) on occupied weapon/armour slots.
  * @param {object} actor
  * @returns {{atk: number, def: number, hp: number, mp: number, spd: number}}
  */
@@ -93,6 +95,8 @@ export function totalStats(actor) {
     const stats = ITEMS[id]?.stats || {};
     for (const key of Object.keys(totals)) totals[key] += stats[key] || 0;
   }
+  const fitted = fittingBonus(actor);
+  for (const key of Object.keys(totals)) totals[key] += fitted[key] || 0;
   return totals;
 }
 

@@ -15,6 +15,7 @@ import { installAudio } from './audio/controls.js';
 import { installQuestJournal } from './scenes/quests.js';
 import { installFeats } from './scenes/feats.js';
 import { installDrills } from './scenes/drills.js';
+import { installForge } from './scenes/forge.js';
 import { guideScene } from './scenes/guide.js';
 import { installCharacter } from './scenes/character.js';
 import { installDisplayControls } from './ui/displayControls.js';
@@ -41,6 +42,7 @@ installCompanions(game); // registers the 'muster' scene (recruit companions)
 installQuestJournal(game);
 installFeats(game);
 installDrills(game);
+installForge(game);
 installBestiary(game); // registers the 'bestiary' scene + records defeated foes
 installCharacter(game); // registers Wren's read-only character sheet
 installRecipeBook(game); // registers the 'recipes' scene (Field Recipe Book)
