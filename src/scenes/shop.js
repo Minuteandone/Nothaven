@@ -77,11 +77,13 @@ export const shopScene = {
       .map((it) => {
         const stats = isKnownItem(it.id) ? getItem(it.id).stats : null;
         let cmpLine = '';
+        let wearingIt = false;
         if (isKnownItem(it.id) && canEquip(it.id)) {
           const curId = eq[getItem(it.id).slot];
           const curItem = curId && isKnownItem(curId) ? getItem(curId) : null;
           const delta = statDeltaSummary(curItem, getItem(it.id));
           if (delta) cmpLine = `<br><small>vs ${esc(curItem.name)}: ${esc(delta)}</small>`;
+          wearingIt = curId === it.id;
         }
         let craftLine = '';
         if (isKnownItem(it.id)) {
@@ -100,6 +102,9 @@ export const shopScene = {
           <td>
             <button data-action="buy" data-arg="${esc(it.id)}" ${gold < it.price ? 'disabled' : ''}>Buy</button>
             <button data-action="buy5" data-arg="${esc(it.id)}" aria-label="Buy 5 ${esc(it.name)}" ${gold < it.price ? 'disabled' : ''}>Buy 5</button>
+            ${wearingIt || (isKnownItem(it.id) && canEquip(it.id)) ? `<div style="margin-top:0.25rem;">
+              <button data-action="buyEquip" data-arg="${esc(it.id)}" aria-label="Buy and equip ${esc(it.name)}" ${gold < it.price || wearingIt ? 'disabled' : ''}>Buy &amp; equip</button>
+            </div>` : ''}
           </td>
         </tr>`;
       })
@@ -245,6 +250,36 @@ export const shopScene = {
         game.state.gold = res.state.gold;
         game.state.inventory = res.state.inventory;
       }
+    },
+    buyEquip(game, el) {
+      const id = el?.dataset?.arg;
+      if (!id) return;
+      const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
+      const s = game.state;
+      if (!isKnownItem(id) || !canEquip(id)) {
+        game.shopMessage = 'That cannot be equipped.';
+        return;
+      }
+      const item = getItem(id);
+      const { member, index, party } = activeMember(game);
+      const wearing = (member.equipment || createEquipment())[item.slot];
+      if (wearing === id) {
+        game.shopMessage = `${item.name} is already equipped.`;
+        return;
+      }
+      const buyRes = buyItem(s, shop, id, 1);
+      game.shopMessage = buyRes.message;
+      if (!buyRes.ok) return;
+      s.gold = buyRes.state.gold;
+      s.inventory = buyRes.state.inventory;
+      const eqRes = equipItem(member, s.inventory, id);
+      if (!eqRes.ok) {
+        game.shopMessage = `Bought ${item.name}, but could not equip it: ${eqRes.message}`;
+        return;
+      }
+      party[index] = eqRes.actor;
+      s.inventory = eqRes.inv;
+      game.shopMessage = `Bought and equipped ${item.name}${party.length > 1 ? ` for ${member.name || `member ${index + 1}`}` : ''}.`;
     },
     sell(game, el) {
       const id = el?.dataset?.arg;

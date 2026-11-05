@@ -97,10 +97,11 @@ test('shop buy rows offer Buy 5 with an accessible label and matching disabled s
   const priceyRow = html.split('<tr>').find((chunk) => chunk.includes('data-arg="leather_armor"'));
   assert.ok(priceyRow, 'leather armor row rendered');
   const disabledCount = (priceyRow.match(/disabled/g) || []).length;
-  assert.equal(disabledCount, 2, 'both Buy and Buy 5 disable when unaffordable');
+  assert.ok(priceyRow.includes('data-action="buyEquip"'), 'gear row also offers Buy & equip');
+  assert.equal(disabledCount, 3, 'Buy, Buy 5, and Buy & equip all disable when unaffordable');
   assert.ok(priceyRow.includes('data-action="buy5"'));
   const cheapRow = html.split('<tr>').find((chunk) => chunk.includes('data-arg="rations"'));
-  assert.ok(!cheapRow.includes('disabled'), 'affordable rows enable both buttons');
+  assert.ok(!cheapRow.includes('disabled'), 'affordable consumable rows enable every button');
 });
 
 test('buy5 scene action bulk-buys consumables through the shop scene', () => {
