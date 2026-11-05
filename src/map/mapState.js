@@ -1,4 +1,4 @@
-import { TILE_TYPES, ZONES, ZONE_ORDER } from './zones.js';
+import { TILE_TYPES, ZONE_CONDITIONS, ZONES, ZONE_ORDER } from './zones.js';
 import { grantRewards } from '../items/inventory.js';
 import { useConsumable } from '../items/consumables.js';
 import { craft } from '../items/crafting.js';
@@ -67,6 +67,31 @@ export function getInnCost(gameState, inter) {
 
 // Zones where defeating The Storm's Heart (flag victory_storm_heart) halves random encounters.
 export const STORM_CALMED_ZONES = ['stormcrown_spire', 'storms_eye'];
+export function getZoneCondition(gameState, zoneOrId = null) {
+  const resolvedZone =
+    typeof zoneOrId === 'string'
+      ? getZone(zoneOrId)
+      : zoneOrId && typeof zoneOrId === 'object'
+        ? zoneOrId
+        : getZone(gameState?.map?.zoneId || gameState?.location || 'greyhaven');
+  const story = gameState?.story;
+  const flags = story?.flags || {};
+  if (flags.victory_storm_heart && STORM_CALMED_ZONES.includes(resolvedZone?.id)) {
+    return ZONE_CONDITIONS.clear;
+  }
+  if (
+    resolvedZone?.id === 'beacon_tower' &&
+    (story?.stage === 'complete' ||
+      story?.ending === 'protect_town' ||
+      story?.ending === 'share_signal' ||
+      Boolean(story?.ending) ||
+      Boolean(flags.beacon_lit))
+  ) {
+    return ZONE_CONDITIONS.sheltered;
+  }
+  return ZONE_CONDITIONS[resolvedZone?.condition] || ZONE_CONDITIONS.sheltered;
+}
+
 
 export function getEffectiveRandomEncounterChance(gameState, zone) {
   const base = typeof zone?.randomEncounterChance === 'number' ? zone.randomEncounterChance : 0;

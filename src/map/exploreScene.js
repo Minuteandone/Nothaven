@@ -11,6 +11,7 @@ import {
   getTileInfo,
   getVisitedZones,
   getZone,
+  getZoneCondition,
   interactWith,
   movePlayer,
   patrolZone,
@@ -119,9 +120,10 @@ export const exploreScene = {
       const mapState = ensureMapState(game.state);
       const zone = getZone(mapState.zoneId);
       const tile = getTileInfo(zone, mapState.x, mapState.y);
+      const condition = getZoneCondition(game.state, zone);
       mapState.log = [
         ...(mapState.log || []).slice(-19),
-        `Standing on ${tile.name} in ${zone.name} (${mapState.x}, ${mapState.y}).`,
+        `Standing on ${tile.name} in ${zone.name} (${mapState.x}, ${mapState.y}) — ${condition.name}: ${condition.summary}`,
       ];
     },
     mapTalk(game, el) {
