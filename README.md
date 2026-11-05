@@ -117,3 +117,7 @@ CI or the deployment path, and the local server only serves game source/assets.
 
 The browser smoke also checks the Muster Board at 115% and 130% text size,
 including heading/count containment, without changing party progress.
+
+The portable smoke also compares its one genuinely defeated Ridge Bandit at 115%
+and 130% text size, then checks Remove/re-add/Clear and Back without progress changes.
+This fresh route does not claim three-card comparison coverage.
