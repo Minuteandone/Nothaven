@@ -115,8 +115,16 @@ These keyboard checks do not validate speech input or screen-reader support.
 
 Screenshots and Playwright traces are written to the ignored `browser-artifacts/`
 folder, including a failure screenshot when possible. View a trace with
-`npx playwright show-trace browser-artifacts/320-trace.zip`. No changes are made to
-CI or the deployment path, and the local server only serves game source/assets.
+`npx playwright show-trace browser-artifacts/320-trace.zip`. The local server only
+serves game source/assets.
+
+CI also offers an optional **browser-smoke** job: open a branch pipeline and run
+that manual job to install the locked dependencies and Chromium, then execute the
+same smoke. It has a 15-minute limit and is explicitly non-blocking; it does not
+change the default Node checks or deployment script. On a browser-test failure,
+its artifacts retain only the failing viewport's screenshot(s) and trace(s), when
+available, for one day. Setup failures may provide only the job log. Successful
+viewports are not uploaded; use the local command above to retain a complete run.
 
 The browser smoke also checks the Muster Board at 115% and 130% text size,
 including heading/count containment, without changing party progress.
