@@ -62,6 +62,26 @@ try {
       await click(action);
       assert.match(await page.locator('main h1, main h2').first().innerText(), title);
       await fit(action);
+      if (action === 'muster') {
+        for (const scale of ['115', '130']) {
+          await page.locator('[aria-controls="display-settings"]').click();
+          await page.locator('[data-display-scale]').selectOption(scale);
+          await page.locator('[data-display-done]').click();
+          await fit(`muster-text-${scale}`);
+          assert.deepEqual(await progress(), before, 'larger text must not change party progress');
+          const headings = await page.locator('.muster-section-heading').evaluateAll(rows => rows.map(row => {
+            const bounds = row.getBoundingClientRect();
+            return [...row.children].every(child => {
+              const rect = child.getBoundingClientRect();
+              return rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1;
+            });
+          }));
+          assert.deepEqual(headings, [true, true], 'Muster heading and count must fit without clipping');
+        }
+        await page.locator('[aria-controls="display-settings"]').click();
+        await page.locator('[data-display-scale]').selectOption('100');
+        await page.locator('[data-display-done]').click();
+      }
       await click('leave');
       assert.equal((await state()).scene, 'town');
       assert.deepEqual(await progress(), before, `${action}: opening and closing changed progress`);

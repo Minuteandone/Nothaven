@@ -114,3 +114,6 @@ Screenshots and Playwright traces are written to the ignored `browser-artifacts/
 folder, including a failure screenshot when possible. View a trace with
 `npx playwright show-trace browser-artifacts/320-trace.zip`. No changes are made to
 CI or the deployment path, and the local server only serves game source/assets.
+
+The browser smoke also checks the Muster Board at 115% and 130% text size,
+including heading/count containment, without changing party progress.
