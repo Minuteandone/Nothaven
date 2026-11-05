@@ -6,7 +6,7 @@
 import { getItem, isKnownItem, canEquip, TYPES, SLOTS } from '../items/items.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
 import { useConsumable } from '../items/consumables.js';
-import { recipesUsingItem, listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
+import { recipesUsingItem, listRecipes, recipeInputsMet, recipeSummary, craft as craftRecipe } from '../items/crafting.js';
 import { countItem } from '../items/inventory.js';
 import { craftInField } from '../map/mapState.js';
 import { sellValueOf, shopsStocking } from '../items/shop.js';
@@ -128,7 +128,7 @@ function craftSection(inv) {
       `<br><small>Needs: ${esc(recipeSummary(recipe))}</small></td>` +
       `<td><ul class="craft-checklist">${checklist}</ul></td>` +
       `<td><strong>${outputs}</strong></td>` +
-      `<td><button data-action="craft" data-arg="${esc(recipe.id)}"${check.ok ? '' : ' disabled'}>Craft</button></td>` +
+      `<td><button data-action="craft" data-arg="${esc(recipe.id)}"${check.ok ? '' : ' disabled'}>Craft</button> <button data-action="craftAll" data-arg="${esc(recipe.id)}"${check.ok ? '' : ' disabled'}>Craft all</button></td>` +
       `</tr>`
     );
   }).join('');
@@ -242,6 +242,27 @@ export const bagScene = {
       if (!recipeId) return;
       const res = craftInField(game.state, recipeId);
       game.bagMessage = res?.log?.[0] || (res?.ok ? 'Crafted.' : 'Crafting failed.');
+    },
+
+    craftAll(game, el) {
+      const recipeId = el?.dataset?.arg;
+      if (!recipeId) return;
+      const first = craftInField(game.state, recipeId);
+      if (!first?.ok) {
+        game.bagMessage = first?.log?.[0] || 'Crafting failed.';
+        return;
+      }
+      let n = 1;
+      let inv = game.state.inventory;
+      while (n < 99) {
+        const res = craftRecipe(inv, recipeId);
+        if (!res?.ok) break;
+        inv = res.inv;
+        n += 1;
+      }
+      game.state.inventory = inv;
+      const recipe = listRecipes().find((r) => r.id === recipeId);
+      game.bagMessage = `Crafted: ${recipe ? recipe.name : recipeId} x${n}.`;
     },
 
     recipes(game) { game.setScene('recipes', { returnScene: 'bag' }); },
