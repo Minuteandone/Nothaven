@@ -57,6 +57,7 @@ Provides 9×7 tile-grid exploration, multi-zone navigation, NPC/object proximity
   - Quest Interactables: `relay_junction` at `(3, 1)` and `relay_console` at `(7, 3)`.
   - Main Encounter: `relay_warden` (`enemyId: 'relay_warden'`) at `(5, 3)`.
   - Optional Encounter: `sunscar_drone_patrol` (`enemyId: 'relay_drone'`) at `(7, 1)`.
+  - Optional Boss Encounter: `sunscar_cinderclaw` (`cinderclaw`) at `(4, 5)`, requires story flag `spire_reward`.
   - Shop & Supply Cache: `relay_outpost` (`kind: 'shop'`, `shopId: 'relay_outpost'`) at `(6, 4)` and one-time `relay_supply_cache` at `(2, 5)`.
   - **Relay Choice Effects (`state.story.flags.relay_choice`)**:
     - `shelter_network`: reduces map inn rest cost (`greyhaven_inn`) from `5g` to `2g` via `getInnCost`.

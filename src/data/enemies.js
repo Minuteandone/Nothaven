@@ -184,6 +184,21 @@ export const ENEMIES = {
       { id: 'field_dressing', chance: 0.5, minQty: 1, maxQty: 2 },
     ],
   },
+  cinderclaw: {
+    id: 'cinderclaw', name: 'Cinderclaw', hp: 440, atk: 29, def: 10, spd: 6, xp: 260, gold: 140,
+    boss: true,
+    drill: false,
+    intro: 'The sand at the foot of the signal lift slides away in a hissing ring. Cinderclaw, a giant sand scorpion with copper-dark plates, rears out of the dune and raises a stinger glowing like a forge coal!',
+    defeat: 'Cinderclaw clacks its pincers once, low and slow, then backs into the dune and burrows out of sight. The plateau sand settles flat behind it.',
+    enrage: { threshold: 0.5, atk: 3, chance: 0.5, line: 'Heat shimmers off Cinderclaw’s plates until the air above it ripples. It scuttles in faster, stinger high!' },
+    ability: { name: 'Searing Sting', chance: 0.35, mult: 1.5, status: 'bleeding', turns: 2 },
+    windup: { name: 'Pincer Vise', chance: 0.15, mult: 1.8 },
+    loot: [
+      { id: 'sunscar_mantle', chance: 0.3, minQty: 1, maxQty: 1 },
+      { id: 'spiced_broth', chance: 1, minQty: 1, maxQty: 2 },
+      { id: 'relay_brass', chance: 0.5, minQty: 1, maxQty: 2 },
+    ],
+  },
   pass_warlord: {
     id: 'pass_warlord', name: 'Highwatch Warlord', hp: 96, atk: 13, def: 6, spd: 5, xp: 70, gold: 45,
     boss: true,
