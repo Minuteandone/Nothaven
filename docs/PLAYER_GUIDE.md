@@ -169,6 +169,16 @@ Four wandering foes can appear on the early roads in addition to the familiar pa
 
 Each adds an entry to the bestiary, so they help toward the **catalogue** feat. Their drops are ordinary supplies such as healing herbs, storm glass, field dressings, and tonics.
 
+### Greyhaven forge: weapon and armour fittings
+
+Choose **Greyhaven forge** in town to have Hesta fit each party member's weapon and armour slots, up to +3 each. A weapon fitting adds +2 attack per level. An armour fitting adds +1 defence and +4 max HP per level. Fittings belong to the wearer's slot, so they carry over when that member changes gear, but they only help while something is equipped there.
+
+| Level | Cost (either slot) |
+|---|---|
+| +1 | 30 gold, 2 Scrap Metal |
+| +2 | 70 gold, 2 Storm Glass, 1 Scrap Metal |
+| +3 | 140 gold, 2 Relay Brass, 1 Storm Glass |
+
 ### Watch House yard: drills, gauntlet and feats
 
 Greyhaven's **Sparring drills** board lets you refight the yard bosses you have already defeated in the field, one bout at a time. Optional field trials (Old Tusk, Gloomfin, Frostmane and the Lenswarden) are not part of the yard. Each drill pays **half that foe's experience to every party member**, but no gold, items, or journal entries — it is pure practice and cannot change the story. Defeating a boss in the field unlocks its drill. Each drill records how many times you have won and your best (fewest) rounds.
