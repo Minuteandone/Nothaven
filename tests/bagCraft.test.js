@@ -28,7 +28,7 @@ test('bag renders a Crafting section listing every recipe with checklists', () =
     assert.match(html, new RegExp(`data-arg="${recipe.id}"`), `craft button for ${recipe.id}`);
   }
   // Unmet input shows a need row with have 0 and a disabled button.
-  assert.match(html, /<li class="need">Healing Herb ×1 <small>\(have 0\)<\/small><\/li>/);
+  assert.match(html, /<li class="need">Healing Herb ×1 <small>\(have 0\)<\/small> <small class="craft-source">at Hesta&#39;s Goods<\/small><\/li>/);
   assert.match(html, /data-arg="distill_tonic"[^>]*disabled/);
 });
 
@@ -43,8 +43,8 @@ test('bag craft button is enabled when every input is owned', () => {
   const row = html.split('<tr>').find((chunk) => chunk.includes('data-arg="distill_tonic"'));
   assert.ok(row, 'distill_tonic row rendered');
   assert.doesNotMatch(row, /disabled/);
-  assert.match(row, /<li class="have">Healing Herb ×1 <small>\(have 1\)<\/small><\/li>/);
-  assert.match(row, /<li class="have">Storm Glass ×1 <small>\(have 1\)<\/small><\/li>/);
+  assert.match(row, /<li class="have">Healing Herb ×1 <small>\(have 1\)<\/small> <small class="craft-source">at Hesta&#39;s Goods<\/small><\/li>/);
+  assert.match(row, /<li class="have">Storm Glass ×1 <small>\(have 1\)<\/small> <small class="craft-source">at Storm&#39;s Eye Post<\/small><\/li>/);
 });
 
 test('craft action consumes inputs and adds the output to the shared inventory', () => {

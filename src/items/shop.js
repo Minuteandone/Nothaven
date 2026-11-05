@@ -72,6 +72,18 @@ export function shopSells(shop, itemId) {
 }
 
 /**
+ * Display names of every shop that stocks itemId, in canonical SHOPS order.
+ * @param {string} itemId
+ * @returns {string[]} shop display names (empty if no shop stocks it or id is unknown)
+ */
+export function shopsStocking(itemId) {
+  if (typeof itemId !== 'string') return [];
+  return Object.values(SHOPS)
+    .filter((shop) => shopSells(shop, itemId))
+    .map((shop) => shop.name);
+}
+
+/**
  * Buy one or more of an item from a shop.
  * @param {{gold: number, inventory: Array<{id:string,qty:number}>}} state
  * @param {object} shop
