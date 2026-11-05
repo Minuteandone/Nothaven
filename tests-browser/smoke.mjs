@@ -253,12 +253,39 @@ try {
       assert.deepEqual((await state()).party, saved.party);
       assert.equal((await state()).gold, saved.gold);
       assert.equal((await state()).map.clearedEncounters.ridge_patrol, true);
+      const beforeJournal = await state();
       await click('openJournal');
+      const journalState = await state();
+      assert.deepEqual({ ...journalState, scene: 'explore' }, beforeJournal);
       assert.match(await page.locator('main').innerText(), /Ridge Bandit/);
+      assert.equal(await page.locator('[data-action="compareFoe"]').count(), 1, 'only the earned foe can be compared');
+      assert.equal(await page.locator('.comparison-card').count(), 0);
+      await click('compareFoe', 'ridge_bandit');
+      assert.equal(await page.locator('.comparison-card[data-comparison-enemy="ridge_bandit"]').count(), 1);
+      assert.equal(await page.locator('.bestiary-entry [data-action="removeComparedFoe"][data-arg="ridge_bandit"]').getAttribute('aria-pressed'), 'true');
+      assert.deepEqual(await state(), journalState, 'comparison must not change progress');
+      for (const scale of ['115', '130']) {
+        await page.locator('[aria-controls="display-settings"]').click();
+        await page.locator('[data-display-scale]').selectOption(scale);
+        await page.locator('[data-display-done]').click();
+        await fit(`earned-comparison-text-${scale}`);
+        assert.deepEqual(await state(), journalState);
+      }
+      await page.locator('[aria-controls="display-settings"]').click();
+      await page.locator('[data-display-scale]').selectOption('100');
+      await page.locator('[data-display-done]').click();
+      await page.locator('.comparison-card [data-action="removeComparedFoe"]').click();
+      assert.equal(await page.locator('.comparison-card').count(), 0);
+      assert.deepEqual(await state(), journalState);
+      await click('compareFoe', 'ridge_bandit');
+      assert.equal(await page.locator('.comparison-card').count(), 1);
+      await click('clearComparison');
+      assert.equal(await page.locator('.comparison-card').count(), 0);
+      assert.deepEqual(await state(), journalState, 'Remove/re-add/Clear must not change progress');
       await fit('earned-bestiary'); await click('leave');
-      assert.equal((await state()).scene, 'explore');
+      assert.deepEqual(await state(), beforeJournal, 'Back must restore the whole expedition state');
       assert.deepEqual(errors, []);
-      console.log(`PASS ${width}px: navigation, filters, purchase, save/reload, shortcut opt-out/persistence/re-enable, combat shortcuts, full chronicle, earned ridge victory; browser errors []`);
+      console.log(`PASS ${width}px: navigation, filters, purchase, save/reload, shortcut opt-out/persistence/re-enable, combat shortcuts, full chronicle, earned ridge victory/comparison; browser errors []`);
     } catch (error) {
       await page.screenshot({ path: path.join(artifacts, `${width}-failure.png`), fullPage: true }).catch(() => {});
       console.error(`FAIL ${width}px; browser errors: ${JSON.stringify(errors)}`);
