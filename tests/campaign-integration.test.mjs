@@ -1310,6 +1310,8 @@ function calibrationJourney(game) {
   const beforeCalibrationPay = structuredClone(game.state);
   act(game, 'storyExpedition', 'signal_line_patrol');
   assert.deepEqual(game.state, beforeCalibrationPay, 'unpaid Calibration cannot unlock Signal Line Patrol');
+  for (const arg of ['coastal', 'highland', 'report']) act(game, 'storySupplyLine', arg);
+  assert.deepEqual(game.state, beforeCalibrationPay, 'unpaid Calibration cannot unlock Supply Lines');
   act(game, 'storyCalibration', 'report');
   assert.equal(game.state.gold, gold + 220); assert.equal(game.state.story.flags.calibration_reward, true);
   assert.equal(game.state.scene, 'explore', 'no ending is replayed');
@@ -1324,6 +1326,100 @@ function calibrationJourney(game) {
   assert.deepEqual(oldStory, prior, 'old ending, relay purpose, quests and expedition stay unchanged');
 }
 
+
+function supplyLinesJourney(game, first) {
+  assert.equal(game.state.map.zoneId, 'greyhaven');
+  assert.equal(game.state.story.flags.calibration_reward, true);
+  assert.equal(game.state.story.flags.victory_last_squall, undefined);
+  assert.equal(game.state.bestiary?.thunderhoof, undefined);
+  act(game, 'toTownScene'); act(game, 'rest'); act(game, 'explore');
+  const prior = structuredClone(game.state.story);
+  const flags = structuredClone(game.state.flags), reserve = structuredClone(game.state.reserve);
+  const route = first === 'coast' ? 'coastal' : 'highland';
+  const fields = ['supply_patrol', 'supply_station', 'supply_relay_patrol', 'supply_junction'];
+  const regional = route === 'coastal'
+    ? { zones: ['saltmere_coast'], enemy: 'wrack_eel', station: 'saltmere_harbor_lamp', x: 4, y: 5 }
+    : { zones: ['ridge_road', 'highwatch_pass'], enemy: 'rime_wight', station: 'highwatch_cairn', x: 4, y: 1 };
+  act(game, 'storyTalk', 'mara');
+  assert.deepEqual(game.state.story, prior, 'talk neither accepts nor backfills survey progress');
+  assert.equal(game.state.story.flags.supply_route, undefined);
+  act(game, 'storySupplyLine', route);
+  assert.equal(game.state.story.flags.supply_route, route);
+  for (const flag of fields) assert.equal(game.state.story.flags[flag], undefined, 'old patrols and inspections do not count');
+  checkpoint(game, 'complete');
+  const staleControls = () => {
+    const before = structuredClone(game.state);
+    for (const arg of ['coastal', 'highland', 'report']) act(game, 'storySupplyLine', arg);
+    assert.deepEqual(game.state, before, 'stale choices and unavailable reports are whole-state no-ops');
+  };
+  staleControls();
+  const inspect = (id, x, y, nextFlag) => {
+    walkTo(game, x, y);
+    const story = structuredClone(game.state.story), gold = game.state.gold;
+    act(game, 'mapInteract', id);
+    const expected = structuredClone(story);
+    if (nextFlag) expected.flags[nextFlag] = true;
+    assert.deepEqual(game.state.story, expected, 'only the next ordered inspection can advance the survey');
+    assert.equal(game.state.gold, gold, 'an inspection never pays the commission');
+    act(game, 'mapInteract', id);
+    assert.deepEqual(game.state.story, expected, 'duplicate inspection cannot advance another step');
+    checkpoint(game, 'complete');
+    staleControls();
+  };
+  const patrol = (enemy, rng, nextFlag) => {
+    const before = structuredClone(game.state);
+    game.mapRng = () => rng;
+    try { act(game, 'mapPatrol'); } finally { delete game.mapRng; }
+    const combat = game.state.combat;
+    assert.equal(combat.enemy.id, enemy);
+    assert.equal(combat.encounterId, null); assert.notEqual(combat.drill, true);
+    for (let turn = 0; !combat.over && turn < 100; turn++) act(game, 'attack');
+    assert.equal(combat.over, 'victory', 'survey patrol uses genuinely earned party strength');
+    const story = structuredClone(before.story); story.flags[nextFlag] = true;
+    const book = { ...before.bestiary, [enemy]: (before.bestiary[enemy] || 0) + 1 };
+    const rewarded = grantRewards(before.inventory, combat.rewards.items); assert.equal(rewarded.ok, true);
+    const assertRewards = () => {
+      assert.equal(game.state.gold, before.gold + combat.rewards.gold, 'only ordinary combat gold, not the 280-gold report');
+      game.state.party.forEach((member, i) => assert.equal(member.xp, before.party[i].xp + combat.rewards.xp));
+      assert.deepEqual(game.state.inventory, rewarded.inv);
+      assert.deepEqual(game.state.bestiary, book);
+      assert.deepEqual(game.state.story, story, 'only the next fresh patrol step advances');
+      assert.deepEqual(game.state.map.clearedEncounters, before.map.clearedEncounters);
+      assert.deepEqual(game.state.map.completedInteractions, before.map.completedInteractions);
+    };
+    assertRewards(); act(game, 'finish'); assert.equal(game.state.combat, null);
+    assert.equal(game.state.map.activeEncounterId, null); assertRewards();
+    checkpoint(game, 'complete'); assertRewards(); staleControls();
+  };
+  for (const zone of regional.zones) walkExit(game, zone);
+  inspect(regional.station, regional.x, regional.y, null);
+  patrol(regional.enemy, .99, 'supply_patrol');
+  inspect(regional.station, regional.x, regional.y, 'supply_station');
+  if (route === 'coastal') {
+    for (const zone of ['greyhaven', 'ridge_road', 'highwatch_pass']) walkExit(game, zone);
+  }
+  walkExit(game, 'sunscar_relay');
+  inspect('relay_junction', 3, 1, null);
+  patrol('dust_marauder', .25, 'supply_relay_patrol');
+  inspect('relay_junction', 3, 1, 'supply_junction');
+  for (const flag of fields) assert.equal(game.state.story.flags[flag], true);
+  assert.equal(game.state.story.flags.supply_reward, undefined);
+  walkExit(game, 'greyhaven');
+  assert.match(getJournal(game.state.story).find(q => q.id === 'supply_lines').objective, /explicitly report Supply Lines for 280 gold/);
+  const beforeTalk = structuredClone(game.state);
+  act(game, 'storyTalk', 'mara');
+  assert.deepEqual(game.state, beforeTalk, 'conversation never submits or pays the survey');
+  act(game, 'storySupplyLine', 'report');
+  const expected = structuredClone(beforeTalk);
+  expected.gold += 280; expected.story.flags.supply_reward = true;
+  assert.deepEqual(game.state, expected, 'report changes only the paid flag and exactly 280 gold');
+  checkpoint(game, 'complete'); staleControls();
+  assert.equal(getJournal(game.state.story).find(q => q.id === 'supply_lines').status, 'complete');
+  const oldStory = structuredClone(game.state.story);
+  for (const key of ['supply_route', ...fields, 'supply_reward']) delete oldStory.flags[key];
+  assert.deepEqual(oldStory, prior, 'ending, relay purpose, earlier flags and expedition are preserved');
+  assert.deepEqual(game.state.flags, flags); assert.deepEqual(game.state.reserve, reserve);
+}
 
 function signalLineJourney(game, reverse) {
   assert.equal(game.state.map.zoneId, 'greyhaven');
@@ -1595,9 +1691,11 @@ function wandererJourney(game) {
     { zones: ['ridge_road', 'greyhaven', 'saltmere_coast'], id: 'wrack_eel' },
     { zones: ['greyhaven', 'ridge_road', 'highwatch_pass'], id: 'rime_wight' },
   ];
-  for (const { id } of routes) assert.equal(expectedBook[id], undefined);
+  const surveyedEnemy = game.state.story.flags.supply_route === 'coastal' ? 'wrack_eel' : 'rime_wight';
+  for (const { id } of routes) assert.equal(expectedBook[id], id === surveyedEnemy ? 1 : undefined,
+    'only the chosen regional survey already earned one wanderer victory');
   assert.equal(roadwise(), false);
-  for (const [index, { zones, id }] of routes.entries()) {
+  for (const { zones, id } of routes) {
     for (const zone of zones) walkExit(game, zone);
     const beforeGold = game.state.gold, beforeXp = game.state.party.map(member => member.xp);
     const cleared = structuredClone(game.state.map.clearedEncounters);
@@ -1612,11 +1710,11 @@ function wandererJourney(game) {
     assert.equal(combat.rewards.gold, combat.enemy.gold);
     assert.equal(game.state.gold, beforeGold + combat.rewards.gold);
     game.state.party.forEach((member, i) => assert.equal(member.xp, beforeXp[i] + xp));
-    expectedBook[id] = 1; assert.deepEqual(game.state.bestiary, expectedBook);
+    expectedBook[id] = (expectedBook[id] || 0) + 1; assert.deepEqual(game.state.bestiary, expectedBook);
     assert.deepEqual(protectedState(), protectedBefore);
     assert.deepEqual(game.state.map.clearedEncounters, cleared);
     assert.deepEqual(game.state.map.completedInteractions, inspected);
-    assert.equal(roadwise(), index === routes.length - 1);
+    assert.equal(roadwise(), routes.every(({ id: species }) => (expectedBook[species] || 0) > 0));
     const rewardedGold = game.state.gold, rewardedXp = game.state.party.map(member => member.xp);
     act(game, 'finish');
     assert.equal(game.state.scene, 'explore'); assert.equal(game.state.combat, null);
@@ -1627,7 +1725,7 @@ function wandererJourney(game) {
     assert.deepEqual(game.state.bestiary, expectedBook);
     checkpoint(game, 'complete');
     assert.deepEqual(game.state.bestiary, expectedBook); assert.deepEqual(protectedState(), protectedBefore);
-    assert.equal(roadwise(), index === routes.length - 1);
+    assert.equal(roadwise(), routes.every(({ id: species }) => (expectedBook[species] || 0) > 0));
   }
 }
 
@@ -1858,6 +1956,7 @@ for (const ending of ['protect_town', 'share_signal']) {
         heartJourney(game, early, first);
         watchJourney(game, early, first);
         calibrationJourney(game);
+        supplyLinesJourney(game, first);
         signalLineJourney(game, early);
         thunderhoofJourney(game);
         squallJourney(game);
