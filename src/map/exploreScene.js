@@ -1,3 +1,4 @@
+import { unpinQuest } from '../story/pinnedQuest.js';
 import { characterShortcutsEnabled } from '../ui/displayControls.js';
 import { saveGame } from '../state.js';
 import { createStoryState, getDialogue } from '../story/index.js';
@@ -105,6 +106,7 @@ export const exploreScene = {
   },
 
   actions: {
+    unpinObjective(game, el) { if (game.state.scene === 'explore' && !game.state.combat) unpinQuest(game.state, el?.dataset?.arg); },
     openArchive(game) { if (game.state.scene === 'explore' && game.scenes?.archive && !game.state.combat) game.setScene('archive', { returnScene: 'explore' }); },
     ...storyUI.actions,
     moveNorth(game) {
