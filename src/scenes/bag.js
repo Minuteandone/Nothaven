@@ -9,7 +9,7 @@ import { useConsumable } from '../items/consumables.js';
 import { recipesUsingItem, listRecipes, recipeInputsMet, recipeSummary, craft as craftRecipe } from '../items/crafting.js';
 import { countItem } from '../items/inventory.js';
 import { craftInField } from '../map/mapState.js';
-import { sellValueOf, shopsStocking } from '../items/shop.js';
+import { sellValueOf, shopsStocking, isScarceItem } from '../items/shop.js';
 import { FITTING_SLOTS, MAX_FITTING, fittingLevel, fittingEffectText } from '../items/forge.js';
 
 const esc = (v) =>
@@ -109,12 +109,14 @@ function bagRow(item, stack, member) {
 function craftSection(inv) {
   const rows = listRecipes().map((recipe) => {
     const check = recipeInputsMet(inv, recipe);
+    const usesScarce = (recipe.inputs || []).some((input) => isScarceItem(input.id));
     const checklist = (recipe.inputs || []).map((input) => {
       const have = countItem(inv, input.id);
       const label = isKnownItem(input.id) ? getItem(input.id).name : input.id;
       const sources = shopsStocking(input.id);
       const sourceHint = sources.length ? ` <small class="craft-source">at ${esc(sources.join(' · '))}</small>` : '';
-      return `<li class="${have >= input.qty ? 'have' : 'need'}">${esc(label)} ×${input.qty} <small>(have ${have})</small>${sourceHint}</li>`;
+      const scarceHint = isScarceItem(input.id) ? ' <small class="craft-scarce">rare drop</small>' : '';
+      return `<li class="${have >= input.qty ? 'have' : 'need'}">${esc(label)} ×${input.qty} <small>(have ${have})</small>${sourceHint}${scarceHint}</li>`;
     }).join('');
     const outputs = (recipe.outputs || []).map((out) => {
       const item = isKnownItem(out.id) ? getItem(out.id) : null;
@@ -128,7 +130,9 @@ function craftSection(inv) {
       `<br><small>Needs: ${esc(recipeSummary(recipe))}</small></td>` +
       `<td><ul class="craft-checklist">${checklist}</ul></td>` +
       `<td><strong>${outputs}</strong></td>` +
-      `<td><button data-action="craft" data-arg="${esc(recipe.id)}"${check.ok ? '' : ' disabled'}>Craft</button> <button data-action="craftAll" data-arg="${esc(recipe.id)}"${check.ok ? '' : ' disabled'}>Craft all</button></td>` +
+      `<td><button data-action="craft" data-arg="${esc(recipe.id)}"${check.ok ? '' : ' disabled'}>Craft</button>` +
+      (usesScarce ? '' : ` <button data-action="craftAll" data-arg="${esc(recipe.id)}"${check.ok ? '' : ' disabled'}>Craft all</button>`) +
+      `</td>` +
       `</tr>`
     );
   }).join('');
@@ -247,6 +251,11 @@ export const bagScene = {
     craftAll(game, el) {
       const recipeId = el?.dataset?.arg;
       if (!recipeId) return;
+      const recipe = listRecipes().find((r) => r.id === recipeId);
+      if (recipe && (recipe.inputs || []).some((input) => isScarceItem(input.id))) {
+        game.bagMessage = 'Craft all is disabled for recipes that use rare drops.';
+        return;
+      }
       const first = craftInField(game.state, recipeId);
       if (!first?.ok) {
         game.bagMessage = first?.log?.[0] || 'Crafting failed.';
@@ -261,7 +270,6 @@ export const bagScene = {
         n += 1;
       }
       game.state.inventory = inv;
-      const recipe = listRecipes().find((r) => r.id === recipeId);
       game.bagMessage = `Crafted: ${recipe ? recipe.name : recipeId} x${n}.`;
     },
 
