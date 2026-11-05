@@ -796,7 +796,7 @@ test('getZoneProgress and getZoneVantage track encounters and caches without mut
   const snapshot = JSON.stringify(game.state);
   const ridgeProg0 = getZoneProgress(game.state, 'ridge_road');
   assert.equal(ridgeProg0.encountersCleared, 0);
-  assert.equal(ridgeProg0.encountersTotal, 3);
+  assert.equal(ridgeProg0.encountersTotal, 4);
   assert.equal(ridgeProg0.cachesOpened, 0);
   assert.equal(ridgeProg0.cachesTotal, 1);
   assert.equal(ridgeProg0.percent, 0);
@@ -815,8 +815,8 @@ test('getZoneProgress and getZoneVantage track encounters and caches without mut
   assert.equal(ridgeProg1.encountersCleared, 1);
   assert.equal(ridgeProg1.cachesOpened, 1);
   assert.equal(ridgeProg1.completedObjectives, 2);
-  assert.equal(ridgeProg1.totalObjectives, 4);
-  assert.equal(ridgeProg1.percent, 50);
+  assert.equal(ridgeProg1.totalObjectives, 5);
+  assert.equal(ridgeProg1.percent, 40);
 
   // Render exploration includes .zone-recon-summary with active weather, landmark, and progress
   travelToZone(game.state, 'ridge_road');
@@ -825,5 +825,5 @@ test('getZoneProgress and getZoneVantage track encounters and caches without mut
   assert.match(html, /class="zone-recon-summary"/);
   assert.match(html, /Coastal Squall/);
   assert.match(html, /Ridge Switchback Milestone \(144m\)/);
-  assert.match(html, /Threats cleared 1\/3 · Caches 1\/1/);
+  assert.match(html, /Threats cleared 1\/4 · Caches 1\/1/);
 });

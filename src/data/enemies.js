@@ -205,6 +205,22 @@ export const ENEMIES = {
       { id: 'relay_brass', chance: 0.5, minQty: 1, maxQty: 2 },
     ],
   },
+  thunderhoof: {
+    id: 'thunderhoof', name: 'Thunderhoof', hp: 1300, atk: 46, def: 13, spd: 9, xp: 400, gold: 240,
+    boss: true,
+    drill: false,
+    intro: 'Thunder rolls up the ridge road out of a clear patch of sky. Thunderhoof, a great storm-charged elk with antlers wreathed in blue sparks, stamps once and lowers its rack toward you!',
+    defeat: 'Thunderhoof lifts its head, snorts a last spark into the wind, and bounds away up the cliffside. The rumble of its hooves fades toward the high pass.',
+    enrage: { threshold: 0.5, atk: 4, chance: 0.5, line: 'Sparks race along Thunderhoof’s antlers until the whole rack blazes blue. It paws the stone, ready to charge again!' },
+    ability: { name: 'Arcing Antlers', chance: 0.3, mult: 1.4, status: 'shocked', turns: 2 },
+    windup: { name: 'Stampede Rush', chance: 0.15, mult: 1.8 },
+    loot: [
+      { id: 'thunder_iron', chance: 1, minQty: 2, maxQty: 3 },
+      { id: 'storm_glass', chance: 0.6, minQty: 1, maxQty: 2 },
+      { id: 'ember_broth', chance: 1, minQty: 1, maxQty: 2 },
+      { id: 'relay_brass', chance: 0.5, minQty: 1, maxQty: 2 },
+    ],
+  },
   pass_warlord: {
     id: 'pass_warlord', name: 'Highwatch Warlord', hp: 96, atk: 13, def: 6, spd: 5, xp: 70, gold: 45,
     boss: true,

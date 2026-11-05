@@ -13,6 +13,7 @@ Provides 9×7 tile-grid exploration, multi-zone navigation, NPC/object proximity
   - Story Encounter: `ridge_patrol` (`ridge_bandit`) at `(5, 3)`.
   - Optional Encounter: `ridge_hound_den` (`gale_hound`) at `(2, 1)`.
   - Optional Boss Encounter: `ridge_old_tusk` (`old_tusk`) at `(6, 2)`, requires story flag `rescue_reward`.
+  - Optional Boss Encounter: `ridge_thunderhoof` (`thunderhoof`) at `(6, 4)`, requires story flag `calibration_reward`.
   - Random Encounters (12%): `ridge_bandit`, `storm_rat`, `gale_hound`, `briar_boar`.
   - Interactables: `dispatch_ridge` at `(5, 5)`, `ridge_supply_cache` at `(1, 5)`.
   - Exits: West Trail `(0, 3)` → `greyhaven`; North Ascent `(7, 0)` → `observatory_ruins`; North Trail `(8, 3)` → `highwatch_pass`.
