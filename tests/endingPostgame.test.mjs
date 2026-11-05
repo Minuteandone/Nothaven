@@ -30,7 +30,9 @@ test('every earned deed is listed once, in order', () => {
 });
 
 test('deeds key off strict flags, bestiary counts and the ledger', () => {
-  assert.deepEqual(postgameLines({ story: { flags: { victory_last_squall: 'yes' } } }), []);
+  for (const v of ['yes', 1, 'true', {}]) {
+    assert.deepEqual(postgameLines({ story: { flags: { victory_last_squall: v, watch_reward: v, calibration_reward: v, supply_reward: v } } }), [], `lookalike ${JSON.stringify(v)}`);
+  }
   assert.deepEqual(postgameLines({ bestiary: { thunderhoof: 0, cinderclaw: 'x' } }), []);
   assert.deepEqual(postgameLines({ ledger: { stormbornBossVictories: -2 } }), []);
   assert.deepEqual(postgameLines({ bestiary: { glacierward_colossus: 1 } }), [POSTGAME_DEEDS.find((d) => d.id === 'glacierward').text]);
