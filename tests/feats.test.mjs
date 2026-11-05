@@ -193,6 +193,6 @@ test('Well Fitted needs both fittings at +3 on the same member, in party or rese
   assert.equal(earned(s), false, 'split across members does not count');
   s.party[0].temper = { weapon: 3, armor: '3' };
   assert.equal(earned(s), false, 'non-integer levels are ignored');
-  s.reserve = [{ id: 'bram', temper: { weapon: 3, armor: 3 } }];
+  s.reserve = { bram: { id: 'bram', temper: { weapon: 3, armor: 3 } } };
   assert.equal(earned(s), true);
 });
