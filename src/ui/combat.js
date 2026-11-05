@@ -14,13 +14,30 @@ function safeClass(value) {
   return String(value || '').replace(/[^a-z0-9_-]/gi, '');
 }
 
+/** Readable names and short hints for combat statuses, shown on unit cards. */
+export const STATUS_INFO = {
+  bleeding: { label: 'Bleeding', hint: 'Loses 2 HP each turn. Rallying Light, Steady Signal or Stormhaven Vigil stops it.' },
+  shocked: { label: 'Shocked', hint: 'Blocks most magic, healing and wards; physical and piercing skills, Stillpoint Strike, cleansing, items and basic commands remain available. Steady Signal or Stormhaven Vigil clears it.' },
+  stunned: { label: 'Stunned', hint: 'Loses its next turn.' },
+};
+
+function statusInfo(id) {
+  return typeof id === 'string' && Object.prototype.hasOwnProperty.call(STATUS_INFO, id) ? STATUS_INFO[id] : null;
+}
+
+export function statusLabel(id) {
+  const info = statusInfo(id);
+  return info ? info.label : String(id || 'Unknown');
+}
+
 function statusChips(unit) {
   const statuses = Array.isArray(unit?.statuses) ? unit.statuses : [];
   if (!statuses.length) return '<span data-status="clear" class="status">Clear</span>';
   return statuses.map((status) => {
     const id = typeof status === 'object' && status ? status.id || status.name : status;
     const turns = typeof status === 'object' && status ? number(status.turns) : 0;
-    return `<span data-status="${safeClass(id)}" class="status">${escapeHTML(id || 'Unknown')}${turns > 0 ? ` · ${turns}` : ''}</span>`;
+    const hint = statusInfo(id)?.hint;
+    return `<span data-status="${safeClass(id)}" class="status"${hint ? ` title="${escapeHTML(hint)}"` : ''}>${escapeHTML(statusLabel(id))}${turns > 0 ? ` · ${turns}` : ''}</span>`;
   }).join('');
 }
 
@@ -188,7 +205,7 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main', ite
 export function windupCue(combat) {
   if (!enemyWindingUp(combat)) return '';
   const name = combat.windup?.name || combat.enemy?.windup?.name || 'a heavy blow';
-  return `<p class="windup-cue" role="status"><strong>Gathering ${escapeHTML(name)}</strong> · Next turn it lands on your leader. Defend or a ward halves it; a stun breaks it.</p>`;
+  return `<p class="windup-cue" role="status"><strong>Gathering ${escapeHTML(name)}</strong> · Next turn it lands on your leader. Defend or a ward halves it; a stun or Stillpoint Strike breaks it.</p>`;
 }
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;

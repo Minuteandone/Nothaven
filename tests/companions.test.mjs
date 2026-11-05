@@ -252,5 +252,5 @@ test('combat render shows companion status chips', () => {
   g.state.combat = createCombat({ enemyId: 'storm_rat' });
   const html = combatScene.render(g);
   const ally = html.slice(html.indexOf('unit ally'));
-  assert.match(ally, /class="status">bleeding/);
+  assert.match(ally, /class="status"[^>]*>Bleeding/);
 });
