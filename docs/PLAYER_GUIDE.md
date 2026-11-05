@@ -130,7 +130,7 @@ Old inspections do **not** count, unlike the earlier companion requests. You can
 
 #### Optional ordered survey: Signal Calibration
 
-After **reporting The Long Watch and receiving its reward**, explicitly accept **Signal Calibration** in Greyhaven. Take fresh readings in order: **Eye Reference Gauge** on the Storm’s Eye lower platform (3,5), **Eastern Barometer Logbook** on Stormcrown Spire’s eastern parapet (7,3), then **Relay Capacitor Junction** on Sunscar’s northern terrace (3,1). Earlier or out-of-order inspections do not count; the Journey Journal always identifies the next step. Return to Greyhaven and explicitly report for **220 gold**. Talking alone pays nothing. The survey changes no ending, beacon reach, relay benefit, or combat statistics.
+After **reporting The Long Watch and receiving its reward**, explicitly accept **Signal Calibration** in Greyhaven. Take fresh readings in order: **Eye Reference Gauge** on the Storm’s Eye lower platform (3,5), **Eastern Barometer Logbook** on Stormcrown Spire’s eastern parapet (7,3), then **Relay Capacitor Junction** on Sunscar’s northern terrace (3,1). Earlier or out-of-order inspections do not count; the Journey Journal always identifies the next step. Return to Greyhaven and explicitly report for **220 gold**. Talking alone pays nothing. Reporting also earns the **True Interval** feat. The survey changes no ending, beacon reach, relay benefit, or combat statistics.
 
 ### Optional companion commissions
 
