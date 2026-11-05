@@ -27,7 +27,7 @@ test('Stillpoint Strike ignores armour and breaks a gathered windup', () => {
   const expected = Math.floor(heroStats(hero).atk * 2) + 0; // randInt(-1..2) at 0.5 → 0 or +1
   assert.ok(before - c.enemy.hp >= expected - 1 && before - c.enemy.hp <= expected + 2, 'armour is ignored');
   assert.equal(c.windup, null);
-  assert.ok(r.lines.some((l) => /Gathering Vortex scatters!/.test(l)));
+  assert.ok(r.lines.some((l) => /Gathering Vortex scatters before it can land!/.test(l)));
 });
 
 test('a broken windup is not released on the foe’s next turn', () => {
