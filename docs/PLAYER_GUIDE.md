@@ -106,7 +106,7 @@ After the summit report, accept **The Storm’s Heart** in Greyhaven. Return to 
 
 Defeating the exact core immediately halves random encounters in **Stormcrown Spire and the Storm’s Eye**, even before reporting. The route-network benefit stacks, making those encounters one quarter as likely as their original rate. Other regions, fixed enemies, and ordinary weather are not removed.
 
-Your original beacon choice, relay service, and earlier rewards remain unchanged. The report does not automatically replay an ending. **Read the chronicle** in town lets you revisit the ending and credits with the completed chapter’s aftermath; **Back to Greyhaven** returns without paying rewards again.
+Your original beacon choice, relay service, and earlier rewards remain unchanged. The report does not automatically replay an ending. **Read the chronicle** in town lets you revisit the ending and credits with the completed chapter’s aftermath; **Back to Greyhaven** returns without paying rewards again. Once you finish postgame challenges such as the Last Squall, Cinderclaw, Signal Calibration, Supply Lines or the Glacierward Colossus, the chronicle also lists them under **Beyond the storm**.
 
 #### Optional challenge: The Last Squall
 
