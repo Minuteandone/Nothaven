@@ -32,7 +32,7 @@ export function damagePopup(anchor, amount, kind = 'damage') {
   const rect = anchor.getBoundingClientRect();
   const el = document.createElement('span');
   el.className = `damage-pop damage-pop--${kind}`;
-  el.textContent = kind === 'miss' ? 'Miss' : kind === 'heal' ? `+${amount}` : kind === 'level' ? `Lv ${amount}!` : kind === 'break' ? 'Break!' : kind === 'braced' ? 'Braced!' : `${amount}`;
+  el.textContent = kind === 'miss' ? 'Miss' : kind === 'heal' ? `+${amount}` : kind === 'level' ? `Lv ${amount}!` : kind === 'break' ? 'Break!' : kind === 'braced' ? 'Braced!' : kind === 'enrage' ? 'Enraged!' : `${amount}`;
   el.style.left = `${rect.left + rect.width / 2 - 20}px`;
   el.style.top = `${rect.top - 10}px`;
   container.appendChild(el);
@@ -146,6 +146,7 @@ export const ANIM_CSS = `
 .damage-pop--level { color: #facc15; font-size: 1.3rem; margin-top: -22px; text-shadow: 0 0 6px rgba(250,204,21,0.55); }
 .damage-pop--break { color: #38bdf8; font-size: 1.35rem; margin-top: -26px; letter-spacing: 0.04em; text-shadow: 0 0 6px rgba(56,189,248,0.6); }
 .damage-pop--braced { color: #a3e635; font-size: 1.2rem; margin-top: -26px; letter-spacing: 0.04em; text-shadow: 0 0 6px rgba(163,230,53,0.55); }
+.damage-pop--enrage { color: #f87171; font-size: 1.3rem; margin-top: -26px; letter-spacing: 0.04em; text-shadow: 0 0 6px rgba(248,113,113,0.6); }
 @keyframes popUp {
   0% { opacity: 1; transform: translateY(0) scale(1); }
   30% { opacity: 1; transform: translateY(-12px) scale(1.15); }
@@ -171,7 +172,7 @@ export function injectAnimCSS() {
 
 /** Wire animations to game events. Returns a cleanup function.
  *  Hooks combat:victory (shake + enemy card fade), combat:defeat, and party:levelup for screen effects,
- *  combat:hp for floating damage and healing numbers, combat:windupbreak for a "Break!" popup, and combat:windupbraced for a "Braced!" popup.
+ *  combat:hp for floating damage and healing numbers, combat:windupbreak for a "Break!" popup, combat:windupbraced for a "Braced!" popup, and combat:enrage for an "Enraged!" popup.
  *  Crossfade is handled by the engine — call crossfadeScene() directly from
  *  engine.setScene() if desired. */
 export function installAnimations(game) {
@@ -226,12 +227,20 @@ export function installAnimations(game) {
     setTimeout(() => damagePopup(combatAnchor(target), 0, 'braced'), 0);
   }
 
+  // Flash a red "Enraged!" over the foe when a boss enters its second phase.
+  function onEnrage() {
+    screenShake(2, 180);
+    if (typeof document === 'undefined') return;
+    setTimeout(() => damagePopup(combatAnchor('enemy'), 0, 'enrage'), 0);
+  }
+
   bus.on('combat:victory', onVictory);
   bus.on('combat:defeat', onDefeat);
   bus.on('party:levelup', onLevelUp);
   bus.on('combat:hp', onHp);
   bus.on('combat:windupbreak', onWindupBreak);
   bus.on('combat:windupbraced', onWindupBraced);
+  bus.on('combat:enrage', onEnrage);
 
   return () => {
     bus.off('combat:victory', onVictory);
@@ -240,5 +249,6 @@ export function installAnimations(game) {
     bus.off('combat:hp', onHp);
     bus.off('combat:windupbreak', onWindupBreak);
     bus.off('combat:windupbraced', onWindupBraced);
+    bus.off('combat:enrage', onEnrage);
   };
 }
