@@ -174,6 +174,7 @@ export const combatScene = {
         return;
       }
       if (over === 'defeat') {
+        game.bus.emit('combat:defeat', { reason: 'hp' });
         const message = recoverFromDefeat(game.state);
         game.setScene(game.scenes?.town ? 'town' : 'title', { message, combatResult: 'defeat', encounterId });
         return;
