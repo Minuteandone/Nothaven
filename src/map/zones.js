@@ -851,7 +851,7 @@ export const ZONES = {
         main: false,
         requiresStoryFlag: 'rescue_reward',
         requirementMessage: 'Fresh paw prints the size of shields circle the southern bastion and vanish into the sleet. Bring Saltmere and Highwatch home and report to Mara before you follow them.',
-        description: 'Optional: the white-maned leader of the Highwatch wolf packs prowls the southern bastion. Stronger than anything else on the pass, and nothing else depends on beating it.',
+        description: 'Optional: the white-maned leader of the Highwatch wolf packs prowls the southern bastion. Stronger than the usual patrol threats, and nothing else depends on beating it.',
       },
       {
         id: 'highwatch_glacierward',
