@@ -27,7 +27,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'Up to three travelers fight together. Rescued allies join the Watch House muster board in Greyhaven, where you can swap them in or out.',
     'Victories earn experience. Each level raises health, focus, attack, defense and speed, and some levels teach Wren a new skill.',
     'At level 8 each companion masters a signature technique: Keeper’s Mend, Bulwark Bash, Bright Flare or Piercing Shot.',
-    'Shops sell gear for each region, and the bag lets you equip it and use supplies. Shops and the field craft upgrades from salvaged materials.',
+    'Shops sell gear for each region, and the bag lets you equip it and use supplies. Shops and the field craft upgrades from salvaged materials. The shop Craft tab has a Craft all button that repeats a recipe while materials last.',
   ] }),
   Object.freeze({ title: 'Settings and saving', lines: [
     'The Difficulty button in Greyhaven switches between Story, Standard and Veteran foes at any time.',
