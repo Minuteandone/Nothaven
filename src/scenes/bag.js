@@ -26,6 +26,39 @@ const TYPE_TITLES = {
   [TYPES.KEY]: 'Key items',
 };
 
+export const BAG_SORTS = Object.freeze(['type', 'name', 'value']);
+const BAG_SORT_LABELS = { type: 'Type', name: 'Name', value: 'Value' };
+
+const byString = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+function stackName(stack) {
+  return isKnownItem(stack?.id) ? getItem(stack.id).name : String(stack?.id ?? '');
+}
+
+function stackWorth(stack) {
+  if (!stack || !isKnownItem(stack.id)) return 0;
+  return sellValueOf(getItem(stack.id)) * Math.max(0, Number(stack.qty) || 0);
+}
+
+/** Pure: reorder inventory stacks for display. Never mutates the input array. */
+export function sortStacks(stacks, mode = 'type') {
+  const list = [...(stacks || [])];
+  if (mode === 'name') {
+    list.sort((a, b) => {
+      const diff = byString(stackName(a).toLowerCase(), stackName(b).toLowerCase());
+      return diff !== 0 ? diff : byString(String(a?.id ?? ''), String(b?.id ?? ''));
+    });
+  } else if (mode === 'value') {
+    list.sort((a, b) => {
+      const diff = stackWorth(b) - stackWorth(a);
+      if (diff !== 0) return diff;
+      const nameDiff = byString(stackName(a).toLowerCase(), stackName(b).toLowerCase());
+      return nameDiff !== 0 ? nameDiff : byString(String(a?.id ?? ''), String(b?.id ?? ''));
+    });
+  }
+  return list;
+}
+
 function statSummary(stats) {
   if (!stats) return '';
   const parts = [];
@@ -174,10 +207,18 @@ export const bagScene = {
       ? `<section class="bag-group" aria-label="Equipped"><h3>Equipped</h3><ul class="bag-list">${equippedRows}</ul></section>`
       : '';
 
+    const sortMode = BAG_SORTS.includes(game.bagSort) ? game.bagSort : 'type';
+    const sortControl = `<div class="bag-sort" role="group" aria-label="Sort bag items">` +
+      `<span class="bag-sort-label">Sort:</span>` +
+      BAG_SORTS.map((m) =>
+        `<button data-action="bagSort" data-arg="${m}"${m === sortMode ? ' aria-pressed="true"' : ''}>${BAG_SORT_LABELS[m]}</button>`,
+      ).join('') +
+      `</div>`;
+
     const sections = TYPE_ORDER.map((type) => {
-      const stacks = (s.inventory || []).filter(
+      const stacks = sortStacks((s.inventory || []).filter(
         (st) => isKnownItem(st.id) && getItem(st.id).type === type,
-      );
+      ), sortMode);
       if (!stacks.length) return '';
       const rows = stacks.map((st) => bagRow(getItem(st.id), st, member)).join('');
       return `<section class="bag-group" aria-label="${TYPE_TITLES[type]}"><h3>${TYPE_TITLES[type]}</h3><ul class="bag-list">${rows}</ul></section>`;
@@ -190,6 +231,7 @@ export const bagScene = {
       ${member ? `<p class="bag-member-stats">${esc(member.name)} — ${esc(statsLine)}</p>` : ''}
       ${game.bagMessage ? `<p class="bag-message" role="status">${esc(game.bagMessage)}</p>` : ''}
       ${equippedSection}
+      ${sortControl}
       ${sections || '<p class="bag-empty">Your bag is empty.</p>'}
       ${craftSection(s.inventory)}
       <div class="actions"><button data-action="recipes">Recipe book</button><button data-action="leave">Back</button></div>
@@ -200,6 +242,11 @@ export const bagScene = {
     selectMember(game, el) {
       const n = Number.parseInt(el?.dataset?.arg, 10);
       if (Number.isInteger(n)) game.bagMemberIndex = n;
+    },
+
+    bagSort(game, el) {
+      const mode = el?.dataset?.arg;
+      if (BAG_SORTS.includes(mode)) game.bagSort = mode;
     },
 
     use(game, el) {

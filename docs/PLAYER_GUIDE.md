@@ -213,6 +213,10 @@ The **Wardens' feats** panel lists milestones of your journey. Alongside the cha
 
 Below the feats, the **Service record** tallies your real battles: battles won, bosses overcome, times carried home, safe withdrawals, wins after a defeat, and your current and longest winning runs. Sparring Drills and the Yard Gauntlet are practice and are not counted.
 
+### The field bag
+
+The bag screen holds the whole party's supplies and is reachable from town and the field. Member tabs choose whose stat line, gear comparisons and Equip buttons apply to; each stack lists its total sell value, and consumables can be used on the selected member without leaving the screen. Sort buttons above the item groups reorder stacks by type, name, or total sell value; the default order stays the way items were gathered.
+
 ### Planning with the Recipe Book
 
 Use **All**, **Ready**, or **Missing** to narrow the Field Recipe Book, and type a recipe, ingredient, or output name before choosing **Search**. Search ignores letter case; **Clear search** keeps your availability filter. Filters use the last applied search, not unfinished typing. Reopening the book resets both choices. These controls only change the reference view: crafting still happens in the Bag or at a trader, and your journey save is unchanged.
