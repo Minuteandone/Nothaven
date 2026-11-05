@@ -24,8 +24,9 @@ test('Stillpoint Strike ignores armour and breaks a gathered windup', () => {
   const r = heroAction(c, hero, { type: 'skill', skillId: 'stillpoint_strike' }, () => 0.5, [hero]);
   assert.equal(r.ok, true);
   assert.equal(hero.mp, 47);
-  const expected = Math.floor(heroStats(hero).atk * 2) + 0; // randInt(-1..2) at 0.5 → 0 or +1
-  assert.ok(before - c.enemy.hp >= expected - 1 && before - c.enemy.hp <= expected + 2, 'armour is ignored');
+  const dealt = Number(r.lines.find((l) => /finds the stillpoint/.test(l)).match(/for (\d+)!/)[1]);
+  assert.equal(dealt, Math.floor(heroStats(hero).atk * 2) + 1, 'armour is ignored; rng 0.5 gives +1 variance');
+  assert.ok(before - c.enemy.hp >= dealt, 'the strike lands in full');
   assert.equal(c.windup, null);
   assert.ok(r.lines.some((l) => /Gathering Vortex scatters before it can land!/.test(l)));
 });
@@ -34,8 +35,11 @@ test('a broken windup is not released on the foe’s next turn', () => {
   const hero = member();
   const c = createCombat({ enemyId: 'storm_heart' });
   c.windup = { name: c.enemy.windup.name };
-  heroAction(c, hero, { type: 'skill', skillId: 'stillpoint_strike' }, () => 0.5, [hero]);
-  assert.doesNotMatch(enemyTurn(c, hero, () => 0.99, [hero]).join(' '), /unleashes/);
+  // heroAction already runs the foe’s immediate reply; it must not release the broken blow.
+  const r = heroAction(c, hero, { type: 'skill', skillId: 'stillpoint_strike' }, () => 0.99, [hero]);
+  assert.equal(r.ok, true);
+  assert.doesNotMatch(r.lines.join(' '), /unleashes/);
+  assert.equal(c.windup, null);
   // Control: an unbroken windup does land.
   const c2 = createCombat({ enemyId: 'storm_heart' });
   c2.windup = { name: c2.enemy.windup.name };
