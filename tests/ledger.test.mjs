@@ -17,7 +17,7 @@ const done = (s, id) => featStatus(s).find(f => f.id === id).done;
 
 test('fresh and malformed saves read as an all-zero ledger without mutation', () => {
   const s = createInitialState();
-  assert.deepEqual(ledgerOf(s), { victories: 0, bossVictories: 0, defeats: 0, escapes: 0, comebacks: 0, streak: 0, bestStreak: 0, pendingComeback: false });
+  assert.deepEqual(ledgerOf(s), { victories: 0, bossVictories: 0, defeats: 0, escapes: 0, comebacks: 0, streak: 0, bestStreak: 0, stormbornBossVictories: 0, pendingComeback: false });
   assert.equal('ledger' in s, false);
   const bad = { ledger: { victories: -3, defeats: 'x', streak: 2.5, bestStreak: 1, escapes: Infinity } };
   const l = ledgerOf(bad);

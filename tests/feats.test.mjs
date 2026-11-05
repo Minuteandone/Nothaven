@@ -30,7 +30,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.bestiary.thunderhoof = 1;
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
-  s.ledger = { victories: 20, comebacks: 1, bestStreak: 15 };
+  s.ledger = { victories: 20, comebacks: 1, bestStreak: 15, stormbornBossVictories: 1 };
   s.party[0].temper = { weapon: 3, armor: 3 };
   assert.equal(featsEarned(s), FEATS.length);
 });
@@ -209,7 +209,7 @@ test('Dune Breaker feat needs a Cinderclaw defeat and sits last', () => {
   assert.equal(done(), true);
   s.bestiary = null;
   assert.equal(done(), false, 'missing bestiary is safe');
-  assert.equal(FEATS[FEATS.length - 3].id, 'cinderclaw');
+  assert.equal(FEATS[FEATS.length - 4].id, 'cinderclaw');
   assert.ok(!FIELD_TRIALS.includes('cinderclaw'));
 });
 
@@ -223,8 +223,8 @@ test('True Interval feat needs the paid Signal Calibration report and sits last'
   assert.equal(done(), false, 'strictly true');
   s.story.flags.calibration_reward = true;
   assert.equal(done(), true);
-  assert.equal(FEATS[FEATS.length - 2].id, 'calibration');
-  assert.equal(FEATS.length, 28);
+  assert.equal(FEATS[FEATS.length - 3].id, 'calibration');
+  assert.equal(FEATS.length, 29);
 });
 
 test('Stampede Stopped feat needs a recorded Thunderhoof victory and sits last', () => {
@@ -235,7 +235,28 @@ test('Stampede Stopped feat needs a recorded Thunderhoof victory and sits last',
   assert.equal(done(), false);
   s.bestiary.thunderhoof = 1;
   assert.equal(done(), true);
-  assert.equal(FEATS[FEATS.length - 1].id, 'thunderhoof');
-  assert.equal(FEATS[FEATS.length - 1].title, 'Stampede Stopped');
-  assert.equal(FEATS.length, 28);
+  assert.equal(FEATS[FEATS.length - 2].id, 'thunderhoof');
+  assert.equal(FEATS[FEATS.length - 2].title, 'Stampede Stopped');
+  assert.equal(FEATS.length, 29);
+});
+
+test('Calm in the Gale needs a boss win recorded on Stormborn and sits last', async () => {
+  const { recordVictory, ledgerOf } = await import('../src/core/ledger.js');
+  const s = createInitialState();
+  const done = () => featStatus(s).find(f => f.id === 'stormborn').done;
+  assert.equal(done(), false);
+  s.settings = { difficulty: 'veteran' };
+  recordVictory(s, 'relay_warden');
+  assert.equal(done(), false, 'veteran boss wins do not count');
+  s.settings.difficulty = 'stormborn';
+  recordVictory(s, 'storm_rat');
+  assert.equal(done(), false, 'ordinary foes do not count');
+  assert.equal(ledgerOf(s).stormbornBossVictories, 0);
+  recordVictory(s, 'relay_warden');
+  assert.equal(ledgerOf(s).stormbornBossVictories, 1);
+  assert.equal(ledgerOf(s).bossVictories, 2);
+  assert.equal(done(), true);
+  assert.equal(FEATS.at(-1).id, 'stormborn');
+  assert.equal(FEATS.at(-1).title, 'Calm in the Gale');
+  assert.equal(FEATS.length, 29);
 });

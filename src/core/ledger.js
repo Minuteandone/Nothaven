@@ -2,8 +2,9 @@
 // Listens to combat:victory, combat:defeat and combat:escape on the game bus.
 // Sparring drills never emit these events, so practice bouts are not counted.
 import { ENEMIES } from '../data/enemies.js';
+import { getDifficulty } from '../combat/difficulty.js';
 
-const COUNTERS = ['victories', 'bossVictories', 'defeats', 'escapes', 'comebacks', 'streak', 'bestStreak'];
+const COUNTERS = ['victories', 'bossVictories', 'defeats', 'escapes', 'comebacks', 'streak', 'bestStreak', 'stormbornBossVictories'];
 
 const count = v => (Number.isSafeInteger(v) && v > 0 ? v : 0);
 
@@ -27,7 +28,10 @@ export function recordVictory(state, enemyId) {
   if (!state) return null;
   const l = writable(state);
   l.victories += 1;
-  if (Object.prototype.hasOwnProperty.call(ENEMIES, enemyId) && ENEMIES[enemyId]?.boss === true) l.bossVictories += 1;
+  if (Object.prototype.hasOwnProperty.call(ENEMIES, enemyId) && ENEMIES[enemyId]?.boss === true) {
+    l.bossVictories += 1;
+    if (getDifficulty(state) === 'stormborn') l.stormbornBossVictories += 1;
+  }
   l.streak += 1;
   l.bestStreak = Math.max(l.bestStreak, l.streak);
   if (l.pendingComeback) { l.comebacks += 1; l.pendingComeback = false; }
@@ -59,6 +63,7 @@ export const SERVICE_ROWS = Object.freeze([
   Object.freeze({ key: 'comebacks', label: 'Wins after a defeat' }),
   Object.freeze({ key: 'streak', label: 'Current winning run' }),
   Object.freeze({ key: 'bestStreak', label: 'Longest winning run' }),
+  Object.freeze({ key: 'stormbornBossVictories', label: 'Bosses overcome on Stormborn' }),
 ]);
 
 export function installLedger(game) {
