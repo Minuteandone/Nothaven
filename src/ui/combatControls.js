@@ -6,6 +6,7 @@ const MAIN_SHORTCUTS = Object.freeze({
   KeyA: { action: 'attack' },
   KeyS: { action: 'menu', arg: 'skills' },
   KeyI: { action: 'menu', arg: 'items' },
+  KeyT: { action: 'menu', arg: 'tactics' },
   KeyD: { action: 'defend' },
   KeyF: { action: 'flee' },
   KeyB: { action: 'burst' },
@@ -13,7 +14,7 @@ const MAIN_SHORTCUTS = Object.freeze({
 });
 
 const KEY_CODES = Object.freeze({
-  a: 'KeyA', s: 'KeyS', i: 'KeyI', d: 'KeyD', f: 'KeyF', b: 'KeyB', c: 'KeyC',
+  a: 'KeyA', s: 'KeyS', i: 'KeyI', t: 'KeyT', d: 'KeyD', f: 'KeyF', b: 'KeyB', c: 'KeyC',
   escape: 'Escape',
 });
 

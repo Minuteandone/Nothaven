@@ -1,3 +1,4 @@
+import { setCompanionTactic } from '../party/tactics.js';
 import { getDifficulty } from '../combat/difficulty.js';
 import { applyLevelUps } from '../core/progression.js';
 import { getItem } from '../items/items.js';
@@ -124,6 +125,13 @@ export const combatScene = {
       game.combatMenu = el?.dataset?.arg || 'main';
       if (game.combatMenu === 'items') game.combatItemTarget = game.state.party[0];
       else delete game.combatItemTarget;
+    },
+    setTactic(game, el) {
+      if (!game.state.combat || game.state.combat.over || game.combatMenu !== 'tactics') return;
+      const arg = el?.dataset?.arg;
+      if (typeof arg !== 'string') return;
+      const match = /^([a-z]+):(auto|conserve)$/.exec(arg);
+      if (match) setCompanionTactic(game.state, match[1], match[2]);
     },
     itemTarget(game, el) {
       const c = game.state.combat, arg = el?.dataset?.arg;
