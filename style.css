@@ -1376,3 +1376,12 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .feats__filters { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 .75rem; }
 .feats__filters [aria-pressed="true"] { border-color: var(--accent); background: var(--panel); font-weight: 700; }
 .feats__empty { color: var(--muted); margin: 0; }
+
+/* Field Journal catalogue controls stay independent of the comparison tray. */
+.bestiary-tools { min-width: 0; margin-bottom: 1rem; overflow-wrap: anywhere; }
+.bestiary-filters, .bestiary-search-row { display: flex; flex-wrap: wrap; gap: .5rem; min-width: 0; }
+.bestiary-filters { margin-bottom: .75rem; }
+.bestiary-tools input { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; min-height: 44px; font: inherit; }
+.bestiary-tools button { min-height: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.bestiary-filters [aria-pressed="true"] { border-color: var(--accent); background: var(--panel); font-weight: 700; }
+.bestiary-empty { min-width: 0; overflow-wrap: anywhere; }

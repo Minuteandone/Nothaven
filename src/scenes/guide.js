@@ -7,6 +7,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'Move with the arrow buttons or the W, A, S and D keys. Each step in the wilds can stir up a random encounter.',
     'Stand next to people to talk, and next to landmarks or foes to interact or fight. Exits lead to new regions once you reach them.',
     'Your bag and journal are available in the field, and ready crafting recipes appear right on the exploration screen. Recipes that use rare drops can only be crafted one at a time.',
+    'In the Field Journal, choose All, Bosses, or Regular to filter the catalogue. Enter a recorded foe’s name and choose Search; unknown names cannot be searched. Clear search restores unknown placeholders within the chosen category. Progress totals and the comparison tray stay unfiltered. Search and category choices reset when you reopen the journal and never unlock entries or change your save.',
     'Foes marked as optional are never required to finish the story. After the Storm’s Heart, a far greater trial waits in the Storm’s Eye for seasoned wardens of level 15 or higher.',
   ] }),
   Object.freeze({ title: 'Battle', lines: [

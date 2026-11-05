@@ -2,7 +2,7 @@
 // installBestiary(game) records victories (state.bestiary[enemyId] = count)
 // from the combat:victory event and registers the 'bestiary' scene.
 import { ENEMIES } from '../data/enemies.js';
-import { BESTIARY_COMPARISON_LIMIT, bestiaryComparisonIds, renderBestiary } from '../ui/bestiary.js';
+import { BESTIARY_COMPARISON_LIMIT, bestiaryComparisonIds, bestiaryQueryText, renderBestiary } from '../ui/bestiary.js';
 
 const own = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);
 
@@ -25,12 +25,30 @@ function currentComparison(game) {
 
 export const bestiaryScene = {
   onEnter(game, data = {}) {
+    game.bestiaryFilter = 'all';
+    game.bestiaryQuery = '';
     game.bestiaryReturn = data.returnScene || game.bestiaryReturn || 'town';
   },
   render(game) {
-    return renderBestiary({ entries: bestiaryEntries(game.state), returnScene: game.bestiaryReturn || 'town', compareIds: game.bestiaryComparison });
+    return renderBestiary({ entries: bestiaryEntries(game.state), returnScene: game.bestiaryReturn || 'town', compareIds: game.bestiaryComparison, filter: game.bestiaryFilter, query: game.bestiaryQuery });
   },
   actions: {
+    bestiaryFilter(game, el) {
+      if (game.state?.scene !== 'bestiary' || game.state?.combat) return;
+      const filter = el?.dataset?.arg;
+      if (!['all', 'bosses', 'regular'].includes(filter)) return;
+      game.bestiaryFilter = filter;
+    },
+    searchBestiary(game) {
+      if (game.state?.scene !== 'bestiary' || game.state?.combat) return;
+      const query = game.root?.querySelector?.('#bestiary-search')?.value;
+      if (typeof query !== 'string') return;
+      game.bestiaryQuery = bestiaryQueryText(query);
+    },
+    clearBestiarySearch(game) {
+      if (game.state?.scene !== 'bestiary' || game.state?.combat) return;
+      game.bestiaryQuery = '';
+    },
     compareFoe(game, el) {
       const current = currentComparison(game);
       if (current.length >= BESTIARY_COMPARISON_LIMIT || current.includes(el?.dataset?.arg)) {
