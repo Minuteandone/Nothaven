@@ -13,7 +13,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'Battles are turn-based. Choose Attack, a Skill, an Item, Defend or Flee, and your companions act after you.',
     'Defend halves damage to Wren during the next enemy action. Fleeing depends on speed and never works against a boss.',
     'Bosses grow fiercer once badly wounded. Watch for the warning line in the battle log.',
-    'Every boss and field trial sometimes spends a turn gathering a heavy blow. A warning appears under the foe; Defend or a ward halves the strike that follows, and a stun breaks it entirely.',
+    'Every boss and field trial sometimes spends a turn gathering a heavy blow. A warning appears under the foe; Defend or a ward halves the strike that follows, and a stun or Stillpoint Strike breaks it entirely.',
     'The Beacon Charge gauge fills as Wren attacks, uses skills, defends and takes hits. When it is full, unleash a Beacon Burst: a def-ignoring blast that also clears bleeding and shock, usable even while shocked.',
     'After each victory, the battle summary tallies the rounds fought, damage dealt, damage your party took and any Beacon Bursts fired.',
     'If Wren falls, the patrol carries the party back to Greyhaven at half health, minus half your gold.',
@@ -27,7 +27,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'Up to three travelers fight together. Rescued allies join the Watch House muster board in Greyhaven, where you can swap them in or out.',
     'Victories earn experience. Each level raises health, focus, attack, defense and speed, and some levels teach Wren a new skill.',
     'At level 8 each companion masters a signature technique: Keeper’s Mend, Bulwark Bash, Bright Flare or Piercing Shot.',
-    'Shops sell gear for each region, and the bag lets you equip it and use supplies. Shops and the field craft upgrades from salvaged materials. The shop Craft tab has a Craft all button that repeats a recipe while materials last. Sort buttons above the bag groups reorder stacks by type, name, or total sell value.',
+    'Shops sell gear for each region, and the bag lets you equip it and use supplies. Shops and the field craft upgrades from salvaged materials. The shop Craft tab has a Craft all button that repeats a recipe while materials last. Sort buttons above the bag groups reorder stacks by type, name, or total sell value. The Buy tab’s quantity stepper picks how many the Buy button purchases at once (up to 99), while Buy 5 and Buy &amp; equip stay unchanged.',
   ] }),
   Object.freeze({ title: 'Settings and saving', lines: [
     'The Difficulty button in Greyhaven switches between Story, Standard and Veteran foes at any time.',

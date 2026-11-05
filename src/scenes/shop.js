@@ -15,6 +15,9 @@ const esc = (v) =>
 
 const SLOT_LABELS = { weapon: 'Weapon', armor: 'Armor', trinket: 'Trinket' };
 
+/** Largest quantity the Buy tab's stepper can queue for one purchase. */
+export const SHOP_BUY_QTY_MAX = 99;
+
 function typeLabel(type) {
   return { consumable: 'Consumable', equipment: 'Gear', key: 'Key item', material: 'Material' }[type] || 'Goods';
 }
@@ -45,6 +48,10 @@ function getRecipeSafe(id) {
   return listRecipes().find((r) => r.id === id) || null;
 }
 
+function normalizeShopQty(value) {
+  return Number.isInteger(value) && value >= 1 ? Math.min(SHOP_BUY_QTY_MAX, value) : 1;
+}
+
 function activeMember(game) {
   const party = Array.isArray(game.state?.party) && game.state.party.length ? game.state.party : [];
   let index = Number.isInteger(game.shopMemberIndex) ? game.shopMemberIndex : 0;
@@ -60,6 +67,7 @@ export const shopScene = {
     game.shopMessage = data?.message || '';
     game.shopReturnScene = data?.returnScene || 'town';
     game.shopMemberIndex = 0;
+    game.shopQty = 1;
     game.shopId = data?.shopId && getShop(data.shopId) ? data.shopId : 'greyhaven_shop';
   },
 
@@ -69,6 +77,7 @@ export const shopScene = {
     const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
     const mode = ['sell', 'craft'].includes(game.shopMode) ? game.shopMode : 'buy';
     const gold = s.gold ?? 0;
+    const buyQty = normalizeShopQty(game.shopQty);
     const { member, index, party } = activeMember(game);
     const eff = effectiveStats(member);
     const eq = member.equipment || createEquipment();
@@ -100,7 +109,7 @@ export const shopScene = {
             <small>${esc(typeLabel(it.type))}${stats ? ' · ' + esc(statSummary(stats)) : ''}</small>${craftLine}${cmpLine}</td>
           <td style="white-space:nowrap;">${it.price}g</td>
           <td>
-            <button data-action="buy" data-arg="${esc(it.id)}" ${gold < it.price ? 'disabled' : ''}>Buy</button>
+            <button data-action="buy" data-arg="${esc(it.id)}"${buyQty > 1 ? ` aria-label="Buy ${buyQty} ${esc(it.name)}"` : ''} ${gold < it.price ? 'disabled' : ''}>${buyQty > 1 ? `Buy ×${buyQty}` : 'Buy'}</button>
             <button data-action="buy5" data-arg="${esc(it.id)}" aria-label="Buy 5 ${esc(it.name)}" ${gold < it.price ? 'disabled' : ''}>Buy 5</button>
             ${wearingIt || (isKnownItem(it.id) && canEquip(it.id)) ? `<div style="margin-top:0.25rem;">
               <button data-action="buyEquip" data-arg="${esc(it.id)}" aria-label="Buy and equip ${esc(it.name)}" ${gold < it.price || wearingIt ? 'disabled' : ''}>Buy &amp; equip</button>
@@ -182,6 +191,13 @@ export const shopScene = {
       })
       .join('');
 
+    const qtyPicker = `<div class="shop-qty" role="group" aria-label="Buy quantity">
+          <span aria-live="polite">Buy quantity ×${buyQty}</span>
+          <button data-action="shopQty" data-arg="dec" aria-label="Decrease buy quantity"${buyQty <= 1 ? ' disabled' : ''}>&minus;</button>
+          <button data-action="shopQty" data-arg="inc" aria-label="Increase buy quantity"${buyQty >= SHOP_BUY_QTY_MAX ? ' disabled' : ''}>+</button>
+          <small>The Buy button purchases this many at once; Buy 5 and Buy &amp; equip are unchanged.</small>
+        </div>`;
+
     return `
       <div class="panel">
         <h2>${esc(shop.name)}</h2>
@@ -201,7 +217,7 @@ export const shopScene = {
         </div>
         ${
           mode === 'buy'
-            ? `<table aria-label="Items for sale">${buyRows}</table>`
+            ? `${qtyPicker}<table class="shop-buy" aria-label="Items for sale">${buyRows}</table>`
             : mode === 'sell'
               ? sellRows
                 ? `<table class="shop-sell" aria-label="Items available to sell">${sellRows}</table>`
@@ -232,11 +248,18 @@ export const shopScene = {
       const arg = el?.dataset?.arg;
       game.shopMode = ['sell', 'craft'].includes(arg) ? arg : 'buy';
     },
+    shopQty(game, el) {
+      const arg = el?.dataset?.arg;
+      const current = normalizeShopQty(game.shopQty);
+      if (arg === 'inc') game.shopQty = Math.min(SHOP_BUY_QTY_MAX, current + 1);
+      else if (arg === 'dec') game.shopQty = Math.max(1, current - 1);
+    },
     buy(game, el) {
       const id = el?.dataset?.arg;
       if (!id) return;
       const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
-      const res = buyItem(game.state, shop, id, 1);
+      const qty = normalizeShopQty(game.shopQty);
+      const res = buyItem(game.state, shop, id, qty);
       game.shopMessage = res.message;
       if (res.ok) {
         game.state.gold = res.state.gold;

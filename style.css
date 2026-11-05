@@ -696,6 +696,9 @@ em.enraged {
 .shop-tabs { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .6rem; }
 .shop-tab { min-width: 5.5rem; text-align: center; justify-content: center; }
 .shop-tab--active { border-color: var(--accent); background: var(--accent); color: #15202b; }
+.shop-qty { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin: 0 0 .6rem; }
+.shop-qty span[aria-live] { color: var(--muted); font-size: .8rem; }
+.shop-qty button { min-width: 2.2rem; justify-content: center; }
 .craft-checklist { list-style: none; margin: .25rem 0; padding: 0; }
 .craft-checklist .have { color: var(--good); }
 .craft-checklist .need { color: var(--bad); }
@@ -817,12 +820,13 @@ em.enraged {
 .craft-scarce { color: var(--bad); font-size: 0.85em; }
 /* Keep inventory names, bulk-sale totals, and spare-gear controls usable on narrow screens. */
 @media (max-width: 560px) {
+  .shop-buy, .shop-buy tbody, .shop-buy tr, .shop-buy td,
   .shop-sell, .shop-sell tbody, .shop-sell tr, .shop-sell td,
   .shop-wardrobe, .shop-wardrobe tbody, .shop-wardrobe tr, .shop-wardrobe td { display: block; }
-  .shop-sell, .shop-wardrobe { width: 100%; }
-  .shop-sell tr, .shop-wardrobe tr { border-top: 1px solid var(--line-soft); padding: .6rem 0; }
-  .shop-sell td, .shop-wardrobe td { padding: .15rem 0; overflow-wrap: anywhere; }
-  .shop-sell button, .shop-wardrobe button { max-width: 100%; margin-inline: 0; white-space: normal; }
+  .shop-buy, .shop-sell, .shop-wardrobe { width: 100%; }
+  .shop-buy tr, .shop-sell tr, .shop-wardrobe tr { border-top: 1px solid var(--line-soft); padding: .6rem 0; }
+  .shop-buy td, .shop-sell td, .shop-wardrobe td { padding: .15rem 0; overflow-wrap: anywhere; }
+  .shop-buy button, .shop-sell button, .shop-wardrobe button { max-width: 100%; margin-inline: 0; white-space: normal; }
 }
 
 
@@ -1332,3 +1336,9 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .recipe-tools button { min-height: 44px; min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 .recipe-tools label { display: block; margin-top: .75rem; }
 .recipe-search-row input { flex: 1 1 14rem; min-width: 0; max-width: 100%; min-height: 44px; box-sizing: border-box; font: inherit; }
+
+/* Command cards: never let a long skill name or description force the panel wider than a narrow screen. */
+.command-list { grid-template-columns: minmax(0, 1fr); }
+.command-card { min-width: 0; }
+.command-card__top > span { min-width: 0; overflow-wrap: anywhere; }
+.command-card__description { overflow-wrap: anywhere; }
