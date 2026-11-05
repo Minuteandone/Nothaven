@@ -2,6 +2,8 @@
 // changes state. Lines react to the story stage, the beacon ending, rescues and
 // the chapter-three relay choice.
 
+import { ledgerOf } from '../core/ledger.js';
+
 const LINES = {
   tamsin: {
     stormborn: 'You set the frontier to its hardest and still walked back through the gate. I stopped counting the bruises and started counting the wins.',
@@ -93,7 +95,7 @@ export function companionRemark(id, story = {}, bestiary = {}, ledger = {}) {
   if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(LINES, id)) return '';
   const set = LINES[id];
   const f = story?.flags || {};
-  if (Number(ledger?.stormbornBossVictories) >= 1 && set.stormborn) return set.stormborn;
+  if (ledgerOf({ ledger }).stormbornBossVictories >= 1 && set.stormborn) return set.stormborn;
   if (f.calibration_reward === true && Number(bestiary?.thunderhoof) > 0 && set.thunderhoof) return set.thunderhoof;
   if (f.calibration_reward === true && set.calibration) return set.calibration;
   if (f.victory_last_squall === true && set.squall) return set.squall;

@@ -26,6 +26,9 @@ test('Stormborn remarks need at least one recorded Stormborn boss victory', () =
     assert.equal(companionRemark(id, { stage: 'complete', flags: { ...done } }, {}, { stormbornBossVictories: 0 }), base);
     assert.equal(companionRemark(id, { stage: 'complete', flags: { ...done } }, {}, { stormbornBossVictories: 'x' }), base);
     assert.equal(companionRemark(id, { stage: 'complete', flags: { ...done } }, {}, null), base);
+    for (const bad of [true, '1', 1.5, Infinity, -1, NaN, [1], { n: 1 }]) {
+      assert.equal(companionRemark(id, { stage: 'complete', flags: { ...done } }, {}, { stormbornBossVictories: bad }), base, `${id} ignores ${String(bad)}`);
+    }
     assert.equal(companionRemark(id, { stage: 'complete', flags: { ...done } }, {}), base);
   }
 });
