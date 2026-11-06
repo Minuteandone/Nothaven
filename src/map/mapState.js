@@ -233,6 +233,75 @@ export function getFrontierAtlas(gameState = null) {
   };
 }
 
+/**
+ * Pure read-only route briefing for a destination zone.
+ * Masks weather and objective counts on locked or unvisited regions.
+ */
+export function getRouteBriefing(gameState, toZoneId) {
+  if (typeof toZoneId !== 'string' || !Object.prototype.hasOwnProperty.call(ZONES, toZoneId)) {
+    return null;
+  }
+  const zone = ZONES[toZoneId];
+  const rawCurrentId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
+  const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawCurrentId) ? rawCurrentId : 'greyhaven';
+  const progress = getZoneProgress(gameState, zone);
+  const visited = Boolean(progress.visited || zone.id === currentZoneId);
+  const lockReason = zoneLockReason(gameState || {}, zone);
+  const unlocked = !lockReason;
+  const condition = getZoneCondition(gameState, zone);
+
+  let summary;
+  if (!unlocked) {
+    summary = `${zone.name} · Locked — ${lockReason}`;
+  } else if (!visited) {
+    summary = `${zone.name} · Uncharted region (Danger ${zone.dangerLevel ?? 0})`;
+  } else {
+    const reconText = progress.totalObjectives > 0
+      ? `${progress.percent}% recon (${progress.encountersCleared}/${progress.encountersTotal} threats, ${progress.cachesOpened}/${progress.cachesTotal} caches)`
+      : 'Safe haven';
+    summary = `${zone.name} · ${condition.name} · ${reconText}`;
+  }
+
+  return {
+    zoneId: zone.id,
+    name: zone.name,
+    subtitle: zone.subtitle || '',
+    dangerLevel: zone.dangerLevel ?? 0,
+    visited,
+    unlocked,
+    lockReason: lockReason || null,
+    conditionName: condition.name,
+    percent: progress.percent,
+    encountersCleared: progress.encountersCleared,
+    encountersTotal: progress.encountersTotal,
+    cachesOpened: progress.cachesOpened,
+    cachesTotal: progress.cachesTotal,
+    summary,
+  };
+}
+
+/**
+ * Pure read-only formatter that collapses consecutive identical expedition log
+ * entries into `<line> (×N)` ordered newest-first up to `limit` entries.
+ */
+export function formatExpeditionLog(lines, limit = 6) {
+  if (!Array.isArray(lines)) return [];
+  const maxEntries = Number.isInteger(limit) && limit > 0 ? limit : 6;
+  const valid = lines.filter((line) => typeof line === 'string' && line.length > 0);
+  const entries = [];
+  for (let i = valid.length - 1; i >= 0; i -= 1) {
+    const text = valid[i];
+    const last = entries[entries.length - 1];
+    if (last && last.text === text) {
+      last.count += 1;
+    } else {
+      if (entries.length >= maxEntries) break;
+      entries.push({ text, count: 1 });
+    }
+  }
+  return entries.map((entry) => (entry.count > 1 ? `${entry.text} (×${entry.count})` : entry.text));
+}
+
 
 export function getEffectiveRandomEncounterChance(gameState, zone) {
   const base = typeof zone?.randomEncounterChance === 'number' ? zone.randomEncounterChance : 0;
@@ -339,6 +408,7 @@ export function getAvailableActions(gameState) {
         toSpawn: ex.toSpawn,
         label: ex.label,
         entity: ex,
+        briefing: getRouteBriefing(gameState, ex.toZone),
       });
     }
   }
