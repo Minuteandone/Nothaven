@@ -308,3 +308,5 @@ future cards are disabled, ordered by unlock level, and show no action shortcut
 or damage range. An unused digit cannot activate a future skill; the whole
 fight and quick save remain unchanged. This is not all-level earned coverage,
 a full visual audit, or screen-reader testing.
+
+The retained Journal layout check enumerates the original six controls and all seven element filters, checking all thirteen at 115%/130% text. This updates its pre-element-filter control count; it does not remove the original search, category, unknown-foe, comparison, or whole-state checks.

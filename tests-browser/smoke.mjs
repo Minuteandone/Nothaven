@@ -501,7 +501,14 @@ try {
             return r.left >= 0 && r.right <= innerWidth + 1 && r.height >= 44
               && (node.tagName === 'INPUT' || node.scrollWidth <= node.clientWidth + 1);
           }));
-          assert.equal(controls.length, 6);
+          assert.equal(controls.length, 13);
+          assert.deepEqual(await page.locator('.bestiary-tools button:not([data-action="bestiaryElementFilter"]),.bestiary-tools input')
+            .evaluateAll(nodes => nodes.map(node => node.dataset.action || node.id)),
+          ['bestiaryFilter', 'bestiaryFilter', 'bestiaryFilter', 'bestiary-search', 'searchBestiary', 'clearBestiarySearch']);
+          assert.deepEqual(await page.locator('[data-action="bestiaryElementFilter"]')
+            .evaluateAll(nodes => nodes.map(node => [node.dataset.arg, node.getAttribute('aria-pressed')])),
+          [['all', 'true'], ['fire', 'false'], ['ice', 'false'], ['lightning', 'false'],
+            ['water', 'false'], ['earth', 'false'], ['untyped', 'false']]);
           assert.ok(controls.every(Boolean), 'Journal controls and button text fit; the single-line input may scroll internally');
         };
         for (const filter of ['bosses', 'regular', 'all']) {
