@@ -243,3 +243,17 @@ screenshots when possible. Only randomness is controlled: no progress, items,
 stats, coordinates, or saves are injected. This is not completion of all nine
 contracts, actual screen-reader testing, cross-browser coverage, a full visual
 audit, or a balance certificate.
+
+### Earned regional browser journey
+
+Run `npm run test:browser:regions` after installing Playwright Chromium. This
+separate suite starts 12 fresh journeys: widths 320/375/768, both chapter endings,
+and both coast-first/highland-first rescue orders, all at 130% text size. It
+retains the chapter checks and continues through purchased Relief supplies,
+both physical rescue routes and one-time caches, explicit payments, and
+recruiting Bram/Sela while retaining Tamsin/Iven in reserve. Exact combat rewards
+and eleven whole Explore Save/reload checkpoints are checked per journey.
+Progress uses native UI actions; evaluations only observe state/catalog/layout,
+and Math.random is held at 0.5 to avoid incidental patrols. Ignored screenshots
+and traces go to `browser-artifacts/regions/`, including failures. This is not
+a full-campaign, screen-reader, cross-browser, or first-availability balance proof.
