@@ -5,7 +5,7 @@ import { MAX_PARTY } from '../party/companions.js';
 import { DRILL_FOES, drillRecord, gauntletRecord } from './drills.js';
 import { ledgerOf, SERVICE_ROWS } from '../core/ledger.js';
 import { FITTING_SLOTS, MAX_FITTING, fittingLevel } from '../items/forge.js';
-import { BOUNTIES, bountyState, totalBountiesClaimed } from '../core/bounties.js';
+import { BOUNTIES, bountyRank, bountyState, totalBountiesClaimed } from '../core/bounties.js';
 
 const flagsOf = state => state?.story?.flags || {};
 const heroOf = state => (Array.isArray(state?.party) ? state.party[0] : null) || null;
@@ -121,6 +121,8 @@ export const featsScene = {
     const ledger = ledgerOf(game.state);
     const record = SERVICE_ROWS.map(r => `<div><dt>${escapeHTML(r.label)}</dt><dd>${ledger[r.key]}</dd></div>`).join('');
     const bountyRecord = `<div><dt>Bounties claimed</dt><dd>${totalBountiesClaimed(game.state)}</dd></div>`;
+    const boardRank = bountyRank(game.state).rank;
+    const rankRecord = `<div><dt>Board rank</dt><dd>${escapeHTML(boardRank.title)}</dd></div>`;
     const filter = featFilterOf(game.featsFilter);
     const shown = filterFeatRows(rows, filter);
     const filters = FEAT_FILTERS.map(id => `<button type="button" class="action-button action-button--ghost" data-action="filterFeats" data-arg="${id}" aria-pressed="${id === filter}">${FEAT_FILTER_LABELS[id]}</button>`).join('');
@@ -139,7 +141,7 @@ export const featsScene = {
       <section class="panel service-record" aria-labelledby="service-record-title">
         <h2 id="service-record-title">Service record</h2>
         <p class="service-record__note">Real battles only; Sparring Drills are not counted.</p>
-        <dl class="service-record__list">${record}${bountyRecord}</dl>
+        <dl class="service-record__list">${record}${bountyRecord}${rankRecord}</dl>
       </section>
       <div class="title-actions">${uiButton({ action: 'closeFeats', label: game.featsReturn === 'explore' ? 'Back to expedition' : 'Back to Greyhaven', iconName: 'compass', variant: 'primary' })}</div>
     </main>`;
