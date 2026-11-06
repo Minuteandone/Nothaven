@@ -417,34 +417,42 @@ export function getTileInspection(gameState, x = null, y = null, zoneOrId = null
     if (inBounds) {
       const raw = getEntityAt(resolvedZone, mapLike, cx, cy);
       if (raw?.type === 'npc') {
+        const label = raw.entity.role ? `${raw.entity.name} (${raw.entity.role})` : raw.entity.name;
+        const briefing = getNpcBriefing(gameState, raw.entity, resolvedZone);
         entity = {
           kind: 'npc',
           id: raw.entity.id,
           name: raw.entity.name,
           role: raw.entity.role || '',
           status: 'Present',
-          label: raw.entity.role ? `${raw.entity.name} (${raw.entity.role})` : raw.entity.name,
+          label,
+          summary: briefing?.summary || label,
         };
       } else if (raw?.type === 'encounter') {
         const id = raw.entity.encounterId || raw.entity.id;
         const lockReason = encounterLockReason(mapLike, raw.entity, gameState);
         const locked = Boolean(lockReason);
+        const label = locked ? 'Sealed challenge' : `Threat: ${raw.entity.name}`;
+        const preview = locked ? null : getEncounterPreview(raw.entity.enemyId, gameState);
         entity = {
           kind: 'encounter',
           id: locked ? 'sealed_challenge' : id,
           name: locked ? 'Sealed challenge' : raw.entity.name,
           status: locked ? 'Locked' : 'Active',
           locked,
-          label: locked ? 'Sealed challenge' : `Threat: ${raw.entity.name}`,
+          label,
+          summary: locked ? 'Sealed challenge · Locked' : (preview?.summary || label),
         };
       } else if (raw?.type === 'interactable') {
         const id = raw.entity.interactionId || raw.entity.id;
+        const briefing = getInteractableBriefing(gameState, raw.entity, resolvedZone);
         entity = {
           kind: 'interactable',
           id,
           name: raw.entity.name,
           status: raw.entity.once ? 'Available' : 'Service',
           label: raw.entity.name,
+          summary: briefing?.summary || raw.entity.name,
         };
       } else if (raw?.type === 'exit') {
         const briefing = getRouteBriefing(gameState, raw.entity.toZone);
@@ -455,9 +463,11 @@ export function getTileInspection(gameState, x = null, y = null, zoneOrId = null
           name: raw.entity.label,
           status,
           label: raw.entity.label,
+          summary: briefing?.summary || raw.entity.label,
         };
       }
     }
+    const cellSummary = `${tile.name} (${cx}, ${cy}) · ${passable ? 'Passable' : 'Blocked'}${entity ? ` · ${entity.label}` : ''}`;
     return {
       x: cx,
       y: cy,
@@ -465,6 +475,7 @@ export function getTileInspection(gameState, x = null, y = null, zoneOrId = null
       tileName: tile.name,
       passable,
       entity,
+      summary: cellSummary,
     };
   };
 
@@ -495,6 +506,7 @@ export function getTileInspection(gameState, x = null, y = null, zoneOrId = null
         id: cell.entity.id,
         label: cell.entity.label,
         status: cell.entity.status,
+        summary: cell.entity.summary || cell.entity.label,
       });
     }
   }
