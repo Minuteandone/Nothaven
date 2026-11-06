@@ -3,6 +3,8 @@ import { grantRewards } from '../items/inventory.js';
 import { useConsumable } from '../items/consumables.js';
 import { craft } from '../items/crafting.js';
 import { effectiveStats } from '../items/equipment.js';
+import { getItem, isKnownItem } from '../items/items.js';
+import { ENEMIES } from '../data/enemies.js';
 
 export function createMapState(initialZone = 'greyhaven') {
   const zone = ZONES[initialZone] || ZONES.greyhaven;
@@ -227,6 +229,7 @@ export function getAvailableActions(gameState) {
         enemyId: enc.enemyId,
         label: `Engage ${enc.name}`,
         entity: enc,
+        preview: getEncounterPreview(enc.enemyId, gameState),
       });
     }
   }
@@ -669,6 +672,74 @@ const COMPASS_LABELS = Object.freeze({
   NW: 'Northwest',
   HERE: 'Here',
 });
+
+export function getEncounterPreview(enemyId, gameState = null) {
+  const enemy = enemyId ? ENEMIES[enemyId] : null;
+  if (!enemy) return null;
+  const defeatedCount = Math.max(0, Math.floor(Number(gameState?.bestiary?.[enemy.id]) || 0));
+  const tier = enemy.boss ? 'Boss' : enemy.hp >= 60 ? 'Elite' : enemy.hp >= 30 ? 'Veteran' : 'Standard';
+  const drops = Array.isArray(enemy.loot)
+    ? enemy.loot.map((entry) => {
+        const item = isKnownItem(entry.id) ? getItem(entry.id) : { id: entry.id, name: entry.id };
+        const chance = Number(entry.chance) || 0;
+        return {
+          id: entry.id,
+          name: item.name,
+          chance,
+          minQty: Number.isInteger(entry.minQty) ? entry.minQty : 1,
+          maxQty: Number.isInteger(entry.maxQty) ? entry.maxQty : 1,
+          guaranteed: chance >= 1,
+        };
+      })
+    : [];
+  const dropNames = drops.map((d) => (d.guaranteed ? `${d.name} (100%)` : d.name)).join(', ');
+  const summary = `${enemy.name} (${tier}, ${enemy.hp} HP)${dropNames ? ` · Drops: ${dropNames}` : ''}`;
+  return {
+    enemyId: enemy.id,
+    name: enemy.name,
+    hp: enemy.hp,
+    atk: enemy.atk,
+    def: enemy.def,
+    spd: enemy.spd,
+    boss: Boolean(enemy.boss),
+    tier,
+    known: defeatedCount > 0,
+    defeatedCount,
+    drops,
+    summary,
+  };
+}
+
+export function getZoneThreatIntel(gameState, zoneOrId = null) {
+  const resolvedZone = typeof zoneOrId === 'object' && zoneOrId !== null
+    ? zoneOrId
+    : getZone(zoneOrId || gameState?.map?.zoneId || gameState?.location || 'greyhaven');
+  const mapState = gameState?.map || {};
+  const clearedMap = mapState?.clearedEncounters || {};
+  const fixedEncounters = (resolvedZone.encounters || []).map((enc) => {
+    const encId = enc.encounterId || enc.id;
+    return {
+      id: encId,
+      name: enc.name,
+      enemyId: enc.enemyId,
+      x: enc.x,
+      y: enc.y,
+      cleared: Boolean(clearedMap[encId]),
+      locked: Boolean(encounterLockReason(mapState, enc, gameState)),
+      preview: getEncounterPreview(enc.enemyId, gameState),
+    };
+  });
+  const roamingEncounters = (resolvedZone.randomEncounters || []).map((entry) => ({
+    enemyId: entry.enemyId,
+    weight: typeof entry.weight === 'number' && entry.weight > 0 ? entry.weight : 1,
+    preview: getEncounterPreview(entry.enemyId, gameState),
+  }));
+  return {
+    zoneId: resolvedZone.id,
+    fixedEncounters,
+    roamingEncounters,
+  };
+}
 
 export function getCompassBearing(fromX, fromY, toX, toY) {
   const fx = Number(fromX) || 0;

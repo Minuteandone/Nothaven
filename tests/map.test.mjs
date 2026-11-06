@@ -13,6 +13,8 @@ import {
   getZoneCompassHint,
   findSafePath,
   stepAlongSafePath,
+  getEncounterPreview,
+  getZoneThreatIntel,
   ensureMapState,
   exploreScene,
   getClearedEncounters,
@@ -985,4 +987,44 @@ test('findSafePath and stepAlongSafePath navigate walkable routes, pause adjacen
   assert.equal(renderCount, 1);
   cleanup2();
   assert.equal(clickListeners.length, 0);
+});
+
+
+test('getEncounterPreview and getZoneThreatIntel resolve threat tiers, loot drops, and exploration tooltips without mutating state', () => {
+  const state = createInitialState();
+  state.bestiary = { ridge_bandit: 2 };
+  const snapshot = JSON.stringify(state);
+
+  const banditPreview = getEncounterPreview('ridge_bandit', state);
+  assert.equal(banditPreview.enemyId, 'ridge_bandit');
+  assert.equal(banditPreview.name, 'Ridge Bandit');
+  assert.equal(banditPreview.tier, 'Standard');
+  assert.equal(banditPreview.hp, 20);
+  assert.equal(banditPreview.known, true);
+  assert.equal(banditPreview.defeatedCount, 2);
+  assert.ok(banditPreview.drops.some((d) => d.id === 'scrap_metal' && d.name === 'Scrap Metal'));
+  assert.match(banditPreview.summary, /Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage, Scrap Metal, Waterlogged Dispatch/);
+
+  const wraithPreview = getEncounterPreview('tide_wraith', state);
+  assert.equal(wraithPreview.boss, true);
+  assert.equal(wraithPreview.tier, 'Boss');
+  assert.ok(wraithPreview.drops.every((d) => d.guaranteed === true));
+  assert.match(wraithPreview.summary, /Tide Wraith \(Boss, 50 HP\) · Drops: Storm Tonic \(100%\), Storm Glass \(100%\)/);
+
+  assert.equal(getEncounterPreview('unknown_foe', state), null);
+
+  const ridgeIntel = getZoneThreatIntel(state, 'ridge_road');
+  assert.equal(ridgeIntel.zoneId, 'ridge_road');
+  assert.ok(ridgeIntel.fixedEncounters.some((e) => e.id === 'ridge_patrol' && e.preview.name === 'Ridge Bandit' && !e.cleared));
+  assert.ok(ridgeIntel.roamingEncounters.some((r) => r.enemyId === 'storm_rat' && r.preview.name === 'Storm Rat'));
+  assert.equal(JSON.stringify(state), snapshot);
+
+  // Verify exploration UI renders threat preview in encounter cell and Engage button tooltips
+  const game = makeMockGame();
+  travelToZone(game.state, 'ridge_road');
+  game.state.map.x = 4;
+  game.state.map.y = 3;
+  const html = exploreScene.render(game);
+  assert.match(html, /aria-label="Threat: Ridge Patrol Pack"[^>]*title="Threat: Ridge Patrol Pack — Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage, Scrap Metal, Waterlogged Dispatch"/);
+  assert.match(html, /data-action="mapEncounter" data-arg="ridge_patrol" title="Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage, Scrap Metal, Waterlogged Dispatch"/);
 });
