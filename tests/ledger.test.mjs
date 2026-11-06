@@ -110,8 +110,19 @@ test('feats page shows an escaped, egg-free service record', () => {
   assert.match(html, /<h2 id="service-record-title">Service record<\/h2>/);
   assert.match(html, /<dt>Battles won<\/dt><dd>1<\/dd>/);
   assert.match(html, /<dt>Times carried home<\/dt><dd>1<\/dd>/);
-  assert.equal((html.match(/<dt>/g) || []).length, SERVICE_ROWS.length);
+  assert.equal((html.match(/<dt>/g) || []).length, SERVICE_ROWS.length + 1);
+  assert.match(html, /<dt>Bounties claimed<\/dt><dd>0<\/dd>/);
   assertEggFree(html, 'feats page');
   assertEggFree(SERVICE_ROWS.map(r => r.label).join(' '), 'service labels');
   for (const f of FEATS.filter(f => ['undaunted', 'steady_road'].includes(f.id))) assertEggFree(`${f.title} ${f.detail}`, f.id);
+});
+
+test('service record counts every claimed bounty, ignoring junk counts', () => {
+  const state = createInitialState();
+  state.bounties = { active: null, progress: 0, completed: { ridge_rats: 3, bandit_toll: 1, wolf_trail: 'x', no_such: 5 } };
+  const html = featsScene.render({ state });
+  const m = html.match(/<dt>Bounties claimed<\/dt><dd>(\d+)<\/dd>/);
+  assert.ok(m, 'bounty row present');
+  assertEggFree(html, 'feats page with bounties');
+  assert.equal(m[1], '4');
 });
