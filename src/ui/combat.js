@@ -365,7 +365,7 @@ export function rewardsLine(combat) {
   if (Number.isFinite(r.gold) && r.gold > 0) parts.push(`+${r.gold} gold`);
   if (Array.isArray(r.items) && r.items.length) {
     const names = r.items.map((s) => {
-      try { return `${s.qty}× ${escapeHTML(getItem(s.id).name)}`; } catch { return escapeHTML(String(s.id)); }
+      try { return `${escapeHTML(String(s.qty))}× ${escapeHTML(getItem(s.id).name)}`; } catch { return escapeHTML(String(s.id)); }
     });
     parts.push(`Found: ${names.join(', ')}`);
   }
