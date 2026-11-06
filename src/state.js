@@ -1,6 +1,11 @@
 import { createStoryState } from './story/index.js';
 import { SAVE_VERSION, migrateSave } from './core/save.js';
 const SAVE_KEY = 'stormhaven-save';
+const AUTOSAVE_KEY = 'stormhaven-autosave';
+const AUTOSAVE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+let _autosaveTimer = null;
+let _autosaveEnabled = false;
 
 export function createInitialState() {
   return {
@@ -32,3 +37,65 @@ export function loadGame() {
   }
 }
 export function hasSave() { return !!localStorage.getItem(SAVE_KEY); }
+
+// --- Autosave (separate key, does not touch manual save) ---
+
+export function isAutosaveEnabled() {
+  return _autosaveEnabled;
+}
+
+export function enableAutosave() {
+  _autosaveEnabled = true;
+}
+
+export function disableAutosave() {
+  _autosaveEnabled = false;
+  if (_autosaveTimer !== null) {
+    clearTimeout(_autosaveTimer);
+    _autosaveTimer = null;
+  }
+}
+
+export function hasAutosave() {
+  return !!localStorage.getItem(AUTOSAVE_KEY);
+}
+
+export function loadAutosave() {
+  const raw = localStorage.getItem(AUTOSAVE_KEY);
+  if (!raw) return null;
+  try {
+    return migrateSave(JSON.parse(raw), createInitialState);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Schedule a debounced autosave. Call this on scene transitions when
+ * autosave is enabled. The save fires after a quiet period (no calls
+ * to scheduleAutosave for AUTOSAVE_INTERVAL_MS).
+ */
+export function scheduleAutosave(state) {
+  if (!_autosaveEnabled) return;
+  if (_autosaveTimer !== null) clearTimeout(_autosaveTimer);
+  _autosaveTimer = setTimeout(() => {
+    // Don't autosave during combat
+    if (state && state.combat) return;
+    try {
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ ...state, combat: null, saveVersion: SAVE_VERSION }));
+    } catch { /* storage full — silently skip */ }
+  }, AUTOSAVE_INTERVAL_MS);
+}
+
+export function clearAutosave() {
+  localStorage.removeItem(AUTOSAVE_KEY);
+}
+
+export function installAutosave(game) {
+  if (!game?.bus) return;
+  game.bus.on('scene:enter', () => {
+    scheduleAutosave(game.state);
+  });
+  // Start disabled; player opts in via UI
+  _autosaveEnabled = false;
+}

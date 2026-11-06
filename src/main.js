@@ -1,3 +1,4 @@
+import { installAutosave } from './state.js';
 import { Game } from './engine.js';
 import { titleScene } from './scenes/title.js';
 import { townScene } from './scenes/town.js';
@@ -52,5 +53,6 @@ installEnding(game); // after installStory so the story state is already updated
 installAudio(game); // creates no AudioContext until the player explicitly enables sound
 installDisplayControls(game); // device-local interface preferences; no game-state changes
 installAnimations(game); // combat + level-up screen effects (shake/fade/popups)
+installAutosave(game);
 game.setScene('title');
 window.game = game; // handy for debugging
