@@ -25,7 +25,7 @@ test('Stillpoint Strike ignores armour and breaks a gathered windup', () => {
   assert.equal(r.ok, true);
   assert.equal(hero.mp, 47);
   const dealt = Number(r.lines.find((l) => /finds the stillpoint/.test(l)).match(/for (\d+)!/)[1]);
-  assert.equal(dealt, Math.floor(heroStats(hero).atk * 2) + 1, 'armour is ignored; rng 0.5 gives +1 variance');
+  assert.equal(dealt, Math.floor((Math.floor(heroStats(hero).atk * 2) + 1) * 1.5), 'armour is ignored; rng 0.5 gives +1 variance; ice vs lightning = 1.5x');
   assert.ok(before - c.enemy.hp >= dealt, 'the strike lands in full');
   assert.equal(c.windup, null);
   assert.ok(r.lines.some((l) => /Gathering Vortex scatters before it can land!/.test(l)));

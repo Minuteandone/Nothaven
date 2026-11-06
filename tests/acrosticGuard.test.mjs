@@ -11,6 +11,7 @@ import { FEATS } from '../src/scenes/feats.js';
 import { TRADES } from '../src/items/trade.js';
 import { BOUNTIES, BOUNTY_RANKS } from '../src/core/bounties.js';
 import { POSTGAME_DEEDS } from '../src/scenes/ending.js';
+import { ELEMENTS } from '../src/combat/elements.js';
 
 // Hidden words can be spelled by the first letters of a text field read in game order.
 const HIDDEN = /egg|yolk|omel|scram|fried|boil|sunny|easter|hatch|nest|chick|poach|shell|devil|bened|quail|hen|coddl|clutch|ovum|oeuf|huevo/i;
@@ -63,7 +64,8 @@ const CATALOGUES = {
   trades: () => TRADES,
   'postgame deeds': () => POSTGAME_DEEDS,
   bounties: () => BOUNTIES,
-  bountyRanks: () => BOUNTY_RANKS
+  bountyRanks: () => BOUNTY_RANKS,
+  elements: () => Object.entries(ELEMENTS).map(([k, v]) => ({ elementId: k, element: v })),
 };
 
 for (const [name, list] of Object.entries(CATALOGUES)) {

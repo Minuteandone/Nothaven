@@ -183,6 +183,19 @@ Four wandering foes can appear on the early roads in addition to the familiar pa
 
 Each adds an entry to the bestiary, so they help toward the **catalogue** feat. Their drops are ordinary supplies such as healing herbs, storm glass, field dressings, and tonics.
 
+### Elements and the elemental wheel
+
+Five elements shape every battle: **Fire melts Ice**, **Ice grounds Lightning**, **Lightning parts Water**, and **Water douses Fire**. **Earth** stands neutral, neither strong nor weak against any element.
+
+Some skills carry an element: Spark, Stormbreaker and Tempest Cleave (Lightning), Beacon Lance, Signal Flare and Skyfire Lance (Fire), and Stillpoint Strike (Ice). Basic attacks are untyped and ignore the wheel altogether.
+
+Enemies have elemental affinities too — a Gale Hound is Lightning, a Cinderclaw is Fire, a Wrack Eel is Water. Check the coloured badge under an enemy's name during combat to plan your moves.
+
+Super-effective hits deal **1.5× damage** and flash *It's super effective!* in the battle log. Resisted hits deal **0.75×** and warn *It's not very effective…* Earth-element foes still show their badge but never multiply or resist damage.
+
+Companion techniques get elements too: Iven's Spark is Lightning, and Sela's Signal Flare is Fire, both making full use of the wheel.
+
+
 ### Greyhaven forge: weapon and armour fittings
 
 Choose **Greyhaven forge** in town to have Hesta fit each party member's weapon and armour slots, up to +3 each. A weapon fitting adds +2 attack per level. An armour fitting adds +1 defence and +4 max HP per level. Fittings belong to the wearer's slot, so they carry over when that member changes gear, but they only help while something is equipped there.
