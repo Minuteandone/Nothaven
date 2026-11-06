@@ -29,6 +29,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.bestiary.cinderclaw = 1;
   s.bestiary.thunderhoof = 1;
   s.bestiary.glacierward_colossus = 1;
+  s.bounties = { active: null, progress: 0, completed: { ridge_rats: 1, bandit_toll: 1, stray_lights: 1, pier_clearance: 1, wolf_trail: 1, upper_route: 1, relay_raiders: 1, silent_sentries: 1, vortex_shades: 1 } };
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
   s.ledger = { victories: 20, comebacks: 1, bestStreak: 15, stormbornBossVictories: 1 };
@@ -210,7 +211,7 @@ test('Dune Breaker feat needs a Cinderclaw defeat and sits last', () => {
   assert.equal(done(), true);
   s.bestiary = null;
   assert.equal(done(), false, 'missing bestiary is safe');
-  assert.equal(FEATS[FEATS.length - 5].id, 'cinderclaw');
+  assert.equal(FEATS[FEATS.length - 6].id, 'cinderclaw');
   assert.ok(!FIELD_TRIALS.includes('cinderclaw'));
 });
 
@@ -224,8 +225,8 @@ test('True Interval feat needs the paid Signal Calibration report and sits last'
   assert.equal(done(), false, 'strictly true');
   s.story.flags.calibration_reward = true;
   assert.equal(done(), true);
-  assert.equal(FEATS[FEATS.length - 4].id, 'calibration');
-  assert.equal(FEATS.length, 30);
+  assert.equal(FEATS[FEATS.length - 5].id, 'calibration');
+  assert.equal(FEATS.length, 31);
 });
 
 test('Stampede Stopped feat needs a recorded Thunderhoof victory and sits last', () => {
@@ -236,9 +237,9 @@ test('Stampede Stopped feat needs a recorded Thunderhoof victory and sits last',
   assert.equal(done(), false);
   s.bestiary.thunderhoof = 1;
   assert.equal(done(), true);
-  assert.equal(FEATS[FEATS.length - 3].id, 'thunderhoof');
-  assert.equal(FEATS[FEATS.length - 3].title, 'Stampede Stopped');
-  assert.equal(FEATS.length, 30);
+  assert.equal(FEATS[FEATS.length - 4].id, 'thunderhoof');
+  assert.equal(FEATS[FEATS.length - 4].title, 'Stampede Stopped');
+  assert.equal(FEATS.length, 31);
 });
 
 test('Calm in the Gale needs a boss win recorded on Stormborn and sits last', async () => {
@@ -257,9 +258,9 @@ test('Calm in the Gale needs a boss win recorded on Stormborn and sits last', as
   assert.equal(ledgerOf(s).stormbornBossVictories, 1);
   assert.equal(ledgerOf(s).bossVictories, 2);
   assert.equal(done(), true);
-  assert.equal(FEATS.at(-2).id, 'stormborn');
-  assert.equal(FEATS.at(-2).title, 'Calm in the Gale');
-  assert.equal(FEATS.length, 30);
+  assert.equal(FEATS.at(-3).id, 'stormborn');
+  assert.equal(FEATS.at(-3).title, 'Calm in the Gale');
+  assert.equal(FEATS.length, 31);
 });
 
 test('Thaw the Sentinel feat needs a recorded Glacierward Colossus victory and sits last', () => {
@@ -272,7 +273,23 @@ test('Thaw the Sentinel feat needs a recorded Glacierward Colossus victory and s
   assert.equal(done(), false);
   s.bestiary.glacierward_colossus = 1;
   assert.equal(done(), true);
-  assert.equal(FEATS.at(-1).id, 'glacierward');
-  assert.equal(FEATS.at(-1).title, 'Thaw the Sentinel');
-  assert.equal(FEATS.length, 30);
+  assert.equal(FEATS.at(-2).id, 'glacierward');
+  assert.equal(FEATS.at(-2).title, 'Thaw the Sentinel');
+  assert.equal(FEATS.length, 31);
+});
+
+test('Every Notice Answered needs each bounty contract claimed at least once and sits last', async () => {
+  const { BOUNTIES } = await import('../src/core/bounties.js');
+  const s = createInitialState();
+  const done = () => featStatus(s).find(f => f.id === 'bounties').done;
+  assert.equal(done(), false);
+  s.bounties = { active: null, progress: 0, completed: Object.fromEntries(BOUNTIES.slice(1).map(b => [b.id, 3])) };
+  assert.equal(done(), false, 'one contract still unclaimed');
+  s.bounties.completed[BOUNTIES[0].id] = 'x';
+  assert.equal(done(), false, 'malformed counts do not count');
+  s.bounties.completed[BOUNTIES[0].id] = 1;
+  assert.equal(done(), true);
+  assert.equal(FEATS.at(-1).id, 'bounties');
+  assert.equal(FEATS.at(-1).title, 'Every Notice Answered');
+  assert.equal(FEATS.length, 31);
 });
