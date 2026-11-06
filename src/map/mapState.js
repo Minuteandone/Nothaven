@@ -157,6 +157,68 @@ export function getZoneVantage(gameState, zoneOrId = null) {
   };
 }
 
+/**
+ * Pure read-only summary of repeatable field services (inn, shop, muster)
+ * across charted zones, plus live inn rest cost and active network status.
+ */
+export function getFieldServicesSummary(gameState = null) {
+  const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
+  const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
+  const visitedMap = gameState?.map?.visitedZones || {};
+  const flags = gameState?.story?.flags || {};
+  const shelterNetworkActive = flags.relay_choice === 'shelter_network';
+  const routeNetworkActive = flags.relay_choice === 'route_network';
+  const stormCalmed = Boolean(flags.victory_storm_heart);
+  const innCost = getInnCost(gameState, { costGold: 5 });
+
+  const services = [];
+  for (const zoneId of ZONE_ORDER) {
+    const zone = ZONES[zoneId];
+    if (!zone) continue;
+    const visited = Boolean(visitedMap[zoneId] || zoneId === currentZoneId);
+    if (!visited) continue;
+    for (const inter of zone.interactables || []) {
+      if (!inter || inter.once) continue;
+      if (inter.kind !== 'inn' && inter.kind !== 'shop' && inter.kind !== 'muster') continue;
+      services.push({
+        id: inter.interactionId || inter.id,
+        name: inter.name,
+        kind: inter.kind,
+        zoneId: zone.id,
+        zoneName: zone.name,
+        x: inter.x,
+        y: inter.y,
+        costGold: inter.kind === 'inn' ? getInnCost(gameState, inter) : null,
+      });
+    }
+  }
+
+  const inns = services.filter((s) => s.kind === 'inn');
+  const shops = services.filter((s) => s.kind === 'shop');
+  const musters = services.filter((s) => s.kind === 'muster');
+  const shopZones = Array.from(new Set(shops.map((s) => s.zoneName)));
+
+  const parts = [
+    `Inn rest: ${innCost}g${shelterNetworkActive ? ' (Shelter Network)' : ''}`,
+    `Charted posts: ${shops.length} ${shops.length === 1 ? 'shop' : 'shops'}${shopZones.length > 0 ? ` (${shopZones.join(', ')})` : ''}`,
+  ];
+  if (routeNetworkActive) parts.push('Route Network (-50% ambushes)');
+  if (stormCalmed) parts.push('Storm Heart calmed');
+
+  return {
+    currentZoneId,
+    innCost,
+    shelterNetworkActive,
+    routeNetworkActive,
+    stormCalmed,
+    inns,
+    shops,
+    musters,
+    services,
+    summary: parts.join(' · '),
+  };
+}
+
 export function getFrontierAtlas(gameState = null) {
   const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
   const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
