@@ -142,7 +142,7 @@ export const featsScene = {
     return `<main class="game-shell feats">
       ${sceneHeader({ eyebrow: 'Watch House records', title: 'Wardens’ Feats', subtitle: 'Milestones of your journey across the storm frontier.', iconName: 'beacon' })}
       <section class="panel" aria-label="Feats earned">
-        <p class="feats__count">${earned} of ${rows.length} feats earned</p>
+        <p class="feats__count">${escapeHTML(`${earned} of ${rows.length} feats earned`)}</p>
         ${nextFeat ? `<p class="feats__next">${escapeHTML(nextFeat)}</p>` : ''}
         <div class="feats__filters" role="group" aria-label="Show feats">${filters}</div>
         ${shown.length ? `<ul class="feats__list">${items}</ul>` : `<p class="feats__empty">${escapeHTML(FEAT_FILTER_EMPTY[filter] || '')}</p>`}
