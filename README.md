@@ -319,3 +319,14 @@ fight and quick save remain unchanged. This is not all-level earned coverage,
 a full visual audit, or screen-reader testing.
 
 The retained Journal layout check enumerates the original six controls and all seven element filters, checking all thirteen at 115%/130% text. This updates its pre-element-filter control count; it does not remove the original search, category, unknown-foe, comparison, or whole-state checks.
+
+### Conditional incoming-damage hints
+
+Combat labels the ordinary incoming estimate as a **basic hit versus the leader**,
+not every possible foe action. Both basic and active-windup hints explicitly use
+current defenses and are not next-turn predictions; the basic hint also notes
+that abilities and other targets differ. Windup and target names are escaped once
+at the rendering boundary. `tests/incoming-damage-hint.test.mjs` exercises frozen
+full-render inputs, fixed ranges, protections, omissions, and hostile text. This
+is synthetic renderer coverage, not browser, screen-reader, or balance evidence;
+combat rules and preview arithmetic are unchanged.
