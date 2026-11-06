@@ -201,7 +201,9 @@ Greyhaven's **Sparring drills** board lets you refight the yard bosses you have 
 
 Once **three** drills are unlocked, the **Yard Gauntlet** opens beside them: face every unlocked drill boss back to back, with wounds and spent MP carrying over between bouts. Losing ends the run but costs nothing — no gold is lost and the party stands back up. Your best run (foes beaten in one attempt) is recorded.
 
-The **Wardens' feats** panel lists milestones of your journey. Alongside the chapter milestones it tracks fourteen yard, road, forge and record achievements:
+**Bounty board.** The Greyhaven bounty board posts nine repeatable hunts against roaming foes, from the Ridge Road Rat Cull to Shades in the Vortex. A contract opens once that foe is in your Field Journal. Take one at a time, defeat the listed number in the wilds (roaming ambushes and patrols both count; sparring drills do not), then return to the board to claim gold and crafting materials such as scrap metal, storm glass and relay brass. You can abandon a contract at no cost, and every contract can be taken again.
+
+The **Wardens' feats** panel lists milestones of your journey. Alongside the chapter milestones it tracks sixteen yard, road, forge and record achievements:
 
 - **Yard Champion** — win a Sparring Drill against every boss in the Watch House yard.
 - **Unbroken Run** — clear the full Yard Gauntlet against every yard boss without a single loss.
@@ -218,6 +220,7 @@ The **Wardens' feats** panel lists milestones of your journey. Alongside the cha
 - **Steady Road** — win fifteen real battles in a row without a defeat. Fleeing does not break the run.
 - **Calm in the Gale** — overcome any boss in a real battle while the Difficulty is set to Stormborn. Sparring drills do not count.
 - **Well Fitted** — have the Greyhaven forge bring both the weapon and armour fittings of one party member to +3.
+- **Every Notice Answered** — claim every contract on the Greyhaven bounty board at least once.
 
 Use the **All**, **Earned** and **Not yet** buttons above the list to show only the feats you want; the earned count stays the same and the choice resets each time you open the panel.
 

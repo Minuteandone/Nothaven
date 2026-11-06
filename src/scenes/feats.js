@@ -5,6 +5,7 @@ import { MAX_PARTY } from '../party/companions.js';
 import { DRILL_FOES, drillRecord, gauntletRecord } from './drills.js';
 import { ledgerOf, SERVICE_ROWS } from '../core/ledger.js';
 import { FITTING_SLOTS, MAX_FITTING, fittingLevel } from '../items/forge.js';
+import { BOUNTIES, bountyState } from '../core/bounties.js';
 
 const flagsOf = state => state?.story?.flags || {};
 const heroOf = state => (Array.isArray(state?.party) ? state.party[0] : null) || null;
@@ -75,6 +76,8 @@ export const FEATS = Object.freeze([
     check: s => ledgerOf(s).stormbornBossVictories >= 1 }),
   Object.freeze({ id: 'glacierward', title: 'Thaw the Sentinel', detail: 'Defeat the Glacierward Colossus, the ice-plated Highwatch guardian that wakes once Signal Calibration is paid.',
     check: s => Number(s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary.glacierward_colossus : 0) > 0 }),
+  Object.freeze({ id: 'bounties', title: 'Every Notice Answered', detail: 'Claim every contract on the Greyhaven bounty board at least once.',
+    check: s => { const done = bountyState(s).completed; return BOUNTIES.every(b => (done[b.id] || 0) >= 1); } }),
 ]);
 
 export function featStatus(state) {

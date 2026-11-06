@@ -44,6 +44,7 @@ export const townScene = {
             ${game.scenes?.character ? uiButton({ action: 'character', label: "Wren's character sheet", iconName: 'sword', variant: 'ghost' }) : ''}
             ${game.scenes?.feats ? uiButton({ action: 'feats', label: 'Wardens’ feats', iconName: 'beacon', variant: 'ghost' }) : ''}
             ${game.scenes?.forge ? uiButton({ action: 'forge', label: 'Greyhaven forge', iconName: 'shield', variant: 'ghost' }) : ''}
+            ${game.scenes?.bounties ? uiButton({ action: 'bounties', label: 'Greyhaven bounty board', iconName: 'journal', variant: 'ghost' }) : ''}
             ${game.scenes?.drills ? uiButton({ action: 'drills', label: 'Sparring drills', iconName: 'sword', variant: 'ghost' }) : ''}
             ${game.scenes?.recipes ? uiButton({ action: 'recipes', label: 'Field recipe book', iconName: 'focus', variant: 'ghost' }) : ''}
             ${game.scenes?.ending && s.flags?.endingShown ? uiButton({ action: 'chronicle', label: 'Read the chronicle', iconName: 'journal', variant: 'ghost' }) : ''}
@@ -69,6 +70,7 @@ export const townScene = {
     bag(game) { if (game.scenes?.bag) game.setScene('bag', { returnScene: 'town' }); },
     muster(game) { if (game.scenes?.muster) game.setScene('muster', { returnScene: 'town' }); },
     feats(game) { if (game.scenes?.feats) game.setScene('feats', { returnScene: 'town' }); },
+    bounties(game) { if (game.state.scene === 'town' && !game.state.combat && game.scenes?.bounties) game.setScene('bounties'); },
     drills(game) { if (game.scenes?.drills) game.setScene('drills'); },
     forge(game) { if (game.scenes?.forge) game.setScene('forge', { returnScene: 'town' }); },
     questJournal(game) { if (game.scenes?.quests) game.setScene('quests', { returnScene: 'town' }); },

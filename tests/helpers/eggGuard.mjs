@@ -9,6 +9,7 @@ export const EGG_WORDS = [
   'poach\\w*', 'fried', 'devil(?:l)?ed', 'albumen', 'easter', 'goose', 'geese', 'gosling\\w*', 'ovals?',
   'ovoid\\w*', 'sunny', 'over-easy', 'boil\\w*', 'crack\\w*', 'whisk\\w*', 'cackl\\w*', 'cluck\\w*', 'pearl',
   'golden', 'basket', 'peeps?', 'quiche', 'meringue', 'custard', 'frittata', 'souffl\\w*', 'mayonnaise',
+  'roes?', 'caviar', 'coddl\\w*', 'ovul\\w*', 'kedgeree', 'shakshuka',
   // Compound-smuggling catchers: fused forms like 'eggshell', 'eggcup',
   // 'yolkish', 'yolked' that the word-bounded entries above cannot match.
   // 'egg(?!guard)' keeps this guard's own filename, which docs/ legitimately

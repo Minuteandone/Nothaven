@@ -16,6 +16,7 @@ import { installAudio } from './audio/controls.js';
 import { installQuestJournal } from './scenes/quests.js';
 import { installFeats } from './scenes/feats.js';
 import { installDrills } from './scenes/drills.js';
+import { installBounties } from './scenes/bounties.js';
 import { installForge } from './scenes/forge.js';
 import { guideScene } from './scenes/guide.js';
 import { installCharacter } from './scenes/character.js';
@@ -45,6 +46,7 @@ installCompanions(game); // registers the 'muster' scene (recruit companions)
 installQuestJournal(game);
 installFeats(game);
 installDrills(game);
+installBounties(game); // Greyhaven bounty board: repeatable hunt contracts (real victories only)
 installForge(game);
 installBestiary(game); // registers the 'bestiary' scene + records defeated foes
 installCharacter(game); // registers Wren's read-only character sheet
