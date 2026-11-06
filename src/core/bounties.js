@@ -51,6 +51,16 @@ function writeState(state, view) {
   return state.bounties;
 }
 
+/** One-line status of the active contract for other screens, or null when none is active. */
+export function bountySummaryText(state) {
+  const view = bountyState(state);
+  const b = getBounty(view.active);
+  if (!b) return null;
+  return view.progress >= b.count
+    ? `Bounty contract: “${b.title}” complete — claim it at the Greyhaven bounty board.`
+    : `Bounty contract: “${b.title}” — ${view.progress}/${b.count} defeated.`;
+}
+
 export function bountyUnlocked(state, id) {
   const b = getBounty(id);
   return Boolean(b) && count(state?.bestiary?.[b.enemyId]) >= 1;
