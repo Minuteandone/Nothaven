@@ -321,6 +321,66 @@ try {
       await page.keyboard.press('s');
       assert.ok(await page.locator('[data-action="skill"]').count() > 0);
       assert.deepEqual(await state(), beforeCommands, 'opening skills must not take a turn');
+      // The earned level-one fight previews future skills without activating them.
+      {
+        const quickBefore = await page.evaluate(() => localStorage.getItem('stormhaven-save'));
+        const upcoming = await page.evaluate(async () => {
+          const { SKILLS, SKILL_UNLOCKS } = await import('/src/combat/rules.js');
+          const level = window.game.state.party[0].level;
+          return Object.entries(SKILL_UNLOCKS).filter(([, unlock]) => unlock > level)
+            .sort((a, b) => a[1] - b[1])
+            .map(([id, unlock]) => ({ name: SKILLS[id].name, unlock, description: SKILLS[id].description }));
+        });
+        assert.equal((await state()).party[0].level, 1);
+        assert.equal(upcoming.length, 13);
+        const disclosure = page.locator('.locked-skills');
+        for (const scale of ['115', '130']) {
+          await page.locator('[aria-controls="display-settings"]').click();
+          await page.locator('[data-display-scale]').selectOption(scale);
+          await page.locator('[data-display-done]').click();
+          assert.equal(await disclosure.getAttribute('open'), null);
+          const summary = disclosure.locator('summary');
+          assert.equal(await summary.textContent(), 'Upcoming skills (13)');
+          const summaryFit = await summary.evaluate(node => {
+            const r = node.getBoundingClientRect(), range = document.createRange();
+            range.selectNodeContents(node);
+            return r.height >= 44 && r.left >= 0 && r.right <= innerWidth + 1
+              && node.scrollWidth <= node.clientWidth + 1
+              && [...range.getClientRects()].every(g => g.left >= r.left - 1 && g.right <= r.right + 1
+                && g.top >= r.top - 1 && g.bottom <= r.bottom + 1);
+          });
+          assert.equal(summaryFit, true, `upcoming-skills summary has a 44px target and fitting text at ${width}px/${scale}%`);
+          await summary.click();
+          assert.equal(await disclosure.getAttribute('open'), '');
+          const cards = await disclosure.locator('button').evaluateAll(nodes => nodes.map(node => {
+            const r = node.getBoundingClientRect();
+            return { disabled: node.disabled, action: node.dataset.action, arg: node.dataset.arg,
+              text: node.textContent.replace(/\s+/g, ' ').trim(), ranges: node.querySelectorAll('.damage-range').length,
+              keys: node.querySelectorAll('kbd').length,
+              fits: r.height >= 44 && r.left >= 0 && r.right <= innerWidth + 1 && node.scrollWidth <= node.clientWidth + 1 };
+          }));
+          assert.equal(cards.length, upcoming.length);
+          cards.forEach((card, i) => {
+            assert.equal(card.disabled, true); assert.equal(card.action, ''); assert.equal(card.arg, '');
+            assert.equal(card.ranges, 0); assert.equal(card.keys, 0); assert.equal(card.fits, true);
+            assert.ok(card.text.includes(upcoming[i].name) && card.text.includes(`Lv ${upcoming[i].unlock}`)
+              && card.text.includes(upcoming[i].description), `upcoming skill ${i} matches the catalog in unlock order`);
+          });
+          assert.equal(await page.locator('[data-action="skill"]').count(), 2);
+          await page.keyboard.press('3');
+          assert.deepEqual(await state(), beforeCommands, 'opening upcoming skills or pressing an unused digit is free');
+          assert.equal(await page.evaluate(() => localStorage.getItem('stormhaven-save')), quickBefore);
+          await fit(`upcoming-skills-${scale}`);
+          await summary.click();
+          assert.equal(await disclosure.getAttribute('open'), null);
+          assert.deepEqual(await state(), beforeCommands);
+        }
+        await page.locator('[aria-controls="display-settings"]').click();
+        await page.locator('[data-display-scale]').selectOption('100');
+        await page.locator('[data-display-done]').click();
+        assert.deepEqual(await state(), beforeCommands);
+        assert.equal(await page.evaluate(() => localStorage.getItem('stormhaven-save')), quickBefore);
+      }
       await fit('combat-skills');
       await page.keyboard.press('Escape');
       assert.equal(await page.locator('[data-action="attack"]').count(), 1);
@@ -441,7 +501,14 @@ try {
             return r.left >= 0 && r.right <= innerWidth + 1 && r.height >= 44
               && (node.tagName === 'INPUT' || node.scrollWidth <= node.clientWidth + 1);
           }));
-          assert.equal(controls.length, 6);
+          assert.equal(controls.length, 13);
+          assert.deepEqual(await page.locator('.bestiary-tools button:not([data-action="bestiaryElementFilter"]),.bestiary-tools input')
+            .evaluateAll(nodes => nodes.map(node => node.dataset.action || node.id)),
+          ['bestiaryFilter', 'bestiaryFilter', 'bestiaryFilter', 'bestiary-search', 'searchBestiary', 'clearBestiarySearch']);
+          assert.deepEqual(await page.locator('[data-action="bestiaryElementFilter"]')
+            .evaluateAll(nodes => nodes.map(node => [node.dataset.arg, node.getAttribute('aria-pressed')])),
+          [['all', 'true'], ['fire', 'false'], ['ice', 'false'], ['lightning', 'false'],
+            ['water', 'false'], ['earth', 'false'], ['untyped', 'false']]);
           assert.ok(controls.every(Boolean), 'Journal controls and button text fit; the single-line input may scroll internally');
         };
         for (const filter of ['bosses', 'regular', 'all']) {
