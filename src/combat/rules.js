@@ -327,16 +327,20 @@ function chargeFromHit(c, d, maxHp) { gainCharge(c, (d * 60) / Math.max(1, maxHp
 export function chargeReady(c) { return (c?.charge || 0) >= BEACON_CHARGE_MAX; }
 
 /** Apply element multiplier to damage and return adjusted value + optional log line. */
+function elementPrefix(atkEl) {
+  return atkEl ? `::elem:${atkEl}::` : '';
+}
+
 function applyElement(c, action, baseDmg) {
   const skill = action && action.type === 'skill' ? SKILLS[action.skillId] : null;
   const atkEl = skill ? skill.element : null;
   const defEl = c && c.enemy ? c.enemy.element : null;
-  if (!atkEl && !defEl) return { dmg: baseDmg, note: '' };
+  if (!atkEl && !defEl) return { dmg: baseDmg, note: '', atkEl: null };
   const mult = elementMultiplier(atkEl, defEl);
   const effective = elementEffectivenessText(atkEl, defEl);
-  if (effective === 'strong') return { dmg: Math.max(1, Math.floor(baseDmg * mult)), note: ' It\'s super effective!' };
-  if (effective === 'weak') return { dmg: Math.max(1, Math.floor(baseDmg * mult)), note: ' It\'s not very effective…' };
-  return { dmg: baseDmg, note: '' };
+  if (effective === 'strong') return { dmg: Math.max(1, Math.floor(baseDmg * mult)), note: ' It\'s super effective!', atkEl };
+  if (effective === 'weak') return { dmg: Math.max(1, Math.floor(baseDmg * mult)), note: ' It\'s not very effective…', atkEl };
+  return { dmg: baseDmg, note: '', atkEl };
 }
 
 export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
@@ -349,7 +353,7 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
       let d = physicalDamage(hs.atk, c.enemy.def, rng);
       const el = applyElement(c, action, d); d = el.dmg;
       c.enemy.hp = Math.max(0, c.enemy.hp - d);
-      lines.push(`${hero.name} strikes for ${d}.${el.note}`);
+      lines.push(`${elementPrefix(el.atkEl)}${hero.name} strikes for ${d}.${el.note}`);
       break;
     }
     case 'defend':
@@ -367,14 +371,14 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
         let d = physicalDamage(hs.atk, c.enemy.def, rng, { mult: sk.mult });
         const el = applyElement(c, action, d); d = el.dmg;
         c.enemy.hp = Math.max(0, c.enemy.hp - d);
-        lines.push(`${hero.name} uses ${sk.name} for ${d}!${el.note}`);
+        lines.push(`${elementPrefix(el.atkEl)}${hero.name} uses ${sk.name} for ${d}!${el.note}`);
         if (rng() < 0.25) { addStatus(c.enemy, 'stunned', 1, c.enemyTimers); lines.push(`${c.enemy.name} reels, stunned.`); }
       } else if (sk.kind === 'magic') {
         let d = sk.power + (hero.level || 1) * 2 + randInt(rng, 0, 2);
         if (c.enemy.tags?.includes('construct')) d = Math.floor(d * 1.5);
         const el = applyElement(c, action, d); d = el.dmg;
         c.enemy.hp = Math.max(0, c.enemy.hp - d);
-        lines.push(`${hero.name} casts ${sk.name} for ${d}!${el.note}`);
+        lines.push(`${elementPrefix(el.atkEl)}${hero.name} casts ${sk.name} for ${d}!${el.note}`);
       } else if (sk.kind === 'heal') {
         const before = hero.hp;
         hero.hp = Math.min(hs.maxHp, hero.hp + sk.power + (hero.level || 1) * 2);
@@ -395,12 +399,12 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
         let d = Math.max(1, Math.floor(hs.atk * sk.mult) + randInt(rng, -1, 2));
         const el = applyElement(c, action, d); d = el.dmg;
         c.enemy.hp = Math.max(0, c.enemy.hp - d);
-        lines.push(`${hero.name} hurls a ${sk.name} for ${d}!${el.note}`);
+        lines.push(`${elementPrefix(el.atkEl)}${hero.name} hurls a ${sk.name} for ${d}!${el.note}`);
       } else if (sk.kind === 'break') {
         let d = Math.max(1, Math.floor(hs.atk * sk.mult) + randInt(rng, -1, 2));
         const el = applyElement(c, action, d); d = el.dmg;
         c.enemy.hp = Math.max(0, c.enemy.hp - d);
-        lines.push(`${hero.name} finds the stillpoint and strikes for ${d}!${el.note}`);
+        lines.push(`${elementPrefix(el.atkEl)}${hero.name} finds the stillpoint and strikes for ${d}!${el.note}`);
         if (c.windup) {
           lines.push(`${c.windup.name || c.enemy.windup?.name || 'The heavy blow'} scatters before it can land!`);
           c.windup = null;
@@ -538,7 +542,7 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
       const sparkMult = elementMultiplier('lightning', e.element);
       const d = Math.max(1, Math.floor(sparkBase * sparkMult * 1.5));
       e.hp = Math.max(0, e.hp - d);
-      lines.push(`${m.name} casts Spark for ${d}!`);
+      lines.push(`::elem:lightning::${m.name} casts Spark for ${d}!`);
       return lines;
     }
   }
@@ -558,7 +562,7 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
     const flareMult = elementMultiplier("fire", e.element);
     const d = Math.max(1, Math.floor((master ? base * 1.5 : base) * flareMult));
     e.hp = Math.max(0, e.hp - d);
-    lines.push(`${m.name} hurls a ${master ? COMPANION_MASTERY.signaler.name : 'Signal Flare'} for ${d}!`);
+    lines.push(`::elem:fire::${m.name} hurls a ${master ? COMPANION_MASTERY.signaler.name : 'Signal Flare'} for ${d}!`);
     return lines;
   }
   if (m.role === 'scout' && rng() < (master ? 0.4 : 0.3)) {
