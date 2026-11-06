@@ -4,6 +4,7 @@ import { FEATS, WANDERERS, FIELD_TRIALS, featStatus, featsEarned, featsScene } f
 import { ENEMIES } from '../src/data/enemies.js';
 import { createInitialState } from '../src/state.js';
 import { DRILL_FOES } from '../src/scenes/drills.js';
+import { BOUNTIES } from '../src/core/bounties.js';
 
 const EGG_RE = /\b(eggs?|yolks?|shells?|hatch\w*|nests?|chicks?|hens?|omelet\w*|scrambl\w*|clutch|poach\w*|fried|easter|oval|boil\w*|crack\w*|golden|birds?|feathers?|basket)\b/i;
 
@@ -29,7 +30,7 @@ test('feats unlock from story flags, party, bestiary and level', () => {
   s.bestiary.cinderclaw = 1;
   s.bestiary.thunderhoof = 1;
   s.bestiary.glacierward_colossus = 1;
-  s.bounties = { active: null, progress: 0, completed: { ridge_rats: 1, bandit_toll: 1, stray_lights: 1, pier_clearance: 1, wolf_trail: 1, upper_route: 1, relay_raiders: 1, silent_sentries: 1, vortex_shades: 1 } };
+  s.bounties = { active: null, progress: 0, completed: Object.fromEntries(BOUNTIES.map((b) => [b.id, 1])) };
   s.drillRecords = Object.fromEntries(DRILL_FOES.map(id => [id, { wins: 1, best: 9 }]));
   s.drillGauntlet = { runs: 1, best: DRILL_FOES.length };
   s.ledger = { victories: 20, comebacks: 1, bestStreak: 15, stormbornBossVictories: 1 };

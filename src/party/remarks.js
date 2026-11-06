@@ -32,7 +32,7 @@ const LINES = {
   },
   iven: {
     boardWarden: 'Twenty-five claims and a forty percent premium. I ran the board’s accounts twice; at this rate the clerk will owe us the desk.',
-    bounties: 'I cross-checked the bounty ledger against the Field Journal. Nine contracts, every one claimed, and the sums agree to the last coin.',
+    bounties: 'I cross-checked the bounty ledger against the Field Journal. Fourteen contracts, every one claimed, and the sums agree to the last coin.',
     stormborn: 'I logged our Stormborn battle beside the old storm tables. By every number we should have lost; I have checked the sums three times.',
     glacierward: 'The Glacierward Colossus was built from the same survey stone as our old benchmarks. I would give a month of readings to see its original plans.',
     thunderhoof: 'Those antlers threw sparks hot enough to fuse my lens clips. I am keeping one of the scorched tines for the observatory shelf.',
