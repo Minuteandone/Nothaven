@@ -1,11 +1,11 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { bountyFieldText } from '../core/bounties.js';
 import { getEntityAt, getTileInfo, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
+import { bountyFieldText } from '../core/bounties.js';
 
 function safeClass(value) {
   return String(value || '').replace(/[^a-z0-9_-]/gi, '');
