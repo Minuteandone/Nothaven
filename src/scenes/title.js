@@ -1,7 +1,7 @@
 import { createInitialState, loadGame, hasSave, hasAutosave, loadAutosave, isAutosaveEnabled, enableAutosave, disableAutosave } from '../state.js';
 import { beaconArt, escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { resumeJourney } from '../core/resume.js';
-import { exportSave, importSave, deleteSave } from '../core/saveManager.js';
+import { exportSave, validateImportSave, commitImportSave, deleteSave } from '../core/saveManager.js';
 
 function clearStoryTransients(game) {
   game.storyDialogue = null;
@@ -24,18 +24,46 @@ function buildSaveActions(hasExistingSave, hasExistingAutosave) {
   return buttons.join('');
 }
 
+function importPreviewBlock(preview) {
+  const rows = [
+    ['Hero', escapeHTML(preview.heroName)],
+    ['Level', String(preview.level)],
+    ['Location', escapeHTML(preview.location)],
+    ['Scene', escapeHTML(preview.scene)],
+    ['Gold', String(preview.gold)],
+    ['Party', `${preview.partyCount} member${preview.partyCount !== 1 ? 's' : ''}`],
+    ['Save version', String(preview.saveVersion)],
+  ];
+  return `<div class="import-preview" role="region" aria-label="Import preview">
+    <h3>Import this save?</h3>
+    <p class="import-warning">This will replace your current save on this device.</p>
+    <dl class="import-preview__details">
+      ${rows.map(([label, value]) => `<div><dt>${escapeHTML(label)}</dt><dd>${value}</dd></div>`).join('')}
+    </dl>
+    <div class="import-preview__actions">
+      ${uiButton({ action: 'confirmImport', label: 'Confirm import', iconName: 'check', variant: 'primary' })}
+      ${uiButton({ action: 'cancelImport', label: 'Cancel', iconName: 'x', variant: 'ghost' })}
+    </div>
+  </div>`;
+}
+
 export const titleScene = {
   render(game) {
     const saveActions = buildSaveActions(hasSave(), hasAutosave());
-    const result = game && game.importResult;
-    const importBanner = result
-      ? `<div role="alert" class="import-banner import-banner--${result.ok ? 'success' : 'error'}">${escapeHTML(result.message)}</div>`
+    let banner = '';
+    if (game && game.importResult) {
+      const r = game.importResult;
+      banner = `<div role="alert" class="import-banner import-banner--${r.ok ? 'success' : 'error'}">${escapeHTML(r.message)}</div>`;
+    }
+    const previewBlock = (game && game.pendingImportPreview)
+      ? importPreviewBlock(game.pendingImportPreview)
       : '';
     return `<main class="game-shell title-screen">
       <div class="title-layout">
         <section class="title-copy">
           ${sceneHeader({ eyebrow: 'A turn-based expedition', title: 'Beacon of Stormhaven', subtitle: 'The storms have broken the beacon that shields Greyhaven. Someone must set it alight again.', iconName: 'beacon' })}
-          ${importBanner}
+          ${banner}
+          ${previewBlock}
           <div class="title-actions">
             ${uiButton({ action: 'newGame', label: 'New journey', iconName: 'compass', variant: 'primary' })}
             ${uiButton({ action: 'continue', label: 'Continue', iconName: 'save', disabled: !hasSave() })}
@@ -52,7 +80,15 @@ export const titleScene = {
   actions: {
     archive(game) { if (game.state.scene === 'title' && game.scenes?.archive && !game.state.combat) game.setScene('archive', { returnScene: 'title' }); },
     guide(game) { if (game.scenes?.guide) game.setScene('guide', { returnScene: 'title' }); },
-    newGame(game) { game.state = createInitialState(); clearStoryTransients(game); game.setScene('town'); },
+    newGame(game) {
+      game.state = createInitialState();
+      clearStoryTransients(game);
+      // Clear any pending import
+      delete game.pendingImportRaw;
+      delete game.pendingImportPreview;
+      delete game.importResult;
+      game.setScene('town');
+    },
     continue(game) {
       const s = loadGame();
       if (!s) return;
@@ -65,9 +101,9 @@ export const titleScene = {
       }
     },
     promptImport(game) {
-      // Create a temporary file input. The browser's file dialog holds a
-      // reference to it until the user selects a file or cancels, so it
-      // survives the engine's render() call that fires after every action.
+      // Clean up any stale import state
+      delete game.pendingImportRaw;
+      delete game.pendingImportPreview;
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.json,application/json';
@@ -76,15 +112,17 @@ export const titleScene = {
         if (!file) return;
         const reader = new FileReader();
         reader.onload = () => {
-          const result = importSave(reader.result);
-          if (result.ok) {
-            game.importResult = { ok: true, message: 'Save imported. Reloading…' };
+          const validation = validateImportSave(reader.result);
+          if (!validation.ok) {
+            game.importResult = { ok: false, message: validation.error || 'Import failed.' };
             game.render();
-            setTimeout(() => { window.location.reload(); }, 800);
-          } else {
-            game.importResult = { ok: false, message: result.error || 'Import failed.' };
-            game.render();
+            return;
           }
+          // Store raw JSON and preview; show confirmation UI
+          game.pendingImportRaw = reader.result;
+          game.pendingImportPreview = validation.preview;
+          delete game.importResult;
+          game.render();
         };
         reader.onerror = () => {
           game.importResult = { ok: false, message: 'Could not read the selected file.' };
@@ -93,6 +131,24 @@ export const titleScene = {
         reader.readAsText(file);
       };
       input.click();
+    },
+    confirmImport(game) {
+      if (!game.pendingImportRaw) return;
+      const result = commitImportSave(game.pendingImportRaw);
+      if (result.ok) {
+        game.importResult = { ok: true, message: 'Save imported. Reloading…' };
+      } else {
+        game.importResult = { ok: false, message: result.error || 'Could not write save.' };
+      }
+      delete game.pendingImportRaw;
+      delete game.pendingImportPreview;
+      game.render();
+      if (result.ok) setTimeout(() => { window.location.reload(); }, 800);
+    },
+    cancelImport(game) {
+      delete game.pendingImportRaw;
+      delete game.pendingImportPreview;
+      game.render();
     },
     promptDelete(game) {
       if (!hasSave()) return;
@@ -111,8 +167,6 @@ export const titleScene = {
         disableAutosave();
       } else {
         enableAutosave();
-        // Trigger an immediate schedule on the next scene:enter
-        // by simulating that we've just entered the current scene
       }
       game.render();
     },

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createInitialState, saveGame, hasSave, enableAutosave, disableAutosave, scheduleAutosave, isAutosaveEnabled, hasAutosave, loadAutosave, clearAutosave } from '../src/state.js';
-import { exportSave, importSave, deleteSave } from '../src/core/saveManager.js';
+import { exportSave, importSave, validateImportSave, commitImportSave, deleteSave } from '../src/core/saveManager.js';
 import { SAVE_VERSION } from '../src/core/save.js';
 
 const SAVE_KEY = 'stormhaven-save';
@@ -12,6 +12,8 @@ function storage() {
   const data = new Map();
   return { data, getItem(k) { return data.get(k) ?? null; }, setItem(k, v) { data.set(k, String(v)); }, removeItem(k) { data.delete(k); } };
 }
+
+// --- exportSave tests ---
 
 test('exportSave returns false when no save exists', () => {
   const st = storage();
@@ -31,7 +33,6 @@ test('exportSave returns true when save exists (mocked DOM)', () => {
   st.setItem(SAVE_KEY, JSON.stringify(state));
   const old = globalThis.localStorage;
   globalThis.localStorage = st;
-  // Save and replace DOM/URL globals for the download path
   const oldDoc = globalThis.document;
   const oldURL = globalThis.URL;
   globalThis.document = {
@@ -55,20 +56,155 @@ test('exportSave output contains no egg words (format check)', () => {
   assert.ok(!EGG_RE.test(json), 'save JSON format must not contain egg words');
 });
 
+// --- validateImportSave tests ---
+
+test('validateImportSave rejects invalid JSON', () => {
+  const result = validateImportSave('not valid json {{{');
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('Invalid JSON'));
+});
+
+test('validateImportSave rejects non-object JSON', () => {
+  const result = validateImportSave('"just a string"');
+  assert.equal(result.ok, false);
+});
+
+test('validateImportSave rejects null', () => {
+  const result = validateImportSave('null');
+  assert.equal(result.ok, false);
+});
+
+test('validateImportSave rejects empty object {}', () => {
+  const result = validateImportSave('{}');
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('valid party'));
+});
+
+test('validateImportSave rejects object missing party', () => {
+  const result = validateImportSave('{"gold": 100, "scene": "town"}');
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('valid party'));
+});
+
+test('validateImportSave rejects object with empty party', () => {
+  const result = validateImportSave('{"gold": 100, "party": [], "scene": "town"}');
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('valid party'));
+});
+
+test('validateImportSave rejects object with __proto__ key', () => {
+  const result = validateImportSave('{"__proto__": {}, "gold": 100, "party": [{"id":"h","name":"W"}], "scene": "town"}');
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('disallowed'));
+});
+
+test('validateImportSave rejects object missing scene', () => {
+  const result = validateImportSave('{"gold": 100, "party": [{"id":"hero","name":"Wren"}]}');
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('scene'));
+});
+
+test('validateImportSave rejects object missing gold', () => {
+  const result = validateImportSave('{"party": [{"id":"hero","name":"Wren"}], "scene": "town"}');
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('gold'));
+});
+
+test('validateImportSave migrates and accepts valid save', () => {
+  const state = createInitialState();
+  const json = JSON.stringify({ ...state, saveVersion: 1, scene: 'town' });
+  const result = validateImportSave(json);
+  assert.equal(result.ok, true);
+  assert.ok(result.preview);
+  assert.equal(result.preview.heroName, state.party[0].name);
+  assert.equal(result.preview.scene, 'town');
+});
+
+test('validateImportSave returns correct preview data', () => {
+  const state = createInitialState();
+  state.gold = 250;
+  state.location = 'ridge_road';
+  state.scene = 'explore';
+  state.party[0].level = 7;
+  const json = JSON.stringify(state);
+  const result = validateImportSave(json);
+  assert.equal(result.ok, true);
+  assert.equal(result.preview.heroName, state.party[0].name);
+  assert.equal(result.preview.level, 7);
+  assert.equal(result.preview.location, 'ridge_road');
+  assert.equal(result.preview.scene, 'explore');
+  assert.equal(result.preview.gold, 250);
+  assert.equal(result.preview.partyCount, state.party.length);
+});
+
+test('validateImportSave rejects save with active combat', () => {
+  const state = createInitialState();
+  state.scene = 'town';
+  state.combat = { active: true, enemy: 'test_fiend' };
+  const json = JSON.stringify(state);
+  const result = validateImportSave(json);
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('combat'));
+});
+
+test('validateImportSave accepts save with null combat', () => {
+  const state = createInitialState();
+  state.scene = 'town';
+  state.combat = null;
+  const json = JSON.stringify(state);
+  const result = validateImportSave(json);
+  assert.equal(result.ok, true);
+});
+
+// --- commitImportSave tests ---
+
+test('commitImportSave writes to localStorage', () => {
+  const st = storage();
+  const old = globalThis.localStorage;
+  globalThis.localStorage = st;
+  try {
+    const state = createInitialState();
+    state.scene = 'town';
+    const json = JSON.stringify(state);
+    const result = commitImportSave(json);
+    assert.equal(result.ok, true);
+    assert.ok(st.getItem(SAVE_KEY), 'save should be written');
+  } finally {
+    globalThis.localStorage = old;
+  }
+});
+
+test('commitImportSave backs up existing save before overwriting', () => {
+  const st = storage();
+  st.setItem(SAVE_KEY, '{"saveVersion":2,"scene":"town","party":[{"id":"hero","name":"Old"}],"gold":50}');
+  const old = globalThis.localStorage;
+  globalThis.localStorage = st;
+  try {
+    const state = createInitialState();
+    state.scene = 'explore';
+    const json = JSON.stringify(state);
+    const result = commitImportSave(json);
+    assert.equal(result.ok, true);
+    const backup = st.getItem(SAVE_KEY + '.backup');
+    assert.ok(backup, 'backup should exist');
+    assert.equal(JSON.parse(backup).scene, 'town');
+  } finally {
+    globalThis.localStorage = old;
+  }
+});
+
+// --- importSave (legacy single-step) tests ---
+
 test('importSave rejects invalid JSON', () => {
   const result = importSave('not valid json {{{');
   assert.equal(result.ok, false);
   assert.ok(result.error);
 });
 
-test('importSave rejects non-object JSON', () => {
-  const result = importSave('"just a string"');
+test('importSave rejects empty object {}', () => {
+  const result = importSave('{}');
   assert.equal(result.ok, false);
-});
-
-test('importSave rejects null', () => {
-  const result = importSave('null');
-  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('valid party'));
 });
 
 test('importSave migrates and accepts valid save', () => {
@@ -89,7 +225,7 @@ test('importSave migrates and accepts valid save', () => {
 
 test('importSave backs up existing save before overwriting', () => {
   const st = storage();
-  st.setItem(SAVE_KEY, '{"saveVersion":2,"scene":"town"}');
+  st.setItem(SAVE_KEY, '{"saveVersion":2,"scene":"town","party":[{"id":"hero","name":"Old"}],"gold":50}');
   const old = globalThis.localStorage;
   globalThis.localStorage = st;
   try {
@@ -104,6 +240,8 @@ test('importSave backs up existing save before overwriting', () => {
     globalThis.localStorage = old;
   }
 });
+
+// --- deleteSave / hasSave tests ---
 
 test('deleteSave removes save, backup, and autosave', () => {
   const st = storage();
@@ -135,6 +273,8 @@ test('hasSave returns false after deleteSave', () => {
     globalThis.localStorage = old;
   }
 });
+
+// --- autosave tests ---
 
 test('autosave is initially disabled', () => {
   assert.equal(isAutosaveEnabled(), false);
@@ -178,25 +318,6 @@ test('scheduleAutosave does nothing when disabled', (_, done) => {
     }, 50);
   } finally {
     globalThis.localStorage = old;
-  }
-});
-
-test('scheduleAutosave writes to localStorage when enabled', (_, done) => {
-  const st = storage();
-  const old = globalThis.localStorage;
-  globalThis.localStorage = st;
-  enableAutosave();
-  try {
-    const state = createInitialState();
-    state.gold = 500;
-    scheduleAutosave(state);
-    // The debounce is 5 minutes, but we verify the function runs without error
-    assert.equal(isAutosaveEnabled(), true);
-    disableAutosave();
-    done();
-  } finally {
-    globalThis.localStorage = old;
-    disableAutosave();
   }
 });
 
@@ -249,36 +370,6 @@ test('saveManager module source has no egg words', async () => {
   assert.ok(!EGG_RE.test(src), 'saveManager.js must not contain egg words');
 });
 
-test('importSave rejects empty object {}', () => {
-  const result = importSave('{}');
-  assert.equal(result.ok, false);
-  assert.ok(result.error.includes('recognised game data'), 'should reject near-empty objects');
-});
-
-test('importSave rejects object with only one save key', () => {
-  const result = importSave('{"gold": 100}');
-  assert.equal(result.ok, false);
-  assert.ok(result.error.includes('recognised game data'), 'should reject objects with insufficient save fields');
-});
-
-test('importSave rejects object with unrelated keys', () => {
-  const result = importSave('{"foo": 1, "bar": 2}');
-  assert.equal(result.ok, false);
-  assert.ok(result.error.includes('recognised game data'));
-});
-
-test('importSave accepts object with gold and party (valid save)', () => {
-  const st = storage();
-  const old = globalThis.localStorage;
-  globalThis.localStorage = st;
-  try {
-    const result = importSave('{"gold": 100, "party": [{"id":"hero","name":"Wren"}], "scene": "town"}');
-    assert.equal(result.ok, true);
-  } finally {
-    globalThis.localStorage = old;
-  }
-});
-
 test('autosave writes to localStorage when enabled (controlled timer)', (_, done) => {
   const st = storage();
   const old = globalThis.localStorage;
@@ -286,12 +377,7 @@ test('autosave writes to localStorage when enabled (controlled timer)', (_, done
   enableAutosave();
   const state = createInitialState();
   state.gold = 777;
-  // Use _testInterval = 10ms for fast test
   scheduleAutosave(state, 10);
-  // The autosave timer fires after 10ms. We check at 50ms.
-  // Per-test cleanup (localStorage swap, disable) must live inside
-  // the timeout — a finally block would fire synchronously and clear
-  // the timer before it ever runs.
   setTimeout(() => {
     try {
       const raw = st.getItem(AUTOSAVE_KEY);
@@ -319,6 +405,86 @@ test('autosave does not write when disabled even with short interval', (_, done)
       assert.equal(st.getItem(AUTOSAVE_KEY), null, 'disabled autosave must not write');
       done();
     }, 50);
+  } finally {
+    globalThis.localStorage = old;
+  }
+});
+
+// --- Autosave lifecycle test (GPT-6's concern #3) ---
+
+test('autosave full lifecycle: opt-in → write → confirmed → load → clear', (_, done) => {
+  const st = storage();
+  const old = globalThis.localStorage;
+  globalThis.localStorage = st;
+
+  // Phase 1: Initially disabled, no autosave
+  disableAutosave();
+  assert.equal(isAutosaveEnabled(), false);
+  assert.equal(hasAutosave(), false);
+
+  // Phase 2: Opt in and write
+  enableAutosave();
+  assert.equal(isAutosaveEnabled(), true);
+
+  const state = createInitialState();
+  state.gold = 4321;
+  state.scene = 'explore';
+  state.location = 'beacon_tower';
+  scheduleAutosave(state, 10);
+
+  setTimeout(() => {
+    try {
+      // Phase 3: Confirm autosave was written with correct data
+      assert.ok(st.getItem(AUTOSAVE_KEY), 'autosave should exist in storage');
+      const parsed = JSON.parse(st.getItem(AUTOSAVE_KEY));
+      assert.equal(parsed.gold, 4321);
+      assert.equal(parsed.scene, 'explore');
+      assert.equal(parsed.location, 'beacon_tower');
+      assert.equal(parsed.combat, null);
+      assert.equal(hasAutosave(), true);
+
+      // Phase 4: Load autosave
+      const loaded = loadAutosave();
+      assert.ok(loaded);
+      assert.equal(loaded.gold, 4321);
+
+      // Phase 5: Disable and clear
+      disableAutosave();
+      clearAutosave();
+      assert.equal(hasAutosave(), false);
+      assert.equal(st.getItem(AUTOSAVE_KEY), null);
+    } finally {
+      globalThis.localStorage = old;
+      done();
+    }
+  }, 50);
+});
+
+// --- Two-phase import lifecycle test ---
+
+test('two-phase import: validate → preview → confirm writes save', () => {
+  const st = storage();
+  const old = globalThis.localStorage;
+  globalThis.localStorage = st;
+  try {
+    const state = createInitialState();
+    state.gold = 888;
+    state.scene = 'town';
+    const json = JSON.stringify(state);
+
+    // Phase 1: validate
+    const validation = validateImportSave(json);
+    assert.equal(validation.ok, true);
+    assert.equal(validation.preview.gold, 888);
+    assert.equal(validation.preview.scene, 'town');
+
+    // Phase 2: confirm
+    const result = commitImportSave(json);
+    assert.equal(result.ok, true);
+
+    // Phase 3: verify written data
+    const written = JSON.parse(st.getItem(SAVE_KEY));
+    assert.equal(written.gold, 888);
   } finally {
     globalThis.localStorage = old;
   }
