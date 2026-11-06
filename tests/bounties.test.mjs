@@ -165,3 +165,24 @@ test('a claim whose item grant fails changes nothing', () => {
   assert.equal(claimBounty(s).ok, true);
   assert.equal(s.gold, 37);
 });
+
+test('the Journey Journal shows the active bounty contract and its progress', async () => {
+  const { bountySummaryText } = await import('../src/core/bounties.js');
+  const { questJournalScene } = await import('../src/scenes/quests.js');
+  const s = fresh();
+  assert.equal(bountySummaryText(s), null);
+  const game = { state: s, scenes: { town: {} } };
+  questJournalScene.onEnter(game, {});
+  assert.ok(!questJournalScene.render(game).includes('quest-bounty-summary'));
+  s.bestiary.storm_rat = 1;
+  assert.equal(acceptBounty(s, 'ridge_rats').ok, true);
+  recordBountyKill(s, 'storm_rat');
+  assert.equal(bountySummaryText(s), 'Bounty contract: “Ridge Road Rat Cull” — 1/4 defeated.');
+  const html = questJournalScene.render(game);
+  assert.match(html, /<p class="quest-bounty-summary" role="status">Bounty contract: “Ridge Road Rat Cull” — 1\/4 defeated\.<\/p>/);
+  for (let i = 0; i < 5; i++) recordBountyKill(s, 'storm_rat');
+  assert.equal(bountySummaryText(s), 'Bounty contract: “Ridge Road Rat Cull” complete — claim it at the Greyhaven bounty board.');
+  s.bounties.active = 'no_such_contract';
+  assert.equal(bountySummaryText(s), null);
+  assertEggFree(html, 'journal bounty line');
+});

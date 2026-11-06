@@ -1406,3 +1406,6 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .bounty__status { opacity: .8; }
 .bounty--active { border-color: rgba(250,204,21,.6); }
 .bounty--locked { opacity: .6; }
+
+/* Journey Journal bounty line */
+.quest-bounty-summary { overflow-wrap: anywhere; }
