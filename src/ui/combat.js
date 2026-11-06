@@ -142,6 +142,7 @@ function lockedSkillsHtml(hero, combat) {
 }
 
 function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
+  const warded = combat.defending || combat.wardTurns > 0 || (combat.aegisTurns || 0) > 0;
   if (combat.over) {
     return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
   }
@@ -149,7 +150,7 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
     const skills = knownSkills(hero).map((skill, index) => {
       const effectiveness = elementEffectivenessText(skill.element, combat.enemy?.element);
       const effSuffix = effectiveness === 'strong' ? 'strong' : effectiveness === 'weak' ? 'weak' : '';
-      const preview = damagePreview(skill, hero, combat.enemy);
+      const preview = damagePreview(skill, hero, combat.enemy, { warded });
       const dmgRange = preview ? `${preview.min}–${preview.max}` : '';
       return commandCard({
         action: 'skill', arg: skill.id, name: skill.name, meta: `${skill.mp} MP`,
@@ -188,7 +189,7 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
   const usableCount = (inventory || []).filter((stack) => {
     try { return getItem(stack.id).type === TYPES.CONSUMABLE; } catch { return false; }
   }).length;
-  const attackPreview = damagePreview(null, hero, combat.enemy);
+  const attackPreview = damagePreview(null, hero, combat.enemy, { warded });
   const attackBadge = attackPreview ? `<span class="damage-preview-badge">${escapeHTML(String(attackPreview.min))}–${escapeHTML(String(attackPreview.max))}</span>` : '';
   return `${chargeMeter(combat)}<div class="actions command-grid" role="group" aria-label="Combat actions">
     ${commandButton({ action: 'burst', label: chargeReady(combat) ? 'Beacon Burst — ready!' : 'Beacon Burst', iconName: 'beacon', variant: chargeReady(combat) ? 'primary' : 'secondary', disabled: !chargeReady(combat), className: 'command-button command-button--burst', shortcut: 'B' })}

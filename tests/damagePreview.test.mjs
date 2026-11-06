@@ -191,3 +191,104 @@ describe('damagePreview — edge cases', () => {
     assert.strictEqual(damagePreview('power_strike', heroBase, enemyFire), null);
   });
 });
+
+describe('damagePreview — warded halving', () => {
+  // When warded, all damage is halved (floor, min 1) after element calculations.
+
+  it('basic attack halved when warded', () => {
+    // atk=14, enemy def=4 → phys range 9–12. No element. Warded → 4–6.
+    const r = damagePreview(null, heroBase, enemyFire, { warded: true });
+    assert.ok(r);
+    assert.strictEqual(r.kind, 'attack');
+    assert.strictEqual(r.min, 4);
+    assert.strictEqual(r.max, 6);
+    assert.strictEqual(r.effective, '');
+  });
+
+  it('damage skill halved when warded', () => {
+    // Power Strike: mult=1.6, atk=14 → base=22. enemy def=4 → 17–20. Warded → 8–10.
+    const r = damagePreview(skillDamage, heroBase, enemyFire, { warded: true });
+    assert.ok(r);
+    assert.strictEqual(r.kind, 'damage');
+    assert.strictEqual(r.min, 8);
+    assert.strictEqual(r.max, 10);
+  });
+
+  it('magic skill halved when warded (element strong)', () => {
+    // Spark: power=8, level=5 → 18. +randInt(0,2) → 18–20.
+    // lightning vs water → strong (×1.5) → 27–30. Warded → 13–15.
+    const r = damagePreview(skillMagic, heroBase, enemyWater, { warded: true });
+    assert.ok(r);
+    assert.strictEqual(r.kind, 'magic');
+    assert.strictEqual(r.effective, 'strong');
+    assert.strictEqual(r.min, 13);
+    assert.strictEqual(r.max, 15);
+  });
+
+  it('magic vs construct: construct bonus BEFORE ward halving', () => {
+    // Signal Flare: power=20, level=5 → 30. +randInt(0,2) → 30–32.
+    // construct ×1.5 BEFORE element → 45–48.
+    // fire vs lightning → neutral. Warded → 22–24.
+    const r = damagePreview(skillMagicFire, heroBase, constructEnemy, { warded: true });
+    assert.ok(r);
+    assert.strictEqual(r.kind, 'magic');
+    assert.strictEqual(r.min, 22);
+    assert.strictEqual(r.max, 24);
+  });
+
+  it('pierce halved when warded (element weak)', () => {
+    // Beacon Lance: mult=1.8, atk=14 → base=25. pierce ignores def.
+    // pierceMin=24, pierceMax=27. fire vs water → weak (×0.75) → 18–20.
+    // Warded → 9–10.
+    const r = damagePreview(skillPierce, heroBase, enemyWater, { warded: true });
+    assert.ok(r);
+    assert.strictEqual(r.kind, 'pierce');
+    assert.strictEqual(r.effective, 'weak');
+    assert.strictEqual(r.min, 9);
+    assert.strictEqual(r.max, 10);
+  });
+
+  it('warded=false gives same result as no opts (backward-compatible)', () => {
+    const r = damagePreview(null, heroBase, enemyFire, { warded: false });
+    const base = damagePreview(null, heroBase, enemyFire);
+    assert.ok(r);
+    assert.ok(base);
+    assert.strictEqual(r.min, base.min);
+    assert.strictEqual(r.max, base.max);
+    assert.strictEqual(r.kind, base.kind);
+  });
+
+  it('no opts object is backward-compatible (defaults to unwarded)', () => {
+    const r = damagePreview(null, heroBase, enemyFire);
+    assert.ok(r);
+    assert.strictEqual(r.min, 9);
+    assert.strictEqual(r.max, 12);
+  });
+
+  it('non-damaging skill with warded=true still returns null', () => {
+    assert.strictEqual(damagePreview(skillHeal, heroBase, enemyFire, { warded: true }), null);
+  });
+
+  it('break skill halved when warded', () => {
+    // Stillpoint Strike: mult=2, atk=14 → base=28. pierce ignores def.
+    // pierceMin=27, pierceMax=30. ice element vs fire (fire > ice → weak) → ×0.75 → 20–22.
+    // Warded → 10–11.
+    const r = damagePreview(skillBreak, heroBase, enemyFire, { warded: true });
+    assert.ok(r);
+    assert.strictEqual(r.kind, 'break');
+    assert.strictEqual(r.effective, 'weak');
+    assert.strictEqual(r.min, 10);
+    assert.strictEqual(r.max, 11);
+  });
+
+  it('warded floor: small damage rounds to 1', () => {
+    // Low-atk hero vs high-def enemy with ward → should floor to 1
+    const weakHero = { ...heroBase, atk: 4 };
+    const tankEnemy = { name: 'Iron Wall', hp: 100, maxHp: 100, atk: 10, def: 20, spd: 3, element: 'earth' };
+    // atk=4, def=20, physMin=max(1,4-20-1)=1, physMax=max(1,4-20+2)=1. element neutral. Warded → max(1, floor(1/2))=1.
+    const r = damagePreview(null, weakHero, tankEnemy, { warded: true });
+    assert.ok(r);
+    assert.strictEqual(r.min, 1);
+    assert.strictEqual(r.max, 1);
+  });
+});
