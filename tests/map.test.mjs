@@ -14,6 +14,7 @@ import {
   formatExpeditionLog,
   getTileInspection,
   getZoneChecklist,
+  getPatrolBriefing,
   getCompassBearing,
   getZoneCompassHint,
   findSafePath,
@@ -1273,4 +1274,56 @@ test('getTileInspection and terrain compass report spoiler-safe current tile and
   const compassSection = ridgeHtml.match(/<section class="terrain-compass"[\s\S]*?<\/section>/)?.[0] || '';
   assert.match(compassSection, /class="terrain-compass__adjacent">Adjacent landmarks:[\s\S]*?Sealed challenge/);
   assert.doesNotMatch(compassSection, /Old Tusk|Thunderhoof/i);
+});
+
+test('getPatrolBriefing masks unscouted roaming hostiles, reflects story encounter chance reductions, and renders patrol tooltip + frontier atlas totals', () => {
+  const state = createInitialState();
+  ensureMapState(state);
+
+  // Safe haven (Greyhaven) has no roaming hostiles
+  const havenBriefing = getPatrolBriefing(state, 'greyhaven');
+  assert.equal(havenBriefing.zoneId, 'greyhaven');
+  assert.equal(havenBriefing.hasHostiles, false);
+  assert.equal(havenBriefing.totalCount, 0);
+  assert.equal(havenBriefing.summary, 'No roaming hostiles in Greyhaven.');
+
+  // Travel to Ridge Road on a fresh save (0 bestiary entries)
+  travelToZone(state, 'ridge_road');
+  const beforeSnap = JSON.stringify(state);
+  const unscouted = getPatrolBriefing(state);
+  assert.equal(JSON.stringify(state), beforeSnap, 'getPatrolBriefing must not mutate gameState');
+  assert.equal(unscouted.zoneId, 'ridge_road');
+  assert.equal(unscouted.hasHostiles, true);
+  assert.equal(unscouted.encounterPercent, 12);
+  assert.equal(unscouted.scoutedCount, 0);
+  assert.equal(unscouted.totalCount, 4);
+  assert.ok(unscouted.hostiles.every((h) => h.enemyId === 'unscouted_hostile' && h.name === 'Unscouted hostile' && h.hp === null));
+  assert.doesNotMatch(unscouted.summary, /Storm Rat|Ridge Bandit|Gale Hound|Briar Boar/);
+  assert.match(unscouted.summary, /Step ambush: 12% · Roaming \(0\/4 scouted\): Unscouted hostile \(33%\), Unscouted hostile \(17%\), Unscouted hostile \(33%\), Unscouted hostile \(17%\)/);
+
+  // Scout Storm Rat in bestiary and verify only Storm Rat is revealed while others stay masked
+  state.bestiary = { storm_rat: 1 };
+  const partial = getPatrolBriefing(state, 'ridge_road');
+  assert.equal(partial.scoutedCount, 1);
+  assert.equal(partial.hostiles[0].enemyId, 'unscouted_hostile');
+  assert.equal(partial.hostiles[2].enemyId, 'storm_rat');
+  assert.equal(partial.hostiles[2].name, 'Storm Rat');
+  assert.equal(partial.hostiles[2].hp, 12);
+  assert.match(partial.summary, /Roaming \(1\/4 scouted\): Unscouted hostile \(33%\), Unscouted hostile \(17%\), Storm Rat \(33%, 12 HP\), Unscouted hostile \(17%\)/);
+
+  // Route network relay choice halves random encounter chance (12% -> 6%)
+  state.story.flags.relay_choice = 'route_network';
+  const calmed = getPatrolBriefing(state, 'ridge_road');
+  assert.equal(calmed.encounterPercent, 6);
+  assert.match(calmed.summary, /Step ambush: 6%/);
+
+  // Verify getAvailableActions attaches patrol briefing and renderExploration renders patrol tooltip + frontier-atlas__totals
+  const actions = getAvailableActions(state);
+  const patrolAction = actions.find((a) => a.kind === 'patrol');
+  assert.ok(patrolAction?.patrol);
+  assert.equal(patrolAction.patrol.summary, calmed.summary);
+
+  const html = exploreScene.render({ state });
+  assert.match(html, /data-action="mapPatrol" data-arg="ridge_road" title="Step ambush: 6% · Roaming \(1\/4 scouted\): Unscouted hostile \(33%\), Unscouted hostile \(17%\), Storm Rat \(33%, 12 HP\), Unscouted hostile \(17%\)"/);
+  assert.match(html, /<p class="frontier-atlas__totals">Total threats cleared: 0\/\d+ · Caches opened: 0\/\d+<\/p>/);
 });

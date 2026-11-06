@@ -144,3 +144,9 @@ Each zone defines a `vantage` metadata block (`{ landmark, elevation, surveyNote
 - `getTileInspection(gameState, x, y, zoneOrId)`: Returns a spoiler-safe inspection of the tile at `(x, y)` (defaulting to current position) and its 4 cardinal neighbors (`north`, `west`, `east`, `south`), plus `adjacentLandmarks` and `summary` (masking locked encounters as `'Sealed challenge'`). Rendered in `.terrain-compass__adjacent`.
 - `getZoneChecklist(gameState, zoneOrId)`: Pure, read-only helper returning a structured point-of-interest roster for the zone (`{ zoneId, name, npcs, encounters, interactables, exits }`) with coordinates and live status (`Active`, `Cleared`, `Locked`, `Available`, `Completed`, `Service`, `Charted`, `Uncharted`).
 - `renderExploration` renders a collapsible `<details class="shortcut-guide zone-checklist">` in the Navigator panel and attaches spoiler-safe `getRouteBriefing` summaries as `title` tooltips on `Visited Routes` fast-travel buttons via `uiButton({ ..., title })`.
+
+### Patrol Briefings & Frontier Atlas Totals
+- `getPatrolBriefing(gameState, zoneOrId = null)`: Pure, read-only helper returning roaming encounter probabilities and scouted status (`{ zoneId, zoneName, hasHostiles, encounterChance, encounterPercent, scoutedCount, totalCount, hostiles, summary }`).
+- Masks unscouted roaming foes as `enemyId: 'unscouted_hostile'`, `name: 'Unscouted hostile'` (`Unscouted hostile (<percent>%)`) until defeated at least once in `gameState.bestiary`, and reveals `${name} (${percent}%, ${hp} HP)` once scouted.
+- Attached to `patrol` actions in `getAvailableActions` and surfaced as the `title` tooltip on the `Patrol <Zone> for Hostiles` button in `src/ui/exploration.js`.
+- `.frontier-atlas__totals` in `src/ui/exploration.js` summarizes aggregate campaign threats cleared (`totalEncountersCleared/totalEncounters`) and caches opened (`totalCachesOpened/totalCaches`).
