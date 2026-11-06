@@ -126,14 +126,14 @@ export const featsScene = {
     const earned = rows.filter(r => r.done).length;
     const nextFeat = nextFeatText(game.state);
     const ledger = ledgerOf(game.state);
-    const record = SERVICE_ROWS.map(r => `<div><dt>${escapeHTML(r.label)}</dt><dd>${ledger[r.key]}</dd></div>`).join('');
-    const bountyRecord = `<div><dt>Bounties claimed</dt><dd>${totalBountiesClaimed(game.state)}</dd></div>`;
+    const record = SERVICE_ROWS.map(r => `<div><dt>${escapeHTML(r.label)}</dt><dd>${escapeHTML(String(ledger[r.key]))}</dd></div>`).join('');
+    const bountyRecord = `<div><dt>Bounties claimed</dt><dd>${escapeHTML(String(totalBountiesClaimed(game.state)))}</dd></div>`;
     const boardRank = bountyRank(game.state).rank;
     const rankRecord = `<div><dt>Board rank</dt><dd>${escapeHTML(boardRank.title)}</dd></div>`;
     const masteryRecord = `<div><dt>Contracts mastered</dt><dd>${escapeHTML(`${masteredCount(game.state)} of ${BOUNTIES.length}`)}</dd></div>`;
     const filter = featFilterOf(game.featsFilter);
     const shown = filterFeatRows(rows, filter);
-    const filters = FEAT_FILTERS.map(id => `<button type="button" class="action-button action-button--ghost" data-action="filterFeats" data-arg="${id}" aria-pressed="${id === filter}">${FEAT_FILTER_LABELS[id]}</button>`).join('');
+    const filters = FEAT_FILTERS.map(id => `<button type="button" class="action-button action-button--ghost" data-action="filterFeats" data-arg="${id}" aria-pressed="${id === filter}">${escapeHTML(`${FEAT_FILTER_LABELS[id]} (${filterFeatRows(rows, id).length})`)}</button>`).join('');
     const items = shown.map(r => `<li class="feat${r.done ? ' feat--done' : ''}">
         <span class="feat__mark" aria-hidden="true">${r.done ? '✦' : '·'}</span>
         <div><h2>${escapeHTML(r.title)}</h2><p>${escapeHTML(r.detail)}</p></div>
