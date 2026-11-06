@@ -6,12 +6,12 @@ test('abilityDetail returns descriptive tooltip', () => {
   // Full ability with all fields
   assert.equal(
     abilityDetail({ name: 'Dirty Cut', chance: 0.25, mult: 1.2, status: 'bleeding', turns: 3 }),
-    '25% chance · 1.2× damage · Inflicts bleeding for 3 turns'
+    '25% chance · 1.2× ATK · Inflicts bleeding for 3 turns'
   );
   // Ability with just name and chance, no status
   assert.equal(
     abilityDetail({ name: 'Lunging Bite', chance: 0.3, mult: 1.4 }),
-    '30% chance · 1.4× damage'
+    '30% chance · 1.4× ATK'
   );
   // Ability with just chance, mult=1 (should not show mult)
   assert.equal(
@@ -21,7 +21,7 @@ test('abilityDetail returns descriptive tooltip', () => {
   // Ability with status but no turns
   assert.equal(
     abilityDetail({ name: 'Arc Discharge', chance: 0.3, mult: 1.1, status: 'shocked' }),
-    '30% chance · 1.1× damage · Inflicts shocked'
+    '30% chance · 1.1× ATK · Inflicts shocked'
   );
   // Turn singular
   assert.equal(

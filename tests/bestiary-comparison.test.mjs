@@ -77,7 +77,7 @@ test('comparison cards repeat confirmed stats, signature details, and second-pha
   assert.match(rat, new RegExp(`<dt>HP</dt><dd>${ENEMIES.storm_rat.hp}</dd>`));
   assert.match(rat, new RegExp(`<dt>Gold</dt><dd>${ENEMIES.storm_rat.gold}</dd>`));
   assert.match(rat, /<h4>Gnaw<\/h4>/);
-  assert.match(rat, /Inflicts bleeding\. 20% use chance\./);
+  assert.match(rat, /20% chance · Inflicts bleeding/);
   assert.match(cardMarkup(html, 'relay_warden'), /Second phase: grows enraged below 50% HP \(\+3 ATK\)/);
 
   const custom = [{ count: 1, enemy: { id: 'plain_foe', name: 'Plain Foe', hp: 4 } }];
@@ -98,7 +98,7 @@ test('comparison rendering escapes every dynamic field and preserves frozen reco
   assert.ok(!html.includes('<b>Unsafe</b>'));
   assert.ok(!html.includes('<i>cursed</i>'));
   assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
-  assert.ok(html.includes('Inflicts &lt;i&gt;cursed&lt;/i&gt;. 25% use chance.'));
+  assert.ok(html.includes('25% chance · Inflicts &lt;i&gt;cursed&lt;/i&gt;'));
   assert.match(html, /<dt>HP<\/dt><dd>0<\/dd>/);
 });
 

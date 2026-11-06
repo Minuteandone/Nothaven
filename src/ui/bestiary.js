@@ -2,6 +2,7 @@ import { getItem } from '../items/items.js';
 import { fieldTip } from '../data/fieldTips.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
 import { elementLabel, elementClass } from '../combat/elements.js';
+import { abilityDetail } from '../ui/combat.js';
 
 const BEASTS = new Set(['storm_rat', 'gale_hound', 'frost_wolf', 'briar_boar', 'old_tusk', 'frostmane', 'thunderhoof']);
 const SPECTRES = new Set(['tide_wraith', 'squall_revenant', 'tempest_shade', 'last_squall', 'lens_wisp', 'rime_wight']);
@@ -144,14 +145,12 @@ function windupDetails(enemy, comparison = false) {
 
 function comparisonCard({ enemy }) {
   const ability = enemy.ability;
-  const details = ability
-    ? `${ability.status ? `Inflicts ${escapeHTML(ability.status)}. ` : ''}${Number.isFinite(Number(ability.chance)) ? `${Math.round(Number(ability.chance) * 100)}% use chance.` : ''}`
-    : 'No signature move recorded.';
+  const details = ability ? abilityDetail(ability) : '';
   return `<article class="comparison-card" data-comparison-enemy="${escapeHTML(enemy.id)}">
     <div class="comparison-card__heading"><div><p class="eyebrow">${enemy.boss ? 'Boss record' : 'Patrol record'}</p><h3>${escapeHTML(enemy.name)}</h3></div>${uiButton({ action: 'removeComparedFoe', arg: enemy.id, label: 'Remove', variant: 'ghost', className: 'comparison-remove' })}</div>
     ${stats(enemy)}
     ${elementBadge(enemy) ? `<p class="foe-element">${elementBadge(enemy)}</p>` : ''}
-    <div class="comparison-tactic"><h4>${escapeHTML(ability?.name || 'Signature move')}</h4><p>${details || 'No additional trigger details recorded.'}</p></div>
+    <div class="comparison-tactic"><h4>${escapeHTML(ability?.name || 'Signature move')}</h4><p>${details ? escapeHTML(details) : 'No signature move recorded.'}</p></div>
     ${windupDetails(enemy, true)}
     ${enemy.enrage ? `<p class="foe-phase"><strong>Second phase: grows enraged below ${Math.round(number(enemy.enrage.threshold) * 100)}% HP (+${number(enemy.enrage.atk)} ATK)</strong>.</p>` : ''}
   </article>`;
@@ -173,7 +172,8 @@ function knownEntry({ enemy, count, roams, contract }, selected = false, full = 
   const defeats = victoryCount(count);
   const traits = Array.isArray(enemy.tags) ? enemy.tags : [];
   const tags = [enemy.boss ? 'Boss' : null, ...traits].filter(Boolean);
-  const ability = enemy.ability ? `<section class="foe-tactic" aria-label="Signature move"><span>${icon('sword')}Signature move</span><h4>${escapeHTML(enemy.ability.name)}</h4><p>${enemy.ability.status ? `Inflicts <strong>${escapeHTML(enemy.ability.status)}</strong>. ` : ''}${Number.isFinite(Number(enemy.ability.chance)) ? `${Math.round(Number(enemy.ability.chance) * 100)}% use chance.` : ''}</p></section>` : '';
+  const abilityDetailText = enemy.ability ? abilityDetail(enemy.ability) : '';
+  const ability = enemy.ability ? `<section class="foe-tactic" aria-label="Signature move"><span>${icon('sword')}Signature move</span><h4>${escapeHTML(enemy.ability.name)}</h4><p>${escapeHTML(abilityDetailText)}</p></section>` : '';
   const drops = Array.isArray(enemy.loot) ? enemy.loot : [];
   const loot = drops.map(item => getItem(item?.id)?.name || item?.id).filter(Boolean);
   const tip = fieldTip(enemy.id);
