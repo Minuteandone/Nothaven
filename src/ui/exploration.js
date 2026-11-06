@@ -221,17 +221,17 @@ function zoneChecklistPanel(state, zone, mapState) {
   const checklist = getZoneChecklist(effectiveState, zone);
   const rows = [];
   for (const npc of checklist.npcs) {
-    rows.push(`<li data-poi-kind="npc" data-poi-id="${escapeHTML(npc.id)}"><strong>${escapeHTML(npc.name)}</strong>${npc.role ? ` (${escapeHTML(npc.role)})` : ''} · (${npc.x}, ${npc.y})</li>`);
+    rows.push(`<li data-poi-kind="npc" data-poi-id="${escapeHTML(npc.id)}"><strong>${escapeHTML(npc.name)}</strong>${npc.role ? ` (${escapeHTML(npc.role)})` : ''} · (${escapeHTML(String(npc.x))}, ${escapeHTML(String(npc.y))})</li>`);
   }
   for (const enc of checklist.encounters) {
-    rows.push(`<li data-poi-kind="encounter" data-poi-id="${escapeHTML(enc.id)}" data-poi-status="${escapeHTML(enc.status)}"><strong>${escapeHTML(enc.name)}</strong> · ${escapeHTML(enc.status)} · (${enc.x}, ${enc.y})</li>`);
+    rows.push(`<li data-poi-kind="encounter" data-poi-id="${escapeHTML(enc.id)}" data-poi-status="${escapeHTML(enc.status)}"><strong>${escapeHTML(enc.name)}</strong> · ${escapeHTML(enc.status)} · (${escapeHTML(String(enc.x))}, ${escapeHTML(String(enc.y))})</li>`);
   }
   for (const inter of checklist.interactables) {
-    rows.push(`<li data-poi-kind="interactable" data-poi-id="${escapeHTML(inter.id)}" data-poi-status="${escapeHTML(inter.status)}"><strong>${escapeHTML(inter.name)}</strong> · ${escapeHTML(inter.status)} · (${inter.x}, ${inter.y})</li>`);
+    rows.push(`<li data-poi-kind="interactable" data-poi-id="${escapeHTML(inter.id)}" data-poi-status="${escapeHTML(inter.status)}"><strong>${escapeHTML(inter.name)}</strong> · ${escapeHTML(inter.status)} · (${escapeHTML(String(inter.x))}, ${escapeHTML(String(inter.y))})</li>`);
   }
   for (const ex of checklist.exits) {
     const routeStatus = !ex.unlocked ? 'Locked' : ex.visited ? 'Charted' : 'Uncharted';
-    rows.push(`<li data-poi-kind="exit" data-poi-id="${escapeHTML(ex.toZone)}" data-poi-status="${routeStatus}"><strong>${escapeHTML(ex.label)}</strong> · ${routeStatus} · (${ex.x}, ${ex.y})</li>`);
+    rows.push(`<li data-poi-kind="exit" data-poi-id="${escapeHTML(ex.toZone)}" data-poi-status="${routeStatus}"><strong>${escapeHTML(ex.label)}</strong> · ${routeStatus} · (${escapeHTML(String(ex.x))}, ${escapeHTML(String(ex.y))})</li>`);
   }
   const totalPois = rows.length;
   return `<details class="shortcut-guide zone-checklist"><summary>Zone field checklist (${totalPois} ${totalPois === 1 ? 'landmark' : 'landmarks'})</summary>

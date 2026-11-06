@@ -1202,10 +1202,14 @@ test('getZoneChecklist and fast-travel tooltips report live zone landmarks, stat
   assert.equal(patrolBefore.cleared, false);
   assert.equal(patrolBefore.unlocked, true);
 
-  const tuskBefore = initialChecklist.encounters.find((e) => e.id === 'ridge_old_tusk');
-  assert.ok(tuskBefore);
-  assert.equal(tuskBefore.status, 'Locked');
-  assert.equal(tuskBefore.unlocked, false);
+  const lockedEncs = initialChecklist.encounters.filter((e) => e.status === 'Locked');
+  assert.ok(lockedEncs.length >= 2);
+  for (const locked of lockedEncs) {
+    assert.equal(locked.id, 'sealed_challenge');
+    assert.equal(locked.name, 'Sealed challenge');
+    assert.equal(locked.unlocked, false);
+  }
+  assert.equal(initialChecklist.encounters.some((e) => /Thunderhoof|Old Tusk/i.test(e.name)), false);
 
   const cacheBefore = initialChecklist.interactables.find((i) => i.id === 'ridge_supply_cache');
   assert.ok(cacheBefore);
@@ -1221,6 +1225,8 @@ test('getZoneChecklist and fast-travel tooltips report live zone landmarks, stat
   const html = exploreScene.render(game);
   assert.match(html, /class="shortcut-guide zone-checklist"/);
   assert.match(html, /Zone field checklist \(\d+ landmarks\)/);
+  assert.doesNotMatch(html, /Thunderhoof|Old Tusk/i);
+  assert.match(html, /data-poi-kind="encounter" data-poi-id="sealed_challenge" data-poi-status="Locked"><strong>Sealed challenge<\/strong>/);
   assert.match(html, /data-poi-kind="encounter" data-poi-id="ridge_patrol" data-poi-status="Cleared"/);
   assert.match(html, /data-poi-kind="interactable" data-poi-id="ridge_supply_cache" data-poi-status="Completed"/);
   assert.match(html, /data-action="mapTravel" data-arg="greyhaven" title="Greyhaven · Lantern Shelter · Safe haven"/);

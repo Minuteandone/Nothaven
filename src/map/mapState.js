@@ -331,9 +331,10 @@ export function getZoneChecklist(gameState, zoneOrId = null) {
     const lockReason = cleared ? null : encounterLockReason(mapLike, e, gameState);
     const unlocked = !lockReason;
     const status = cleared ? 'Cleared' : unlocked ? 'Active' : 'Locked';
+    const isLocked = status === 'Locked';
     return {
-      id,
-      name: e.name,
+      id: isLocked ? 'sealed_challenge' : id,
+      name: isLocked ? 'Sealed challenge' : e.name,
       x: e.x,
       y: e.y,
       cleared,
