@@ -9,7 +9,7 @@ import { SHOPS } from '../src/items/shop.js';
 import { SKILLS } from '../src/combat/rules.js';
 import { FEATS } from '../src/scenes/feats.js';
 import { TRADES } from '../src/items/trade.js';
-import { BOUNTIES } from '../src/core/bounties.js';
+import { BOUNTIES, BOUNTY_RANKS } from '../src/core/bounties.js';
 import { POSTGAME_DEEDS } from '../src/scenes/ending.js';
 
 // Hidden words can be spelled by the first letters of a text field read in game order.
@@ -62,7 +62,8 @@ const CATALOGUES = {
   'zone conditions': () => Object.values(ZONE_CONDITIONS),
   trades: () => TRADES,
   'postgame deeds': () => POSTGAME_DEEDS,
-  bounties: () => BOUNTIES
+  bounties: () => BOUNTIES,
+  bountyRanks: () => BOUNTY_RANKS
 };
 
 for (const [name, list] of Object.entries(CATALOGUES)) {
