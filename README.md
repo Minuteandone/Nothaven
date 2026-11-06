@@ -125,6 +125,14 @@ The portable smoke also compares its one genuinely defeated Ridge Bandit at 115%
 and 130% text size, then checks Remove/re-add/Clear and Back without progress changes.
 This fresh route does not claim three-card comparison coverage.
 
+With that same earned foe, the smoke checks Field Journal All/Bosses/Regular and
+explicit recorded-name Search at 115% and 130% in all three viewports. Category
+and query combine; unknown names, placeholders and raw IDs never match. A zero-result
+catalogue keeps the one comparison card and full progress totals. Long and hostile
+queries, Clear retaining category, Back/reopen reset, 44px controls, document fit,
+whole journey state and raw quick-save preservation are covered. This remains a
+one-victory route, not three-card, full-campaign, screen-reader or full visual coverage.
+
 The smoke also searches the Bag containing its genuinely purchased rations at
 115% and 130% text size in all three viewports. It checks item/recipe matching,
 sort retention, Clear, reset on reopening, escaped query text, and a 120-character
