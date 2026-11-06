@@ -126,7 +126,9 @@ function nearbyActionButton(action, index, characterShortcuts) {
     ? action.preview?.summary
     : action.kind === 'exit'
       ? action.briefing?.summary
-      : '';
+      : action.kind === 'patrol'
+        ? action.patrol?.summary
+        : '';
   const titleAttr = tooltipText ? ` title="${escapeHTML(tooltipText)}"` : '';
   return `<button type="button" class="action-button action-button--${type.variant || 'secondary'} nearby-action" data-action="${escapeHTML(type.name)}" data-arg="${escapeHTML(action.id)}"${titleAttr}${shortcut ? ` aria-keyshortcuts="${shortcut}"` : ''}>
     ${icon(type.iconName)}<span>${escapeHTML(action.label)}</span>${shortcut ? keyHint(shortcut) : ''}
@@ -215,8 +217,10 @@ function frontierAtlasPanel(state, zone, mapState) {
   const unchartedLine = unvisitedCount > 0
     ? `<p class="frontier-atlas__uncharted">${unvisitedCount} frontier ${unvisitedCount === 1 ? 'region remains' : 'regions remain'} uncharted.</p>`
     : '<p class="frontier-atlas__uncharted">All frontier regions charted.</p>';
+  const totalsLine = `<p class="frontier-atlas__totals">Total threats cleared: ${atlas.totalEncountersCleared}/${atlas.totalEncounters} · Caches opened: ${atlas.totalCachesOpened}/${atlas.totalCaches}</p>`;
   return `<details class="shortcut-guide frontier-atlas"><summary>Frontier atlas (${atlas.zonesVisited}/${atlas.zonesTotal} regions · ${atlas.overallPercent}% recon)</summary>
     <ul class="frontier-atlas__list" aria-label="Charted frontier regions">${items}</ul>
+    ${totalsLine}
     ${unchartedLine}
   </details>`;
 }
