@@ -1,6 +1,7 @@
 import { getItem } from '../items/items.js';
 import { fieldTip } from '../data/fieldTips.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
+import { elementLabel, elementClass } from '../combat/elements.js';
 
 const BEASTS = new Set(['storm_rat', 'gale_hound', 'frost_wolf', 'briar_boar', 'old_tusk', 'frostmane', 'thunderhoof']);
 const SPECTRES = new Set(['tide_wraith', 'squall_revenant', 'tempest_shade', 'last_squall', 'lens_wisp', 'rime_wight']);
@@ -108,6 +109,12 @@ function stats(enemy) {
   return `<dl class="foe-stats" aria-label="Combat record">${values.map(([label, value]) => `<div><dt>${label}</dt><dd>${number(value)}</dd></div>`).join('')}</dl>`;
 }
 
+/** Element badge chip shown when a foe has a defined element. */
+function elementBadge(enemy) {
+  if (!enemy?.element) return "";
+  return `<span class="element-chip ${elementClass(enemy.element)}">${escapeHTML(elementLabel(enemy.element))}</span>`;
+}
+
 /** Static catalogue guidance, only called after the known-victory filter. */
 function windupDetails(enemy, comparison = false) {
   const w = enemy.windup;
@@ -127,6 +134,7 @@ function comparisonCard({ enemy }) {
   return `<article class="comparison-card" data-comparison-enemy="${escapeHTML(enemy.id)}">
     <div class="comparison-card__heading"><div><p class="eyebrow">${enemy.boss ? 'Boss record' : 'Patrol record'}</p><h3>${escapeHTML(enemy.name)}</h3></div>${uiButton({ action: 'removeComparedFoe', arg: enemy.id, label: 'Remove', variant: 'ghost', className: 'comparison-remove' })}</div>
     ${stats(enemy)}
+    ${elementBadge(enemy) ? `<p class="foe-element">${elementBadge(enemy)}</p>` : ''}
     <div class="comparison-tactic"><h4>${escapeHTML(ability?.name || 'Signature move')}</h4><p>${details || 'No additional trigger details recorded.'}</p></div>
     ${windupDetails(enemy, true)}
     ${enemy.enrage ? `<p class="foe-phase"><strong>Second phase: grows enraged below ${Math.round(number(enemy.enrage.threshold) * 100)}% HP (+${number(enemy.enrage.atk)} ATK)</strong>.</p>` : ''}
@@ -159,6 +167,7 @@ function knownEntry({ enemy, count }, selected = false, full = false) {
       ${tags.length ? `<ul class="foe-tags" aria-label="Foe traits">${tags.map(tag => `<li>${escapeHTML(tag)}</li>`).join('')}</ul>` : ''}
       ${enemy.intro ? `<p class="foe-intro">${escapeHTML(enemy.intro)}</p>` : ''}
       ${stats(enemy)}
+      ${elementBadge(enemy) ? `<p class="foe-element">${elementBadge(enemy)}</p>` : ''}
       ${ability}
       ${windupDetails(enemy)}
       ${enemy.enrage ? `<p class="foe-phase"><strong>Second phase: grows enraged below ${Math.round(number(enemy.enrage.threshold) * 100)}% HP (+${number(enemy.enrage.atk)} ATK)</strong>.</p>` : ''}
