@@ -369,3 +369,13 @@ checks the new HP-based preview and remaining quantity before the existing
 victory/save/Journal/Archive route continues. All earlier assertions remain.
 This earned solo check complements synthetic all-item/all-recipient coverage;
 it does not establish screen-reader accessibility or general combat balance.
+
+### Visible boss enrage threshold
+
+Enemy HP meters now link to a visible “Enrage threshold: N HP or lower.” line.
+The cutoff uses the current fight's maximum HP and the phase rule's floor,
+including difficulty scaling; it describes the threshold, not a promise about
+when the enemy next acts. The marker remains decorative. Tests compare each
+canonical enrage cutoff with the actual phase check and preserve whole render
+inputs. This adds visible text and an `aria-describedby` association, not a
+claim of completed screen-reader testing; combat rules and saves are unchanged.
