@@ -61,3 +61,18 @@ export function elementEffectivenessText(attackerElement, defenderElement) {
   if (attackerElement && defenderElement && mult === 1.0 && attackerElement !== 'earth' && defenderElement !== 'earth') return 'neutral';
   return '';
 }
+/** Returns which attack elements are strong/resist against a defending element.
+ *  For Earth or missing elements, returns empty arrays. */
+export function elementMatchups(defenderElement) {
+  if (!defenderElement || defenderElement === 'earth') return { strong: [], resist: [] };
+  const strong = [];
+  const resist = [];
+  for (const atkEl of Object.values(ELEMENTS)) {
+    if (atkEl === 'earth') continue;
+    const mult = elementMultiplier(atkEl, defenderElement);
+    if (mult === 1.5) strong.push(atkEl);
+    else if (mult === 0.75) resist.push(atkEl);
+  }
+  return { strong, resist };
+}
+
