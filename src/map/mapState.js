@@ -6,6 +6,7 @@ import { effectiveStats } from '../items/equipment.js';
 import { getItem, isKnownItem } from '../items/items.js';
 import { ENEMIES } from '../data/enemies.js';
 import { getDifficulty, scaleEnemy } from '../combat/difficulty.js';
+import { createStoryState, getDialogue } from '../story/index.js';
 
 export function createMapState(initialZone = 'greyhaven') {
   const zone = ZONES[initialZone] || ZONES.greyhaven;
@@ -618,7 +619,7 @@ export function getInteractableBriefing(gameState, interactableOrId, zoneOrId = 
   } else if (kind === 'shop') {
     summary = `${name} · Quartermaster & provisions`;
   } else if (kind === 'muster') {
-    summary = `${name} · Party roster & companion tactics`;
+    summary = `${name} · Party roster & equipment`;
   } else if (kind === 'cache') {
     summary = `${name} · Unopened cache (${rewardCount} ${rewardCount === 1 ? 'supply item' : 'supply items'})`;
   } else if (kind === 'dispatch') {
@@ -650,6 +651,70 @@ export function getInteractableBriefing(gameState, interactableOrId, zoneOrId = 
   };
 }
 
+/**
+ * Pure, read-only helper returning a field contact briefing for a zone NPC.
+ */
+export function getNpcBriefing(gameState, npcOrId, zoneOrId = null) {
+  const mapLike = gameState && typeof gameState === "object"
+    ? (gameState.map && typeof gameState.map === "object" ? gameState.map : gameState)
+    : {};
+  const resolvedZone = typeof zoneOrId === "string"
+    ? getZone(zoneOrId)
+    : (zoneOrId && typeof zoneOrId === "object"
+      ? zoneOrId
+      : getZone(mapLike.zoneId || mapLike.currentZoneId || gameState?.location || "greyhaven"));
+  if (!resolvedZone) return null;
+
+  const npc = npcOrId && typeof npcOrId === "object" && typeof npcOrId.name === "string"
+    ? npcOrId
+    : (typeof npcOrId === "string" && npcOrId
+      ? (Array.isArray(resolvedZone.npcs) ? resolvedZone.npcs : []).find((n) => n.id === npcOrId)
+      : null);
+  if (!npc) return null;
+
+  const name = npc.name;
+  const role = npc.role || "Field Contact";
+  const defaultLine = typeof npc.defaultLine === "string" ? npc.defaultLine : "";
+  const baseStory = createStoryState();
+  const rawStory = gameState && typeof gameState === "object" && gameState.story && typeof gameState.story === "object"
+    ? gameState.story
+    : null;
+  const storyState = rawStory
+    ? {
+        ...baseStory,
+        ...rawStory,
+        flags: { ...baseStory.flags, ...(rawStory.flags && typeof rawStory.flags === "object" ? rawStory.flags : {}) },
+      }
+    : baseStory;
+  const liveDialogue = typeof npc.id === "string" && npc.id ? getDialogue(storyState, npc.id) : null;
+  const line = typeof liveDialogue?.text === "string" && liveDialogue.text ? liveDialogue.text : defaultLine;
+  const sameZone = (mapLike.zoneId || mapLike.currentZoneId || gameState?.location || "greyhaven") === resolvedZone.id;
+  const px = Number(mapLike.x);
+  const py = Number(mapLike.y);
+  const distance = sameZone && Number.isFinite(px) && Number.isFinite(py)
+    ? Math.abs(px - npc.x) + Math.abs(py - npc.y)
+    : null;
+  const adjacent = distance !== null && distance <= 1;
+  const summary = line
+    ? `${name} (${role}) · "${line}"`
+    : `${name} (${role})`;
+
+  return {
+    id: npc.id,
+    name,
+    role,
+    x: npc.x,
+    y: npc.y,
+    zoneId: resolvedZone.id,
+    zoneName: resolvedZone.name,
+    distance,
+    adjacent,
+    line,
+    defaultLine,
+    summary,
+  };
+}
+
 export function getZoneChecklist(gameState, zoneOrId = null) {
   const resolvedZone =
     typeof zoneOrId === 'string'
@@ -667,6 +732,7 @@ export function getZoneChecklist(gameState, zoneOrId = null) {
     role: n.role || '',
     x: n.x,
     y: n.y,
+    summary: getNpcBriefing(gameState, n, resolvedZone)?.summary || n.name,
   }));
 
   const encounters = (Array.isArray(resolvedZone.encounters) ? resolvedZone.encounters : []).map((e) => {
@@ -792,6 +858,7 @@ export function getAvailableActions(gameState) {
         id: npc.id,
         label: `Talk to ${npc.name}`,
         entity: npc,
+        briefing: getNpcBriefing(gameState, npc, zone),
       });
     }
   }

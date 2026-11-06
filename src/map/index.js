@@ -12,6 +12,7 @@ export {
   formatExpeditionLog,
   getTileInspection,
   getInteractableBriefing,
+  getNpcBriefing,
   getZoneChecklist,
   getPatrolBriefing,
   getEncounterPreview,
