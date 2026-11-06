@@ -3,10 +3,11 @@
 // the chapter-three relay choice.
 
 import { ledgerOf } from '../core/ledger.js';
-import { BOUNTIES, bountyState } from '../core/bounties.js';
+import { BOUNTIES, bountyRank, bountyState } from '../core/bounties.js';
 
 const LINES = {
   tamsin: {
+    boardWarden: 'Warden of the Board, they call you at the clerk’s desk. I still say the title should be split two ways, since I chased down half those rats.',
     bounties: 'Every notice on the Greyhaven board carries your mark now. The clerk keeps reposting the rat cull just to see if I will race you for it.',
     stormborn: 'You set the frontier to its hardest and still walked back through the gate. I stopped counting the bruises and started counting the wins.',
     glacierward: 'That Colossus swung like the whole south wall had decided to walk. When it knelt, I swear the pass went ten degrees warmer.',
@@ -30,6 +31,7 @@ const LINES = {
     rescued: 'Both roads are open again. I counted the caravans this morning and ran out of fingers.',
   },
   iven: {
+    boardWarden: 'Twenty-five claims and a forty percent premium. I ran the board’s accounts twice; at this rate the clerk will owe us the desk.',
     bounties: 'I cross-checked the bounty ledger against the Field Journal. Nine contracts, every one claimed, and the sums agree to the last coin.',
     stormborn: 'I logged our Stormborn battle beside the old storm tables. By every number we should have lost; I have checked the sums three times.',
     glacierward: 'The Glacierward Colossus was built from the same survey stone as our old benchmarks. I would give a month of readings to see its original plans.',
@@ -53,6 +55,7 @@ const LINES = {
     rescued: 'Saltmere sent spare copper wire and Highwatch sent star charts. I may never sleep again.',
   },
   bram: {
+    boardWarden: 'The Saltmere crews toast the Warden of the Board at every shift change. I let them think I carry half the contracts; you can correct them.',
     bounties: 'Saltmere dockhands read the Greyhaven bounty board aloud at the Post now. Your name comes up so often they cheer before the reward is read.',
     stormborn: 'Stormborn foes hit like a winter sea against the harbor wall. My shield rang for an hour, and I would still stand there again tomorrow.',
     glacierward: 'I have held a wall against winter storms, but never one that punched back. My arm still hums from that Glacier Slam.',
@@ -76,6 +79,7 @@ const LINES = {
     rescued: 'The harbor watch is back on the breakwater. I owe you a proper meal at the Saltmere Post.',
   },
   sela: {
+    boardWarden: 'Rusk wants the Warden of the Board to drill his runners in tracking. I told him you charge forty percent over the posted rate now.',
     bounties: 'Rusk sent a runner to copy the Greyhaven bounty board for Highwatch. He says a frontier with every contract answered is one he can finally rest in.',
     stormborn: 'Highwatch runners heard we beat a boss on Stormborn and begged to train on the steepest slope. Rusk said yes before I could warn them.',
     glacierward: 'Rusk says the Colossus guarded Highwatch long before the beacon was lit. Now it rests by the south wall, and the runners leave it a lantern each night.',
@@ -105,6 +109,7 @@ export function companionRemark(id, story = {}, bestiary = {}, ledger = {}, boun
   const set = LINES[id];
   const f = story?.flags || {};
   const claimed = bountyState({ bounties }).completed;
+  if (bountyRank({ bounties }).rank.id === 'warden' && set.boardWarden) return set.boardWarden;
   if (BOUNTIES.every(b => (claimed[b.id] || 0) >= 1) && set.bounties) return set.bounties;
   if (ledgerOf({ ledger }).stormbornBossVictories >= 1 && set.stormborn) return set.stormborn;
   if (f.calibration_reward === true && Number(bestiary?.glacierward_colossus) > 0 && set.glacierward) return set.glacierward;

@@ -37,3 +37,18 @@ test('reading a bounty remark never changes the record', () => {
   for (const id of IDS) companionRemark(id, story, {}, {}, b);
   assert.equal(JSON.stringify(b), before);
 });
+
+test('companions salute the Warden of the Board rank above every other remark', () => {
+  const warden = { active: null, progress: 0, completed: { ridge_rats: 20, bandit_toll: 5 } };
+  const almost = { active: null, progress: 0, completed: { ridge_rats: 20, bandit_toll: 4 } };
+  const lines = new Set();
+  for (const id of IDS) {
+    const line = companionRemark(id, story, {}, { stormbornBossVictories: 1 }, warden);
+    assert.match(line, /Warden of the Board|twenty-five|forty percent/i, id);
+    assertEggFree(line, `${id} warden remark`);
+    assert.notEqual(companionRemark(id, story, {}, {}, almost), line, id);
+    assert.equal(companionRemark('mara', story, {}, {}, warden), companionRemark('mara', story, {}, {}), 'mara');
+    lines.add(line);
+  }
+  assert.equal(lines.size, IDS.length);
+});
