@@ -474,3 +474,23 @@ test('sort buttons reorder posted notices while locked notices stay last and unn
   assert.equal(rows[0].id, BOUNTIES[0].id, 'sorting never mutates the source rows');
   assertEggFree(bountiesScene.render(game), 'bounty sort');
 });
+
+test('claimed but unmastered contracts show mastery progress; mastered and locked rows do not', () => {
+  const s = fresh();
+  s.bestiary = { storm_rat: 1, gale_hound: 1, reef_crawler: 1 };
+  s.bounties = { active: null, progress: 0, completed: { ridge_rats: 1, howling_pass: 3, pier_clearance: 2, rusted_watchmen: 2 } };
+  s.scene = 'bounties'; s.combat = null;
+  const game = { state: s, setScene() {} };
+  bountiesScene.onEnter(game);
+  const html = bountiesScene.render(game);
+  const items = html.split('<li').slice(1);
+  const row = (title) => items.find((li) => li.includes(title)) || '';
+  assert.match(row('Ridge Road Rat Cull'), /Mastery progress: 1 of 3 claims\./);
+  assert.match(row('Pier Clearance'), /Mastery progress: 2 of 3 claims\./);
+  assert.doesNotMatch(row('Hounds on the Wind'), /Mastery progress/);
+  assert.match(row('Hounds on the Wind'), /Mastered — \+1/);
+  assert.doesNotMatch(row('Bandit Toll Road'), /Mastery progress/);
+  assert.equal((html.match(/bounty__mastery-progress/g) || []).length, 2, 'locked Rusted Watchmen stays silent');
+  assert.equal(MASTERY_CLAIMS, 3);
+  assertEggFree(html, 'mastery progress board');
+});
