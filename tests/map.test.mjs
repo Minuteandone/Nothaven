@@ -1575,3 +1575,69 @@ test('getZoneChecklist computes relative tile distances, compass bearings, spoil
   assert.match(checklistHtml, /data-poi-kind="exit" data-poi-id="greyhaven" data-poi-status="Charted"><strong>West Trail → Greyhaven<\/strong> · Charted · \(0, 3\) · 1 tile W/);
   assert.doesNotMatch(checklistHtml, /Old Tusk|Thunderhoof/i);
 });
+
+test('getFieldServicesSummary reports field pack consumable/craft readiness, renders .frontier-atlas__pack, and attaches useFieldItem button tooltips', () => {
+  const state = createInitialState();
+  ensureMapState(state);
+
+  const emptyServices = getFieldServicesSummary(state);
+  assert.equal(emptyServices.consumableStacks, 0);
+  assert.equal(emptyServices.consumableUnits, 0);
+  assert.equal(emptyServices.craftableCount, 0);
+  assert.deepEqual(emptyServices.craftableNames, []);
+  assert.equal(emptyServices.packSummary, 'Field pack: 0 consumables · Craft ready: 0');
+
+  const emptyHtml = exploreScene.render({ state });
+  assert.match(emptyHtml, /<p class="frontier-atlas__pack">Field pack: 0 consumables · Craft ready: 0<\/p>/);
+
+  // Add consumables and crafting materials, plus a companion to verify ally useFieldItem tooltips
+  state.inventory = [
+    { id: 'bandage', qty: 2 },
+    { id: 'storm_tonic', qty: 1 },
+    { id: 'healing_herb', qty: 1 },
+    { id: 'storm_glass', qty: 1 },
+  ];
+  state.party.push({
+    id: 'bram',
+    name: 'Bram',
+    hp: 35,
+    maxHp: 35,
+    mp: 8,
+    maxMp: 8,
+    atk: 8,
+    def: 5,
+    spd: 4,
+    level: 1,
+    xp: 0,
+  });
+
+  const beforeSnap = JSON.stringify(state);
+  const stockedServices = getFieldServicesSummary(state);
+  assert.equal(JSON.stringify(state), beforeSnap, 'getFieldServicesSummary must not mutate stocked state');
+  assert.equal(stockedServices.consumableStacks, 3);
+  assert.equal(stockedServices.consumableUnits, 4);
+  assert.equal(stockedServices.craftableCount, 3);
+  assert.deepEqual(stockedServices.craftableNames, [
+    'Distill Storm Tonic',
+    'Pack a Field Dressing',
+    'Mull a Highland Flask',
+  ]);
+  assert.equal(
+    stockedServices.packSummary,
+    'Field pack: 4 consumables (3 stacks) · Craft ready: 3 (Distill Storm Tonic, Pack a Field Dressing, Mull a Highland Flask)',
+  );
+
+  const stockedHtml = exploreScene.render({ state });
+  assert.match(
+    stockedHtml,
+    /<p class="frontier-atlas__pack">Field pack: 4 consumables \(3 stacks\) · Craft ready: 3 \(Distill Storm Tonic, Pack a Field Dressing, Mull a Highland Flask\)<\/p>/,
+  );
+  assert.match(
+    stockedHtml,
+    /data-action="useFieldItem" data-arg="bandage" title="Brine-washed linen strips\. Stops bleeding and covers the ugliest wounds\."/,
+  );
+  assert.match(
+    stockedHtml,
+    /data-action="useFieldItem" data-arg="bandage:1" title="Brine-washed linen strips\. Stops bleeding and covers the ugliest wounds\."/,
+  );
+});

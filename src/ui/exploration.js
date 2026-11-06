@@ -24,12 +24,14 @@ function fieldPack(inventory, party = []) {
     const item = isKnownItem(stack.id) ? getItem(stack.id) : { id: stack.id, name: stack.id };
     summaries.push(`<li><span>${escapeHTML(item.name)} ×${Math.max(0, Number(stack.qty) || 0)}</span></li>`);
     if (item.type === TYPES.CONSUMABLE) {
+      const itemTitle = item.description || item.name;
       consumables.push(uiButton({
         action: 'useFieldItem',
         arg: item.id,
         label: `Use ${item.name} (${stack.qty})`,
         iconName: 'heart',
         variant: 'ghost',
+        title: itemTitle,
       }));
       companions.forEach((ally, idx) => {
         if (!ally) return;
@@ -40,6 +42,7 @@ function fieldPack(inventory, party = []) {
           label: `Use ${item.name} → ${ally.name || `Ally ${targetIdx}`}`,
           iconName: 'heart',
           variant: 'ghost',
+          title: itemTitle,
         }));
       });
     }
@@ -222,10 +225,12 @@ function frontierAtlasPanel(state, zone, mapState) {
   const services = getFieldServicesSummary(state ? { ...state, map: effectiveMap } : { map: effectiveMap });
   const totalsLine = `<p class="frontier-atlas__totals">Total threats cleared: ${atlas.totalEncountersCleared}/${atlas.totalEncounters} · Caches opened: ${atlas.totalCachesOpened}/${atlas.totalCaches}</p>`;
   const servicesLine = `<p class="frontier-atlas__services">${escapeHTML(services.summary)}</p>`;
+  const packLine = `<p class="frontier-atlas__pack">${escapeHTML(services.packSummary)}</p>`;
   return `<details class="shortcut-guide frontier-atlas"><summary>Frontier atlas (${atlas.zonesVisited}/${atlas.zonesTotal} regions · ${atlas.overallPercent}% recon)</summary>
     <ul class="frontier-atlas__list" aria-label="Charted frontier regions">${items}</ul>
     ${totalsLine}
     ${servicesLine}
+    ${packLine}
     ${unchartedLine}
   </details>`;
 }
