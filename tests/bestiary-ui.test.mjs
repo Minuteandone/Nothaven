@@ -153,6 +153,21 @@ test('element badge safely handles unknown element values without XSS', () => {
   assert.ok(!html.includes('<img src=x'), 'must not contain raw img tag');
   assert.ok(!html.includes('onerror='), 'must not contain raw onerror');
   assert.ok(!html.includes('<script'), 'must not contain raw script tag');
-  // Unknown element normalises to empty label/class; badge may render empty or not at all
+  // Unknown element normalises to empty class -> elementBadge returns '' -> no badge at all
   assert.ok(!html.includes('&lt;img'), 'unknown element value must not leak into HTML');
+});
+
+test('unknown element value renders no chip span', () => {
+  const entries = [{
+    count: 1,
+    enemy: {
+      id: 'mystery', name: 'Mystery',
+      hp: 10, atk: 3, def: 1, spd: 2, xp: 5, gold: 1,
+      element: 'plasma',
+      tags: [], loot: [],
+    },
+  }];
+  const html = renderBestiary({ entries });
+  assert.ok(!html.includes('foe-element'), 'unknown element must not render foe-element');
+  assert.ok(!html.includes('element-chip'), 'unknown element must not render empty chip span');
 });

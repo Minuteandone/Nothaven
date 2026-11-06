@@ -111,8 +111,9 @@ function stats(enemy) {
 
 /** Element badge chip shown when a foe has a defined element. */
 function elementBadge(enemy) {
-  if (!enemy?.element) return "";
-  return `<span class="element-chip ${elementClass(enemy.element)}">${escapeHTML(elementLabel(enemy.element))}</span>`;
+  const cls = elementClass(enemy?.element);
+  if (!cls) return "";
+  return `<span class="element-chip ${cls}">${escapeHTML(elementLabel(enemy.element))}</span>`;
 }
 
 /** Static catalogue guidance, only called after the known-victory filter. */
