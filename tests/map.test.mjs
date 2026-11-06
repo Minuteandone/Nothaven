@@ -11,6 +11,7 @@ import {
   getZoneVantage,
   getFieldServicesSummary,
   getInteractableBriefing,
+  getNpcBriefing,
   getFrontierAtlas,
   getRouteBriefing,
   formatExpeditionLog,
@@ -1456,5 +1457,64 @@ test('getInteractableBriefing reports spoiler-safe station/cache status, guardia
   assert.match(
     html,
     /<p class="nearby-threat-preview nearby-interact-preview">Hearthstone Inn · Rest for 5g \(full HP &amp; MP\)<\/p>/,
+  );
+});
+
+test('getNpcBriefing reports field contact role, proximity, defaultLine, and renders .nearby-talk-preview + deduplicated station cell titles', () => {
+  const state = createInitialState();
+  ensureMapState(state);
+
+  const beforeSnap = JSON.stringify(state);
+  assert.equal(getNpcBriefing(state, 'nonexistent_npc'), null);
+  assert.equal(getNpcBriefing(state, '__proto__'), null);
+
+  // Spawn in Greyhaven (2, 3) is distance 2 from Warden Mara at (3, 2)
+  const maraFar = getNpcBriefing(state, 'mara');
+  assert.equal(JSON.stringify(state), beforeSnap, 'getNpcBriefing must not mutate gameState');
+  assert.equal(maraFar.id, 'mara');
+  assert.equal(maraFar.name, 'Warden Mara');
+  assert.equal(maraFar.role, 'Town Warden');
+  assert.equal(maraFar.zoneId, 'greyhaven');
+  assert.equal(maraFar.distance, 2);
+  assert.equal(maraFar.adjacent, false);
+  assert.match(maraFar.summary, /^Warden Mara \(Town Warden\) · "The beacon kept these streets safe for thirty years\./);
+
+  // Move to (3, 3), adjacent to Warden Mara (3, 2)
+  state.map.x = 3;
+  state.map.y = 3;
+  const maraAdj = getNpcBriefing(state, 'mara');
+  assert.equal(maraAdj.distance, 1);
+  assert.equal(maraAdj.adjacent, true);
+
+  // Advancing story stage updates getNpcBriefing live dialogue line to match getDialogue
+  const completedState = {
+    ...state,
+    story: { ...state.story, stage: 'complete', ending: 'protect_town' },
+  };
+  const maraCompleted = getNpcBriefing(completedState, 'mara');
+  assert.match(maraCompleted.summary, /The walls are holding\. Now we owe our neighbors a rescue plan\./);
+
+  // Muster station summary uses "Party roster & equipment"
+  const musterBriefing = getInteractableBriefing(state, 'greyhaven_watch_house', 'greyhaven');
+  assert.equal(musterBriefing.summary, 'Watch House Muster Board · Party roster & equipment');
+
+  const actions = getAvailableActions(state);
+  const talkAction = actions.find((a) => a.kind === 'talk' && a.id === 'mara');
+  assert.ok(talkAction?.briefing);
+  assert.equal(talkAction.briefing.summary, maraAdj.summary);
+
+  const html = exploreScene.render({ state });
+  assert.match(
+    html,
+    /data-action="mapTalk" data-arg="mara" title="Warden Mara \(Town Warden\) · &quot;The beacon kept these streets safe for thirty years\./,
+  );
+  assert.match(
+    html,
+    /<p class="nearby-threat-preview nearby-talk-preview">Warden Mara \(Town Warden\) · &quot;The beacon kept these streets safe for thirty years\./,
+  );
+  // Verify interactable cell title uses briefing.summary directly without duplicating station name
+  assert.match(
+    html,
+    /title="Watch House Muster Board · Party roster &amp; equipment" data-x="2" data-y="1"/,
   );
 });
