@@ -13,7 +13,7 @@ const fresh = () => { const s = createInitialState(); s.bestiary = {}; return s;
 const roaming = new Set(Object.values(ZONES).flatMap((z) => (z.randomEncounters || []).map((e) => e.enemyId || e.id || e)));
 
 test('every bounty targets a real, non-boss roaming foe and pays known items', () => {
-  assert.equal(BOUNTIES.length, 14);
+  assert.equal(BOUNTIES.length, 18);
   assert.equal(new Set(BOUNTIES.map((b) => b.id)).size, BOUNTIES.length);
   for (const b of BOUNTIES) {
     assert.ok(ENEMIES[b.enemyId], b.id);
@@ -254,4 +254,13 @@ test('each contract hunts a different foe, and the newer contracts cover five mo
   assert.equal(byId.ash_survey, 'ashen_raider');
   assert.equal(byId.colossus_thunder, 'thunderhead_colossus');
   assert.equal(BOUNTIES.at(-1).id, 'colossus_thunder');
+});
+
+test('the last four roamers have contracts and gold still rises down the board', () => {
+  const byId = Object.fromEntries(BOUNTIES.map((b) => [b.id, b.enemyId]));
+  assert.equal(byId.howling_pass, 'gale_hound');
+  assert.equal(byId.rusted_watchmen, 'rust_sentinel');
+  assert.equal(byId.kelp_tangle, 'wrack_eel');
+  assert.equal(byId.static_drones, 'relay_drone');
+  for (let i = 1; i < BOUNTIES.length; i += 1) assert.ok(BOUNTIES[i].gold > BOUNTIES[i - 1].gold, BOUNTIES[i].id);
 });
