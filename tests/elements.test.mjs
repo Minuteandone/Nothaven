@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 import {
   ELEMENTS, elementMultiplier, elementLabel, elementClass, elementEffectivenessText,
 } from '../src/combat/elements.js';
-import { SKILLS, createCombat, heroAction } from '../src/combat/rules.js';
+import { SKILLS, createCombat, heroAction, companionTurn } from '../src/combat/rules.js';
+import { createCompanionMember } from '../src/party/companions.js';
 import { ENEMIES } from '../src/data/enemies.js';
 import { assertEggFree } from './helpers/eggGuard.mjs';
+
+const fixed = (v) => () => v;
 
 // --- Unit: elementMultiplier -------------------------------------------------
 
@@ -162,4 +165,31 @@ test('element chip HTML escapes untrusted element labels', () => {
   combat.enemy.element = '<img src=x onerror=alert(1)>';
   const html = renderCombat({ combat, party: [uiHero], inventory: [], menu: 'main' });
   assert.ok(!html.includes('<img src=x'), 'element label is escaped');
+});
+
+// --- Regression: minimum-damage clamp and companion routing -----------------
+
+test('a resisted skill floors to a minimum of 1 damage instead of 0', () => {
+  const hero = member({ atk: 1, mp: 60 });
+  const c = createCombat({ enemyId: 'last_squall' }); // water; fire is weak
+  c.enemy.hp = 9999;
+  const before = c.enemy.hp;
+  const r = heroAction(c, hero, { type: 'skill', skillId: 'skyfire_lance' }, fixed(0), [hero]);
+  assert.equal(r.ok, true);
+  assert.ok(r.lines.some((l) => l.includes("It's not very effective")));
+  assert.equal(before - c.enemy.hp, 1, 'weak hit clamps to 1 rather than flooring to 0');
+});
+
+test('companion Spark and Signal Flare route through the elemental wheel', () => {
+  // Spark (lightning) is weak vs an ice construct: floor((8 + 7*2 + 0) * 0.75 * 1.5) = 24
+  const iven = createCompanionMember('iven', 7);
+  const c1 = createCombat({ enemyId: 'glacierward_colossus' }); // ice + construct
+  const spark = companionTurn(c1, iven, [iven], fixed(0));
+  assert.match(spark[0], /Spark for 24/);
+
+  // Signal Flare (fire) is weak vs water: floor((5 + 7*2 + 0) * 0.75) = 14
+  const sela = createCompanionMember('sela', 7);
+  const c2 = createCombat({ enemyId: 'tide_wraith' }); // water
+  const flare = companionTurn(c2, sela, [sela], fixed(0));
+  assert.match(flare[0], /Signal Flare for 14/);
 });
