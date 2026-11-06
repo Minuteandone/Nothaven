@@ -961,13 +961,15 @@ export function getAvailableActions(gameState) {
   for (const enc of zone.encounters || []) {
     const encId = enc.encounterId || enc.id;
     if (!mapState.clearedEncounters[encId] && isNear(enc.x, enc.y)) {
+      const locked = Boolean(encounterLockReason(mapState, enc, gameState));
       actions.push({
         kind: 'encounter',
         id: encId,
-        enemyId: enc.enemyId,
-        label: `Engage ${enc.name}`,
+        enemyId: locked ? 'sealed_challenge' : enc.enemyId,
+        label: locked ? 'Engage Sealed challenge' : `Engage ${enc.name}`,
+        locked,
         entity: enc,
-        preview: getEncounterPreview(enc.enemyId, gameState),
+        preview: locked ? null : getEncounterPreview(enc.enemyId, gameState),
       });
     }
   }

@@ -1672,6 +1672,30 @@ test('getTileInspection attaches spoiler-safe cell and entity summaries and rend
   assert.doesNotMatch(ridgeInfo.neighbors.north.summary, /Old Tusk|Thunderhoof/i);
   const ridgeHtml = exploreScene.render(game);
   assert.match(ridgeHtml, /data-action="moveNorth"[^>]*title="[^"]*Sealed challenge"/);
-  const moveSection = ridgeHtml.match(/<div class="movement-controls"[\s\S]*?<\/div>/)?.[0] || '';
-  assert.doesNotMatch(moveSection, /Old Tusk|Thunderhoof/i);
+  assert.match(ridgeHtml, /aria-label="Sealed challenge"[^>]*title="Sealed challenge · Locked"[^>]*data-x="6" data-y="2"/);
+  assert.match(ridgeHtml, /data-action="mapEncounter" data-arg="ridge_old_tusk" title="Sealed challenge · Locked"[^>]*>[\s\S]*?<span>Engage Sealed challenge<\/span>/);
+  assert.doesNotMatch(ridgeHtml, /Old Tusk|Thunderhoof Stag|Threat: Thunderhoof|Engage Thunderhoof/i);
+});
+
+test('locked encounters mask names and previews in getAvailableActions and mapGrid until unlocked', () => {
+  const state = createInitialState();
+  state.map = { zoneId: 'ridge_road', x: 6, y: 3 };
+  ensureMapState(state);
+
+  const actions = getAvailableActions(state);
+  const tuskAction = actions.find((a) => a.kind === 'encounter' && a.id === 'ridge_old_tusk');
+  assert.ok(tuskAction, 'expected nearby action for ridge_old_tusk');
+  assert.equal(tuskAction.locked, true);
+  assert.equal(tuskAction.enemyId, 'sealed_challenge');
+  assert.equal(tuskAction.label, 'Engage Sealed challenge');
+  assert.equal(tuskAction.preview, null);
+
+  state.story = { ...state.story, flags: { ...(state.story?.flags || {}), rescue_reward: true } };
+  const unlockedActions = getAvailableActions(state);
+  const unlockedTusk = unlockedActions.find((a) => a.kind === 'encounter' && a.id === 'ridge_old_tusk');
+  assert.ok(unlockedTusk);
+  assert.equal(unlockedTusk.locked, false);
+  assert.equal(unlockedTusk.enemyId, 'old_tusk');
+  assert.match(unlockedTusk.label, /Engage Old Tusk/);
+  assert.ok(unlockedTusk.preview?.summary);
 });
