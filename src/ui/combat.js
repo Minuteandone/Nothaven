@@ -3,6 +3,7 @@ import { isCompanionId } from '../party/companions.js';
 import { BEACON_CHARGE_MAX, chargeReady, battleSummary, enemyWindingUp } from '../combat/rules.js';
 import { heroStats, knownSkills } from '../combat/rules.js';
 import { elementLabel, elementClass, elementEffectivenessText, elementMatchups } from '../combat/elements.js';
+import { damagePreview } from '../combat/damagePreview.js';
 import { getItem, TYPES } from '../items/items.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
 
@@ -96,8 +97,9 @@ function keyHint(key) {
   return key ? `<kbd class="key-hint" aria-hidden="true">${escapeHTML(key)}</kbd>` : '';
 }
 
-function commandButton({ shortcut = null, ...options }) {
-  const html = uiButton(options);
+function commandButton({ shortcut = null, badge = '', ...options }) {
+  let html = uiButton(options);
+  if (badge) html = html.replace('</button>', `${badge}</button>`);
   return shortcut ? html.replace('</button>', `${keyHint(shortcut)}</button>`) : html;
 }
 
@@ -110,10 +112,10 @@ function shortcutGuide() {
   return `<details class="shortcut-guide"><summary>Keyboard commands</summary><dl class="shortcut-guide__grid">${bindings.map(([key, label]) => `<div><dt><kbd>${key}</kbd></dt><dd>${label}</dd></div>`).join('')}</dl><p class="character-shortcuts-off">Letter and number shortcuts are off. Use buttons; Escape still returns to commands.</p><p>Turn letter and number shortcuts on or off in Display settings. Shortcuts never activate disabled commands. Text fields and modified key presses are ignored.</p></details>`;
 }
 
-function commandCard({ action, arg, name, meta, description, iconName = 'focus', disabled = false, shortcut = null, badge = '' }) {
+function commandCard({ action, arg, name, meta, description, iconName = 'focus', disabled = false, shortcut = null, badge = '', damageRange = '' }) {
   return `<button type="button" class="command-card" data-action="${escapeHTML(action)}" data-arg="${escapeHTML(arg)}" title="${escapeHTML(description)}"${disabled ? ' disabled' : ''}>
     <span class="command-card__top"><span>${icon(iconName)}${escapeHTML(name)}</span><span class="command-card__meta"><strong>${escapeHTML(meta)}</strong>${keyHint(shortcut)}</span></span>
-    ${badge}
+    ${badge}${damageRange ? `<span class="damage-range">${escapeHTML(damageRange)}</span>` : ''}
     <span class="command-card__description">${escapeHTML(description)}</span>
   </button>`;
 }
@@ -126,11 +128,14 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
     const skills = knownSkills(hero).map((skill, index) => {
       const effectiveness = elementEffectivenessText(skill.element, combat.enemy?.element);
       const effSuffix = effectiveness === 'strong' ? 'strong' : effectiveness === 'weak' ? 'weak' : '';
+      const preview = damagePreview(skill, hero, combat.enemy);
+      const dmgRange = preview ? `${preview.min}–${preview.max}` : '';
       return commandCard({
         action: 'skill', arg: skill.id, name: skill.name, meta: `${skill.mp} MP`,
         description: skill.description, iconName: skill.kind === 'heal' || skill.kind === 'party_heal' || skill.kind === 'revive' || skill.kind === 'vigil' ? 'heart' : (skill.kind === 'ward' || skill.kind === 'party_ward') ? 'shield' : 'focus',
         disabled: hero.mp < skill.mp, shortcut: index < 9 ? String(index + 1) : null,
         badge: skill.element ? elementChip(skill.element, effSuffix) : '',
+        damageRange: dmgRange,
       });
     }).join('');
     return `<div class="actions command-list" role="group" aria-label="Skill actions">${skills || '<p class="empty-state">No skills learned yet.</p>'}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
@@ -162,9 +167,11 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
   const usableCount = (inventory || []).filter((stack) => {
     try { return getItem(stack.id).type === TYPES.CONSUMABLE; } catch { return false; }
   }).length;
+  const attackPreview = damagePreview(null, hero, combat.enemy);
+  const attackBadge = attackPreview ? `<span class="damage-preview-badge">${attackPreview.min}–${attackPreview.max}</span>` : '';
   return `${chargeMeter(combat)}<div class="actions command-grid" role="group" aria-label="Combat actions">
     ${commandButton({ action: 'burst', label: chargeReady(combat) ? 'Beacon Burst — ready!' : 'Beacon Burst', iconName: 'beacon', variant: chargeReady(combat) ? 'primary' : 'secondary', disabled: !chargeReady(combat), className: 'command-button command-button--burst', shortcut: 'B' })}
-    ${commandButton({ action: 'attack', label: 'Attack', iconName: 'sword', variant: 'primary', className: 'command-button', shortcut: 'A' })}
+    ${commandButton({ action: 'attack', label: 'Attack', iconName: 'sword', variant: 'primary', className: 'command-button', shortcut: 'A', badge: attackBadge })}
     ${commandButton({ action: 'menu', arg: 'skills', label: `Skills · ${knownSkills(hero).length}`, iconName: 'focus', className: 'command-button', shortcut: 'S' })}
     ${commandButton({ action: 'menu', arg: 'items', label: `Items · ${usableCount}`, iconName: 'bag', className: 'command-button', shortcut: 'I' })}
     ${commandButton({ action: 'menu', arg: 'tactics', label: 'Tactics', iconName: 'focus', className: 'command-button', disabled: !party.slice(1).some(member => member && isCompanionId(member.id) && member.hp > 0), shortcut: 'T' })}
