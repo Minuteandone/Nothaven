@@ -98,7 +98,7 @@ test('shop buy rows offer Buy 5 with an accessible label and matching disabled s
   assert.ok(priceyRow, 'leather armor row rendered');
   const disabledCount = (priceyRow.match(/disabled/g) || []).length;
   assert.ok(priceyRow.includes('data-action="buyEquip"'), 'gear row also offers Buy & equip');
-  assert.equal(disabledCount, 3, 'Buy, Buy 5, and Buy & equip all disable when unaffordable');
+  assert.equal(disabledCount, 4, 'Buy, Buy 5, Buy max, and Buy & equip all disable when unaffordable');
   assert.ok(priceyRow.includes('data-action="buy5"'));
   const cheapRow = html.split('<tr>').find((chunk) => chunk.includes('data-arg="rations"'));
   assert.ok(!cheapRow.includes('disabled'), 'affordable consumable rows enable every button');
