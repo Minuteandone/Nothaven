@@ -65,7 +65,7 @@ test('Skyfire uses effective attack, ignores armour and remains usable while sho
     const s = setup(); s.party = [s.hero];
     s.hero.equipment.weapon = 'tempest_edge';
     s.hero.statuses = ['shocked']; s.c.heroTimers.shocked = 3; s.c.enemy.def = def;
-    const hp = s.c.enemy.hp, damage = Math.floor(heroStats(s.hero).atk * 2.6) + 1;
+    const hp = s.c.enemy.hp, baseDamage = Math.floor(heroStats(s.hero).atk * 2.6) + 1, damage = Math.floor(baseDamage * 0.75);  // fire vs water = 0.75x
     assert.equal(cast(s, 'skyfire_lance').ok, true);
     assert.equal(hp - s.c.enemy.hp, damage);
     assert.equal(s.hero.mp, 46);

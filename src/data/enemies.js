@@ -23,6 +23,7 @@ export const ENEMIES = {
   },
   gale_hound: {
     id: 'gale_hound', name: 'Gale Hound', hp: 18, atk: 7, def: 1, spd: 8, xp: 12, gold: 4,
+    element: 'lightning',
     intro: 'A lean Gale Hound lopes down the slope, howling with the wind.',
     ability: { name: 'Lunging Bite', chance: 0.3, mult: 1.4 },
     loot: [
@@ -32,7 +33,7 @@ export const ENEMIES = {
   },
   rust_sentinel: {
     id: 'rust_sentinel', name: 'Rust Sentinel', hp: 34, atk: 8, def: 5, spd: 3, xp: 25, gold: 15,
-    tags: ['construct'],
+    element: 'earth', tags: ['construct'],
     intro: 'Gears grind as a Rust Sentinel lurches upright among the observatory ruins.',
     ability: { name: 'Arc Discharge', chance: 0.3, mult: 1.1, status: 'shocked', turns: 2 },
     loot: [
@@ -44,6 +45,7 @@ export const ENEMIES = {
   },
   tide_wraith: {
     id: 'tide_wraith', name: 'Tide Wraith', hp: 50, atk: 10, def: 4, spd: 6, xp: 50, gold: 30,
+    element: 'water',
     boss: true,
     windup: { name: 'Breaker Surge', chance: 0.15, mult: 1.6 },
     intro: 'Seawater and lightning knot together into a Tide Wraith at the foot of the beacon!',
@@ -57,6 +59,7 @@ export const ENEMIES = {
   },
   reef_crawler: {
     id: 'reef_crawler', name: 'Reef Crawler', hp: 26, atk: 8, def: 4, spd: 4, xp: 18, gold: 10,
+    element: 'water',
     intro: 'A barnacled Reef Crawler drags itself over the drowned pier, pincers snapping.',
     ability: { name: 'Pincer Grip', chance: 0.3, mult: 1.2, status: 'bleeding', turns: 2 },
     loot: [
@@ -66,6 +69,7 @@ export const ENEMIES = {
   },
   squall_revenant: {
     id: 'squall_revenant', name: 'Squall Revenant', hp: 32, atk: 9, def: 3, spd: 7, xp: 24, gold: 14,
+    element: 'water',
     intro: 'Rain gathers into the outline of a drowned harbor guard, lantern still lit.',
     ability: { name: 'Lashing Rain', chance: 0.3, mult: 1.1, status: 'shocked', turns: 2 },
     loot: [
@@ -75,6 +79,7 @@ export const ENEMIES = {
   },
   frost_wolf: {
     id: 'frost_wolf', name: 'Frost Wolf', hp: 24, atk: 9, def: 2, spd: 9, xp: 18, gold: 6,
+    element: 'ice',
     intro: 'A Frost Wolf pads out of the sleet, breath steaming in the thin mountain air.',
     ability: { name: 'Rending Fangs', chance: 0.3, mult: 1.3, status: 'bleeding', turns: 2 },
     loot: [
@@ -84,7 +89,7 @@ export const ENEMIES = {
   },
   rockslide_golem: {
     id: 'rockslide_golem', name: 'Rockslide Golem', hp: 44, atk: 10, def: 6, spd: 2, xp: 32, gold: 18,
-    tags: ['construct'],
+    element: 'earth', tags: ['construct'],
     intro: 'Boulders lock together around a ruined signal engine and rise as a Rockslide Golem!',
     ability: { name: 'Landslide', chance: 0.25, mult: 1.5 },
     loot: [
@@ -103,6 +108,7 @@ export const ENEMIES = {
   },
   lens_wisp: {
     id: 'lens_wisp', name: 'Lens Wisp', hp: 16, atk: 7, def: 1, spd: 7, xp: 13, gold: 8,
+    element: 'fire',
     intro: 'Starlight trapped in a broken lens drifts loose as a flickering Lens Wisp.',
     ability: { name: 'Prism Glare', chance: 0.3, mult: 1, status: 'shocked', turns: 2 },
     loot: [
@@ -112,6 +118,7 @@ export const ENEMIES = {
   },
   wrack_eel: {
     id: 'wrack_eel', name: 'Wrack Eel', hp: 24, atk: 8, def: 3, spd: 6, xp: 17, gold: 9,
+    element: 'water',
     intro: 'A Wrack Eel uncoils from a tangle of storm-torn kelp along the tideline.',
     ability: { name: 'Coiling Bite', chance: 0.3, mult: 1.2, status: 'bleeding', turns: 2 },
     loot: [
@@ -121,6 +128,7 @@ export const ENEMIES = {
   },
   rime_wight: {
     id: 'rime_wight', name: 'Rime Wight', hp: 28, atk: 9, def: 3, spd: 5, xp: 20, gold: 11,
+    element: 'ice',
     intro: 'Frost gathers into the hollow outline of a lost sentry, still keeping its post.',
     ability: { name: 'Numbing Frost', chance: 0.3, mult: 1.1, status: 'shocked', turns: 2 },
     loot: [
@@ -131,6 +139,7 @@ export const ENEMIES = {
   old_tusk: {
     windup: { name: 'Tusk Charge', chance: 0.15, mult: 1.7 },
     id: 'old_tusk', name: 'Old Tusk', hp: 130, atk: 15, def: 6, spd: 5, xp: 85, gold: 55,
+    element: 'earth',
     boss: true,
     drill: false,
     intro: 'The gorse parts like a curtain. Old Tusk, scarred grey king of the briar boars, paws the switchback and lowers a pair of storm-split tusks!',
@@ -146,6 +155,7 @@ export const ENEMIES = {
   gloomfin: {
     windup: { name: 'Riptide Lunge', chance: 0.15, mult: 1.7 },
     id: 'gloomfin', name: 'Gloomfin', hp: 150, atk: 16, def: 6, spd: 7, xp: 95, gold: 60,
+    element: 'water',
     boss: true,
     drill: false,
     intro: 'The tide pulls back all at once. Gloomfin, a wrack eel as long as a fishing boat, rears out of the dark water off the breakwater, sparking with stolen storm light!',
@@ -161,6 +171,7 @@ export const ENEMIES = {
   lenswarden: {
     windup: { name: 'Focused Glare', chance: 0.15, mult: 1.7 },
     id: 'lenswarden', name: 'The Lenswarden', hp: 170, atk: 16, def: 9, spd: 6, xp: 110, gold: 70,
+    element: 'fire',
     tags: ['construct'],
     boss: true,
     drill: false,
@@ -177,6 +188,7 @@ export const ENEMIES = {
   frostmane: {
     windup: { name: 'Avalanche Pounce', chance: 0.15, mult: 1.7 },
     id: 'frostmane', name: 'Frostmane', hp: 160, atk: 17, def: 7, spd: 8, xp: 105, gold: 65,
+    element: 'ice',
     boss: true,
     drill: false,
     intro: 'Snow slides off the southern bastion in a single sheet. Frostmane, the white-maned leader of the Highwatch wolf packs, pads out of the sleet with rime frozen along its jaws!',
@@ -191,6 +203,7 @@ export const ENEMIES = {
   },
   cinderclaw: {
     id: 'cinderclaw', name: 'Cinderclaw', hp: 440, atk: 29, def: 10, spd: 6, xp: 260, gold: 140,
+    element: 'fire',
     boss: true,
     drill: false,
     intro: 'The sand at the foot of the signal lift slides away in a hissing ring. Cinderclaw, a giant sand scorpion with copper-dark plates, rears out of the dune and raises a stinger glowing like a forge coal!',
@@ -207,6 +220,7 @@ export const ENEMIES = {
   },
   thunderhoof: {
     id: 'thunderhoof', name: 'Thunderhoof', hp: 1300, atk: 46, def: 13, spd: 9, xp: 400, gold: 240,
+    element: 'lightning',
     boss: true,
     drill: false,
     intro: 'Thunder rolls up the ridge road out of a clear patch of sky. Thunderhoof, a great storm-charged elk with antlers wreathed in blue sparks, stamps once and lowers its rack toward you!',
@@ -224,6 +238,7 @@ export const ENEMIES = {
   },
   glacierward_colossus: {
     id: 'glacierward_colossus', name: 'Glacierward Colossus', hp: 1500, atk: 48, def: 16, spd: 6, xp: 440, gold: 260,
+    element: 'ice',
     tags: ['construct'],
     boss: true,
     drill: false,
@@ -256,6 +271,7 @@ export const ENEMIES = {
   },
   drowned_harbormaster: {
     id: 'drowned_harbormaster', name: 'Drowned Harbormaster', hp: 88, atk: 12, def: 5, spd: 6, xp: 64, gold: 40,
+    element: 'water',
     boss: true,
     intro: 'Chains rattle under the pier as the Drowned Harbormaster rises, lantern blazing with storm-light!',
     defeat: 'The Harbormaster\'s lantern dims to a calm amber. He lowers it toward the harbor mouth, as if guiding one last ship home, and sinks beneath the waves.',
@@ -270,6 +286,7 @@ export const ENEMIES = {
   },
   dust_marauder: {
     id: 'dust_marauder', name: 'Dust Marauder', hp: 64, atk: 18, def: 5, spd: 7, xp: 30, gold: 18,
+    element: 'earth',
     ability: { name: 'Sandblind Slash', chance: 0.3, mult: 1.25, status: 'bleeding', turns: 3 },
     loot: [
       { id: 'bandage', chance: 0.5, minQty: 1, maxQty: 1 },
@@ -278,6 +295,7 @@ export const ENEMIES = {
   },
   relay_drone: {
     id: 'relay_drone', name: 'Relay Drone', hp: 72, atk: 17, def: 7, spd: 6, xp: 34, gold: 20,
+    element: 'earth',
     tags: ['construct'],
     ability: { name: 'Static Pulse', chance: 0.3, mult: 1.1, status: 'shocked', turns: 2 },
     loot: [
@@ -287,6 +305,7 @@ export const ENEMIES = {
   },
   relay_warden: {
     id: 'relay_warden', name: 'Relay Warden', hp: 220, atk: 22, def: 7, spd: 5, xp: 95, gold: 60,
+    element: 'earth',
     tags: ['construct'], boss: true,
     intro: 'The relay station shudders awake. A towering brass Warden unfolds from its cradle, coils humming with stolen storm-charge!',
     defeat: 'The Relay Warden folds back into its cradle with a long mechanical sigh. Its coils cool from blue to dull copper, and the console beyond flickers to life.',
@@ -301,6 +320,7 @@ export const ENEMIES = {
   },
   ashen_raider: {
     id: 'ashen_raider', name: 'Ashen Raider', hp: 120, atk: 24, def: 7, spd: 7, xp: 48, gold: 30,
+    element: 'fire',
     ability: { name: 'Cinder Blade', chance: 0.3, mult: 1.25, status: 'bleeding', turns: 3 },
     loot: [
       { id: 'bandage', chance: 0.5, minQty: 1, maxQty: 1 },
@@ -309,6 +329,7 @@ export const ENEMIES = {
   },
   spire_sentry: {
     id: 'spire_sentry', name: 'Spire Sentry', hp: 140, atk: 23, def: 10, spd: 4, xp: 52, gold: 28,
+    element: 'earth',
     tags: ['construct'],
     ability: { name: 'Chain Lightning', chance: 0.3, mult: 1.15, status: 'shocked', turns: 2 },
     loot: [
@@ -318,6 +339,7 @@ export const ENEMIES = {
   },
   stormcrown_tyrant: {
     id: 'stormcrown_tyrant', name: 'Stormcrown Tyrant', hp: 460, atk: 27, def: 8, spd: 6, xp: 160, gold: 120,
+    element: 'lightning',
     boss: true,
     intro: 'Atop the spire, a figure in a crown of living lightning turns from the gathering clouds. "So the little beacon-keepers finally climbed this high."',
     defeat: 'The crown of lightning gutters and goes dark. The Tyrant sinks to one knee as the clouds above the spire finally begin to thin.',
@@ -332,6 +354,7 @@ export const ENEMIES = {
   },
   tempest_shade: {
     id: 'tempest_shade', name: 'Tempest Shade', hp: 170, atk: 31, def: 8, spd: 9, xp: 70, gold: 35,
+    element: 'lightning',
     intro: 'A shape of rain and blue static drifts out of the clouds, humming with stolen lightning.',
     ability: { name: 'Static Lash', chance: 0.3, mult: 1.3, status: 'shocked', turns: 2 },
     loot: [
@@ -341,6 +364,7 @@ export const ENEMIES = {
   },
   thunderhead_colossus: {
     id: 'thunderhead_colossus', name: 'Thunderhead Colossus', hp: 190, atk: 30, def: 12, spd: 3, xp: 75, gold: 40,
+    element: 'lightning',
     tags: ['construct'],
     intro: 'Storm-iron plates grind together as a towering weather engine lumbers into the path.',
     ability: { name: 'Thunderclap', chance: 0.3, mult: 1.4 },
@@ -351,6 +375,7 @@ export const ENEMIES = {
   },
   storm_heart: {
     id: 'storm_heart', name: 'The Storm’s Heart', hp: 680, atk: 34, def: 10, spd: 7, xp: 240, gold: 180,
+    element: 'lightning',
     boss: true,
     intro: 'Beyond the summit, the eye of the storm opens: a slow-turning core of wind and lightning that has fed the tempest for generations.',
     defeat: 'The core flickers, shrinks and finally scatters into a warm, quiet rain. For the first time in living memory, the sky above Stormcrown is clear.',
@@ -365,6 +390,7 @@ export const ENEMIES = {
   },
   last_squall: {
     id: 'last_squall', name: 'The Last Squall', hp: 1500, atk: 44, def: 13, spd: 8, xp: 420, gold: 320,
+    element: 'water',
     boss: true,
     intro: 'One squall refuses to scatter. Wind and lightning gather into a towering shape above the northern causeway, howling for a final contest.',
     defeat: 'The Last Squall unravels into a long, low rumble that rolls away over the mountains and does not return.',

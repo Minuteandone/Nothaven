@@ -19,6 +19,13 @@ export const GUIDE_SECTIONS = Object.freeze([
     'After each victory, the battle summary tallies the rounds fought, damage dealt, damage your party took and any Beacon Bursts fired.',
     'If Wren falls, the patrol carries the party back to Greyhaven at half health, minus half your gold.',
   ] }),
+  Object.freeze({ title: 'Elements', lines: [
+    'Five elements shape the battlefield: Fire melts Ice, Ice grounds Lightning, Lightning parts Water, and Water douses Fire. Earth stands neutral, neither strong nor weak against any element.',
+    'Some skills carry an element: Spark, Stormbreaker and Tempest Cleave (Lightning), Beacon Lance, Signal Flare and Skyfire Lance (Fire), and Stillpoint Strike (Ice). Basic attacks are untyped and ignore the elemental wheel.',
+    'Enemies have elemental affinities too — a Gale Hound channels lightning, a Cinderclaw burns with fire, a Wrack Eel draws from water. Check the element badge under an enemy\'s name to plan your approach.',
+    'Super-effective hits deal 1.5× damage and flash It\'s super effective! in the log. Resisted hits deal 0.75× and warn It\'s not very effective… Earth-element foes still show their badge but never multiply or resist damage.',
+  ] }),
+
   Object.freeze({ title: 'Conditions', lines: [
     'Bleeding drains 2 health each round until it wears off or is treated.',
     'Shocked blocks magic and support skills such as Spark, Mend and Signal Flare. Attacks, physical skills like Power Strike, Beacon Lance, items and Steady Signal still work, and Steady Signal clears it.',
