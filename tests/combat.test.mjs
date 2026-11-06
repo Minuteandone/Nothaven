@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCombat, heroAction, physicalDamage, knownSkills, enemyTurn, SKILLS } from '../src/combat/rules.js';
+import { createCombat, heroAction, physicalDamage, knownSkills, enemyTurn, SKILLS, fleeChance } from '../src/combat/rules.js';
 import { ENEMIES } from '../src/data/enemies.js';
 import { combatScene, recoverFromDefeat } from '../src/scenes/combat.js';
 import { createInitialState } from '../src/state.js';
@@ -273,4 +273,46 @@ test('non-boss enemies never enrage', async () => {
   c.enemy.hp = 1;
   assert.deepEqual(checkBossPhase(c), []);
   assert.ok(!c.enraged);
+});
+
+test('fleeChance returns null for boss encounters', () => {
+  const c = createCombat({ enemyId: 'old_tusk' });
+  const hero = { id: 'hero', spd: 5 };
+  assert.strictEqual(fleeChance(c, hero), null);
+});
+
+test('fleeChance returns null for missing combat, hero, or enemy', () => {
+  assert.strictEqual(fleeChance(null, {}), null);
+  assert.strictEqual(fleeChance({ enemy: { spd: 3 } }, null), null);
+  assert.strictEqual(fleeChance({}, { spd: 5 }), null);
+  assert.strictEqual(fleeChance({ enemy: null }, { spd: 5 }), null);
+});
+
+test('fleeChance returns 0.5 when hero and enemy SPD are equal', () => {
+  const c = createCombat({ enemyId: 'storm_rat' });
+  c.enemy.spd = 5;
+  const hero = { id: 'hero', spd: 5 };
+  assert.strictEqual(fleeChance(c, hero), 0.5);
+});
+
+test('fleeChance is capped at 0.9 when hero is much faster', () => {
+  const c = createCombat({ enemyId: 'storm_rat' });
+  c.enemy.spd = 3;
+  const hero = { id: 'hero', spd: 20 };
+  assert.strictEqual(fleeChance(c, hero), 0.9);
+});
+
+test('fleeChance is clamped to 0 when hero is much slower', () => {
+  const c = createCombat({ enemyId: 'storm_rat' });
+  c.enemy.spd = 15;
+  const hero = { id: 'hero', spd: 1 };
+  assert.strictEqual(fleeChance(c, hero), 0);
+});
+
+test('fleeChance matches the live flee formula for a range of speed differentials', () => {
+  const c = createCombat({ enemyId: 'storm_rat' });
+  c.enemy.spd = 4;
+  const hero = { id: 'hero', spd: 7 };
+  const expected = Math.min(0.9, 0.5 + (7 - 4) * 0.1);
+  assert.strictEqual(fleeChance(c, hero), expected);
 });

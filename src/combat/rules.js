@@ -334,6 +334,14 @@ export function gainCharge(c, amount) {
 function chargeFromHit(c, d, maxHp) { gainCharge(c, (d * 60) / Math.max(1, maxHp || 1)); }
 export function chargeReady(c) { return (c?.charge || 0) >= BEACON_CHARGE_MAX; }
 
+/** Odds of a successful flee, factoring hero and enemy speed. Returns null for bosses or missing data. */
+export function fleeChance(c, hero) {
+  if (!c || !hero || !c.enemy || (c.enemy && c.enemy.boss)) return null;
+  const hs = heroStats(hero);
+  const raw = 0.5 + (hs.spd - (c.enemy.spd || 0)) * 0.1;
+  return Math.max(0, Math.min(0.9, raw));
+}
+
 /** Apply element multiplier to damage and return adjusted value + optional log line. */
 function elementPrefix(atkEl) {
   return atkEl ? `::elem:${atkEl}::` : '';

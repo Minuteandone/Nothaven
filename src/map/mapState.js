@@ -1480,15 +1480,19 @@ export function getZoneThreatIntel(gameState, zoneOrId = null) {
   const clearedMap = mapState?.clearedEncounters || {};
   const fixedEncounters = (resolvedZone.encounters || []).map((enc) => {
     const encId = enc.encounterId || enc.id;
+    const cleared = Boolean(clearedMap[encId]);
+    const locked = !cleared && Boolean(encounterLockReason(mapState, enc, gameState));
+    const preview = locked ? null : getEncounterPreview(enc.enemyId, gameState);
     return {
-      id: encId,
-      name: enc.name,
-      enemyId: enc.enemyId,
+      id: locked ? 'sealed_challenge' : encId,
+      name: locked ? 'Sealed challenge' : enc.name,
+      enemyId: locked ? 'sealed_challenge' : enc.enemyId,
       x: enc.x,
       y: enc.y,
-      cleared: Boolean(clearedMap[encId]),
-      locked: Boolean(encounterLockReason(mapState, enc, gameState)),
-      preview: getEncounterPreview(enc.enemyId, gameState),
+      cleared,
+      locked,
+      preview,
+      summary: locked ? 'Sealed challenge · Locked' : (preview?.summary || enc.name),
     };
   });
   const roamingEncounters = (resolvedZone.randomEncounters || []).map((entry) => ({

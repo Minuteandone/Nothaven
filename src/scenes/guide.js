@@ -4,14 +4,14 @@ import { SKILLS, SKILL_UNLOCKS } from '../combat/rules.js';
 
 export const GUIDE_SECTIONS = Object.freeze([
   Object.freeze({ title: 'Exploring', lines: [
-    'Move with the arrow buttons or the W, A, S and D keys. Each step in the wilds can stir up a random encounter.',
+    'Move with the arrow buttons or the W, A, S and D keys. Each step in the wilds can stir up a random encounter. A fight that is not yet open, because it awaits a story step or landmark inspections, appears on the map as a “Sealed challenge” and keeps its foe’s name hidden until it unlocks.',
     'Stand next to people to talk, and next to landmarks or foes to interact or fight. Exits lead to new regions once you reach them.',
     'Your bag and journal are available in the field, and ready crafting recipes appear right on the exploration screen. Recipes that use rare drops can only be crafted one at a time.',
     'In the Field Journal, choose All, Bosses, or Regular to filter the catalogue. Enter a recorded foe’s name and choose Search; unknown names cannot be searched. Clear search restores unknown placeholders within the chosen category. Progress totals and the comparison tray stay unfiltered. Search and category choices reset when you reopen the journal and never unlock entries or change your save.',
     'Foes marked as optional are never required to finish the story. After the Storm’s Heart, a far greater trial waits in the Storm’s Eye for seasoned wardens of level 15 or higher.',
   ] }),
   Object.freeze({ title: 'Battle', lines: [
-    'Battles are turn-based. Choose Attack, a Skill, an Item, Defend or Flee, and your companions act after you.',
+    'Battles are turn-based. Choose Attack, a Skill, an Item, Defend or Flee, and your companions act after you. Attack and damaging skills show an estimated damage range, items show what they would restore on their target right now (for example “On Wren now: +12 HP.”), and a line beneath the foe estimates its basic hit, or an unleashed heavy blow, against your current defenses.',
     'Defend halves damage to Wren during the next enemy action. Fleeing depends on speed and never works against a boss.',
     'Bosses grow fiercer once badly wounded. Watch for the warning line in the battle log.',
     'Every boss and field trial sometimes spends a turn gathering a heavy blow. A warning appears under the foe; Defend or a ward halves the strike that follows, and a stun or Stillpoint Strike breaks it entirely. A Break! flash over the foe confirms the blow was scattered, and Braced! appears over a hero who blunts it. When a boss is worn down far enough to turn desperate, a red Enraged! flash marks its harder-hitting second phase. Foes with such a second phase also show a tick on their HP bar and, beneath it, a line such as “Enrage threshold: 120 HP or lower.” naming exactly when that phase begins. After a victory, the outcome panel also lists the experience and gold earned and any items found, in a line such as “+10 XP · +9 gold”.',

@@ -491,6 +491,58 @@ try {
       await setShortcuts(true);
       for (let turn = 0; turn < 40 && !(await state()).combat.over; turn++) await page.keyboard.press('a');
       assert.equal((await state()).combat.over, 'victory');
+      // This receipt was earned through the original solo Ridge route, not injected.
+      {
+        const victory = await state();
+        const quick = await page.evaluate(() => localStorage.getItem('stormhaven-save'));
+        assert.equal(victory.combat.enemy.id, 'ridge_bandit');
+        assert.equal(victory.party.length, 1);
+        assert.deepEqual(victory.combat.rewards, { xp: 10, gold: 9, items: [] });
+        assert.equal(victory.gold, beforeCommands.gold + 9);
+        assert.equal(victory.party[0].xp, beforeCommands.party[0].xp + 10);
+        const expectedInventory = structuredClone(beforeCommands.inventory);
+        expectedInventory.find(item => item.id === 'rations').qty--;
+        assert.deepEqual(victory.inventory, expectedInventory, 'only the actually used ration leaves the inventory');
+        const receipt = page.locator('.combat-outcome .battle-rewards');
+        const unchangedReceipt = async () => {
+          assert.equal(await receipt.count(), 1);
+          assert.equal(await receipt.textContent(), '+10 XP · +9 gold');
+          assert.equal((await receipt.textContent()).includes('Found:'), false, 'the retained RNG earns no loot');
+          assert.deepEqual(await state(), victory, 'reading rewards must not pay them again');
+          assert.equal(await page.evaluate(() => localStorage.getItem('stormhaven-save')), quick);
+          assert.equal(await page.locator('[data-action="finish"]').isEnabled(), true);
+        };
+        await unchangedReceipt();
+        for (const scale of ['115', '130']) {
+          await page.locator('[aria-controls="display-settings"]').click();
+          await page.locator('[data-display-scale]').selectOption(scale);
+          await page.locator('[data-display-done]').click();
+          for (const hints of [true, false]) {
+            await setShortcuts(hints);
+            await unchangedReceipt();
+            const fits = await receipt.evaluate(node => {
+              const box = node.getBoundingClientRect();
+              const range = document.createRange();
+              range.selectNodeContents(node);
+              const glyphs = [...range.getClientRects()];
+              return box.left >= 0 && box.right <= innerWidth + 1 && glyphs.length > 0
+                && glyphs.every(r => r.left >= box.left - 1 && r.right <= box.right + 1
+                  && r.top >= box.top - 1 && r.bottom <= box.bottom + 1);
+            });
+            assert.equal(fits, true, `earned reward text fits ${width}px/${scale}%/hints ${hints}`);
+            assert.equal(await page.locator('[data-action="finish"]').evaluate(node => {
+              const r = node.getBoundingClientRect();
+              return r.height >= 44 && r.left >= 0 && r.right <= innerWidth + 1;
+            }), true);
+            await fit(`earned-victory-rewards-${scale}-${hints ? 'on' : 'off'}`);
+          }
+        }
+        await page.locator('[aria-controls="display-settings"]').click();
+        await page.locator('[data-display-scale]').selectOption('100');
+        await page.locator('[data-display-done]').click();
+        await setShortcuts(true);
+        await unchangedReceipt();
+      }
       assert.match(await page.locator('.battle-summary').innerText(), /\d+ rounds? · \d+ damage dealt · \d+ damage taken/);
       await fit('victory');
       const beforeChronicle = await state();
@@ -508,6 +560,9 @@ try {
       await page.keyboard.press('c');
       assert.equal((await state()).scene, 'explore');
       assert.equal((await state()).combat, null);
+      assert.equal((await state()).gold, beforeFinish.gold, 'Finish does not repay gold');
+      assert.equal((await state()).party[0].xp, beforeFinish.party[0].xp, 'Finish does not repay XP');
+      assert.deepEqual((await state()).inventory, beforeFinish.inventory, 'Finish does not duplicate loot');
       assert.equal((await state()).map.clearedEncounters.ridge_patrol, true);
       await click('save');
       const saved = await state();

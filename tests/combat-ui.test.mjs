@@ -157,3 +157,17 @@ test('rewardsLine renders via renderCombat on victory outcome screen', () => {
   assert.match(html, /\+15 gold/);
   assert.match(html, /1× Healing Herb/);
 });
+
+test('flee button shows flee-chance-badge with percentage for non-boss encounters', () => {
+  const html = view();
+  assert.match(html, /flee-chance-badge/);
+  assert.match(html, /data-action="flee"/);
+  assert.ok(!html.includes('data-action="flee" disabled'), 'flee should not be disabled for non-boss');
+});
+
+test('flee button has no badge and is disabled for boss encounters', () => {
+  const bossCombat = createCombat({ enemyId: 'tide_wraith' });
+  const html = view({ combat: bossCombat });
+  assert.ok(!html.includes('flee-chance-badge'), 'boss flee button should have no flee-chance-badge');
+  assert.match(html, /data-action="flee"[^>]*disabled/);
+});
