@@ -1,4 +1,5 @@
 import { ledgerOf } from '../core/ledger.js';
+import { BOUNTIES, bountyState } from '../core/bounties.js';
 // Ending / credits scene. Shown once when the story reaches stage 'complete',
 // and again as a finale with epilogue after the Stormcrown Spire report.
 const ENDINGS = {
@@ -49,6 +50,8 @@ export const POSTGAME_DEEDS = [
     text: 'The Glacierward Colossus stands thawed and silent at Highwatch Pass.' },
   { id: 'stormborn', test: (f, b, l) => l.stormbornBossVictories >= 1,
     text: 'A Stormborn victory is entered in the Service Record: a calm kept in the fiercest gale.' },
+  { id: 'bounties', test: (f, b, l, s) => BOUNTIES.every((x) => (bountyState(s).completed[x.id] || 0) >= 1),
+    text: 'Every contract on the Greyhaven bounty board has been claimed at least once, and each notice bears the warden’s mark.' },
 ];
 
 /** Postgame deed lines the player has earned, in POSTGAME_DEEDS order. */
@@ -57,7 +60,8 @@ export function postgameLines(state) {
   const raw = state?.bestiary && typeof state.bestiary === 'object' ? state.bestiary : {};
   const b = new Proxy({}, { get: (_, k) => Number(raw[k]) || 0 });
   const l = ledgerOf(state);
-  return POSTGAME_DEEDS.filter((d) => d.test(f, b, l)).map((d) => d.text);
+  const st = state && typeof state === 'object' ? state : {};
+  return POSTGAME_DEEDS.filter((d) => d.test(f, b, l, st)).map((d) => d.text);
 }
 
 export function isFinale(state) {
