@@ -222,3 +222,24 @@ Only `Math.random` is fixed to 0.5; no stats, items, locations, flags, saves, or
 victories are injected. This covers the normal first-chapter route, not early-order
 variants, the full postgame, balance, other browsers, or actual screen-reader use.
 It is an opt-in local command, not included in the existing CI browser job.
+
+## Optional earned bounty browser journey
+
+After `npm ci` and the Playwright Chromium installation described above, run
+`npm run test:browser:bounties`. This separate opt-in suite leaves the existing
+smoke, chapter, default unit-test command and CI jobs unchanged. Three fresh
+journeys at 320/375/768px and 130% text start with nine locked contracts, win the
+Ridge encounter and six real rat patrols, accept a newly unlocked contract with
+no historical progress, check the four-victory cap, and claim exactly 30 gold
+and one Scrap Metal. Reaccepting starts at zero; abandoning preserves rewards.
+Whole-state Save/reload/Continue checkpoints cover ready and claimed contracts.
+
+The Journey Journal is checked before acceptance, after acceptance and every
+victory, after reload, and after claiming. All three filters preserve the whole
+live state and quick-save text, and native Back restores the previous scene.
+The active/ready text, document width, and control sizes are checked; screenshots
+and traces go under ignored `browser-artifacts/bounties/`, including failure
+screenshots when possible. Only randomness is controlled: no progress, items,
+stats, coordinates, or saves are injected. This is not completion of all nine
+contracts, actual screen-reader testing, cross-browser coverage, a full visual
+audit, or a balance certificate.
