@@ -257,6 +257,56 @@ try {
       assert.equal((await state()).map.zoneId, 'ridge_road');
       for (let step = 0; step < 4; step++) await click('moveEast');
       assert.equal((await state()).scene, 'combat');
+      // The earned Ridge fight must keep command labels and shortcut hints inside buttons.
+      {
+        const beforeLayout = await state();
+        const quickBeforeLayout = await page.evaluate(() => localStorage.getItem('stormhaven-save'));
+        const shortcutsBeforeLayout = await page.locator('html').getAttribute('data-character-shortcuts');
+        await setShortcuts(true);
+        for (const scale of ['115', '130']) {
+          await page.locator('[aria-controls="display-settings"]').click();
+          await page.locator('[data-display-scale]').selectOption(scale);
+          await page.locator('[data-display-done]').click();
+          const commands = page.locator('.command-grid .command-button');
+          assert.deepEqual(await commands.evaluateAll(nodes => nodes.map(node =>
+            [node.dataset.action, node.dataset.arg || ''])), [
+            ['burst', ''], ['attack', ''], ['menu', 'skills'], ['menu', 'items'],
+            ['menu', 'tactics'], ['defend', ''], ['flee', ''],
+          ], 'all seven native commands remain present, including disabled commands');
+          const geometry = await commands.evaluateAll(nodes => nodes.map(node => {
+            const r = node.getBoundingClientRect();
+            const inside = rect => rect.width > 0 && rect.height > 0
+              && rect.left >= r.left - 1 && rect.right <= r.right + 1
+              && rect.top >= r.top - 1 && rect.bottom <= r.bottom + 1;
+            const label = node.querySelector(':scope > span');
+            const hint = node.querySelector('.key-hint');
+            const range = document.createRange();
+            if (label) range.selectNodeContents(label);
+            const glyphs = label ? [...range.getClientRects()] : [];
+            return {
+              action: node.dataset.action, arg: node.dataset.arg || '',
+              button: r.left >= 0 && r.right <= innerWidth + 1 && r.height >= 44
+                && node.scrollWidth <= node.clientWidth + 1,
+              label: Boolean(label) && inside(label.getBoundingClientRect())
+                && glyphs.length > 0 && glyphs.every(inside),
+              hint: Boolean(hint) && getComputedStyle(hint).display !== 'none'
+                && inside(hint.getBoundingClientRect()),
+            };
+          }));
+          assert.equal(geometry.length, 7);
+          assert.ok(geometry.every(row => row.button && row.label && row.hint),
+            `command labels and hints fit at ${width}px/${scale}%: ${JSON.stringify(geometry)}`);
+          assert.deepEqual(await state(), beforeLayout, 'layout preferences must preserve the whole fight');
+          assert.equal(await page.evaluate(() => localStorage.getItem('stormhaven-save')), quickBeforeLayout);
+          await fit(`combat-command-${scale}`);
+        }
+        await page.locator('[aria-controls="display-settings"]').click();
+        await page.locator('[data-display-scale]').selectOption('100');
+        await page.locator('[data-display-done]').click();
+        await setShortcuts(shortcutsBeforeLayout !== 'off');
+        assert.deepEqual(await state(), beforeLayout);
+        assert.equal(await page.evaluate(() => localStorage.getItem('stormhaven-save')), quickBeforeLayout);
+      }
       await fit('combat');
       const beforeCommands = await state();
       assert.equal(await page.locator('[data-action="burst"]').isDisabled(), true);

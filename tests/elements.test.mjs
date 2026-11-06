@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ELEMENTS, elementMultiplier, elementLabel, elementClass, elementEffectivenessText,
+  ELEMENTS, elementMultiplier, elementLabel, elementClass, elementEffectivenessText, elementMatchups,
 } from '../src/combat/elements.js';
 import { SKILLS, createCombat, heroAction, companionTurn } from '../src/combat/rules.js';
 import { createCompanionMember } from '../src/party/companions.js';
@@ -232,4 +232,61 @@ test('companion Spark and Signal Flare route through the elemental wheel', () =>
   const c2 = createCombat({ enemyId: 'tide_wraith' }); // water
   const flare = companionTurn(c2, sela, [sela], fixed(0));
   assert.match(flare[0], /Signal Flare for 14/);
+});
+
+
+// --- Unit: elementMatchups ---------------------------------------------------
+
+test('elementMatchups returns correct strong/resist for ice defender', () => {
+  const { strong, resist } = elementMatchups('ice');
+  assert.deepEqual(strong, ['fire'], 'fire is strong vs ice');
+  assert.deepEqual(resist, ['lightning'], 'lightning is weak vs ice');
+});
+
+test('elementMatchups returns correct strong/resist for lightning defender', () => {
+  const { strong, resist } = elementMatchups('lightning');
+  assert.deepEqual(strong, ['ice'], 'ice is strong vs lightning');
+  assert.deepEqual(resist, ['water'], 'water is weak vs lightning');
+});
+
+test('elementMatchups returns empty arrays for earth defender', () => {
+  assert.deepEqual(elementMatchups('earth'), { strong: [], resist: [] });
+});
+
+test('elementMatchups returns empty arrays for null or missing element', () => {
+  assert.deepEqual(elementMatchups(null), { strong: [], resist: [] });
+  assert.deepEqual(elementMatchups(undefined), { strong: [], resist: [] });
+  assert.deepEqual(elementMatchups(''), { strong: [], resist: [] });
+});
+
+test('elementMatchups result labels are egg-free', () => {
+  const mu = elementMatchups('ice');
+  assertEggFree(mu.strong.join(' '));
+  assertEggFree(mu.resist.join(' '));
+});
+
+// --- Integration: enemy matchup hint renders in combat UI ---------------------
+
+test('enemy unit card shows weakness/resistance hint below stats', () => {
+  const combat = createCombat({ enemyId: 'frost_wolf' }); // ice: weak to fire, resists lightning
+  const html = renderCombat({ combat, party: [uiHero], inventory: [], menu: 'main' });
+  assert.match(html, /enemy-matchup-hint/);
+  assert.match(html, /Weak to Fire/);
+  assert.match(html, /Resists Lightning/);
+});
+
+test('earth enemy unit card shows no matchup hint', () => {
+  const combat = createCombat({ enemyId: 'briar_boar' }); // earth
+  const html = renderCombat({ combat, party: [uiHero], inventory: [], menu: 'main' });
+  assert.ok(!html.includes('enemy-matchup-hint'), 'earth foes should not have a matchup hint');
+});
+
+test('matchup hint HTML-escapes element labels', () => {
+  const combat = createCombat({ enemyId: 'frost_wolf' });
+  combat.enemy.element = '<img src=x onerror=alert(1)>';
+  const html = renderCombat({ combat, party: [uiHero], inventory: [], menu: 'main' });
+  // The malicious element label should not appear as an injection in the hint
+  assert.ok(!html.includes('onerror'), 'no unescaped event handler in matchup hint');
+  assert.ok(!html.includes('<img'), 'no unescaped tag in matchup hint');
+  // The raw string may appear escaped
 });
