@@ -1,6 +1,6 @@
 import { companionTactic } from '../party/tactics.js';
 import { isCompanionId } from '../party/companions.js';
-import { BEACON_CHARGE_MAX, chargeReady, battleSummary, enemyWindingUp } from '../combat/rules.js';
+import { BEACON_CHARGE_MAX, chargeReady, battleSummary, enemyWindingUp, fleeChance } from '../combat/rules.js';
 import { heroStats, knownSkills, lockedSkills } from '../combat/rules.js';
 import { elementLabel, elementClass, elementEffectivenessText, elementMatchups, elementMultiplier } from '../combat/elements.js';
 import { damagePreview, incomingDamagePreview } from '../combat/damagePreview.js';
@@ -233,6 +233,7 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
   }).length;
   const attackPreview = damagePreview(null, hero, combat.enemy);
   const attackBadge = attackPreview ? `<span class="damage-preview-badge">${escapeHTML(String(attackPreview.min))}–${escapeHTML(String(attackPreview.max))}</span>` : '';
+  const fleePct = fleeChance(combat, hero);
   return `${chargeMeter(combat)}<div class="actions command-grid" role="group" aria-label="Combat actions">
     ${commandButton({ action: 'burst', label: chargeReady(combat) ? 'Beacon Burst — ready!' : 'Beacon Burst', iconName: 'beacon', variant: chargeReady(combat) ? 'primary' : 'secondary', disabled: !chargeReady(combat), className: 'command-button command-button--burst', shortcut: 'B' })}
     ${commandButton({ action: 'attack', label: 'Attack', iconName: 'sword', variant: 'primary', className: 'command-button', shortcut: 'A', badge: attackBadge })}
@@ -240,7 +241,7 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
     ${commandButton({ action: 'menu', arg: 'items', label: `Items · ${usableCount}`, iconName: 'bag', className: 'command-button', shortcut: 'I' })}
     ${commandButton({ action: 'menu', arg: 'tactics', label: 'Tactics', iconName: 'focus', className: 'command-button', disabled: !party.slice(1).some(member => member && isCompanionId(member.id) && member.hp > 0), shortcut: 'T' })}
     ${commandButton({ action: 'defend', label: 'Defend', iconName: 'shield', className: 'command-button', shortcut: 'D' })}
-    ${commandButton({ action: 'flee', label: 'Flee', iconName: 'compass', variant: 'danger', disabled: Boolean(combat.enemy.boss), className: 'command-button command-button--flee', shortcut: 'F' })}
+    ${commandButton({ action: 'flee', label: 'Flee', iconName: 'compass', variant: 'danger', disabled: Boolean(combat.enemy.boss), className: 'command-button command-button--flee', shortcut: 'F', title: combat.enemy.boss ? 'Boss encounters cannot be fled.' : (fleePct != null ? `Escape odds: ${Math.round(fleePct*100)}%. Your SPD against the foe's SPD.` : ''), badge: fleePct != null ? `<span class="flee-chance-badge">${Math.round(fleePct*100)}%</span>` : '' })}
     <p class="command-hint">${combat.enemy.boss ? 'Boss encounters must be fought to resolution.' : 'Attack or use a skill to press the advantage. Defend halves incoming damage.'}</p>
   </div>${shortcutGuide()}`;
 }

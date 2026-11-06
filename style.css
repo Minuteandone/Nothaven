@@ -593,6 +593,16 @@ em.enraged {
   padding: .1rem .35rem;
   margin-left: auto;
 }
+.flee-chance-badge {
+  font-size: .68rem;
+  font-weight: 600;
+  color: var(--accent-bright);
+  background: rgba(212, 175, 55, .12);
+  border-radius: 4px;
+  padding: .1rem .35rem;
+  margin-left: .4rem;
+}
+
 .combat-dashboard { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); align-items: start; gap: 1rem; }
 .combat-dashboard > .panel { margin: 0; }
 .command-panel h2 { margin-bottom: 1rem; font-size: 1.3rem; }
