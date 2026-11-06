@@ -92,6 +92,29 @@ export function urgentBountyText(state) {
     : `Urgent notice: an unposted contract pays ${pct} until the next claim — meet new foes in the wilds to open it.`;
 }
 
+/** Claims of one contract needed before it counts as mastered. */
+export const MASTERY_CLAIMS = 3;
+export function bountyMastered(state, id) {
+  return (bountyState(state).completed[id] || 0) >= MASTERY_CLAIMS;
+}
+/** Items a claim pays now: a mastered contract adds one more of its first item. */
+export function bountyItems(state, b) {
+  const items = b.items.map((it) => ({ id: it.id, qty: it.qty }));
+  if (items.length && bountyMastered(state, b.id)) items[0].qty += 1;
+  return items;
+}
+function firstItemName(b) {
+  const id = b.items[0]?.id;
+  if (!id) return '';
+  try { return getItem(id).name; } catch { return id; }
+}
+export function masteredCount(state) {
+  return BOUNTIES.filter((b) => bountyMastered(state, b.id)).length;
+}
+export function masteryText(state) {
+  return `Contracts mastered: ${masteredCount(state)} of ${BOUNTIES.length}. A contract is mastered after ${MASTERY_CLAIMS} claims and then pays one extra of its first item.`;
+}
+
 export function bountyRankText(state) {
   const { rank, next, toNext } = bountyRank(state);
   const pct = (r) => `+${Math.round(r.bonus * 100)}% gold`;
@@ -173,6 +196,9 @@ export function bountyRows(state) {
     ready: v.active === b.id && v.progress >= b.count,
     claimed: v.completed[b.id] || 0,
     urgent: b.id === urgentBountyId(state),
+    mastered: bountyMastered(state, b.id),
+    rewardItems: bountyItems(state, b),
+    rewardName: firstItemName(b),
   }));
 }
 
@@ -210,7 +236,9 @@ export function claimBounty(state, lookup = getBounty) {
   const b = v.active ? lookup(v.active) : null;
   if (!b || v.progress < b.count) return { ok: false, message: 'No contract is ready to claim.' };
   const inv = Array.isArray(state.inventory) ? state.inventory : [];
-  const granted = grantRewards(inv, b.items);
+  const mastered = bountyMastered(state, b.id) && b.items.length > 0;
+  const items = mastered ? bountyItems(state, b) : b.items;
+  const granted = grantRewards(inv, items);
   if (!granted || !granted.ok) return { ok: false, message: 'The bounty clerk cannot pay out that contract right now.' };
   const before = bountyRank(state).rank;
   const urgent = b.id === urgentBountyId(state) ? ' Urgent notice premium included.' : '';
@@ -221,5 +249,7 @@ export function claimBounty(state, lookup = getBounty) {
   writeState(state, { active: null, progress: 0, completed });
   const after = bountyRank(state).rank;
   const promoted = after.id !== before.id ? ` Board rank raised to ${after.title}.` : '';
-  return { ok: true, message: `Claimed “${b.title}”: ${bountyRewardText(b, gold)}.${urgent}${promoted}` };
+  const mastery = mastered ? ` Mastery bonus: +1 ${firstItemName(b)}.` : '';
+  const newly = !mastered && completed[b.id] === MASTERY_CLAIMS ? ` “${b.title}” is now mastered: future claims pay one extra of its first item.` : '';
+  return { ok: true, message: `Claimed “${b.title}”: ${bountyRewardText({ ...b, items }, gold)}.${urgent}${mastery}${newly}${promoted}` };
 }

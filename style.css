@@ -1437,3 +1437,6 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .bounty--urgent { border-color: var(--accent); }
 .bounty__urgent { margin: .1rem 0 .25rem; color: var(--accent); font-weight: 600; font-size: .85rem; }
 .enemy-matchup-hint { margin: .25rem 0 0; font-size: .82rem; color: var(--muted); }
+
+.bounties__mastery { color: var(--muted); font-size: .9rem; }
+.bounty__mastered { margin: .25rem 0; color: var(--accent); font-size: .85rem; font-weight: 600; }

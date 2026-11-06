@@ -1,6 +1,6 @@
 // Greyhaven bounty board scene: accept, track, abandon and claim hunt contracts.
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
-import { abandonBounty, acceptBounty, bountyRankText, urgentBountyText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
+import { abandonBounty, acceptBounty, bountyRankText, urgentBountyText, masteryText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
 
 function rowHTML(r, anyActive) {
   const status = !r.unlocked ? 'Defeat this foe once to open the contract.'
@@ -16,7 +16,8 @@ function rowHTML(r, anyActive) {
     <h2 class="bounty__title">${escapeHTML(title)}</h2>
     ${r.unlocked && r.urgent ? '<p class="bounty__urgent">Urgent notice — premium pay until the next claim.</p>' : ''}
     ${r.unlocked ? `<p class="bounty__brief">${escapeHTML(r.brief)}</p>
-    <p class="bounty__terms">Defeat ${r.count} × ${escapeHTML(r.foe)} · Reward: ${escapeHTML(bountyRewardText(r, r.pay))}</p>
+    <p class="bounty__terms">Defeat ${r.count} × ${escapeHTML(r.foe)} · Reward: ${escapeHTML(bountyRewardText({ ...r, items: r.rewardItems || r.items }, r.pay))}</p>
+    ${r.mastered && r.items.length ? `<p class="bounty__mastered">Mastered — +1 ${escapeHTML(r.rewardName || '')} per claim.</p>` : ''}
     ${r.roams.length ? `<p class="bounty__roams">Roams: ${escapeHTML(r.roams.join(', '))}.</p>` : ''}` : ''}
     <p class="bounty__status">${escapeHTML(status)}</p>
     ${button}
@@ -66,6 +67,7 @@ export const bountiesScene = {
         <p class="bounties__total">Contracts claimed: ${total}</p>
         <p class="bounties__rank">${escapeHTML(bountyRankText(game.state))}</p>
         <p class="bounties__urgent">${escapeHTML(urgentBountyText(game.state))}</p>
+        <p class="bounties__mastery">${escapeHTML(masteryText(game.state))}</p>
         ${regionFilterHTML(options, region)}
         ${filterNote}
         <ul class="bounties__list">${shown.map((r) => rowHTML(r, anyActive)).join('')}</ul>

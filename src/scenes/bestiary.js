@@ -2,7 +2,7 @@
 // installBestiary(game) records victories (state.bestiary[enemyId] = count)
 // from the combat:victory event and registers the 'bestiary' scene.
 import { ENEMIES } from '../data/enemies.js';
-import { BESTIARY_COMPARISON_LIMIT, bestiaryComparisonIds, bestiaryQueryText, renderBestiary } from '../ui/bestiary.js';
+import { BESTIARY_COMPARISON_LIMIT, BESTIARY_ELEMENT_FILTERS, bestiaryComparisonIds, bestiaryQueryText, renderBestiary } from '../ui/bestiary.js';
 
 const own = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);
 
@@ -26,11 +26,12 @@ function currentComparison(game) {
 export const bestiaryScene = {
   onEnter(game, data = {}) {
     game.bestiaryFilter = 'all';
+    game.bestiaryElement = 'all';
     game.bestiaryQuery = '';
     game.bestiaryReturn = data.returnScene || game.bestiaryReturn || 'town';
   },
   render(game) {
-    return renderBestiary({ entries: bestiaryEntries(game.state), returnScene: game.bestiaryReturn || 'town', compareIds: game.bestiaryComparison, filter: game.bestiaryFilter, query: game.bestiaryQuery });
+    return renderBestiary({ entries: bestiaryEntries(game.state), returnScene: game.bestiaryReturn || 'town', compareIds: game.bestiaryComparison, filter: game.bestiaryFilter, query: game.bestiaryQuery, elementFilter: game.bestiaryElement });
   },
   actions: {
     bestiaryFilter(game, el) {
@@ -38,6 +39,12 @@ export const bestiaryScene = {
       const filter = el?.dataset?.arg;
       if (!['all', 'bosses', 'regular'].includes(filter)) return;
       game.bestiaryFilter = filter;
+    },
+    bestiaryElementFilter(game, el) {
+      if (game.state?.scene !== 'bestiary' || game.state?.combat) return;
+      const element = el?.dataset?.arg;
+      if (!BESTIARY_ELEMENT_FILTERS.includes(element)) return;
+      game.bestiaryElement = element;
     },
     searchBestiary(game) {
       if (game.state?.scene !== 'bestiary' || game.state?.combat) return;
