@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getRouteBriefing, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getRouteBriefing, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -71,7 +71,8 @@ function mapGrid(zone, mapState, state = null) {
         if (entityInfo.type === 'npc') {
           symbol = entityInfo.entity.symbol || 'N';
           label = `${entityInfo.entity.name}, ${entityInfo.entity.role}`;
-          cellTitle = label;
+          const briefing = getNpcBriefing(state ? { ...state, map: mapState } : { map: mapState }, entityInfo.entity, zone);
+          cellTitle = briefing?.summary || label;
         } else if (entityInfo.type === 'encounter') {
           symbol = entityInfo.entity.symbol || '!';
           label = `Threat: ${entityInfo.entity.name}`;
@@ -81,7 +82,7 @@ function mapGrid(zone, mapState, state = null) {
           symbol = entityInfo.entity.symbol || '?';
           label = entityInfo.entity.name;
           const briefing = getInteractableBriefing(state ? { ...state, map: mapState } : { map: mapState }, entityInfo.entity, zone);
-          cellTitle = briefing?.summary ? `${label} — ${briefing.summary}` : label;
+          cellTitle = briefing?.summary || label;
         } else if (entityInfo.type === 'exit') {
           symbol = '╬';
           label = entityInfo.entity.label;
@@ -125,7 +126,7 @@ function nearbyActionButton(action, index, characterShortcuts) {
   const shortcut = characterShortcuts && index < 9 ? String(index + 1) : null;
   const tooltipText = action.kind === 'encounter'
     ? action.preview?.summary
-    : action.kind === 'exit' || action.kind === 'interact'
+    : action.kind === 'exit' || action.kind === 'interact' || action.kind === 'talk'
       ? action.briefing?.summary
       : action.kind === 'patrol'
         ? action.patrol?.summary
@@ -256,6 +257,10 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
   const contextButtons = (nearbyActions || [])
     .filter(action => NEARBY_ACTION_TYPES[action?.kind])
     .map((action, index) => nearbyActionButton(action, index, characterShortcuts)).join('');
+  const nearbyTalkPreviews = (nearbyActions || [])
+    .filter(action => action?.kind === 'talk' && action.briefing?.summary)
+    .map(action => `<p class="nearby-threat-preview nearby-talk-preview">${escapeHTML(action.briefing.summary)}</p>`)
+    .join('');
   const nearbyThreatPreviews = (nearbyActions || [])
     .filter(action => action?.kind === 'encounter' && action.preview?.summary)
     .map(action => `<p class="nearby-threat-preview">${escapeHTML(action.preview.summary)}</p>`)
@@ -345,6 +350,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
         <section class="panel nearby-panel" aria-labelledby="nearby-title">
           <p class="eyebrow">Within reach</p><h2 id="nearby-title">Nearby Actions:</h2>
           <div class="nearby-actions">${contextButtons || '<p class="empty-state">Move beside a person, route, cache, or threat to interact.</p>'}</div>
+          ${nearbyTalkPreviews}
           ${nearbyThreatPreviews}
           ${nearbyInteractPreviews}
           ${nearbyRoutePreviews}
