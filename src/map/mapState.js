@@ -302,6 +302,87 @@ export function formatExpeditionLog(lines, limit = 6) {
   return entries.map((entry) => (entry.count > 1 ? `${entry.text} (×${entry.count})` : entry.text));
 }
 
+/**
+ * Pure read-only point-of-interest checklist for a zone (NPCs, fixed encounters,
+ * interactables/caches, and outbound exits with coordinates and live status).
+ */
+export function getZoneChecklist(gameState, zoneOrId = null) {
+  const resolvedZone =
+    typeof zoneOrId === 'string'
+      ? getZone(zoneOrId)
+      : zoneOrId && typeof zoneOrId === 'object'
+        ? zoneOrId
+        : getZone(gameState?.map?.zoneId || gameState?.location || 'greyhaven');
+  const clearedEncounters = gameState?.map?.clearedEncounters || {};
+  const completedInteractions = gameState?.map?.completedInteractions || {};
+  const mapLike = { clearedEncounters, completedInteractions };
+
+  const npcs = (Array.isArray(resolvedZone.npcs) ? resolvedZone.npcs : []).map((n) => ({
+    id: n.id,
+    name: n.name,
+    role: n.role || '',
+    x: n.x,
+    y: n.y,
+  }));
+
+  const encounters = (Array.isArray(resolvedZone.encounters) ? resolvedZone.encounters : []).map((e) => {
+    const id = e.encounterId || e.id;
+    const cleared = Boolean(clearedEncounters[id]);
+    const lockReason = cleared ? null : encounterLockReason(mapLike, e, gameState);
+    const unlocked = !lockReason;
+    const status = cleared ? 'Cleared' : unlocked ? 'Active' : 'Locked';
+    return {
+      id,
+      name: e.name,
+      x: e.x,
+      y: e.y,
+      cleared,
+      unlocked,
+      lockReason: lockReason || null,
+      status,
+    };
+  });
+
+  const interactables = (Array.isArray(resolvedZone.interactables) ? resolvedZone.interactables : []).map((inter) => {
+    const id = inter.interactionId || inter.id;
+    const completed = Boolean(completedInteractions[id]);
+    const once = Boolean(inter.once);
+    const status = once ? (completed ? 'Completed' : 'Available') : 'Service';
+    return {
+      id,
+      name: inter.name,
+      kind: inter.kind || 'object',
+      once,
+      x: inter.x,
+      y: inter.y,
+      completed,
+      status,
+    };
+  });
+
+  const exits = (Array.isArray(resolvedZone.exits) ? resolvedZone.exits : []).map((ex) => {
+    const briefing = getRouteBriefing(gameState, ex.toZone);
+    return {
+      toZone: ex.toZone,
+      label: ex.label,
+      x: ex.x,
+      y: ex.y,
+      visited: Boolean(briefing?.visited),
+      unlocked: Boolean(briefing?.unlocked),
+      summary: briefing?.summary || ex.label,
+    };
+  });
+
+  return {
+    zoneId: resolvedZone.id,
+    name: resolvedZone.name,
+    npcs,
+    encounters,
+    interactables,
+    exits,
+  };
+}
+
 
 export function getEffectiveRandomEncounterChance(gameState, zone) {
   const base = typeof zone?.randomEncounterChance === 'number' ? zone.randomEncounterChance : 0;

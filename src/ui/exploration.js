@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFrontierAtlas, getRouteBriefing, getTileInfo, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFrontierAtlas, getRouteBriefing, getTileInfo, getZoneChecklist, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -216,6 +216,29 @@ function frontierAtlasPanel(state, zone, mapState) {
   </details>`;
 }
 
+function zoneChecklistPanel(state, zone, mapState) {
+  const effectiveState = state ? { ...state, map: mapState || state.map } : { map: mapState };
+  const checklist = getZoneChecklist(effectiveState, zone);
+  const rows = [];
+  for (const npc of checklist.npcs) {
+    rows.push(`<li data-poi-kind="npc" data-poi-id="${escapeHTML(npc.id)}"><strong>${escapeHTML(npc.name)}</strong>${npc.role ? ` (${escapeHTML(npc.role)})` : ''} · (${npc.x}, ${npc.y})</li>`);
+  }
+  for (const enc of checklist.encounters) {
+    rows.push(`<li data-poi-kind="encounter" data-poi-id="${escapeHTML(enc.id)}" data-poi-status="${escapeHTML(enc.status)}"><strong>${escapeHTML(enc.name)}</strong> · ${escapeHTML(enc.status)} · (${enc.x}, ${enc.y})</li>`);
+  }
+  for (const inter of checklist.interactables) {
+    rows.push(`<li data-poi-kind="interactable" data-poi-id="${escapeHTML(inter.id)}" data-poi-status="${escapeHTML(inter.status)}"><strong>${escapeHTML(inter.name)}</strong> · ${escapeHTML(inter.status)} · (${inter.x}, ${inter.y})</li>`);
+  }
+  for (const ex of checklist.exits) {
+    const routeStatus = !ex.unlocked ? 'Locked' : ex.visited ? 'Charted' : 'Uncharted';
+    rows.push(`<li data-poi-kind="exit" data-poi-id="${escapeHTML(ex.toZone)}" data-poi-status="${routeStatus}"><strong>${escapeHTML(ex.label)}</strong> · ${routeStatus} · (${ex.x}, ${ex.y})</li>`);
+  }
+  const totalPois = rows.length;
+  return `<details class="shortcut-guide zone-checklist"><summary>Zone field checklist (${totalPois} ${totalPois === 1 ? 'landmark' : 'landmarks'})</summary>
+    <ul class="zone-checklist__list" aria-label="Zone landmarks and coordinates">${rows.join('')}</ul>
+  </details>`;
+}
+
 export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '', hasArchive = false, hasQuestJournal = false, hasCharacter = false, hasFeats = false, characterShortcuts = true }) {
   const contextButtons = (nearbyActions || [])
     .filter(action => NEARBY_ACTION_TYPES[action?.kind])
@@ -230,13 +253,17 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
     .join('');
   const routes = (visitedZones || [])
     .filter(zoneId => zoneId !== zone.id && ZONES[zoneId])
-    .map(zoneId => uiButton({
-      action: 'mapTravel',
-      arg: zoneId,
-      label: `Fast Travel: ${ZONES[zoneId].name}`,
-      iconName: 'map',
-      variant: 'ghost',
-    }))
+    .map(zoneId => {
+      const briefing = getRouteBriefing(state ? { ...state, map: mapState } : { map: mapState }, zoneId);
+      return uiButton({
+        action: 'mapTravel',
+        arg: zoneId,
+        label: `Fast Travel: ${ZONES[zoneId].name}`,
+        iconName: 'map',
+        variant: 'ghost',
+        title: briefing?.summary || null,
+      });
+    })
     .join('');
   const logLines = formatExpeditionLog(mapState.log, 6);
 
@@ -292,6 +319,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           <p class="control-hint">Survey to inspect the tile beneath you, or click a passable map tile to step along a safe route (takes normal movement steps where random encounters may occur, pauses beside threats, and engages a threat if clicked directly). Movement never spends supplies.</p>
           ${explorationShortcutGuide(characterShortcuts)}
           ${frontierAtlasPanel(state, zone, mapState)}
+          ${zoneChecklistPanel(state, zone, mapState)}
         </section>
         <section class="panel nearby-panel" aria-labelledby="nearby-title">
           <p class="eyebrow">Within reach</p><h2 id="nearby-title">Nearby Actions:</h2>
