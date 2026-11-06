@@ -1079,6 +1079,7 @@ test('getFrontierAtlas computes read-only Frontier Atlas overview across all 9 z
     assert.equal(initialAtlas.overallPercent, 0);
     assert.equal(initialAtlas.zones.length, 9);
 
+    assert.equal(initialAtlas.summary, '1/9 regions charted · 0% recon (0/27 threats, 0/8 caches)');
     const greyhavenEntry = initialAtlas.zones.find((z) => z.zoneId === 'greyhaven');
     assert.ok(greyhavenEntry);
     assert.equal(greyhavenEntry.visited, true);
@@ -1086,6 +1087,14 @@ test('getFrontierAtlas computes read-only Frontier Atlas overview across all 9 z
     assert.equal(greyhavenEntry.conditionName, 'Lantern Shelter');
     assert.deepEqual(greyhavenEntry.connections, ['ridge_road', 'saltmere_coast']);
     assert.deepEqual(greyhavenEntry.connectedNames, ['Ridge Road', 'Saltmere Coast']);
+    assert.equal(greyhavenEntry.summary, 'Greyhaven (Current) · Lantern Shelter · Safe haven · Routes: Ridge Road, Saltmere Coast');
+
+    const unvisitedRidge = initialAtlas.zones.find((z) => z.zoneId === 'ridge_road');
+    assert.equal(unvisitedRidge.visited, false);
+    assert.equal(unvisitedRidge.summary, 'Uncharted region (Danger 1)');
+    const lockedEye = initialAtlas.zones.find((z) => z.zoneId === 'storms_eye');
+    assert.equal(lockedEye.visited, false);
+    assert.match(lockedEye.summary, /^Locked — /);
 
     const eyeEntry = initialAtlas.zones.find((z) => z.zoneId === 'storms_eye');
     assert.ok(eyeEntry);
@@ -1121,6 +1130,10 @@ test('getFrontierAtlas computes read-only Frontier Atlas overview across all 9 z
   assert.match(html, /Routes: Greyhaven, Observatory Ruins, Highwatch Pass/);
   assert.match(html, /7 frontier regions remain uncharted\./);
   assert.doesNotMatch(html, /data-zone-id="storms_eye"/);
+  assert.match(html, /data-zone-id="greyhaven" data-current="false" title="Greyhaven · Lantern Shelter · Safe haven · Routes: Ridge Road, Saltmere Coast"/);
+  state.inventory = [{ id: 'healing_herb', qty: 2 }];
+  const htmlWithPack = exploreScene.render(game);
+  assert.match(htmlWithPack, /<ul class="field-pack__items"><li title="[^"]+"><span>/);
 });
 
 

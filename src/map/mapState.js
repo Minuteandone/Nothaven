@@ -264,7 +264,8 @@ export function getFrontierAtlas(gameState = null) {
     const condition = getZoneCondition(gameState, zone);
     const isCurrent = zoneId === currentZoneId;
     const visited = Boolean(progress.visited || isCurrent);
-    const unlocked = !zoneLockReason(gameState || {}, zone);
+    const lockReason = zoneLockReason(gameState || {}, zone);
+    const unlocked = !lockReason;
     const connections = Array.from(
       new Set(
         (zone.exits || [])
@@ -281,6 +282,18 @@ export function getFrontierAtlas(gameState = null) {
     totalCaches += progress.cachesTotal;
     completedObjectives += progress.completedObjectives;
     totalObjectives += progress.totalObjectives;
+
+    const reconText = progress.totalObjectives > 0
+      ? `${progress.percent}% recon (${progress.encountersCleared}/${progress.encountersTotal} threats, ${progress.cachesOpened}/${progress.cachesTotal} caches)`
+      : 'Safe haven';
+    const routesText = connectedNames.length > 0
+      ? `Routes: ${connectedNames.join(', ')}`
+      : 'No outbound routes';
+    const entrySummary = visited
+      ? `${zone.name}${isCurrent ? ' (Current)' : ''} · ${condition.name} · ${reconText} · ${routesText}`
+      : lockReason
+        ? `Locked — ${lockReason}`
+        : `Uncharted region (Danger ${zone.dangerLevel ?? 0})`;
 
     return {
       zoneId,
@@ -301,6 +314,7 @@ export function getFrontierAtlas(gameState = null) {
       percent: progress.percent,
       connections,
       connectedNames,
+      summary: entrySummary,
     };
   });
 
@@ -319,6 +333,7 @@ export function getFrontierAtlas(gameState = null) {
     completedObjectives,
     totalObjectives,
     overallPercent,
+    summary: `${zonesVisited}/${zones.length} regions charted · ${overallPercent}% recon (${totalEncountersCleared}/${totalEncounters} threats, ${totalCachesOpened}/${totalCaches} caches)`,
     zones,
   };
 }
