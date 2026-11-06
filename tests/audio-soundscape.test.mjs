@@ -78,7 +78,7 @@ test('soundscape construction is silent and start creates one resumable context'
   assert.equal(FakeAudioContext.instances.length, 1);
   assert.equal(audio.context.state, 'running');
   assert.equal(audio.ambience.master.gain.value, 0.5);
-  assert.equal(audio.sources.length, 6);
+  assert.equal(audio.sources.length, 5);
   assert.equal(audio.sources.every(source => source.started), true);
   await audio.destroy();
   assert.equal(audio.context, null);

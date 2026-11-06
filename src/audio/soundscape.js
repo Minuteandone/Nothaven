@@ -175,25 +175,18 @@ export class StormSoundscape {
     droneGain.connect(master);
     const lowDrone = ctx.createOscillator();
     lowDrone.type = 'sine';
-    lowDrone.frequency.value = 82.41;
+    lowDrone.frequency.value = 43;
     lowDrone.connect(droneGain);
     const upperDrone = ctx.createOscillator();
     upperDrone.type = 'triangle';
-    upperDrone.frequency.value = 98;
+    upperDrone.frequency.value = 64.5;
     const upperGain = ctx.createGain();
     upperGain.gain.value = 0.24;
     upperDrone.connect(upperGain);
     upperGain.connect(droneGain);
-    const highDrone = ctx.createOscillator();
-    highDrone.type = 'sine';
-    highDrone.frequency.value = 98;
-    const highGain = ctx.createGain();
-    highGain.gain.value = 0.12;
-    highDrone.connect(highGain);
-    highGain.connect(droneGain);
 
     this.ambience = { master, windGain, seaGain, droneGain, windFilter, noiseBuffer, gust, sea };
-    this.sources = [wind, sea, gust, lowDrone, upperDrone, highDrone];
+    this.sources = [wind, sea, gust, lowDrone, upperDrone];
     for (const source of this.sources) source.start();
   }
 
@@ -248,40 +241,40 @@ export class StormSoundscape {
     } else if (name === 'item') {
       this.tone({ frequency: 520, endFrequency: 690, duration: 0.13, level: 0.038 });
     } else if (name === 'travel') {
-      [329.63, 392, 392].forEach((frequency, index) => {
+      [293.66, 349.23, 440].forEach((frequency, index) => {
         this.tone({ frequency, duration: 0.2, type: 'triangle', level: 0.032, delay: index * 0.085 });
       });
     } else if (name === 'quest') {
-      [659.25, 783.99, 783.99, 987.77].forEach((frequency, index) => {
+      [523.25, 659.25, 880, 1046.5].forEach((frequency, index) => {
         this.tone({ frequency, duration: 0.24, type: 'triangle', level: 0.035, delay: index * 0.075 });
       });
     } else if (name === 'rest') {
-      [164.81, 196, 196].forEach((frequency, index) => {
+      [220, 277.18, 329.63].forEach((frequency, index) => {
         this.tone({ frequency, duration: 0.36, level: 0.035, delay: index * 0.13 });
       });
     } else if (name === 'discovery') {
-      [659.25, 783.99, 783.99, 1318.51].forEach((frequency, index) => {
+      [523.25, 698.46, 880, 1046.5].forEach((frequency, index) => {
         this.tone({ frequency, duration: 0.27, type: 'triangle', level: 0.036, delay: index * 0.07 });
       });
     } else if (name === 'trade') {
-      [329.63, 392, 392].forEach((frequency, index) => {
+      [440, 554.37, 698.46].forEach((frequency, index) => {
         this.tone({ frequency, duration: 0.13, level: 0.026, delay: index * 0.06 });
       });
     } else if (name === 'craft') {
-      [329.63, 392, 392].forEach((frequency, index) => {
+      [293.66, 369.99, 493.88].forEach((frequency, index) => {
         this.tone({ frequency, duration: 0.16, type: 'triangle', level: 0.03, delay: index * 0.075 });
       });
       this.noiseBurst({ duration: 0.055, level: 0.014, frequency: 1400 });
     } else if (name === 'warning') {
-      [164.81, 196, 196].forEach((frequency, index) => {
+      [220, 233.08, 246.94].forEach((frequency, index) => {
         this.tone({ frequency, duration: 0.2, type: 'sawtooth', level: 0.025, delay: index * 0.11 });
       });
     } else if (name === 'victory') {
-      [261.63, 329.63, 392, 392, 523.25].forEach((frequency, index) => {
+      [261.63, 329.63, 392, 523.25].forEach((frequency, index) => {
         this.tone({ frequency, duration: 0.3, type: 'triangle', level: 0.048, delay: index * 0.105 });
       });
     } else if (name === 'levelup') {
-      [329.63, 392, 392, 659.25].forEach((frequency, index) => {
+      [440, 554.37, 659.25].forEach((frequency, index) => {
         this.tone({ frequency, endFrequency: frequency * 1.01, duration: 0.28, level: 0.04, delay: index * 0.09 });
       });
     } else {
