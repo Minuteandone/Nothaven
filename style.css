@@ -1440,3 +1440,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 
 .bounties__mastery { color: var(--muted); font-size: .9rem; }
 .bounty__mastered { margin: .25rem 0; color: var(--accent); font-size: .85rem; font-weight: 600; }
+
+.bounties__sorts { margin-top: .5rem; }
