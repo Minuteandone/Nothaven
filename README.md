@@ -355,3 +355,17 @@ viewport, and buttons remain at least 44 pixels tall. It also checks unchanged
 fixture/live journey state and the quick-save key. Header metadata can wrap to
 its own row rather than squeezing the title. This is renderer/layout coverage,
 not an earned campaign, screen-reader assessment, or balance test.
+
+### Earned combat item preview check
+
+The retained `npm run test:browser` route now checks genuinely purchased Trail
+Rations on wounded solo Wren in the first Ridge fight. At 320/375/768px,
+115/130% text and shortcut hints on/off, the preview, recipient, quantity,
+44px card and text bounds are checked while whole journey and quick-save bytes
+stay unchanged. Escape/reopen is free. A native ration use consumes one item
+and one turn; the immediate item log must match the independently capped
+10 HP preview, while the normal enemy reply is explicitly separate. Reopening
+checks the new HP-based preview and remaining quantity before the existing
+victory/save/Journal/Archive route continues. All earlier assertions remain.
+This earned solo check complements synthetic all-item/all-recipient coverage;
+it does not establish screen-reader accessibility or general combat balance.
