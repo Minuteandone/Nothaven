@@ -115,6 +115,14 @@ export function masteryText(state) {
   return `Contracts mastered: ${masteredCount(state)} of ${BOUNTIES.length}. A contract is mastered after ${MASTERY_CLAIMS} claims and then pays one extra of its first item.`;
 }
 
+/** Journal line: lifetime claims, rank and mastery; null before the first claim. */
+export function bountyRecordText(state) {
+  const total = totalBountiesClaimed(state);
+  if (total < 1) return null;
+  const { rank } = bountyRank(state);
+  return `Board record: ${total} ${total === 1 ? 'claim' : 'claims'} · ${rank.title} · ${masteredCount(state)} of ${BOUNTIES.length} contracts mastered.`;
+}
+
 export function bountyRankText(state) {
   const { rank, next, toNext } = bountyRank(state);
   const pct = (r) => `+${Math.round(r.bonus * 100)}% gold`;
