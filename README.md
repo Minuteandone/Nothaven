@@ -238,6 +238,13 @@ no historical progress, check the four-victory cap, and claim exactly 30 gold
 and one Scrap Metal. Reaccepting starts at zero; abandoning preserves rewards.
 Whole-state Save/reload/Continue checkpoints cover ready and claimed contracts.
 
+The fresh locked board has no region buttons. After genuine Bandit and Rat
+victories, native Ridge Road, Observatory Ruins, and Highwatch Pass filters
+show exact contract lists, retain the active Rat contract outside its region,
+and distinguish matching counts from that extra active notice. Checks cover
+one pressed filter, whole live-state and quick-save stability, reopening at
+All regions with all eighteen rows, and 44px controls fitting at 130% text.
+
 The journey then earns three more rat contracts through ordinary acceptance,
 rest, travel, and four real patrol victories each. Claims two and three pay 30
 gold; promotion to Contract Hand happens only on claim three, and claim four
