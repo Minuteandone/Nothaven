@@ -201,6 +201,8 @@ Greyhaven's **Sparring drills** board lets you refight the yard bosses you have 
 
 Once **three** drills are unlocked, the **Yard Gauntlet** opens beside them: face every unlocked drill boss back to back, with wounds and spent MP carrying over between bouts. Losing ends the run but costs nothing — no gold is lost and the party stands back up. Your best run (foes beaten in one attempt) is recorded.
 
+**Bounty board.** The Greyhaven bounty board posts nine repeatable hunts against roaming foes, from the Ridge Road Rat Cull to Shades in the Vortex. A contract opens once that foe is in your Field Journal. Take one at a time, defeat the listed number in the wilds (roaming ambushes and patrols both count; sparring drills do not), then return to the board to claim gold and crafting materials such as scrap metal, storm glass and relay brass. You can abandon a contract at no cost, and every contract can be taken again.
+
 The **Wardens' feats** panel lists milestones of your journey. Alongside the chapter milestones it tracks fourteen yard, road, forge and record achievements:
 
 - **Yard Champion** — win a Sparring Drill against every boss in the Watch House yard.
