@@ -298,3 +298,13 @@ Progress uses native UI actions; evaluations only observe state/catalog/layout,
 and Math.random is held at 0.5 to avoid incidental patrols. Ignored screenshots
 and traces go to `browser-artifacts/regions/`, including failures. This is not
 a full-campaign, screen-reader, cross-browser, or first-availability balance proof.
+
+### Upcoming-skills disclosure regression
+
+The retained smoke journey checks the earned level-one Ridge fight at 320, 375,
+and 768 pixels with 115% and 130% text. It opens and closes Upcoming skills,
+requires a 44px summary target with fitting text, and verifies all thirteen
+future cards are disabled, ordered by unlock level, and show no action shortcut
+or damage range. An unused digit cannot activate a future skill; the whole
+fight and quick save remain unchanged. This is not all-level earned coverage,
+a full visual audit, or screen-reader testing.
