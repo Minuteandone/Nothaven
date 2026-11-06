@@ -5,7 +5,7 @@
 ## Starting without spoilers
 
 - Choose **New journey**, speak to Warden Mara in Greyhaven, and read the quest journal below the main panels. You can also speak to Iven and Tamsin for context.
-- **Explore the wilds** opens the map. Use its movement buttons, WASD, or the arrow keys. Nearby actions appear as you approach people, landmarks, enemies, and exits.
+- **Explore the wilds** opens the map. Use its movement buttons, WASD, or the arrow keys. Nearby actions appear as you approach people, landmarks, enemies, and exits. A fight that is not yet open, because it awaits a story step or landmark inspections, appears on the map as a “Sealed challenge” and keeps its foe’s name hidden until it unlocks.
 - **Display settings → Letter & number shortcuts** can turn off WASD, E (Survey), combat letters, and numbered actions for speech input or personal preference. Arrow movement, Escape, and native buttons still work. This device-local preference is separate from your saved journey; Reset display turns these shortcuts back on.
 - Walk to new regions to discover them before using their travel shortcuts. Some passages also require quest progress.
 - **Inspect landmarks and open caches explicitly.** Standing on a chest is not the same as taking its supplies. Read nearby action labels when you reach an objective.
