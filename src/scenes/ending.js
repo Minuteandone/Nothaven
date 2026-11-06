@@ -2,6 +2,8 @@ import { ledgerOf } from '../core/ledger.js';
 import { FEATS, featsEarned } from './feats.js';
 import { BOUNTIES, bountyState, bountyRecordText } from '../core/bounties.js';
 import { ENEMIES } from '../data/enemies.js';
+import { DIFFICULTIES, getDifficulty } from '../combat/difficulty.js';
+import { COMPANIONS, isUnlocked } from '../party/companions.js';
 // Ending / credits scene. Shown once when the story reaches stage 'complete',
 // and again as a finale with epilogue after the Stormcrown Spire report.
 const ENDINGS = {
@@ -81,6 +83,18 @@ export function journalText(state) {
   return `Field Journal: ${seen} of ${ids.length} foes recorded`;
 }
 
+/** "Difficulty: Label" for the preset the run ended on. */
+export function difficultyText(state) {
+  return `Difficulty: ${DIFFICULTIES[getDifficulty(state)].label}`;
+}
+
+/** Companions whose unlock flag is set, in roster order; null when none. */
+export function companionsText(state) {
+  const names = Object.keys(COMPANIONS).filter((id) => isUnlocked(state, id)).map((id) => COMPANIONS[id].name);
+  if (!names.length) return null;
+  return `Companions who answered the call: ${names.join(', ')}`;
+}
+
 export function isFinale(state) {
   return Boolean(state?.story?.flags?.spire_reward);
 }
@@ -119,6 +133,8 @@ export const endingScene = {
         <li>${esc(hero.name || 'Hero')} reached level ${Number(hero.level) || 1}</li>
         <li>Gold carried home: ${Number(s.gold) || 0}</li>
         <li>Items in pack: ${(s.inventory || []).reduce((n, i) => n + (Number(i.qty) || 0), 0)}</li>
+        <li class="ending-difficulty">${esc(difficultyText(s))}</li>
+        ${companionsText(s) ? `<li class="ending-companions">${esc(companionsText(s))}</li>` : ''}
         <li class="ending-battles">${esc(battlesText(s))}</li>
         <li class="ending-journal">${esc(journalText(s))}</li>
         <li class="ending-feats">Wardens’ Feats earned: ${esc(String(featsEarned(s)))} of ${esc(String(FEATS.length))}</li>
