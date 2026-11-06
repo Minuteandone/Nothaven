@@ -248,3 +248,78 @@ test('saveManager module source has no egg words', async () => {
   const src = fs.readFileSync(new URL('../src/core/saveManager.js', import.meta.url), 'utf-8');
   assert.ok(!EGG_RE.test(src), 'saveManager.js must not contain egg words');
 });
+
+test('importSave rejects empty object {}', () => {
+  const result = importSave('{}');
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('recognised game data'), 'should reject near-empty objects');
+});
+
+test('importSave rejects object with only one save key', () => {
+  const result = importSave('{"gold": 100}');
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('recognised game data'), 'should reject objects with insufficient save fields');
+});
+
+test('importSave rejects object with unrelated keys', () => {
+  const result = importSave('{"foo": 1, "bar": 2}');
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('recognised game data'));
+});
+
+test('importSave accepts object with gold and party (valid save)', () => {
+  const st = storage();
+  const old = globalThis.localStorage;
+  globalThis.localStorage = st;
+  try {
+    const result = importSave('{"gold": 100, "party": [{"id":"hero","name":"Wren"}], "scene": "town"}');
+    assert.equal(result.ok, true);
+  } finally {
+    globalThis.localStorage = old;
+  }
+});
+
+test('autosave writes to localStorage when enabled (controlled timer)', (_, done) => {
+  const st = storage();
+  const old = globalThis.localStorage;
+  globalThis.localStorage = st;
+  enableAutosave();
+  const state = createInitialState();
+  state.gold = 777;
+  // Use _testInterval = 10ms for fast test
+  scheduleAutosave(state, 10);
+  // The autosave timer fires after 10ms. We check at 50ms.
+  // Per-test cleanup (localStorage swap, disable) must live inside
+  // the timeout — a finally block would fire synchronously and clear
+  // the timer before it ever runs.
+  setTimeout(() => {
+    try {
+      const raw = st.getItem(AUTOSAVE_KEY);
+      assert.ok(raw, 'autosave should be written to localStorage');
+      const parsed = JSON.parse(raw);
+      assert.equal(parsed.gold, 777, 'autosaved gold should match');
+      assert.equal(parsed.combat, null, 'combat should be nullified');
+    } finally {
+      disableAutosave();
+      globalThis.localStorage = old;
+      done();
+    }
+  }, 50);
+});
+
+test('autosave does not write when disabled even with short interval', (_, done) => {
+  const st = storage();
+  const old = globalThis.localStorage;
+  globalThis.localStorage = st;
+  disableAutosave();
+  try {
+    const state = createInitialState();
+    scheduleAutosave(state, 10);
+    setTimeout(() => {
+      assert.equal(st.getItem(AUTOSAVE_KEY), null, 'disabled autosave must not write');
+      done();
+    }, 50);
+  } finally {
+    globalThis.localStorage = old;
+  }
+});

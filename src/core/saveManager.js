@@ -37,6 +37,22 @@ export function exportSave() {
  * Backs up the existing save before overwriting.
  * Returns { ok: boolean, error?: string, data?: object }
  */
+
+/**
+ * Basic sanity check: a genuine save always carries several top-level
+ * keys added by createInitialState (gold, party, scene, story, flags,
+ * location, etc.).  A near-empty object such as {} or {x:1} has none
+ * of these and should be rejected before migrateSave fills in defaults.
+ */
+function looksLikeSave(raw) {
+  const required = ['gold', 'party', 'scene', 'saveVersion', 'story', 'flags', 'location', 'inventory'];
+  let hits = 0;
+  for (const k of required) {
+    if (Object.prototype.hasOwnProperty.call(raw, k)) hits++;
+  }
+  return hits >= 2;
+}
+
 export function importSave(jsonString) {
   let raw;
   try {
@@ -46,6 +62,9 @@ export function importSave(jsonString) {
   }
   if (!raw || typeof raw !== 'object') {
     return { ok: false, error: 'Save file is not a valid game state.' };
+  }
+  if (!looksLikeSave(raw)) {
+    return { ok: false, error: 'Save file does not contain recognised game data.' };
   }
   const migrated = migrateSave(raw, createInitialState);
   if (!migrated) {

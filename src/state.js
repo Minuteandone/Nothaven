@@ -75,7 +75,7 @@ export function loadAutosave() {
  * autosave is enabled. The save fires after a quiet period (no calls
  * to scheduleAutosave for AUTOSAVE_INTERVAL_MS).
  */
-export function scheduleAutosave(state) {
+export function scheduleAutosave(state, _testInterval) {
   if (!_autosaveEnabled) return;
   if (_autosaveTimer !== null) clearTimeout(_autosaveTimer);
   _autosaveTimer = setTimeout(() => {
@@ -84,7 +84,7 @@ export function scheduleAutosave(state) {
     try {
       localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ ...state, combat: null, saveVersion: SAVE_VERSION }));
     } catch { /* storage full — silently skip */ }
-  }, AUTOSAVE_INTERVAL_MS);
+  }, _testInterval ?? AUTOSAVE_INTERVAL_MS);
 }
 
 export function clearAutosave() {

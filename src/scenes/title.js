@@ -1,5 +1,5 @@
-import { createInitialState, loadGame, hasSave, hasAutosave, loadAutosave } from '../state.js';
-import { beaconArt, sceneHeader, uiButton } from '../ui/components.js';
+import { createInitialState, loadGame, hasSave, hasAutosave, loadAutosave, isAutosaveEnabled, enableAutosave, disableAutosave } from '../state.js';
+import { beaconArt, escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { resumeJourney } from '../core/resume.js';
 import { exportSave, importSave, deleteSave } from '../core/saveManager.js';
 
@@ -10,10 +10,13 @@ function clearStoryTransients(game) {
 
 function buildSaveActions(hasExistingSave, hasExistingAutosave) {
   const buttons = [];
+  // Always show Import so fresh devices can load a save
+  buttons.push(uiButton({ action: 'promptImport', label: 'Import save', iconName: 'upload', variant: 'secondary' }));
   if (hasExistingSave) {
     buttons.push(uiButton({ action: 'exportSave', label: 'Export save', iconName: 'download', variant: 'secondary' }));
-    buttons.push(uiButton({ action: 'promptImport', label: 'Import save', iconName: 'upload', variant: 'secondary' }));
     buttons.push(uiButton({ action: 'promptDelete', label: 'Delete save', iconName: 'trash', variant: 'danger' }));
+    const autosaveOn = isAutosaveEnabled();
+    buttons.push(uiButton({ action: 'toggleAutosave', label: autosaveOn ? 'Autosave: ON' : 'Autosave: OFF', iconName: 'save', variant: autosaveOn ? 'secondary' : 'ghost' }));
   }
   if (hasExistingAutosave) {
     buttons.push(uiButton({ action: 'loadAutosaveAction', label: 'Restore autosave', iconName: 'save', variant: 'ghost' }));
@@ -26,7 +29,7 @@ export const titleScene = {
     const saveActions = buildSaveActions(hasSave(), hasAutosave());
     const result = game && game.importResult;
     const importBanner = result
-      ? `<div role="alert" class="import-banner import-banner--${result.ok ? 'success' : 'error'}">${result.message}</div>`
+      ? `<div role="alert" class="import-banner import-banner--${result.ok ? 'success' : 'error'}">${escapeHTML(result.message)}</div>`
       : '';
     return `<main class="game-shell title-screen">
       <div class="title-layout">
@@ -39,7 +42,7 @@ export const titleScene = {
             ${game?.scenes?.archive ? uiButton({ action: 'archive', label: 'Journey archive', iconName: 'save', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'guide', label: 'How to play', iconName: 'journal', variant: 'ghost' })}
           </div>
-          ${saveActions ? `<div class="title-save-actions">${saveActions}</div>` : ''}
+          <div class="title-save-actions">${saveActions}</div>
           <p class="save-note">Single player <span aria-hidden="true">•</span> Your progress is saved on this device</p>
         </section>
         <div class="title-art-frame">${beaconArt()}<span class="art-caption">Greyhaven waits beyond the storm</span></div>
@@ -102,6 +105,16 @@ export const titleScene = {
       const s = loadAutosave();
       if (!s) return;
       resumeJourney(game, s);
+    },
+    toggleAutosave(game) {
+      if (isAutosaveEnabled()) {
+        disableAutosave();
+      } else {
+        enableAutosave();
+        // Trigger an immediate schedule on the next scene:enter
+        // by simulating that we've just entered the current scene
+      }
+      game.render();
     },
   },
 };
