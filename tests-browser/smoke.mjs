@@ -335,6 +335,7 @@ try {
       assert.equal((await state()).gold, saved.gold);
       assert.equal((await state()).map.clearedEncounters.ridge_patrol, true);
       const beforeJournal = await state();
+      const journalQuick = await page.evaluate(() => localStorage.getItem('stormhaven-save'));
       await click('openJournal');
       const journalState = await state();
       assert.deepEqual({ ...journalState, scene: 'explore' }, beforeJournal);
@@ -345,12 +346,85 @@ try {
       assert.equal(await page.locator('.comparison-card[data-comparison-enemy="ridge_bandit"]').count(), 1);
       assert.equal(await page.locator('.bestiary-entry [data-action="removeComparedFoe"][data-arg="ridge_bandit"]').getAttribute('aria-pressed'), 'true');
       assert.deepEqual(await state(), journalState, 'comparison must not change progress');
+      const journalCatalogue = await page.evaluate(async () => {
+        const { ENEMIES } = await import('/src/data/enemies.js');
+        return Object.values(ENEMIES).map(foe => ({ id: foe.id, name: foe.name, boss: Boolean(foe.boss) }));
+      });
+      assert.deepEqual(Object.keys(journalState.bestiary).filter(id => journalState.bestiary[id] > 0), ['ridge_bandit']);
+      const journalOverview = await page.locator('.bestiary-overview').textContent();
+      const journalTray = await page.locator('.bestiary-comparison').textContent();
       for (const scale of ['115', '130']) {
         await page.locator('[aria-controls="display-settings"]').click();
         await page.locator('[data-display-scale]').selectOption(scale);
         await page.locator('[data-display-done]').click();
         await fit(`earned-comparison-text-${scale}`);
         assert.deepEqual(await state(), journalState);
+        const journalUnchanged = async () => {
+          assert.deepEqual(await state(), journalState, 'Journal controls must preserve the whole journey');
+          assert.equal(await page.evaluate(() => localStorage.getItem('stormhaven-save')), journalQuick);
+          assert.equal(await page.locator('.bestiary-overview').textContent(), journalOverview);
+          assert.equal(await page.locator('.bestiary-comparison').textContent(), journalTray);
+        };
+        const journalRows = async (filter, query = '') => {
+          const shown = journalCatalogue.filter(foe =>
+            (filter === 'all' || (filter === 'bosses' ? foe.boss : !foe.boss))
+            && (!query || (foe.id === 'ridge_bandit' && foe.name.toLowerCase().includes(query.toLowerCase()))));
+          assert.equal(await page.locator('.bestiary-list > li').count(), shown.length);
+          assert.deepEqual(await page.locator('.bestiary-list [data-enemy]').evaluateAll(nodes => nodes.map(node => node.dataset.enemy)),
+            shown.filter(foe => foe.id === 'ridge_bandit').map(foe => foe.id));
+          assert.equal(await page.locator('.bestiary-list .unknown').count(), shown.filter(foe => foe.id !== 'ridge_bandit').length);
+          assert.equal(await page.locator('.bestiary-list .unknown small').count(), shown.filter(foe => foe.id !== 'ridge_bandit' && foe.boss).length);
+          assert.equal(await page.locator('.bestiary-tools [role="status"]').textContent(), `Showing ${shown.length} of ${journalCatalogue.length} foes.`);
+          assert.equal(await page.locator(`[data-action="bestiaryFilter"][data-arg="${filter}"]`).getAttribute('aria-pressed'), 'true');
+          await journalUnchanged();
+        };
+        const journalSearch = async query => {
+          await page.locator('#bestiary-search').fill(query);
+          await click('searchBestiary');
+          assert.equal(await page.locator('#bestiary-search').inputValue(), query.trim().slice(0, 120));
+          await journalUnchanged();
+        };
+        const journalFit = async label => {
+          await fit(label);
+          const controls = await page.locator('.bestiary-tools button,.bestiary-tools input').evaluateAll(nodes => nodes.map(node => {
+            const r = node.getBoundingClientRect();
+            return r.left >= 0 && r.right <= innerWidth + 1 && r.height >= 44
+              && (node.tagName === 'INPUT' || node.scrollWidth <= node.clientWidth + 1);
+          }));
+          assert.equal(controls.length, 6);
+          assert.ok(controls.every(Boolean), 'Journal controls and button text fit; the single-line input may scroll internally');
+        };
+        for (const filter of ['bosses', 'regular', 'all']) {
+          await click('bestiaryFilter', filter); await journalRows(filter);
+        }
+        await journalSearch('  RiDgE BaNdIt  '); await journalRows('all', 'ridge bandit');
+        await click('bestiaryFilter', 'bosses'); await journalRows('bosses', 'ridge bandit');
+        assert.equal(await page.locator('.comparison-card').count(), 1, 'zero catalogue results retain the earned comparison');
+        await journalFit(`earned-journal-search-${scale}`);
+        await click('clearBestiarySearch'); await journalRows('bosses');
+        assert.equal(await page.locator('#bestiary-search').inputValue(), '');
+        await click('bestiaryFilter', 'all');
+        const hiddenFoe = journalCatalogue.find(foe => foe.id !== 'ridge_bandit');
+        assert.ok(hiddenFoe);
+        for (const query of [hiddenFoe.name, '???', 'ridge_bandit']) {
+          await journalSearch(query); await journalRows('all', query);
+          assert.equal(await page.locator('.bestiary-list > li').count(), 0, 'unknown names, placeholders and raw IDs cannot be searched');
+        }
+        const longJournalQuery = 'x'.repeat(120);
+        await journalSearch(longJournalQuery); await journalRows('all', longJournalQuery);
+        await journalFit(`earned-journal-long-${scale}`);
+        await journalSearch('\"><img src=x onerror=alert(1)>');
+        await journalRows('all', '\"><img src=x onerror=alert(1)>');
+        assert.equal(await page.locator('#app img[src=x]').count(), 0, 'query markup must not create elements');
+        await click('clearBestiarySearch'); await journalRows('all');
+        assert.equal(await page.locator('#bestiary-search').inputValue(), '');
+        assert.equal(await page.locator('[data-action="clearBestiarySearch"]').isDisabled(), true);
+        await journalSearch('ridge bandit'); await click('bestiaryFilter', 'regular');
+        await click('leave'); assert.deepEqual(await state(), beforeJournal);
+        await click('openJournal');
+        assert.equal(await page.locator('#bestiary-search').inputValue(), '', 'reopening resets the applied query');
+        await journalRows('all');
+        await journalFit(`earned-journal-reopened-${scale}`);
       }
       await page.locator('[aria-controls="display-settings"]').click();
       await page.locator('[data-display-scale]').selectOption('100');
@@ -535,7 +609,7 @@ try {
       await page.locator('[data-display-done]').click();
       assert.deepEqual(await state(), archiveOriginal);
       assert.deepEqual(errors, []);
-      console.log(`PASS ${width}px: navigation, filters, purchase, save/reload, readonly Bag search/recipe filters/long-query wrapping, shortcut opt-out/persistence/re-enable, combat shortcuts, full chronicle, earned ridge victory/comparison, archive confirmations/round-trip and independent-context portable transfer; browser errors []`);
+      console.log(`PASS ${width}px: navigation, filters, purchase, save/reload, readonly Bag search/recipe filters/long-query wrapping, shortcut opt-out/persistence/re-enable, combat shortcuts, full chronicle, earned ridge victory/comparison and recorded-name Journal search, archive confirmations/round-trip and independent-context portable transfer; browser errors []`);
     } catch (error) {
       await page.screenshot({ path: path.join(artifacts, `${width}-failure.png`), fullPage: true }).catch(() => {});
       console.error(`FAIL ${width}px; browser errors: ${JSON.stringify(errors)}`);
