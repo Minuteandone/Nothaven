@@ -189,6 +189,7 @@ try {
         const freshTown = await state();
         await click('bounties');
         assert.equal(await page.locator('.bounty--locked').count(), 18);
+        assert.equal(await control('filterBounties').count(), 0);
         assert.equal(await page.locator('[data-action="acceptBounty"]').count(), 0);
         assert.equal(await page.locator('.bounty__brief').count(), 0);
         assert.equal(await page.locator('.bounties__rank').textContent(), 'Board rank: Notice Runner (+0% gold). 3 more claims to Contract Hand (+10% gold).');
@@ -207,6 +208,38 @@ try {
         const active = await state();
         assert.deepEqual(active, { ...unlocked, bounties: { active: 'ridge_rats', progress: 0, completed: {} } });
         await fit('active', '#app button');
+        const rawFilter = await quick();
+        assert.deepEqual(await page.locator('[data-action="filterBounties"]').evaluateAll(ns => ns.map(n => n.dataset.arg)), ['', 'Ridge Road', 'Observatory Ruins', 'Highwatch Pass']);
+        for (const [region, titles] of [
+          ['Highwatch Pass', ['Ridge Road Rat Cull', 'Bandit Toll Road']],
+          ['Observatory Ruins', ['Ridge Road Rat Cull']],
+          ['Ridge Road', ['Ridge Road Rat Cull', 'Bandit Toll Road']],
+        ]) {
+          await click('filterBounties', region);
+          assert.deepEqual(await page.locator('.bounty__title').allTextContents(), titles);
+          assert.equal(await page.locator('.bounty--active').count(), 1);
+          const note = await page.locator('.bounties__filter-note').textContent();
+          if (region === 'Highwatch Pass') {
+            assert.equal(note, '1 contract roams Highwatch Pass. Your active contract, Ridge Road Rat Cull, stays listed too.');
+          } else {
+            assert.equal(note, `${titles.length} ${titles.length === 1 ? 'contract roams' : 'contracts roam'} ${region}.`);
+          }
+          assert.equal(await control('filterBounties', region).getAttribute('aria-pressed'), 'true');
+          assert.equal(await page.locator('.bounty--locked').count(), 0);
+          assert.equal(await page.locator('[data-action="filterBounties"][aria-pressed="true"]').count(), 1);
+          assert.deepEqual(await state(), active);
+          assert.equal(await quick(), rawFilter);
+          await fit(`filter-${region.replaceAll(' ', '-')}`, '#app button');
+        }
+        await click('closeBounties'); await click('bounties');
+        assert.equal(await control('filterBounties', '').getAttribute('aria-pressed'), 'true');
+        assert.equal(await page.locator('.bounty__title').count(), 18);
+        assert.equal(await page.locator('.bounty--locked').count(), 16);
+        assert.equal(await page.locator('.bounties__filter-note').count(), 0);
+        assert.equal(await page.locator('[data-action="filterBounties"][aria-pressed="true"]').count(), 1);
+        assert.deepEqual(await state(), active);
+        assert.equal(await quick(), rawFilter);
+
         await click('closeBounties'); await journal(0, 'accepted'); await click('rest'); await click('explore');
         await exit('ridge_road');
         for (let n = 1; n <= 5; n++) {
@@ -262,7 +295,7 @@ try {
           await click('closeBounties'); await click('explore');
         }
         assert.deepEqual(errors, []);
-        console.log(`PASS ${id}: Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained, 130% fit; errors []`);
+        console.log(`PASS ${id}: earned regional filters/active-outside count/reset; Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained, 130% fit; errors []`);
       } catch (error) {
         await page.screenshot({ path: path.join(artifacts, `${id}-failure.png`), fullPage: true }).catch(() => {});
         console.error(`FAIL ${id}; browser errors: ${JSON.stringify(errors)}`);
