@@ -139,7 +139,7 @@ export const ENEMIES = {
   old_tusk: {
     windup: { name: 'Tusk Charge', chance: 0.15, mult: 1.7 },
     id: 'old_tusk', name: 'Old Tusk', hp: 130, atk: 15, def: 6, spd: 5, xp: 85, gold: 55,
-    element: 'water',
+    element: 'earth',
     boss: true,
     drill: false,
     intro: 'The gorse parts like a curtain. Old Tusk, scarred grey king of the briar boars, paws the switchback and lowers a pair of storm-split tusks!',
@@ -287,7 +287,6 @@ export const ENEMIES = {
   dust_marauder: {
     id: 'dust_marauder', name: 'Dust Marauder', hp: 64, atk: 18, def: 5, spd: 7, xp: 30, gold: 18,
     element: 'earth',
-    tags: ['construct'],
     ability: { name: 'Sandblind Slash', chance: 0.3, mult: 1.25, status: 'bleeding', turns: 3 },
     loot: [
       { id: 'bandage', chance: 0.5, minQty: 1, maxQty: 1 },

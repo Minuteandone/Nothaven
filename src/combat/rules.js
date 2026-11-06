@@ -334,8 +334,8 @@ function applyElement(c, action, baseDmg) {
   if (!atkEl && !defEl) return { dmg: baseDmg, note: '' };
   const mult = elementMultiplier(atkEl, defEl);
   const effective = elementEffectivenessText(atkEl, defEl);
-  if (effective === 'strong') return { dmg: Math.floor(baseDmg * mult), note: ' It\'s super effective!' };
-  if (effective === 'weak') return { dmg: Math.floor(baseDmg * mult), note: ' It\'s not very effective…' };
+  if (effective === 'strong') return { dmg: Math.max(1, Math.floor(baseDmg * mult)), note: ' It\'s super effective!' };
+  if (effective === 'weak') return { dmg: Math.max(1, Math.floor(baseDmg * mult)), note: ' It\'s not very effective…' };
   return { dmg: baseDmg, note: '' };
 }
 
@@ -534,7 +534,9 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
     }
     if (e.tags?.includes('construct') && (m.mp || 0) >= SKILLS.spark.mp) {
       m.mp -= SKILLS.spark.mp;
-      const d = Math.floor((SKILLS.spark.power + (m.level || 1) * 2 + randInt(rng, 0, 2)) * 1.5);
+      const sparkBase = SKILLS.spark.power + (m.level || 1) * 2 + randInt(rng, 0, 2);
+      const sparkMult = elementMultiplier('lightning', e.element);
+      const d = Math.max(1, Math.floor(sparkBase * sparkMult * 1.5));
       e.hp = Math.max(0, e.hp - d);
       lines.push(`${m.name} casts Spark for ${d}!`);
       return lines;
@@ -553,7 +555,8 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
   if (m.role === 'signaler' && !shocked && companionTactic(m) !== 'conserve' && (m.mp || 0) >= 3) {
     m.mp -= 3;
     const base = 5 + (m.level || 1) * 2 + randInt(rng, 0, 2);
-    const d = master ? Math.floor(base * 1.5) : base;
+    const flareMult = elementMultiplier("fire", e.element);
+    const d = Math.max(1, Math.floor((master ? base * 1.5 : base) * flareMult));
     e.hp = Math.max(0, e.hp - d);
     lines.push(`${m.name} hurls a ${master ? COMPANION_MASTERY.signaler.name : 'Signal Flare'} for ${d}!`);
     return lines;
