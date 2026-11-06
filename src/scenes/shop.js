@@ -86,6 +86,7 @@ export const shopScene = {
     const buyRows = shopCatalog(shop)
       .map((it) => {
         const stats = isKnownItem(it.id) ? getItem(it.id).stats : null;
+        const afford = it.price > 0 ? Math.min(SHOP_BUY_QTY_MAX, Math.floor(gold / it.price)) : 0;
         let cmpLine = '';
         let wearingIt = false;
         if (isKnownItem(it.id) && canEquip(it.id)) {
@@ -112,6 +113,7 @@ export const shopScene = {
           <td>
             <button data-action="buy" data-arg="${esc(it.id)}"${buyQty > 1 ? ` aria-label="Buy ${buyQty} ${esc(it.name)}"` : ''} ${gold < it.price ? 'disabled' : ''}>${buyQty > 1 ? `Buy ×${buyQty}` : 'Buy'}</button>
             <button data-action="buy5" data-arg="${esc(it.id)}" aria-label="Buy 5 ${esc(it.name)}" ${gold < it.price ? 'disabled' : ''}>Buy 5</button>
+            <button data-action="buyMax" data-arg="${esc(it.id)}" aria-label="Buy max ${esc(it.name)}" ${afford < 1 ? 'disabled' : ''}>${afford >= 1 ? `Buy max (${afford})` : 'Buy max'}</button>
             ${wearingIt || (isKnownItem(it.id) && canEquip(it.id)) ? `<div style="margin-top:0.25rem;">
               <button data-action="buyEquip" data-arg="${esc(it.id)}" aria-label="Buy and equip ${esc(it.name)}" ${gold < it.price || wearingIt ? 'disabled' : ''}>Buy &amp; equip</button>
             </div>` : ''}
@@ -342,6 +344,17 @@ export const shopScene = {
       if (!id) return;
       const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
       const res = buyUpTo(game.state, shop, id, 5);
+      game.shopMessage = res.message;
+      if (res.ok) {
+        game.state.gold = res.state.gold;
+        game.state.inventory = res.state.inventory;
+      }
+    },
+    buyMax(game, el) {
+      const id = el?.dataset?.arg;
+      if (!id) return;
+      const shop = getShop(game.shopId) || GREYHAVEN_SHOP;
+      const res = buyUpTo(game.state, shop, id, SHOP_BUY_QTY_MAX);
       game.shopMessage = res.message;
       if (res.ok) {
         game.state.gold = res.state.gold;
