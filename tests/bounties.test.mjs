@@ -289,13 +289,13 @@ test('region filter narrows posted notices and keeps the active contract in view
   bountiesScene.actions.filterBounties(game, { dataset: { arg: 'Saltmere Coast' } });
   assert.equal(game.bountyRegion, 'Saltmere Coast');
   html = bountiesScene.render(game);
-  assert.match(html, /Showing 1 contract for Saltmere Coast\./);
+  assert.match(html, /1 contract roams Saltmere Coast\.<\/p>/);
   assert.match(html, /Pier Clearance/);
   assert.doesNotMatch(html, /Ridge Road Rat Cull|bounty--locked/);
   acceptBounty(s, 'wolf_trail');
   html = bountiesScene.render(game);
   assert.match(html, /Wolves on the Pass/);
-  assert.match(html, /Showing 2 contracts for Saltmere Coast\./);
+  assert.match(html, /1 contract roams Saltmere Coast\. Your active contract, Wolves on the Pass, stays listed too\./);
   bountiesScene.actions.filterBounties(game, { dataset: { arg: '<img>' } });
   assert.equal(game.bountyRegion, '');
   bountiesScene.actions.filterBounties(game, { dataset: { arg: 'Highwatch Pass' } });

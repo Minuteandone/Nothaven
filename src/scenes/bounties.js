@@ -52,7 +52,9 @@ export const bountiesScene = {
     const options = bountyRegionOptions(rows);
     const region = options.includes(game.bountyRegion) ? game.bountyRegion : '';
     const shown = filterBountyRows(rows, region);
-    const filterNote = region ? `<p class="bounties__filter-note" role="status">Showing ${shown.length} ${shown.length === 1 ? 'contract' : 'contracts'} for ${escapeHTML(region)}.</p>` : '';
+    const matching = shown.filter((r) => r.unlocked && r.roams.includes(region)).length;
+    const elsewhere = shown.find((r) => r.active && !r.roams.includes(region));
+    const filterNote = region ? `<p class="bounties__filter-note" role="status">${matching} ${matching === 1 ? 'contract roams' : 'contracts roam'} ${escapeHTML(region)}.${elsewhere ? ` Your active contract, ${escapeHTML(elsewhere.title)}, stays listed too.` : ''}</p>` : '';
     const total = totalBountiesClaimed(game.state);
     const msg = game.bountyMessage ? `<p class="bounties__message" role="status">${escapeHTML(game.bountyMessage)}</p>` : '';
     return `<main class="game-shell bounties">
