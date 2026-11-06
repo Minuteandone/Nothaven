@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFrontierAtlas, getRouteBriefing, getTileInfo, getZoneChecklist, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFrontierAtlas, getRouteBriefing, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -169,12 +169,17 @@ function terrainCompass(zone, mapState, characterShortcuts, state = null) {
       <span class="terrain-compass__terrain"><strong>${escapeHTML(terrain.name)}</strong><small>${escapeHTML(`${tx}, ${ty}`)} · ${terrain.passable ? 'Passable' : 'Blocked'}</small></span>
     </li>`;
   }).join('');
-  const compassHint = getZoneCompassHint(state ? { ...state, map: mapState } : { map: mapState }, zone);
+  const effectiveState = state ? { ...state, map: mapState } : { map: mapState };
+  const compassHint = getZoneCompassHint(effectiveState, zone);
   const bearingLine = compassHint
     ? `<p class="terrain-compass__bearing">Compass bearing: <strong>${escapeHTML(compassHint.label)}</strong> (${escapeHTML(compassHint.bearing)}, ${compassHint.distance} ${compassHint.distance === 1 ? 'tile' : 'tiles'})</p>`
     : '';
+  const inspection = getTileInspection(effectiveState, x, y, zone);
+  const adjacentLine = inspection?.adjacentLandmarks?.length
+    ? `<p class="terrain-compass__adjacent">Adjacent landmarks: ${inspection.adjacentLandmarks.map(a => `<strong>${escapeHTML(a.dir)}:</strong> ${escapeHTML(a.label)}`).join(' · ')}</p>`
+    : '';
   return `<section class="terrain-compass" aria-labelledby="terrain-compass-title">
-    <div class="terrain-compass__heading"><h3 id="terrain-compass-title">Terrain compass</h3><p>Standing on <strong>${escapeHTML(current.name)}</strong> at ${escapeHTML(`${x}, ${y}`)}.</p>${bearingLine}</div>
+    <div class="terrain-compass__heading"><h3 id="terrain-compass-title">Terrain compass</h3><p>Standing on <strong>${escapeHTML(current.name)}</strong> at ${escapeHTML(`${x}, ${y}`)}.</p>${bearingLine}${adjacentLine}</div>
     <ul aria-label="Adjacent terrain and passability">${items}</ul>
   </section>`;
 }

@@ -12,6 +12,7 @@ import {
   getFrontierAtlas,
   getRouteBriefing,
   formatExpeditionLog,
+  getTileInspection,
   getZoneChecklist,
   getCompassBearing,
   getZoneCompassHint,
@@ -1232,4 +1233,44 @@ test('getZoneChecklist and fast-travel tooltips report live zone landmarks, stat
   assert.match(html, /data-poi-kind="encounter" data-poi-id="ridge_patrol" data-poi-status="Cleared"/);
   assert.match(html, /data-poi-kind="interactable" data-poi-id="ridge_supply_cache" data-poi-status="Completed"/);
   assert.match(html, /data-action="mapTravel" data-arg="greyhaven" title="Greyhaven · Lantern Shelter · Safe haven"/);
+});
+
+
+test('getTileInspection and terrain compass report spoiler-safe current tile and adjacent landmarks without mutating state', () => {
+  const game = makeMockGame();
+  const state = game.state;
+  ensureMapState(state);
+
+  // In Greyhaven, Warden Mara is at (3, 2); standing at (3, 3) puts Mara to the North
+  state.map.x = 3;
+  state.map.y = 3;
+  const beforeSnapshot = JSON.stringify(state);
+  const info = getTileInspection(state);
+  assert.equal(JSON.stringify(state), beforeSnapshot, 'getTileInspection must not mutate gameState');
+  assert.equal(info.zoneId, 'greyhaven');
+  assert.equal(info.x, 3);
+  assert.equal(info.y, 3);
+  assert.equal(info.passable, true);
+  assert.ok(info.adjacentLandmarks.some((a) => a.dir === 'North' && a.kind === 'npc' && /Warden Mara/i.test(a.label)));
+
+  const html = exploreScene.render(game);
+  assert.match(html, /class="terrain-compass__adjacent">Adjacent landmarks: <strong>North:<\/strong> Warden Mara \(Town Warden\)/);
+
+  // In Ridge Road on a fresh save, inspecting adjacent to locked Old Tusk (6, 2) from (6, 3) masks it as Sealed challenge
+  travelToZone(state, 'ridge_road', 'from_greyhaven');
+  state.map.x = 6;
+  state.map.y = 3;
+  const ridgeInfo = getTileInspection(state);
+  const northLandmark = ridgeInfo.adjacentLandmarks.find((a) => a.dir === 'North');
+  const southLandmark = ridgeInfo.adjacentLandmarks.find((a) => a.dir === 'South');
+  assert.equal(northLandmark?.id, 'sealed_challenge');
+  assert.equal(northLandmark?.label, 'Sealed challenge');
+  assert.equal(southLandmark?.id, 'sealed_challenge');
+  assert.equal(southLandmark?.label, 'Sealed challenge');
+  assert.doesNotMatch(ridgeInfo.summary, /Old Tusk|Thunderhoof/i);
+
+  const ridgeHtml = exploreScene.render(game);
+  const compassSection = ridgeHtml.match(/<section class="terrain-compass"[\s\S]*?<\/section>/)?.[0] || '';
+  assert.match(compassSection, /class="terrain-compass__adjacent">Adjacent landmarks:[\s\S]*?Sealed challenge/);
+  assert.doesNotMatch(compassSection, /Old Tusk|Thunderhoof/i);
 });
