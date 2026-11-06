@@ -1510,3 +1510,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 }
 .incoming-damage-label { font-weight: 600; }
 
+
+.drills__summary { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; margin: .4rem 0 .6rem; }
