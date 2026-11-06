@@ -189,7 +189,7 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
     try { return getItem(stack.id).type === TYPES.CONSUMABLE; } catch { return false; }
   }).length;
   const attackPreview = damagePreview(null, hero, combat.enemy);
-  const attackBadge = attackPreview ? `<span class="damage-preview-badge">${attackPreview.min}–${attackPreview.max}</span>` : '';
+  const attackBadge = attackPreview ? `<span class="damage-preview-badge">${escapeHTML(String(attackPreview.min))}–${escapeHTML(String(attackPreview.max))}</span>` : '';
   return `${chargeMeter(combat)}<div class="actions command-grid" role="group" aria-label="Combat actions">
     ${commandButton({ action: 'burst', label: chargeReady(combat) ? 'Beacon Burst — ready!' : 'Beacon Burst', iconName: 'beacon', variant: chargeReady(combat) ? 'primary' : 'secondary', disabled: !chargeReady(combat), className: 'command-button command-button--burst', shortcut: 'B' })}
     ${commandButton({ action: 'attack', label: 'Attack', iconName: 'sword', variant: 'primary', className: 'command-button', shortcut: 'A', badge: attackBadge })}
