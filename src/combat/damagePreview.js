@@ -48,15 +48,27 @@ function applyElementRange(min, max, atkEl, defEl) {
   return { min, max, effective: '' };
 }
 
+
+/** Halve min/max (floor, min 1) when a ward is active. */
+function applyWard(min, max, warded) {
+  if (!warded) return { min, max };
+  return {
+    min: Math.max(1, Math.floor(min / 2)),
+    max: Math.max(1, Math.floor(max / 2)),
+  };
+}
+
 /**
  * Main entry point.
  *
  * @param {object|null|undefined} skill  — null for basic attack, or a SKILLS entry
  * @param {object} hero   — party hero object (must have .level)
  * @param {object} enemy  — enemy object (must have .def, .element, .tags)
+ * @param {object} [opts]
+ * @param {boolean} [opts.warded=false] — halve damage while a ward or defend is active
  * @returns {{min:number, max:number, kind:string, effective:string, element:string|null}|null}
  */
-export function damagePreview(skill, hero, enemy) {
+export function damagePreview(skill, hero, enemy, { warded = false } = {}) {
   if (!hero || !enemy) return null;
   const hs = heroStats(hero);
   const atk = n(hs?.atk, 10);
@@ -70,7 +82,8 @@ export function damagePreview(skill, hero, enemy) {
     const physMin = Math.max(1, base - def - 1);
     const physMax = Math.max(1, base - def + 2);
     const el = applyElementRange(physMin, physMax, null, defEl);
-    return { min: el.min, max: el.max, kind: 'attack', effective: el.effective, element: null };
+    const w = applyWard(el.min, el.max, warded);
+    return { min: w.min, max: w.max, kind: 'attack', effective: el.effective, element: null };
   }
 
   const sk = typeof skill === 'string' ? null : skill; // skill objects only; string IDs not supported here
@@ -87,7 +100,8 @@ export function damagePreview(skill, hero, enemy) {
     const physMin = Math.max(1, base - def - 1);
     const physMax = Math.max(1, base - def + 2);
     const el = applyElementRange(physMin, physMax, atkEl, defEl);
-    return { min: el.min, max: el.max, kind: 'damage', effective: el.effective, element: atkEl };
+    const w = applyWard(el.min, el.max, warded);
+    return { min: w.min, max: w.max, kind: 'damage', effective: el.effective, element: atkEl };
   }
 
   if (sk.kind === 'magic') {
@@ -100,7 +114,8 @@ export function damagePreview(skill, hero, enemy) {
       magMax = Math.floor(magMax * 1.5);
     }
     const el = applyElementRange(magMin, magMax, atkEl, defEl);
-    return { min: el.min, max: el.max, kind: 'magic', effective: el.effective, element: atkEl };
+    const w = applyWard(el.min, el.max, warded);
+    return { min: w.min, max: w.max, kind: 'magic', effective: el.effective, element: atkEl };
   }
 
   if (sk.kind === 'pierce' || sk.kind === 'break') {
@@ -108,7 +123,8 @@ export function damagePreview(skill, hero, enemy) {
     const pierceMin = Math.max(1, base - 1);
     const pierceMax = Math.max(1, base + 2);
     const el = applyElementRange(pierceMin, pierceMax, atkEl, defEl);
-    return { min: el.min, max: el.max, kind: sk.kind, effective: el.effective, element: atkEl };
+    const w = applyWard(el.min, el.max, warded);
+    return { min: w.min, max: w.max, kind: sk.kind, effective: el.effective, element: atkEl };
   }
 
   return null;
