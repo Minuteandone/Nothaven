@@ -1,3 +1,4 @@
+import { xpForLevel, MAX_LEVEL } from "../core/progression.js";
 const ICONS = {
   beacon: '<path d="M9 21h6M10 21l1-10h2l1 10M8 11h8l-4-6-4 6Z"/><path d="M4 8 1 6M20 8l3-2M4 13H1M20 13h3"/>',
   heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',
@@ -49,7 +50,7 @@ export function partyStatus(party) {
       <div class="party-member__heading"><span class="party-member__name">${name}</span><span class="level-badge">Level ${level}</span></div>
       ${meter({ label: 'HP', value: member?.hp, max: member?.maxHp, tone: 'hp' })}
       ${meter({ label: 'MP', value: member?.mp, max: member?.maxMp, tone: 'mp' })}
-      <div class="xp-line"><span>Experience</span><strong>${Math.max(0, finiteNumber(member?.xp))} XP</strong></div>
+      <div class="xp-line"><span>Experience</span><strong>${(() => { const xp = Math.max(0, finiteNumber(member?.xp)); if (level >= MAX_LEVEL) return `${xp} XP (Max level)`; const floor = xpForLevel(level); const ceiling = xpForLevel(level + 1); const earned = Math.max(0, xp - floor); const needed = ceiling - floor; return `${earned} / ${needed} XP`; })()}</strong>${level >= MAX_LEVEL ? "" : ` · to Level ${level + 1}`}</div>
     </article>`;
   }).join('')}</section>`;
 }
