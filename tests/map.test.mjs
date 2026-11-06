@@ -1225,7 +1225,9 @@ test('getZoneChecklist and fast-travel tooltips report live zone landmarks, stat
   const html = exploreScene.render(game);
   assert.match(html, /class="shortcut-guide zone-checklist"/);
   assert.match(html, /Zone field checklist \(\d+ landmarks\)/);
-  assert.doesNotMatch(html, /Thunderhoof|Old Tusk/i);
+  const checklistHtml = html.match(/<details class="shortcut-guide zone-checklist">[\s\S]*?<\/details>/)?.[0] || '';
+  assert.ok(checklistHtml.length > 0);
+  assert.doesNotMatch(checklistHtml, /Thunderhoof|Old Tusk/i);
   assert.match(html, /data-poi-kind="encounter" data-poi-id="sealed_challenge" data-poi-status="Locked"><strong>Sealed challenge<\/strong>/);
   assert.match(html, /data-poi-kind="encounter" data-poi-id="ridge_patrol" data-poi-status="Cleared"/);
   assert.match(html, /data-poi-kind="interactable" data-poi-id="ridge_supply_cache" data-poi-status="Completed"/);
