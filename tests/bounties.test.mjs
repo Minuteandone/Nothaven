@@ -13,7 +13,7 @@ const fresh = () => { const s = createInitialState(); s.bestiary = {}; return s;
 const roaming = new Set(Object.values(ZONES).flatMap((z) => (z.randomEncounters || []).map((e) => e.enemyId || e.id || e)));
 
 test('every bounty targets a real, non-boss roaming foe and pays known items', () => {
-  assert.equal(BOUNTIES.length, 9);
+  assert.equal(BOUNTIES.length, 14);
   assert.equal(new Set(BOUNTIES.map((b) => b.id)).size, BOUNTIES.length);
   for (const b of BOUNTIES) {
     assert.ok(ENEMIES[b.enemyId], b.id);
@@ -243,4 +243,15 @@ test('claiming pays the rank bonus, announces promotions, and the board shows th
   assert.match(html, /<p class="bounties__rank">Board rank: Contract Hand \(\+10% gold\)\. 4 more claims to Board Regular \(\+20% gold\)\.<\/p>/);
   assert.match(html, /Reward: 33 gold/);
   assertEggFree(html, 'bounty board with rank');
+});
+
+test('each contract hunts a different foe, and the newer contracts cover five more roamers', () => {
+  assert.equal(new Set(BOUNTIES.map((b) => b.enemyId)).size, BOUNTIES.length);
+  const byId = Object.fromEntries(BOUNTIES.map((b) => [b.id, b.enemyId]));
+  assert.equal(byId.hedgerow_boars, 'briar_boar');
+  assert.equal(byId.drowned_watch, 'squall_revenant');
+  assert.equal(byId.cold_cairns, 'rime_wight');
+  assert.equal(byId.ash_survey, 'ashen_raider');
+  assert.equal(byId.colossus_thunder, 'thunderhead_colossus');
+  assert.equal(BOUNTIES.at(-1).id, 'colossus_thunder');
 });
