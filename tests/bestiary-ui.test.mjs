@@ -43,7 +43,7 @@ test('known records show original art, effective reference stats, tactics, spoil
   assert.match(html, /<strong>5<\/strong> victories/);
   assert.match(html, /Defeated: 3<\/strong> confirmed victories/);
   assert.match(html, /<h4>Gnaw<\/h4>/);
-  assert.match(html, /Inflicts <strong>bleeding<\/strong>\. 20% use chance\./);
+  assert.match(html, /20% chance · Inflicts bleeding/);
   assert.match(html, new RegExp(`<dt>HP</dt><dd>${rat.hp}</dd>`));
   assert.match(html, new RegExp(`<dt>ATK</dt><dd>${rat.atk}</dd>`));
   for (const drop of rat.loot) assert.ok(html.includes(getItem(drop.id).name));

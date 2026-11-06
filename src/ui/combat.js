@@ -30,7 +30,7 @@ export function abilityDetail(ability) {
   const chance = Number(ability.chance);
   if (Number.isFinite(chance) && chance > 0) parts.push(`${Math.round(chance * 100)}% chance`);
   const mult = Number(ability.mult);
-  if (Number.isFinite(mult) && mult > 1) parts.push(`${mult}× damage`);
+  if (Number.isFinite(mult) && mult > 1) parts.push(`${mult}× ATK`);
   if (typeof ability.status === 'string' && ability.status) {
     let text = `Inflicts ${ability.status}`;
     const turns = Number(ability.turns);
