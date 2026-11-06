@@ -21,6 +21,11 @@ function elementChip(element, suffix = '') {
   return `<span class="element-chip ${elementClass(element)}">${escapeHTML(elementLabel(element))}${suffix ? ` <em>${escapeHTML(suffix)}</em>` : ''}</span>`;
 }
 
+/** Renders a log line, replacing ::elem:X:: markers with element chips. */
+function renderLogLine(line) {
+  return escapeHTML(line).replace(/::elem:(fire|ice|lightning|water|earth)::/g, (_m, el) => `${elementChip(el)} `);
+}
+
 /** Readable names and short hints for combat statuses, shown on unit cards. */
 export const STATUS_INFO = {
   bleeding: { label: 'Bleeding', hint: 'Loses 2 HP each turn. Rallying Light, Steady Signal or Stormhaven Vigil stops it.' },
@@ -206,9 +211,9 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main', ite
       <section class="panel combat-log-panel" aria-labelledby="combat-log-title">
         <div class="combat-side__heading"><h2 id="combat-log-title">Battle log</h2><span>Latest 8 events</span></div>
         <div class="log combat-log" role="log" aria-live="polite" aria-relevant="additions text">
-          ${logLines.length ? logLines.map(line => `<p>${escapeHTML(line)}</p>`).join('') : '<p>The opponent watches your next move.</p>'}
+          ${logLines.length ? logLines.map(line => `<p>${renderLogLine(line)}</p>`).join('') : '<p>The opponent watches your next move.</p>'}
         </div>
-        ${chronicleLines.length ? `<details class="battle-chronicle"><summary><span>Full battle chronicle</span><span>${chronicleLines.length} retained ${chronicleLines.length === 1 ? 'event' : 'events'}</span></summary><p>The live log above stays concise. Review every retained event here, from oldest to newest.</p><ol class="battle-chronicle__list" aria-label="Full retained battle events">${chronicleLines.map(line => `<li>${escapeHTML(line)}</li>`).join('')}</ol></details>` : ''}
+        ${chronicleLines.length ? `<details class="battle-chronicle"><summary><span>Full battle chronicle</span><span>${chronicleLines.length} retained ${chronicleLines.length === 1 ? 'event' : 'events'}</span></summary><p>The live log above stays concise. Review every retained event here, from oldest to newest.</p><ol class="battle-chronicle__list" aria-label="Full retained battle events">${chronicleLines.map(line => `<li>${renderLogLine(line)}</li>`).join('')}</ol></details>` : ''}
       </section>
     </div>
   </div>`;
