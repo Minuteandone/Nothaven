@@ -94,16 +94,8 @@ describe('damagePreview — magic skill', () => {
 
   it('magic skill strong element (Signal Flare fire vs water)', () => {
     // Signal Flare: power=20 + 5*2=10 → 30, min=30, max=32
-    // fire vs water: fire beats water? No—check pentagram. FIRE > ICE > LIGHTNING > WATER > FIRE
-    // So water beats fire → weak! Let me re-check.
-    // STRONG_AGAINST: FIRE beats ICE, ICE beats LIGHTNING, LIGHTNING beats WATER, WATER beats FIRE
-    // So water beats fire. Signal Flare (fire) vs water enemy → weak.
-    // Actually let me verify with the actual pentagram loop.
-    // FIRE > ICE > LIGHTNING > WATER > FIRE
-    // So fire beats ice, not water. Water beats fire. So fire vs water → weak.
-    // Hmm but I wanted a strong test. Let me use fire vs ice instead.
-    // Let me just adjust: use the right matchup.
-    // Actually, let me use fire vs ice to get strong.
+    // fire vs water: water beats fire (WATER > FIRE in the element cycle), so fire is weak vs water.
+    // Use fire vs ice instead: fire beats ice (FIRE > ICE) → strong.
     const iceEnemy = { name: 'Glacier Wisp', hp: 35, maxHp: 35, atk: 10, def: 4, spd: 7, element: 'ice' };
     const r = damagePreview(skillMagicFire, heroBase, iceEnemy);
     assert.ok(r);
@@ -136,7 +128,7 @@ describe('damagePreview — pierce/break', () => {
 
   it('Stillpoint Strike (break, mult=2, ice)', () => {
     // base = floor(14*2)=28, min=28-1=27, max=28+2=30
-    // ice vs fire → no pentagram relation? FIRE>ICE>LIGHTNING>WATER>FIRE
+    // ice vs fire: fire beats ice (FIRE > ICE), so ice is weak vs fire
     // ICE beats LIGHTNING, FIRE beats ICE
     // ice vs fire: fire beats ice → weak for ice (attacker is ice, defender is fire)
     const r = damagePreview(skillBreak, heroBase, enemyFire);
