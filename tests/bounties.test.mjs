@@ -101,7 +101,7 @@ test('the victory hook advances progress and logs to combat', () => {
 });
 
 test('the scene lists locked and open contracts and drives accept/claim', () => {
-  const s = fresh(); s.bestiary = { storm_rat: 1 }; s.gold = 0; s.inventory = [];
+  const s = fresh(); s.bestiary = { storm_rat: 1 }; s.gold = 0; s.inventory = []; s.scene = 'bounties'; s.combat = null;
   const game = { state: s, setScene(id) { this.went = id; } };
   bountiesScene.onEnter(game);
   let html = bountiesScene.render(game);
@@ -122,10 +122,46 @@ test('the scene lists locked and open contracts and drives accept/claim', () => 
 });
 
 test('town shows the bounty board button when the scene is installed', () => {
-  const s = createInitialState();
+  const s = createInitialState(); s.scene = 'town'; s.combat = null;
   const game = { state: s, scenes: { bounties: bountiesScene }, setScene(id) { this.went = id; } };
   assert.match(townScene.render(game), /data-action="bounties"/);
   townScene.actions.bounties(game);
   assert.equal(game.went, 'bounties');
   assert.doesNotMatch(townScene.render({ state: s, scenes: {} }), /data-action="bounties"/);
+});
+
+test('stale bounty handlers leave the whole state untouched outside the board', () => {
+  for (const [scene, combat] of [['combat', { enemyId: 'storm_rat', log: [] }], ['explore', null], ['bounties', { log: [] }]]) {
+    const s = fresh(); s.bestiary = { storm_rat: 1 }; s.gold = 5; s.scene = scene; s.combat = combat;
+    s.bounties = { active: 'ridge_rats', progress: 4, completed: {} };
+    const before = JSON.stringify(s);
+    const game = { state: s, setScene(id) { this.went = id; } };
+    bountiesScene.actions.acceptBounty(game, { dataset: { arg: 'ridge_rats' } });
+    bountiesScene.actions.abandonBounty(game);
+    bountiesScene.actions.claimBounty(game);
+    bountiesScene.actions.closeBounties(game);
+    assert.equal(JSON.stringify(s), before, `${scene} state unchanged`);
+    assert.equal(game.went, undefined);
+    assert.equal(game.bountyMessage, undefined);
+  }
+  for (const [scene, combat] of [['combat', { log: [] }], ['explore', null], ['town', { log: [] }]]) {
+    const s = createInitialState(); s.scene = scene; s.combat = combat;
+    const before = JSON.stringify(s);
+    const game = { state: s, scenes: { bounties: bountiesScene }, setScene(id) { this.went = id; } };
+    townScene.actions.bounties(game);
+    assert.equal(game.went, undefined, `${scene} town entry blocked`);
+    assert.equal(JSON.stringify(s), before);
+  }
+});
+
+test('a claim whose item grant fails changes nothing', () => {
+  const s = fresh(); s.bestiary = { storm_rat: 1 }; s.gold = 7; s.inventory = [{ id: 'scrap_metal', qty: 1 }];
+  s.bounties = { active: 'ridge_rats', progress: 4, completed: {} };
+  const before = JSON.stringify(s);
+  const broken = (id) => ({ ...BOUNTIES.find((b) => b.id === id), items: [{ id: 'scrap_metal', qty: 1 }, { id: 'no_such_item', qty: 1 }] });
+  const r = claimBounty(s, broken);
+  assert.equal(r.ok, false);
+  assert.equal(JSON.stringify(s), before);
+  assert.equal(claimBounty(s).ok, true);
+  assert.equal(s.gold, 37);
 });
