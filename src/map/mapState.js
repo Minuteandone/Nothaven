@@ -549,6 +549,107 @@ export function getPatrolBriefing(gameState, zoneOrId = null) {
   };
 }
 
+export function getInteractableBriefing(gameState, interactableOrId, zoneOrId = null) {
+  const mapLike = gameState && typeof gameState === 'object'
+    ? (gameState.map && typeof gameState.map === 'object' ? gameState.map : gameState)
+    : {};
+  const resolvedZone = typeof zoneOrId === 'string'
+    ? getZone(zoneOrId)
+    : (zoneOrId && typeof zoneOrId === 'object'
+      ? zoneOrId
+      : getZone(mapLike.zoneId || mapLike.currentZoneId || gameState?.location || 'greyhaven'));
+  if (!resolvedZone) return null;
+
+  const inter = interactableOrId && typeof interactableOrId === 'object' && typeof interactableOrId.name === 'string'
+    ? interactableOrId
+    : (typeof interactableOrId === 'string' && interactableOrId
+      ? (Array.isArray(resolvedZone.interactables) ? resolvedZone.interactables : []).find(
+          (i) => (i.interactionId || i.id) === interactableOrId,
+        )
+      : null);
+  if (!inter) return null;
+
+  const completedInteractions = mapLike.completedInteractions && typeof mapLike.completedInteractions === 'object'
+    ? mapLike.completedInteractions
+    : {};
+  const clearedEncounters = mapLike.clearedEncounters && typeof mapLike.clearedEncounters === 'object'
+    ? mapLike.clearedEncounters
+    : {};
+
+  const id = inter.interactionId || inter.id;
+  const name = inter.name;
+  const kind = inter.kind || 'object';
+  const once = Boolean(inter.once);
+  const completed = Boolean(Object.prototype.hasOwnProperty.call(completedInteractions, id) && completedInteractions[id]);
+  const requiresEncounterCleared = typeof inter.requiresEncounterCleared === 'string' && inter.requiresEncounterCleared
+    ? inter.requiresEncounterCleared
+    : null;
+  const guardianCleared = !requiresEncounterCleared
+    || Boolean(Object.prototype.hasOwnProperty.call(clearedEncounters, requiresEncounterCleared) && clearedEncounters[requiresEncounterCleared]);
+  const guardianEnc = requiresEncounterCleared
+    ? (Array.isArray(resolvedZone.encounters) ? resolvedZone.encounters : []).find(
+        (e) => (e.encounterId || e.id) === requiresEncounterCleared,
+      )
+    : null;
+  const guardianName = requiresEncounterCleared ? (guardianEnc?.name || 'guardian') : null;
+  const status = once && completed
+    ? 'Completed'
+    : !guardianCleared
+      ? 'Guarded'
+      : once
+        ? 'Available'
+        : 'Service';
+  const costGold = kind === 'inn' ? getInnCost(gameState, inter) : null;
+  const canAfford = kind === 'inn' ? (Number(gameState?.gold) || 0) >= costGold : true;
+  const rewardCount = kind === 'cache' && Array.isArray(inter.rewards)
+    ? inter.rewards.reduce(
+        (sum, r) => sum + (Number.isFinite(Number(r?.qty)) && Number(r.qty) > 0 ? Math.floor(Number(r.qty)) : 1),
+        0,
+      )
+    : 0;
+
+  let summary;
+  if (once && completed) {
+    summary = `${name} · Completed`;
+  } else if (!guardianCleared) {
+    summary = `${name} · Guarded by ${guardianName}`;
+  } else if (kind === 'inn') {
+    summary = `${name} · Rest for ${costGold}g (full HP & MP${canAfford ? '' : ', insufficient gold'})`;
+  } else if (kind === 'shop') {
+    summary = `${name} · Quartermaster & provisions`;
+  } else if (kind === 'muster') {
+    summary = `${name} · Party roster & companion tactics`;
+  } else if (kind === 'cache') {
+    summary = `${name} · Unopened cache (${rewardCount} ${rewardCount === 1 ? 'supply item' : 'supply items'})`;
+  } else if (kind === 'dispatch') {
+    summary = `${name} · Courier dispatch (unclaimed)`;
+  } else if (kind === 'relic') {
+    summary = `${name} · Expedition relic (ready to recover)`;
+  } else if (kind === 'beacon' || kind === 'quest') {
+    summary = `${name} · Expedition station`;
+  } else {
+    summary = `${name} · Field landmark`;
+  }
+
+  return {
+    id,
+    name,
+    kind,
+    x: inter.x,
+    y: inter.y,
+    once,
+    completed,
+    requiresEncounterCleared,
+    guardianCleared,
+    guardianName,
+    status,
+    costGold,
+    canAfford,
+    rewardCount,
+    summary,
+  };
+}
+
 export function getZoneChecklist(gameState, zoneOrId = null) {
   const resolvedZone =
     typeof zoneOrId === 'string'
@@ -589,9 +690,10 @@ export function getZoneChecklist(gameState, zoneOrId = null) {
 
   const interactables = (Array.isArray(resolvedZone.interactables) ? resolvedZone.interactables : []).map((inter) => {
     const id = inter.interactionId || inter.id;
-    const completed = Boolean(completedInteractions[id]);
+    const completed = Boolean(Object.prototype.hasOwnProperty.call(completedInteractions, id) && completedInteractions[id]);
     const once = Boolean(inter.once);
     const status = once ? (completed ? 'Completed' : 'Available') : 'Service';
+    const briefing = getInteractableBriefing(gameState, inter, resolvedZone);
     return {
       id,
       name: inter.name,
@@ -600,7 +702,10 @@ export function getZoneChecklist(gameState, zoneOrId = null) {
       x: inter.x,
       y: inter.y,
       completed,
+      guardianCleared: briefing ? briefing.guardianCleared : true,
+      guardianName: briefing ? briefing.guardianName : null,
       status,
+      summary: briefing?.summary || inter.name,
     };
   });
 
@@ -721,6 +826,7 @@ export function getAvailableActions(gameState) {
             ? `Open ${inter.name}`
             : `Inspect ${inter.name}`,
         entity: inter,
+        briefing: getInteractableBriefing(gameState, inter, zone),
       });
     }
   }
