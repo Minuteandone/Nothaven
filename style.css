@@ -148,7 +148,8 @@ p { color: var(--muted); }
 .meter { margin: .55rem 0; }
 .meter__labels { display: flex; justify-content: space-between; margin-bottom: .3rem; color: var(--muted); font-size: .69rem; font-weight: 650; letter-spacing: .05em; }
 .meter__labels span:last-child { color: var(--text); font-variant-numeric: tabular-nums; }
-.meter__track { overflow: hidden; height: 5px; border-radius: 3px; background: #080e17; }
+.meter__track { overflow: hidden; height: 5px; border-radius: 3px; background: #080e17; position: relative; }
+.meter__marker { position: absolute; top: 0; bottom: 0; width: 2px; background: #f87171; z-index: 2; pointer-events: none; box-shadow: 0 0 4px rgba(248, 113, 113, .7); }
 .meter__fill { display: block; height: 100%; border-radius: inherit; background: var(--good); transition: width .3s ease; }
 .meter--mp .meter__fill { background: var(--mana); }
 .meter--xp .meter__fill { background: var(--accent); }
