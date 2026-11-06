@@ -1,6 +1,6 @@
 // Greyhaven bounty board scene: accept, track, abandon and claim hunt contracts.
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
-import { abandonBounty, acceptBounty, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
+import { abandonBounty, acceptBounty, bountyRankText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
 
 function rowHTML(r, anyActive) {
   const status = !r.unlocked ? 'Defeat this foe once to open the contract.'
@@ -15,7 +15,7 @@ function rowHTML(r, anyActive) {
   return `<li class="bounty${r.active ? ' bounty--active' : ''}${r.unlocked ? '' : ' bounty--locked'}">
     <h2 class="bounty__title">${escapeHTML(title)}</h2>
     ${r.unlocked ? `<p class="bounty__brief">${escapeHTML(r.brief)}</p>
-    <p class="bounty__terms">Defeat ${r.count} × ${escapeHTML(r.foe)} · Reward: ${escapeHTML(bountyRewardText(r))}</p>` : ''}
+    <p class="bounty__terms">Defeat ${r.count} × ${escapeHTML(r.foe)} · Reward: ${escapeHTML(bountyRewardText(r, r.pay))}</p>` : ''}
     <p class="bounty__status">${escapeHTML(status)}</p>
     ${button}
   </li>`;
@@ -32,8 +32,9 @@ export const bountiesScene = {
       ${sceneHeader({ eyebrow: 'Greyhaven square', title: 'Bounty Board', subtitle: 'Repeatable hunts posted by the townsfolk.', iconName: 'journal' })}
       <section class="panel" aria-label="Posted contracts">
         ${msg}
-        <p class="bounties__intro">Take one contract at a time, then defeat its foe in the wilds — roaming ambushes and patrols both count, sparring drills do not. Claim the reward here; every contract can be taken again.</p>
+        <p class="bounties__intro">Take one contract at a time, then defeat its foe in the wilds — roaming ambushes and patrols both count, sparring drills do not. Claim the reward here; every contract can be taken again, and each claim counts toward a board rank that raises contract gold.</p>
         <p class="bounties__total">Contracts claimed: ${total}</p>
+        <p class="bounties__rank">${escapeHTML(bountyRankText(game.state))}</p>
         <ul class="bounties__list">${rows.map((r) => rowHTML(r, anyActive)).join('')}</ul>
       </section>
       <div class="title-actions">${uiButton({ action: 'closeBounties', label: 'Back to Greyhaven', iconName: 'compass', variant: 'primary' })}</div>

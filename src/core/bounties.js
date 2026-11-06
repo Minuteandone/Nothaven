@@ -26,13 +26,43 @@ export const BOUNTIES = Object.freeze([
     brief: 'Tempest shades linger in the Storm’s Heart and stir up squalls over the coast.' }),
 ]);
 
-export function bountyRewardText(b) {
-  const parts = [`${b.gold} gold`];
+export function bountyRewardText(b, gold = b.gold) {
+  const parts = [`${gold} gold`];
   for (const it of b.items) { let name = it.id; try { name = getItem(it.id).name; } catch { /* unknown id */ } parts.push(`${it.qty}× ${name}`); }
   return parts.join(', ');
 }
 
 export const getBounty = (id) => BOUNTIES.find((b) => b.id === id) || null;
+
+// Board ranks: claiming more contracts raises the gold every contract pays.
+export const BOUNTY_RANKS = Object.freeze([
+  Object.freeze({ id: 'runner', title: 'Notice Runner', min: 0, bonus: 0 }),
+  Object.freeze({ id: 'hand', title: 'Contract Hand', min: 3, bonus: 0.1 }),
+  Object.freeze({ id: 'regular', title: 'Board Regular', min: 8, bonus: 0.2 }),
+  Object.freeze({ id: 'tracker', title: 'Ridge Tracker', min: 15, bonus: 0.3 }),
+  Object.freeze({ id: 'warden', title: 'Warden of the Board', min: 25, bonus: 0.4 }),
+]);
+
+export function bountyRank(state) {
+  const total = totalBountiesClaimed(state);
+  let i = 0;
+  while (i + 1 < BOUNTY_RANKS.length && total >= BOUNTY_RANKS[i + 1].min) i += 1;
+  const next = BOUNTY_RANKS[i + 1] || null;
+  return { rank: BOUNTY_RANKS[i], next, total, toNext: next ? next.min - total : 0 };
+}
+
+export function bountyPay(state, b) {
+  return b.gold + Math.floor(b.gold * bountyRank(state).rank.bonus);
+}
+
+export function bountyRankText(state) {
+  const { rank, next, toNext } = bountyRank(state);
+  const pct = (r) => `+${Math.round(r.bonus * 100)}% gold`;
+  const here = `Board rank: ${rank.title} (${pct(rank)}).`;
+  return next
+    ? `${here} ${toNext} more ${toNext === 1 ? 'claim' : 'claims'} to ${next.title} (${pct(next)}).`
+    : `${here} The highest rank on the board.`;
+}
 const count = (n) => (Number.isSafeInteger(n) && n > 0 ? n : 0);
 
 /** Sanitised read-only view of state.bounties. */
@@ -89,6 +119,7 @@ export function bountyRows(state) {
   const v = bountyState(state);
   return BOUNTIES.map((b) => ({
     ...b,
+    pay: bountyPay(state, b),
     foe: ENEMIES[b.enemyId]?.name || b.enemyId,
     unlocked: bountyUnlocked(state, b.id),
     active: v.active === b.id,
@@ -134,9 +165,13 @@ export function claimBounty(state, lookup = getBounty) {
   const inv = Array.isArray(state.inventory) ? state.inventory : [];
   const granted = grantRewards(inv, b.items);
   if (!granted || !granted.ok) return { ok: false, message: 'The bounty clerk cannot pay out that contract right now.' };
+  const before = bountyRank(state).rank;
+  const gold = bountyPay(state, b);
   state.inventory = granted.inv;
-  state.gold = (Number.isFinite(state.gold) ? state.gold : 0) + b.gold;
+  state.gold = (Number.isFinite(state.gold) ? state.gold : 0) + gold;
   const completed = { ...v.completed, [b.id]: (v.completed[b.id] || 0) + 1 };
   writeState(state, { active: null, progress: 0, completed });
-  return { ok: true, message: `Claimed “${b.title}”: ${bountyRewardText(b)}.` };
+  const after = bountyRank(state).rank;
+  const promoted = after.id !== before.id ? ` Board rank raised to ${after.title}.` : '';
+  return { ok: true, message: `Claimed “${b.title}”: ${bountyRewardText(b, gold)}.${promoted}` };
 }
