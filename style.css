@@ -603,8 +603,9 @@ em.enraged {
 .command-hint { grid-column: 1 / -1; margin: .15rem 0 0; color: var(--muted); font-size: .74rem; line-height: 1.5; }
 .command-list { display: grid; gap: .55rem; }
 .command-card { display: grid; gap: .45rem; width: 100%; min-height: 64px; padding: .75rem .85rem; text-align: left; }
-.command-card__top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: 100%; }
+.command-card__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; width: 100%; }
 .command-card__top > span { display: inline-flex; align-items: center; gap: .5rem; }
+.command-card__top > span:first-child { flex: 1 1 9rem; }
 .command-card__top strong { flex: 0 0 auto; color: var(--accent-bright); font-size: .72rem; }
 .command-card__description { color: var(--muted); font-size: .71rem; font-weight: 400; line-height: 1.45; }
 .command-card:hover:not(:disabled) .command-card__description, .command-card:hover:not(:disabled) .command-card__top strong { color: #263648; }
@@ -1186,7 +1187,7 @@ html[data-motion="reduced"] em.enraged { animation: none; }
   white-space: nowrap;
 }
 .action-button:disabled .key-hint, .command-card:disabled .key-hint { opacity: .55; }
-.command-card__meta { display: inline-flex; align-items: center; justify-content: flex-end; gap: .5rem; flex: 0 0 auto; }
+.command-card__meta { margin-left: auto; display: inline-flex; align-items: center; justify-content: flex-end; gap: .5rem; flex: 0 0 auto; }
 .command-card__meta strong { color: var(--accent-bright); font-size: .72rem; }
 .shortcut-guide { margin-top: .85rem; border-top: 1px solid var(--line-soft); color: var(--muted); }
 .shortcut-guide summary { min-height: 44px; padding: .75rem .15rem .35rem; color: var(--accent); cursor: pointer; font-size: .76rem; font-weight: 750; }
