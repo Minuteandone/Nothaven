@@ -136,3 +136,34 @@ test('inn rest restores gear-boosted max HP and clears statuses', () => {
   assert.equal(hero.mp, hero.maxMp);
   assert.deepEqual(hero.statuses, []);
 });
+
+test('import preview escapes all field values against HTML injection', () => {
+  globalThis.localStorage = { getItem: () => null };
+  try {
+  const game = gameStub();
+  game.pendingImportPreview = {
+    heroName: 'Wren',
+    level: '<span data-import-markup="inert">not a level</span>',
+    location: '<img src=x onerror=alert(1)>',
+    scene: '<script>alert(1)</script>',
+    gold: '<b>42</b>',
+    partyCount: 2,
+    saveVersion: '<i>2</i>',
+  };
+  const html = titleScene.render(game);
+  // Raw markup must never survive into the preview block.
+  assert.doesNotMatch(html, /<span data-import-markup="inert">/);
+  assert.doesNotMatch(html, /<img src=x onerror/);
+  assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
+  assert.doesNotMatch(html, /<b>42<\/b>/);
+  assert.doesNotMatch(html, /<i>2<\/i>/);
+  // Escaped forms are present instead.
+  assert.match(html, /&lt;span data-import-markup=&quot;inert&quot;&gt;/);
+  assert.match(html, /&lt;img src=x onerror=alert\(1\)&gt;/);
+  assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+  assert.match(html, /&lt;b&gt;42&lt;\/b&gt;/);
+  assert.match(html, /&lt;i&gt;2&lt;\/i&gt;/);
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
