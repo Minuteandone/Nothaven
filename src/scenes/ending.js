@@ -84,7 +84,7 @@ export function journalText(state) {
   return `Field Journal: ${seen} of ${ids.length} foes recorded`;
 }
 
-/** "Difficulty: Label" for the preset the run ended on. */
+/** "Current difficulty: Label" — the preset selected now, not a run history. */
 // Sparring drills won across every restaged boss, plus the best Yard Gauntlet
 // run. Null until the party has won a drill or run the gauntlet.
 export function drillsText(state) {
@@ -97,14 +97,14 @@ export function drillsText(state) {
 }
 
 export function difficultyText(state) {
-  return `Difficulty: ${DIFFICULTIES[getDifficulty(state)].label}`;
+  return `Current difficulty: ${DIFFICULTIES[getDifficulty(state)].label}`;
 }
 
 /** Companions whose unlock flag is set, in roster order; null when none. */
 export function companionsText(state) {
   const names = Object.keys(COMPANIONS).filter((id) => isUnlocked(state, id)).map((id) => COMPANIONS[id].name);
   if (!names.length) return null;
-  return `Companions who answered the call: ${names.join(', ')}`;
+  return `Companions recruited: ${names.join(', ')}`;
 }
 
 export function isFinale(state) {
