@@ -6,6 +6,7 @@ export {
   getZoneCondition,
   getZoneProgress,
   getZoneVantage,
+  getFieldServicesSummary,
   getFrontierAtlas,
   getRouteBriefing,
   formatExpeditionLog,
