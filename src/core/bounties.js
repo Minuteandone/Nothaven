@@ -115,6 +115,19 @@ export function masteryText(state) {
   return `Contracts mastered: ${masteredCount(state)} of ${BOUNTIES.length}. A contract is mastered after ${MASTERY_CLAIMS} claims and then pays one extra of its first item.`;
 }
 
+/** Field Journal line for one foe: its board contract and your record on it; null when no contract targets it. */
+export function bountyJournalText(state, enemyId) {
+  const b = BOUNTIES.find((x) => x.enemyId === enemyId);
+  if (!b) return null;
+  const v = bountyState(state);
+  const n = v.completed[b.id] || 0;
+  let text = `Board contract: “${b.title}” (defeat ${b.count}).`;
+  text += n > 0 ? ` Claimed ${n} ${n === 1 ? 'time' : 'times'}.` : ' Not yet claimed.';
+  if (n >= MASTERY_CLAIMS) text += ' Mastered.';
+  if (v.active === b.id) text += ` Active now: ${v.progress} of ${b.count}.`;
+  return text;
+}
+
 /** Journal line: lifetime claims, rank and mastery; null before the first claim. */
 export function bountyRecordText(state) {
   const total = totalBountiesClaimed(state);

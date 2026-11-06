@@ -167,7 +167,8 @@ function comparisonTray(records, selectedIds) {
   </section>`;
 }
 
-function knownEntry({ enemy, count }, selected = false, full = false) {
+function knownEntry({ enemy, count, roams, contract }, selected = false, full = false) {
+  const habitats = Array.isArray(roams) ? roams.filter((name) => typeof name === 'string' && name) : [];
   const kind = kindFor(enemy);
   const defeats = victoryCount(count);
   const traits = Array.isArray(enemy.tags) ? enemy.tags : [];
@@ -188,6 +189,8 @@ function knownEntry({ enemy, count }, selected = false, full = false) {
       ${windupDetails(enemy)}
       ${enemy.enrage ? `<p class="foe-phase"><strong>Second phase: grows enraged below ${Math.round(number(enemy.enrage.threshold) * 100)}% HP (+${number(enemy.enrage.atk)} ATK)</strong>.</p>` : ''}
       ${loot.length ? `<div class="foe-spoils"><strong>Known spoils:</strong><ul>${loot.map(name => `<li>${escapeHTML(name)}</li>`).join('')}</ul></div>` : ''}
+      ${habitats.length ? `<p class="foe-roams"><strong>Roams:</strong> ${habitats.map((name) => escapeHTML(name)).join(', ')}.</p>` : ''}
+      ${typeof contract === 'string' && contract ? `<p class="foe-bounty">${escapeHTML(contract)}</p>` : ''}
       ${tip ? `<p class="field-tip"><strong>Mara’s advice:</strong> ${escapeHTML(tip)}</p>` : ''}
       <p class="foe-defeats">${icon('shield')}<span><strong>Defeated: ${defeats}</strong> ${defeats === 1 ? 'confirmed victory' : 'confirmed victories'}</span></p>
       <div class="foe-compare"><button type="button" class="action-button action-button--${selected ? 'ghost' : 'secondary'}" data-action="${selected ? 'removeComparedFoe' : 'compareFoe'}" data-arg="${escapeHTML(enemy.id)}" aria-pressed="${selected}" aria-describedby="bestiary-comparison-status"${full && !selected ? ' disabled title="Remove a foe from the full comparison tray first"' : ''}>${icon('journal')}<span>${selected ? 'Remove' : 'Compare'}</span></button></div>
