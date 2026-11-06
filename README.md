@@ -82,6 +82,15 @@ route-network guidance stacks to one quarter of base chance. Other regions and
 fixed encounters are unchanged. The prose describes a regional storm breaking,
 not the end of all weather or danger. Rewards commit before `story:updated`.
 
+## Damage-preview action parity
+
+`tests/damagePreview-integration.test.mjs` compares previews with real solo
+`heroAction` results across catalog foes, six levels, bare and fitted Tempest
+Edge gear, all four difficulties, and five RNG values. It checks exact damage
+endpoints, read-only inputs, and absent previews for non-damaging skills without
+copying the damage formula. HP/MP are amplified only in these synthetic fixtures;
+this is regression coverage, not an earned journey or a balance survey.
+
 ## Optional real-browser smoke test
 
 The default `npm test` stays a dependency-free Node suite. To additionally check
