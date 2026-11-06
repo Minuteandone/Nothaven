@@ -9,6 +9,10 @@ import {
   getZoneCondition,
   getZoneProgress,
   getZoneVantage,
+  getCompassBearing,
+  getZoneCompassHint,
+  findSafePath,
+  stepAlongSafePath,
   ensureMapState,
   exploreScene,
   getClearedEncounters,
@@ -826,4 +830,159 @@ test('getZoneProgress and getZoneVantage track encounters and caches without mut
   assert.match(html, /Coastal Squall/);
   assert.match(html, /Ridge Switchback Milestone \(144m\)/);
   assert.match(html, /Threats cleared 1\/4 · Caches 1\/1/);
+});
+
+test('getCompassBearing and getZoneCompassHint compute cardinal/intercardinal directions and prioritize zone objectives', () => {
+  assert.deepEqual(getCompassBearing(4, 3, 4, 1), {
+    bearing: 'N',
+    directionLabel: 'North',
+    distance: 2,
+    dx: 0,
+    dy: -2,
+  });
+  assert.deepEqual(getCompassBearing(2, 3, 8, 3), {
+    bearing: 'E',
+    directionLabel: 'East',
+    distance: 6,
+    dx: 6,
+    dy: 0,
+  });
+  assert.deepEqual(getCompassBearing(2, 3, 5, 1), {
+    bearing: 'NE',
+    directionLabel: 'Northeast',
+    distance: 5,
+    dx: 3,
+    dy: -2,
+  });
+  assert.equal(getCompassBearing(3, 3, 3, 3).bearing, 'HERE');
+
+  const state = createInitialState();
+  ensureMapState(state);
+  // In Greyhaven (no fixed encounters or one-time caches), hint points to the East Gate → Ridge Road
+  const greyhavenHint = getZoneCompassHint(state);
+  assert.ok(greyhavenHint);
+  assert.equal(greyhavenHint.kind, 'exit');
+  assert.equal(greyhavenHint.id, 'ridge_road');
+  assert.equal(greyhavenHint.bearing, 'E');
+  assert.equal(greyhavenHint.distance, 6);
+  assert.match(greyhavenHint.summary, /East Gate → Ridge Road \(E, 6 tiles\)/);
+
+  // In Ridge Road, hint prioritizes the nearest uncleared encounter first, then caches, then exits
+  travelToZone(state, 'ridge_road');
+  const ridgeHint = getZoneCompassHint(state);
+  assert.equal(ridgeHint.kind, 'encounter');
+  assert.equal(ridgeHint.id, 'ridge_hound_den');
+
+  state.map.clearedEncounters.ridge_hound_den = true;
+  const secondEncHint = getZoneCompassHint(state);
+  assert.equal(secondEncHint.kind, 'encounter');
+  assert.equal(secondEncHint.id, 'ridge_patrol');
+  assert.equal(secondEncHint.bearing, 'E');
+
+  for (const enc of ZONES.ridge_road.encounters) {
+    state.map.clearedEncounters[enc.encounterId || enc.id] = true;
+  }
+  const cacheHint = getZoneCompassHint(state);
+  assert.equal(cacheHint.kind, 'interactable');
+  assert.equal(cacheHint.id, 'ridge_supply_cache');
+
+  for (const inter of ZONES.ridge_road.interactables) {
+    state.map.completedInteractions[inter.interactionId || inter.id] = true;
+  }
+  const exitHint = getZoneCompassHint(state);
+  assert.equal(exitHint.kind, 'exit');
+  assert.equal(exitHint.id, 'highwatch_pass');
+});
+
+test('findSafePath and stepAlongSafePath navigate walkable routes, pause adjacent to threats, and wire into exploreScene', () => {
+  const state = createInitialState();
+  const mapState = ensureMapState(state);
+  const greyhaven = ZONES.greyhaven;
+
+  // From (2, 3) to (6, 3) in Greyhaven is 4 steps East along the clear road
+  const clearPath = findSafePath(greyhaven, mapState, 6, 3, state);
+  assert.equal(clearPath.length, 4);
+  assert.deepEqual(clearPath[0], { x: 3, y: 3, dx: 1, dy: 0 });
+  assert.deepEqual(clearPath[3], { x: 6, y: 3, dx: 1, dy: 0 });
+
+  // Wall tile returns null
+  assert.equal(findSafePath(greyhaven, mapState, 0, 0, state), null);
+
+  // stepAlongSafePath moves Wren to (6, 3) in one call
+  const stepRes = stepAlongSafePath(state, 6, 3, { disableRandomEncounters: true });
+  assert.equal(stepRes.moved, true);
+  assert.equal(stepRes.stepsTaken, 4);
+  assert.equal(state.map.x, 6);
+  assert.equal(state.map.y, 3);
+
+  // In Ridge Road, with side encounters cleared except ridge_patrol at (4, 3), stepping toward (7, 3) pauses cautiously at (3, 3)
+  travelToZone(state, 'ridge_road');
+  assert.equal(state.map.x, 1);
+  assert.equal(state.map.y, 3);
+  state.map.completedInteractions.dispatch_ridge = true;
+  for (const enc of ZONES.ridge_road.encounters) {
+    const id = enc.encounterId || enc.id;
+    if (id !== 'ridge_patrol') state.map.clearedEncounters[id] = true;
+  }
+  const ridgeRes = stepAlongSafePath(state, 4, 1, { disableRandomEncounters: true });
+  assert.equal(ridgeRes.moved, true);
+  assert.equal(state.map.x, 4);
+  assert.equal(state.map.y, 1);
+  // Stepping toward (7, 3) when ridge_patrol is at (5, 3) routes around the chasm and pauses at (6, 3) adjacent to Ridge Patrol Pack
+  state.map.x = 2;
+  state.map.y = 3;
+  const cautionRes = stepAlongSafePath(state, 7, 3, { disableRandomEncounters: true });
+  assert.equal(cautionRes.moved, true);
+  assert.equal(state.map.x, 6);
+  assert.equal(state.map.y, 3);
+  assert.ok(cautionRes.log.some((l) => l.includes('Paused near Ridge Patrol Pack')));
+
+  // exploreScene.actions.mapStepTo supports both data-x/data-y and data-arg="x,y" and renders the compass bearing
+  const game = makeMockGame();
+  const rendered = exploreScene.render(game);
+  assert.match(rendered, /Compass bearing: <strong>East Gate → Ridge Road<\/strong> \(E, 6 tiles\)/);
+  exploreScene.actions.mapStepTo(game, { dataset: { x: '5', y: '3' } });
+  assert.equal(game.state.map.x, 5);
+  assert.equal(game.state.map.y, 3);
+
+  // Verify installMap detaches the root click listener on cleanup and attaches cleanly on reinstall
+  const clickListeners = [];
+  const rootGame = makeMockGame();
+  rootGame.state.scene = 'explore';
+  let renderCount = 0;
+  rootGame.render = () => { renderCount += 1; };
+  rootGame.root = {
+    addEventListener(type, fn) {
+      if (type === 'click') clickListeners.push(fn);
+    },
+    removeEventListener(type, fn) {
+      if (type === 'click') {
+        const idx = clickListeners.indexOf(fn);
+        if (idx !== -1) clickListeners.splice(idx, 1);
+      }
+    },
+  };
+  const cleanup1 = installMap(rootGame, { enableKeyboard: false });
+  assert.equal(clickListeners.length, 1);
+  cleanup1();
+  assert.equal(clickListeners.length, 0);
+  // Clicking after cleanup leaves Wren at (2, 3)
+  for (const fn of [...clickListeners]) {
+    fn({ target: { closest: (sel) => (sel === '.map-cell[data-x][data-y]' ? { dataset: { x: '6', y: '3' } } : null) } });
+  }
+  assert.equal(rootGame.state.map.x, 2);
+  assert.equal(rootGame.state.map.y, 3);
+  assert.equal(renderCount, 0);
+
+  // Reinstall attaches exactly one handler and moves Wren once
+  const cleanup2 = installMap(rootGame, { enableKeyboard: false });
+  assert.equal(clickListeners.length, 1);
+  for (const fn of [...clickListeners]) {
+    fn({ target: { closest: (sel) => (sel === '.map-cell[data-x][data-y]' ? { dataset: { x: '6', y: '3' } } : null) } });
+  }
+  assert.equal(rootGame.state.map.x, 6);
+  assert.equal(rootGame.state.map.y, 3);
+  assert.equal(renderCount, 1);
+  cleanup2();
+  assert.equal(clickListeners.length, 0);
 });
