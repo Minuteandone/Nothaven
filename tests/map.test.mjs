@@ -12,6 +12,7 @@ import {
   getFrontierAtlas,
   getRouteBriefing,
   formatExpeditionLog,
+  getZoneChecklist,
   getCompassBearing,
   getZoneCompassHint,
   findSafePath,
@@ -1181,4 +1182,54 @@ test('getRouteBriefing and formatExpeditionLog provide spoiler-safe route briefi
   assert.match(html, /<p>Surveyed Cobblestone Road\. \(×2\)<\/p>/);
   assert.match(html, /<p>Path blocked by Stone Wall\. \(×3\)<\/p>/);
   assert.deepEqual(state.map.log, rawCopy, 'exploreScene.render must not mutate state.map.log');
+});
+
+
+test('getZoneChecklist and fast-travel tooltips report live zone landmarks, statuses, and visited route briefings without mutating state', () => {
+  const game = makeMockGame();
+  const state = game.state;
+
+  // Visit Ridge Road, clear ridge_patrol, open ridge_supply_cache
+  travelToZone(state, 'ridge_road', 'from_greyhaven');
+  const beforeSnapshot = JSON.stringify(state);
+  const initialChecklist = getZoneChecklist(state, 'ridge_road');
+  assert.equal(JSON.stringify(state), beforeSnapshot, 'getZoneChecklist must not mutate gameState');
+  assert.equal(initialChecklist.zoneId, 'ridge_road');
+
+  const patrolBefore = initialChecklist.encounters.find((e) => e.id === 'ridge_patrol');
+  assert.ok(patrolBefore);
+  assert.equal(patrolBefore.status, 'Active');
+  assert.equal(patrolBefore.cleared, false);
+  assert.equal(patrolBefore.unlocked, true);
+
+  const lockedEncs = initialChecklist.encounters.filter((e) => e.status === 'Locked');
+  assert.ok(lockedEncs.length >= 2);
+  for (const locked of lockedEncs) {
+    assert.equal(locked.id, 'sealed_challenge');
+    assert.equal(locked.name, 'Sealed challenge');
+    assert.equal(locked.unlocked, false);
+  }
+  assert.equal(initialChecklist.encounters.some((e) => /Thunderhoof|Old Tusk/i.test(e.name)), false);
+
+  const cacheBefore = initialChecklist.interactables.find((i) => i.id === 'ridge_supply_cache');
+  assert.ok(cacheBefore);
+  assert.equal(cacheBefore.status, 'Available');
+
+  recordEncounterVictory(state, 'ridge_patrol', 'ridge_bandit');
+  state.map.completedInteractions.ridge_supply_cache = true;
+
+  const afterChecklist = getZoneChecklist(state, 'ridge_road');
+  assert.equal(afterChecklist.encounters.find((e) => e.id === 'ridge_patrol').status, 'Cleared');
+  assert.equal(afterChecklist.interactables.find((i) => i.id === 'ridge_supply_cache').status, 'Completed');
+
+  const html = exploreScene.render(game);
+  assert.match(html, /class="shortcut-guide zone-checklist"/);
+  assert.match(html, /Zone field checklist \(\d+ landmarks\)/);
+  const checklistHtml = html.match(/<details class="shortcut-guide zone-checklist">[\s\S]*?<\/details>/)?.[0] || '';
+  assert.ok(checklistHtml.length > 0);
+  assert.doesNotMatch(checklistHtml, /Thunderhoof|Old Tusk/i);
+  assert.match(html, /data-poi-kind="encounter" data-poi-id="sealed_challenge" data-poi-status="Locked"><strong>Sealed challenge<\/strong>/);
+  assert.match(html, /data-poi-kind="encounter" data-poi-id="ridge_patrol" data-poi-status="Cleared"/);
+  assert.match(html, /data-poi-kind="interactable" data-poi-id="ridge_supply_cache" data-poi-status="Completed"/);
+  assert.match(html, /data-action="mapTravel" data-arg="greyhaven" title="Greyhaven · Lantern Shelter · Safe haven"/);
 });

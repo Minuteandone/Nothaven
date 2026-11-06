@@ -61,9 +61,9 @@ export function sceneHeader({ eyebrow, title, subtitle, iconName }) {
   </header>`;
 }
 
-export function uiButton({ action, label, iconName, variant = 'secondary', disabled = false, arg = null, className = '' }) {
+export function uiButton({ action, label, iconName, variant = 'secondary', disabled = false, arg = null, className = '', title = null }) {
   const safeVariant = ['primary', 'secondary', 'ghost', 'danger'].includes(variant) ? variant : 'secondary';
-  return `<button type="button" class="action-button action-button--${safeVariant} ${escapeHTML(className)}" data-action="${escapeHTML(action)}"${arg !== null ? ` data-arg="${escapeHTML(arg)}"` : ''}${disabled ? ' disabled' : ''}>
+  return `<button type="button" class="action-button action-button--${safeVariant} ${escapeHTML(className)}" data-action="${escapeHTML(action)}"${arg !== null ? ` data-arg="${escapeHTML(arg)}"` : ''}${title ? ` title="${escapeHTML(title)}"` : ''}${disabled ? ' disabled' : ''}>
     ${iconName ? icon(iconName) : ''}<span>${escapeHTML(label)}</span>
   </button>`;
 }
