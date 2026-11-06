@@ -89,6 +89,7 @@ function unitCard(member, { enemy = false, leader = false, enraged = false } = {
   const kind = enemy ? 'enemy' : leader ? 'hero' : 'ally';
   const role = enemy ? (boss ? 'Boss' : 'Enemy') : leader ? 'Leader' : 'Ally';
   const name = member?.name || (enemy ? 'Unknown enemy' : 'Unknown traveller');
+  const enrageMarker = enemy && member?.enrage ? Math.round(number(member.enrage.threshold) * 100) : 0;
   return `<article class="unit ${kind}${down ? ' down' : ''}${boss ? ' boss' : ''}" aria-label="${escapeHTML(`${name}, ${role}`)}">
     <div class="unit-card__heading">
       <span class="unit-card__portrait" aria-hidden="true">${icon(enemy ? 'sword' : leader ? 'shield' : 'heart')}</span>
@@ -96,7 +97,7 @@ function unitCard(member, { enemy = false, leader = false, enraged = false } = {
       ${enraged ? '<em class="enraged">(enraged)</em>' : ''}${enemy ? '' : `<span class="level-badge">Lv ${Math.max(1, number(member?.level, 1))}</span>`}
     </div>
     <div class="unit-card__statuses" aria-label="Status effects">${statusChips(member)}${down ? ' <em>Down</em>' : ''}</div>
-    ${meter({ label: 'HP', value: member?.hp, max: enemy ? member?.maxHp || member?.hp : stats.maxHp, tone: 'hp' })}
+    ${meter({ label: 'HP', value: member?.hp, max: enemy ? member?.maxHp || member?.hp : stats.maxHp, tone: 'hp', marker: enrageMarker })}
     ${enemy ? '' : meter({ label: 'MP', value: member?.mp, max: stats.maxMp, tone: 'mp' })}
     ${statList(stats)}
     ${enemy && member?.element ? enemyMatchupHint(member.element) : ''}

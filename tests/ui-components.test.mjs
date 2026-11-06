@@ -16,6 +16,25 @@ test('meter clamps invalid and out-of-range values and exposes ARIA state', () =
   assert.match(invalid, /aria-valuemax="1"/);
 });
 
+test('meter renders enrage marker when marker param is set for hp meters', () => {
+  // marker=0 (default): no marker rendered
+  const noMarker = meter({ label: 'Health', value: 50, max: 100 });
+  assert.doesNotMatch(noMarker, /meter__marker/);
+  // marker=50, tone=hp: marker rendered at correct position with tooltip
+  const withMarker = meter({ label: 'Health', value: 80, max: 100, marker: 50 });
+  assert.match(withMarker, /meter__marker/);
+  assert.match(withMarker, /left:50%/);
+  assert.match(withMarker, /Boss enrages at or below 50% HP/);
+  // marker should not render on non-hp meters
+  const mpMeter = meter({ label: 'Mana', value: 5, max: 10, tone: 'mp', marker: 30 });
+  assert.doesNotMatch(mpMeter, /meter__marker/);
+  // marker at 100 or 0 should not render
+  const edge1 = meter({ label: 'Health', value: 10, max: 100, marker: 100 });
+  assert.doesNotMatch(edge1, /meter__marker/);
+  const edge2 = meter({ label: 'Health', value: 10, max: 100, marker: 0 });
+  assert.doesNotMatch(edge2, /meter__marker/);
+});
+
 test('button escapes labels and args and uses native disabled state', () => {
   const html = uiButton({ action: 'talk', label: '<Talk>', iconName: 'journal', arg: '" onmouseover="bad', disabled: true });
   assert.match(html, /&lt;Talk&gt;/);
