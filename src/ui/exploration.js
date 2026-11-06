@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFieldServicesSummary, getFrontierAtlas, getRouteBriefing, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getRouteBriefing, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -80,7 +80,8 @@ function mapGrid(zone, mapState, state = null) {
         } else if (entityInfo.type === 'interactable') {
           symbol = entityInfo.entity.symbol || '?';
           label = entityInfo.entity.name;
-          cellTitle = label;
+          const briefing = getInteractableBriefing(state ? { ...state, map: mapState } : { map: mapState }, entityInfo.entity, zone);
+          cellTitle = briefing?.summary ? `${label} — ${briefing.summary}` : label;
         } else if (entityInfo.type === 'exit') {
           symbol = '╬';
           label = entityInfo.entity.label;
@@ -124,7 +125,7 @@ function nearbyActionButton(action, index, characterShortcuts) {
   const shortcut = characterShortcuts && index < 9 ? String(index + 1) : null;
   const tooltipText = action.kind === 'encounter'
     ? action.preview?.summary
-    : action.kind === 'exit'
+    : action.kind === 'exit' || action.kind === 'interact'
       ? action.briefing?.summary
       : action.kind === 'patrol'
         ? action.patrol?.summary
@@ -259,6 +260,10 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
     .filter(action => action?.kind === 'encounter' && action.preview?.summary)
     .map(action => `<p class="nearby-threat-preview">${escapeHTML(action.preview.summary)}</p>`)
     .join('');
+  const nearbyInteractPreviews = (nearbyActions || [])
+    .filter(action => action?.kind === 'interact' && action.briefing?.summary)
+    .map(action => `<p class="nearby-threat-preview nearby-interact-preview">${escapeHTML(action.briefing.summary)}</p>`)
+    .join('');
   const nearbyRoutePreviews = (nearbyActions || [])
     .filter(action => action?.kind === 'exit' && action.briefing?.summary)
     .map(action => `<p class="nearby-threat-preview nearby-route-preview">${escapeHTML(action.briefing.summary)}</p>`)
@@ -341,6 +346,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           <p class="eyebrow">Within reach</p><h2 id="nearby-title">Nearby Actions:</h2>
           <div class="nearby-actions">${contextButtons || '<p class="empty-state">Move beside a person, route, cache, or threat to interact.</p>'}</div>
           ${nearbyThreatPreviews}
+          ${nearbyInteractPreviews}
           ${nearbyRoutePreviews}
           ${nearbyPatrolPreviews}
           ${fieldPack(state.inventory, state.party)}
