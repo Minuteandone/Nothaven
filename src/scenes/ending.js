@@ -1,5 +1,5 @@
 import { ledgerOf } from '../core/ledger.js';
-import { BOUNTIES, bountyState } from '../core/bounties.js';
+import { BOUNTIES, bountyState, bountyRecordText } from '../core/bounties.js';
 // Ending / credits scene. Shown once when the story reaches stage 'complete',
 // and again as a finale with epilogue after the Stormcrown Spire report.
 const ENDINGS = {
@@ -102,6 +102,7 @@ export const endingScene = {
         <li>${esc(hero.name || 'Hero')} reached level ${Number(hero.level) || 1}</li>
         <li>Gold carried home: ${Number(s.gold) || 0}</li>
         <li>Items in pack: ${(s.inventory || []).reduce((n, i) => n + (Number(i.qty) || 0), 0)}</li>
+        ${bountyRecordText(s) ? `<li class="ending-bounty-record">${esc(bountyRecordText(s))}</li>` : ''}
       </ul>
       <h3>Credits</h3>
       <ul class="credits">${rows}</ul>
