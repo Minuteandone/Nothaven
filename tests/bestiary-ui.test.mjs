@@ -112,3 +112,62 @@ test('foeArt has a safe humanoid fallback and escapes accessible labels', () => 
   assert.ok(!html.includes('Road <Captain>'));
   assert.ok(!html.includes('<defs>'));
 });
+
+test('element badge renders in known entry for elemental foe', () => {
+  const html = renderBestiary({ entries: entriesWith({ frost_wolf: 1 }) });
+  assert.match(html, /element-chip element--ice/);
+  assert.match(html, /<span class="element-chip element--ice">Ice<\/span>/);
+  assert.match(html, /foe-element/);
+});
+
+test('no element badge in known entry for non-elemental foe', () => {
+  const html = renderBestiary({ entries: entriesWith({ storm_rat: 1 }) });
+  const ratStart = html.indexOf('data-enemy="storm_rat"');
+  const ratEnd = html.indexOf('</li>', ratStart);
+  const snippet = html.slice(ratStart, ratEnd);
+  assert.ok(!snippet.includes('foe-element'), 'storm_rat entry must not contain foe-element');
+  assert.ok(!snippet.includes('element-chip'), 'storm_rat entry must not contain element-chip');
+});
+
+test('element badge renders in tactical comparison card', () => {
+  const html = renderBestiary({ entries: entriesWith({ frost_wolf: 1 }), compareIds: ['frost_wolf'] });
+  assert.match(html, /data-comparison-enemy="frost_wolf"/);
+  const compStart = html.indexOf('data-comparison-enemy="frost_wolf"');
+  const compEnd = html.indexOf('</article>', compStart);
+  const snippet = html.slice(compStart, compEnd);
+  assert.match(snippet, /element-chip element--ice/);
+  assert.match(snippet, /foe-element/);
+});
+
+test('element badge safely handles unknown element values without XSS', () => {
+  const entries = [{
+    count: 1,
+    enemy: {
+      id: 'hazard', name: 'Hazard',
+      hp: 10, atk: 3, def: 1, spd: 2, xp: 5, gold: 1,
+      element: '<img src=x onerror=alert(1)>',
+      tags: [], loot: [],
+    },
+  }];
+  const html = renderBestiary({ entries });
+  assert.ok(!html.includes('<img src=x'), 'must not contain raw img tag');
+  assert.ok(!html.includes('onerror='), 'must not contain raw onerror');
+  assert.ok(!html.includes('<script'), 'must not contain raw script tag');
+  // Unknown element normalises to empty class -> elementBadge returns '' -> no badge at all
+  assert.ok(!html.includes('&lt;img'), 'unknown element value must not leak into HTML');
+});
+
+test('unknown element value renders no chip span', () => {
+  const entries = [{
+    count: 1,
+    enemy: {
+      id: 'mystery', name: 'Mystery',
+      hp: 10, atk: 3, def: 1, spd: 2, xp: 5, gold: 1,
+      element: 'plasma',
+      tags: [], loot: [],
+    },
+  }];
+  const html = renderBestiary({ entries });
+  assert.ok(!html.includes('foe-element'), 'unknown element must not render foe-element');
+  assert.ok(!html.includes('element-chip'), 'unknown element must not render empty chip span');
+});
