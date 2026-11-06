@@ -166,6 +166,46 @@ test('element chip HTML escapes untrusted element labels', () => {
   const html = renderCombat({ combat, party: [uiHero], inventory: [], menu: 'main' });
   assert.ok(!html.includes('<img src=x'), 'element label is escaped');
 });
+test('hero-action log lines include ::elem:: marker for elemental skills', () => {
+  const hero = member({ atk: 40, mp: 60 });
+  // Spark (lightning) vs storm_heart (lightning) — same element, neutral multiplier
+  const c = createCombat({ enemyId: 'storm_heart' });
+  const r = heroAction(c, hero, { type: 'skill', skillId: 'spark' }, fixed(0), [hero]);
+  assert.ok(r.lines.some((l) => /^::elem:lightning::/.test(l)),
+    'spark log line should start with ::elem:lightning:: marker');
+
+  // Basic attack (no element) vs frost_wolf — no ::elem:: markers expected
+  const c2 = createCombat({ enemyId: 'frost_wolf' });
+  const r2 = heroAction(c2, hero, { type: 'attack' }, fixed(0), [hero]);
+  assert.ok(!r2.lines.some((l) => l.includes('::elem:')),
+    'basic attack log lines should not include ::elem:: markers');
+});
+
+test('renderCombat converts known ::elem:: markers to chips and leaves unknown ones literal', () => {
+  const combat = createCombat({ enemyId: 'frost_wolf' });
+  combat.log = [
+    '::elem:fire::Wren strikes with fury!',
+    '::elem:lightning::Wren casts Spark.',
+    '::elem:plasma::Wren casts ???',
+    '<waits>',
+  ];
+  combat.turn = 4;
+  const html = renderCombat({ combat, party: [uiHero], inventory: [], menu: 'main' });
+
+  // Known elements render as chips
+  assert.match(html, /element-chip element--fire/);
+  assert.match(html, /element-chip element--lightning/);
+  // Trailing space after chip before text
+  assert.match(html, /<span class="element-chip element--fire">Fire<\/span> Wren/);
+  assert.match(html, /<span class="element-chip element--lightning">Lightning<\/span> Wren/);
+  // Unknown element marker stays literal, no chip class generated
+  assert.ok(html.includes('::elem:plasma::'), 'unknown element marker stays literal');
+  assert.ok(!html.includes('element--plasma'), 'unknown element marker does not get a chip');
+  // HTML injection is escaped
+  assert.ok(html.includes('&lt;waits&gt;'), '<waits> is HTML-escaped');
+  assert.ok(!html.includes('<waits>'), 'unescaped <waits> must not appear');
+});
+
 
 // --- Regression: minimum-damage clamp and companion routing -----------------
 
