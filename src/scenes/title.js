@@ -15,9 +15,10 @@ function buildSaveActions(hasExistingSave, hasExistingAutosave) {
   if (hasExistingSave) {
     buttons.push(uiButton({ action: 'exportSave', label: 'Export save', iconName: 'download', variant: 'secondary' }));
     buttons.push(uiButton({ action: 'promptDelete', label: 'Delete save', iconName: 'trash', variant: 'danger' }));
-    const autosaveOn = isAutosaveEnabled();
-    buttons.push(uiButton({ action: 'toggleAutosave', label: autosaveOn ? 'Autosave: ON' : 'Autosave: OFF', iconName: 'save', variant: autosaveOn ? 'secondary' : 'ghost' }));
   }
+  // Autosave toggle available for both new and continuing journeys
+  const autosaveOn = isAutosaveEnabled();
+  buttons.push(uiButton({ action: 'toggleAutosave', label: autosaveOn ? 'Autosave: ON' : 'Autosave: OFF', iconName: 'save', variant: autosaveOn ? 'secondary' : 'ghost' }));
   if (hasExistingAutosave) {
     buttons.push(uiButton({ action: 'loadAutosaveAction', label: 'Restore autosave', iconName: 'save', variant: 'ghost' }));
   }
