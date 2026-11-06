@@ -1409,3 +1409,6 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 
 /* Journey Journal bounty line */
 .quest-bounty-summary { overflow-wrap: anywhere; }
+
+/* Greyhaven town bounty line */
+.town-bounty-summary { margin: 0.25rem 0 0.75rem; overflow-wrap: anywhere; }
