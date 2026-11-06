@@ -315,15 +315,18 @@ export function windupCue(combat) {
   return `<p class="windup-cue" role="status"><strong>Gathering ${escapeHTML(name)}</strong> · Next turn it lands on your leader. Defend or a ward halves it; a stun or Stillpoint Strike breaks it.</p>`;
 }
 
-/** Subtle hint showing expected incoming physical damage from the enemy. */
+/** Conditional incoming physical estimate using current stats and defenses. */
 export function incomingDamageHint(combat, hero) {
   const preview = incomingDamagePreview(combat, hero);
   if (!preview) return '';
   const { min, max, warded, windupName } = preview;
   const range = min === max ? `${min}` : `${min}–${max}`;
-  const label = windupName ? `Unleashed ${escapeHTML(windupName)}` : 'Foe attack';
+  const target = hero?.name || 'Wren';
+  const label = windupName ? `Unleashed ${windupName} vs ${target}` : `Basic hit vs ${target}`;
   const note = warded ? ' (halved)' : '';
-  return `<p class="incoming-damage-hint"><span class="incoming-damage-label">${escapeHTML(label)}:</span> ${escapeHTML(range)}${escapeHTML(note)}</p>`;
+  const caveat = 'Estimate using current defenses, not a next-turn prediction.' +
+    (windupName ? '' : ' Abilities and other targets differ.');
+  return `<p class="incoming-damage-hint"><span class="incoming-damage-label">${escapeHTML(label)}:</span> ${escapeHTML(range)}${escapeHTML(note)} · ${escapeHTML(caveat)}</p>`;
 }
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
