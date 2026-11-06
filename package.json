@@ -6,7 +6,8 @@
     "test": "node --test tests/*.test.js tests/*.test.mjs",
     "test:browser": "node tests-browser/smoke.mjs",
     "test:browser:chapter": "node tests-browser/chapter.mjs",
-    "test:browser:bounties": "node tests-browser/bounties.mjs"
+    "test:browser:bounties": "node tests-browser/bounties.mjs",
+    "test:browser:regions": "node tests-browser/regions.mjs"
   },
   "devDependencies": {
     "playwright": "1.64.1"
