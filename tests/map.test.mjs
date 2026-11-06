@@ -1518,3 +1518,60 @@ test('getNpcBriefing reports field contact role, proximity, defaultLine, and ren
     /title="Watch House Muster Board · Party roster &amp; equipment" data-x="2" data-y="1"/,
   );
 });
+
+test('getZoneChecklist computes relative tile distances, compass bearings, spoiler-safe encounter tooltips, and checklist summary line', () => {
+  const game = makeMockGame();
+  const state = game.state;
+  ensureMapState(state);
+
+  // 1. Greyhaven: contacts, services, and outbound routes
+  const greyhavenChecklist = getZoneChecklist(state, 'greyhaven');
+  assert.equal(greyhavenChecklist.counts.npcs, 3);
+  assert.match(greyhavenChecklist.summary, /3 contacts · Stations: 4 services · Routes:/);
+  const mara = greyhavenChecklist.npcs.find((n) => n.id === 'mara');
+  assert.ok(mara);
+  assert.equal(mara.distance, Math.abs(mara.x - greyhavenChecklist.originX) + Math.abs(mara.y - greyhavenChecklist.originY));
+  assert.ok(mara.bearing.length > 0);
+
+  // 2. Ridge Road: active and locked threats, cache, and routes
+  travelToZone(state, 'ridge_road', 'from_greyhaven');
+  assert.equal(state.map.x, 1);
+  assert.equal(state.map.y, 3);
+
+  const checklist = getZoneChecklist(state, 'ridge_road');
+  assert.equal(checklist.originX, 1);
+  assert.equal(checklist.originY, 3);
+  assert.equal(checklist.counts.npcs, 0);
+  assert.equal(checklist.counts.encountersActive, 2);
+  assert.equal(checklist.counts.encountersCleared, 0);
+  assert.equal(checklist.counts.encountersLocked, 2);
+  assert.match(checklist.summary, /Threats: 2 active, 0 cleared, 2 locked · Stations: 2 available · Routes: 1 charted, 2 uncharted/);
+
+  // ridge_patrol at (5, 3) -> distance 4, bearing E, spoiler-safe unscouted drop in summary
+  const patrol = checklist.encounters.find((e) => e.id === 'ridge_patrol');
+  assert.ok(patrol);
+  assert.equal(patrol.distance, 4);
+  assert.equal(patrol.bearing, 'E');
+  assert.match(patrol.summary, /Ridge Patrol Pack · Active — Ridge Bandit \(Standard, 20 HP\) · Drops: Unscouted/);
+
+  // Locked encounters must never leak enemy names or stats in summary
+  const locked = checklist.encounters.filter((e) => e.status === 'Locked');
+  assert.equal(locked.length, 2);
+  for (const item of locked) {
+    assert.equal(item.summary, 'Sealed challenge · Locked');
+    assert.doesNotMatch(item.summary, /Old Tusk|Thunderhoof/i);
+  }
+
+  // Exit back to Greyhaven is at (0, 3) -> distance 1, bearing W
+  const greyhavenExit = checklist.exits.find((x) => x.toZone === 'greyhaven');
+  assert.ok(greyhavenExit);
+  assert.equal(greyhavenExit.distance, 1);
+  assert.equal(greyhavenExit.bearing, 'W');
+
+  const html = exploreScene.render(game);
+  const checklistHtml = html.match(/<details class="shortcut-guide zone-checklist">[\s\S]*?<\/details>/)?.[0] || '';
+  assert.match(checklistHtml, /class="zone-checklist__summary">Threats: 2 active, 0 cleared, 2 locked · Stations: 2 available · Routes: 1 charted, 2 uncharted/);
+  assert.match(checklistHtml, /title="Sealed challenge · Locked" data-poi-kind="encounter" data-poi-id="sealed_challenge" data-poi-status="Locked"><strong>Sealed challenge<\/strong> · Locked · \(6, 2\) · 6 tiles NE/);
+  assert.match(checklistHtml, /data-poi-kind="exit" data-poi-id="greyhaven" data-poi-status="Charted"><strong>West Trail → Greyhaven<\/strong> · Charted · \(0, 3\) · 1 tile W/);
+  assert.doesNotMatch(checklistHtml, /Old Tusk|Thunderhoof/i);
+});
