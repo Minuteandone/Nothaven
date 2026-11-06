@@ -1641,3 +1641,37 @@ test('getFieldServicesSummary reports field pack consumable/craft readiness, ren
     /data-action="useFieldItem" data-arg="bandage:1" title="Brine-washed linen strips\. Stops bleeding and covers the ugliest wounds\."/,
   );
 });
+
+test('getTileInspection attaches spoiler-safe cell and entity summaries and renders terrain compass and movement button tooltips', () => {
+  const game = makeMockGame();
+  const state = game.state;
+  ensureMapState(state);
+
+  // Stand at (3, 3) in Greyhaven: Warden Mara is North at (3, 2)
+  state.map.x = 3;
+  state.map.y = 3;
+  const beforeSnap = JSON.stringify(state);
+  const info = getTileInspection(state);
+  assert.equal(JSON.stringify(state), beforeSnap, 'getTileInspection must not mutate gameState');
+  assert.match(info.neighbors.north.summary, /Windswept Scrub \(3, 2\) · Passable · Warden Mara \(Town Warden\)/);
+  assert.ok(info.neighbors.north.entity?.summary?.includes('Warden Mara'));
+  const northLandmark = info.adjacentLandmarks.find((a) => a.dir === 'North');
+  assert.ok(northLandmark?.summary?.includes('Warden Mara'));
+
+  const html = exploreScene.render(game);
+  assert.match(html, /data-direction="north" data-passable="true" title="Windswept Scrub \(3, 2\) · Passable · Warden Mara \(Town Warden\)"/);
+  assert.match(html, /data-action="moveNorth"[^>]*title="Windswept Scrub \(3, 2\) · Passable · Warden Mara \(Town Warden\)"/);
+  assert.match(html, /data-action="waitTurn"[^>]*title="Cobble \/ Trail \(3, 3\) · Passable · Adjacent: North Warden Mara \(Town Warden\)"/);
+
+  // In Ridge Road at (6, 3), locked Old Tusk at (6, 2) stays masked in neighbor and movement button tooltips
+  travelToZone(state, 'ridge_road', 'from_greyhaven');
+  state.map.x = 6;
+  state.map.y = 3;
+  const ridgeInfo = getTileInspection(state);
+  assert.equal(ridgeInfo.neighbors.north.entity?.summary, 'Sealed challenge · Locked');
+  assert.doesNotMatch(ridgeInfo.neighbors.north.summary, /Old Tusk|Thunderhoof/i);
+  const ridgeHtml = exploreScene.render(game);
+  assert.match(ridgeHtml, /data-action="moveNorth"[^>]*title="[^"]*Sealed challenge"/);
+  const moveSection = ridgeHtml.match(/<div class="movement-controls"[\s\S]*?<\/div>/)?.[0] || '';
+  assert.doesNotMatch(moveSection, /Old Tusk|Thunderhoof/i);
+});

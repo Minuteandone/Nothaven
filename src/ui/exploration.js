@@ -140,13 +140,14 @@ function nearbyActionButton(action, index, characterShortcuts) {
   </button>`;
 }
 
-function movementButton(action, label, key, arrow, className, characterShortcuts) {
+function movementButton(action, label, key, arrow, className, characterShortcuts, title = null) {
   const shortcuts = {
     moveNorth: 'W ArrowUp', moveWest: 'A ArrowLeft', moveEast: 'D ArrowRight',
     moveSouth: 'S ArrowDown', waitTurn: 'E',
   };
   const binding = characterShortcuts ? shortcuts[action] : (shortcuts[action].split(' ')[1] || '');
-  return `<button type="button" class="action-button movement-button ${className}" data-action="${action}" aria-label="${action === 'waitTurn' ? 'Survey Area' : `Move ${label}`}" ${binding ? `aria-keyshortcuts="${binding}"` : ''}>
+  const titleAttr = title ? ` title="${escapeHTML(title)}"` : '';
+  return `<button type="button" class="action-button movement-button ${className}" data-action="${action}" aria-label="${action === 'waitTurn' ? 'Survey Area' : `Move ${label}`}" ${binding ? `aria-keyshortcuts="${binding}"` : ''}${titleAttr}>
     <span class="movement-button__arrow" aria-hidden="true">${arrow}</span><span>${label}</span>${characterShortcuts ? `<kbd aria-hidden="true">${key}</kbd>` : ''}
   </button>`;
 }
@@ -167,21 +168,23 @@ function terrainCompass(zone, mapState, characterShortcuts, state = null) {
     { id: 'east', label: 'East', key: 'D', dx: 1, dy: 0 },
     { id: 'south', label: 'South', key: 'S', dx: 0, dy: 1 },
   ];
+  const effectiveState = state ? { ...state, map: mapState } : { map: mapState };
+  const inspection = getTileInspection(effectiveState, x, y, zone);
   const items = directions.map(direction => {
     const tx = x + direction.dx;
     const ty = y + direction.dy;
     const terrain = terrainAt(tx, ty);
-    return `<li data-direction="${direction.id}" data-passable="${terrain.passable}">
+    const neighborCell = inspection?.neighbors?.[direction.id];
+    const rowTitle = neighborCell?.summary || `${terrain.name} (${tx}, ${ty}) · ${terrain.passable ? 'Passable' : 'Blocked'}`;
+    return `<li data-direction="${direction.id}" data-passable="${terrain.passable}" title="${escapeHTML(rowTitle)}">
       <span class="terrain-compass__direction">${direction.label}${characterShortcuts ? keyHint(direction.key) : ''}</span>
       <span class="terrain-compass__terrain"><strong>${escapeHTML(terrain.name)}</strong><small>${escapeHTML(`${tx}, ${ty}`)} · ${terrain.passable ? 'Passable' : 'Blocked'}</small></span>
     </li>`;
   }).join('');
-  const effectiveState = state ? { ...state, map: mapState } : { map: mapState };
   const compassHint = getZoneCompassHint(effectiveState, zone);
   const bearingLine = compassHint
     ? `<p class="terrain-compass__bearing">Compass bearing: <strong>${escapeHTML(compassHint.label)}</strong> (${escapeHTML(compassHint.bearing)}, ${compassHint.distance} ${compassHint.distance === 1 ? 'tile' : 'tiles'})</p>`
     : '';
-  const inspection = getTileInspection(effectiveState, x, y, zone);
   const adjacentLine = inspection?.adjacentLandmarks?.length
     ? `<p class="terrain-compass__adjacent">Adjacent landmarks: ${inspection.adjacentLandmarks.map(a => `<strong>${escapeHTML(a.dir)}:</strong> ${escapeHTML(a.label)}`).join(' · ')}</p>`
     : '';
@@ -348,13 +351,16 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
       <aside class="explore-sidebar" aria-label="Exploration controls">
         <section class="panel navigation-panel" aria-labelledby="navigation-title">
           <p class="eyebrow">Navigator</p><h2 id="navigation-title">Choose your route</h2>
-          <div class="movement-controls" role="group" aria-label="Movement Controls">
-            ${movementButton('moveNorth', 'North', 'W', '↑', 'movement-button--north', characterShortcuts)}
-            ${movementButton('moveWest', 'West', 'A', '←', 'movement-button--west', characterShortcuts)}
-            ${movementButton('waitTurn', 'Survey', 'E', '◉', 'movement-button--survey', characterShortcuts)}
-            ${movementButton('moveEast', 'East', 'D', '→', 'movement-button--east', characterShortcuts)}
-            ${movementButton('moveSouth', 'South', 'S', '↓', 'movement-button--south', characterShortcuts)}
-          </div>
+          ${(() => {
+            const navInspection = getTileInspection(state ? { ...state, map: mapState } : { map: mapState }, mapState?.x, mapState?.y, zone);
+            return `<div class="movement-controls" role="group" aria-label="Movement Controls">
+            ${movementButton('moveNorth', 'North', 'W', '↑', 'movement-button--north', characterShortcuts, navInspection?.neighbors?.north?.summary)}
+            ${movementButton('moveWest', 'West', 'A', '←', 'movement-button--west', characterShortcuts, navInspection?.neighbors?.west?.summary)}
+            ${movementButton('waitTurn', 'Survey', 'E', '◉', 'movement-button--survey', characterShortcuts, navInspection?.summary)}
+            ${movementButton('moveEast', 'East', 'D', '→', 'movement-button--east', characterShortcuts, navInspection?.neighbors?.east?.summary)}
+            ${movementButton('moveSouth', 'South', 'S', '↓', 'movement-button--south', characterShortcuts, navInspection?.neighbors?.south?.summary)}
+          </div>`;
+          })()}
           <p class="control-hint">Survey to inspect the tile beneath you, or click a passable map tile to step along a safe route (takes normal movement steps where random encounters may occur, pauses beside threats, and engages a threat if clicked directly). Movement never spends supplies.</p>
           ${explorationShortcutGuide(characterShortcuts)}
           ${frontierAtlasPanel(state, zone, mapState)}
