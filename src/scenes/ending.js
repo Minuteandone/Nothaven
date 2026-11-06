@@ -1,4 +1,5 @@
 import { ledgerOf } from '../core/ledger.js';
+import { FEATS, featsEarned } from './feats.js';
 import { BOUNTIES, bountyState, bountyRecordText } from '../core/bounties.js';
 // Ending / credits scene. Shown once when the story reaches stage 'complete',
 // and again as a finale with epilogue after the Stormcrown Spire report.
@@ -64,6 +65,13 @@ export function postgameLines(state) {
   return POSTGAME_DEEDS.filter((d) => d.test(f, b, l, st)).map((d) => d.text);
 }
 
+/** One-line battle tally for “Your journey”, from the Service Record (drills never count). */
+export function battlesText(state) {
+  const l = ledgerOf(state);
+  const won = `Battles won: ${l.victories}`;
+  return l.bossVictories > 0 ? `${won} (${l.bossVictories} against bosses)` : won;
+}
+
 export function isFinale(state) {
   return Boolean(state?.story?.flags?.spire_reward);
 }
@@ -102,6 +110,8 @@ export const endingScene = {
         <li>${esc(hero.name || 'Hero')} reached level ${Number(hero.level) || 1}</li>
         <li>Gold carried home: ${Number(s.gold) || 0}</li>
         <li>Items in pack: ${(s.inventory || []).reduce((n, i) => n + (Number(i.qty) || 0), 0)}</li>
+        <li class="ending-battles">${esc(battlesText(s))}</li>
+        <li class="ending-feats">Wardens’ Feats earned: ${esc(String(featsEarned(s)))} of ${esc(String(FEATS.length))}</li>
         ${bountyRecordText(s) ? `<li class="ending-bounty-record">${esc(bountyRecordText(s))}</li>` : ''}
       </ul>
       <h3>Credits</h3>
