@@ -10,6 +10,7 @@ import {
   getZoneProgress,
   getZoneVantage,
   getFieldServicesSummary,
+  getInteractableBriefing,
   getFrontierAtlas,
   getRouteBriefing,
   formatExpeditionLog,
@@ -1383,5 +1384,77 @@ test('getFieldServicesSummary reports charted repeatable services, inn discount,
   assert.match(
     wildHtml,
     /<p class="nearby-threat-preview nearby-patrol-preview">Step ambush: \d+% · Roaming \(0\/\d+ scouted\):/,
+  );
+});
+
+
+test('getInteractableBriefing reports spoiler-safe station/cache status, guardian locks, inn affordability, and renders .nearby-interact-preview', () => {
+  const state = createInitialState();
+  ensureMapState(state);
+
+  // Unknown interactable returns null without mutating state
+  const beforeSnap = JSON.stringify(state);
+  assert.equal(getInteractableBriefing(state, 'nonexistent_station'), null);
+  assert.equal(getInteractableBriefing(state, '__proto__'), null);
+
+  // Inn briefing in Greyhaven reflects cost and affordability
+  const innBriefing = getInteractableBriefing(state, 'greyhaven_inn');
+  assert.equal(JSON.stringify(state), beforeSnap, 'getInteractableBriefing must not mutate gameState');
+  assert.equal(innBriefing.id, 'greyhaven_inn');
+  assert.equal(innBriefing.kind, 'inn');
+  assert.equal(innBriefing.status, 'Service');
+  assert.equal(innBriefing.costGold, 5);
+  assert.equal(innBriefing.canAfford, true);
+  assert.equal(innBriefing.summary, 'Hearthstone Inn · Rest for 5g (full HP & MP)');
+
+  // Insufficient gold for inn rest
+  state.gold = 1;
+  const brokeInn = getInteractableBriefing(state, 'greyhaven_inn');
+  assert.equal(brokeInn.canAfford, false);
+  assert.equal(brokeInn.summary, 'Hearthstone Inn · Rest for 5g (full HP & MP, insufficient gold)');
+  state.gold = 25;
+
+  // Guarded relic in Observatory Ruins before and after clearing observatory_sentinel
+  const guardedRelic = getInteractableBriefing(state, 'observatory_lens_pedestal', 'observatory_ruins');
+  assert.equal(guardedRelic.status, 'Guarded');
+  assert.equal(guardedRelic.guardianCleared, false);
+  assert.equal(guardedRelic.guardianName, 'Observatory Sentinel');
+  assert.equal(guardedRelic.summary, 'Refractory Lens Pedestal · Guarded by Observatory Sentinel');
+
+  state.map.clearedEncounters.observatory_sentinel = true;
+  const unguardedRelic = getInteractableBriefing(state, 'observatory_lens_pedestal', 'observatory_ruins');
+  assert.equal(unguardedRelic.status, 'Available');
+  assert.equal(unguardedRelic.guardianCleared, true);
+  assert.equal(unguardedRelic.summary, 'Refractory Lens Pedestal · Expedition relic (ready to recover)');
+
+  // Unopened cache counts total supply items without spoiling item names
+  const cacheBriefing = getInteractableBriefing(state, 'ridge_supply_cache', 'ridge_road');
+  assert.equal(cacheBriefing.status, 'Available');
+  assert.equal(cacheBriefing.rewardCount, 3);
+  assert.equal(cacheBriefing.summary, 'Wayfarer Supply Crate · Unopened cache (3 supply items)');
+
+  state.map.completedInteractions.ridge_supply_cache = true;
+  const openedCache = getInteractableBriefing(state, 'ridge_supply_cache', 'ridge_road');
+  assert.equal(openedCache.status, 'Completed');
+  assert.equal(openedCache.completed, true);
+  assert.equal(openedCache.summary, 'Wayfarer Supply Crate · Completed');
+
+  // Stand adjacent to Hearthstone Inn (1, 1) at (1, 2) in Greyhaven and verify getAvailableActions + UI rendering
+  state.map.zoneId = 'greyhaven';
+  state.map.x = 1;
+  state.map.y = 2;
+  const actions = getAvailableActions(state);
+  const innAction = actions.find((a) => a.kind === 'interact' && a.id === 'greyhaven_inn');
+  assert.ok(innAction?.briefing);
+  assert.equal(innAction.briefing.summary, 'Hearthstone Inn · Rest for 5g (full HP & MP)');
+
+  const html = exploreScene.render({ state });
+  assert.match(
+    html,
+    /data-action="mapInteract" data-arg="greyhaven_inn" title="Hearthstone Inn · Rest for 5g \(full HP &amp; MP\)"/,
+  );
+  assert.match(
+    html,
+    /<p class="nearby-threat-preview nearby-interact-preview">Hearthstone Inn · Rest for 5g \(full HP &amp; MP\)<\/p>/,
   );
 });
