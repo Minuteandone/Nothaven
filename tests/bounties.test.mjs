@@ -494,3 +494,21 @@ test('claimed but unmastered contracts show mastery progress; mastered and locke
   assert.equal(MASTERY_CLAIMS, 3);
   assertEggFree(html, 'mastery progress board');
 });
+
+test('the Journey Journal shows a board record once a contract has been claimed', async () => {
+  const { bountyRecordText } = await import('../src/core/bounties.js');
+  const { questJournalScene } = await import('../src/scenes/quests.js');
+  const s = fresh();
+  const game = { state: s, scenes: { town: {} } };
+  questJournalScene.onEnter(game, {});
+  assert.equal(bountyRecordText(s), null);
+  assert.ok(!questJournalScene.render(game).includes('quest-bounty-record'));
+  s.bounties = { active: null, progress: 0, completed: { ridge_rats: 1 } };
+  assert.equal(bountyRecordText(s), 'Board record: 1 claim · Notice Runner · 0 of 18 contracts mastered.');
+  s.bounties.completed = { ridge_rats: 3, pier_clearance: 4, wolf_trail: 2, junk: 'x', no_such: 9 };
+  assert.equal(bountyRecordText(s), 'Board record: 9 claims · Board Regular · 2 of 18 contracts mastered.');
+  const html = questJournalScene.render(game);
+  assert.match(html, /<p class="quest-bounty-record">Board record: 9 claims · Board Regular · 2 of 18 contracts mastered\.<\/p>/);
+  assert.equal((html.match(/quest-bounty-record/g) || []).length, 1);
+  assertEggFree(html, 'journal board record');
+});

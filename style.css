@@ -1473,3 +1473,4 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
   font-size: .85rem;
   margin: .25rem 0;
 }
+.quest-bounty-record { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
