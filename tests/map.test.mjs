@@ -9,6 +9,7 @@ import {
   getZoneCondition,
   getZoneProgress,
   getZoneVantage,
+  getFieldServicesSummary,
   getFrontierAtlas,
   getRouteBriefing,
   formatExpeditionLog,
@@ -1326,4 +1327,61 @@ test('getPatrolBriefing masks unscouted roaming hostiles, reflects story encount
   const html = exploreScene.render({ state });
   assert.match(html, /data-action="mapPatrol" data-arg="ridge_road" title="Step ambush: 6% · Roaming \(1\/4 scouted\): Unscouted hostile \(33%\), Unscouted hostile \(17%\), Storm Rat \(33%, 12 HP\), Unscouted hostile \(17%\)"/);
   assert.match(html, /<p class="frontier-atlas__totals">Total threats cleared: 0\/\d+ · Caches opened: 0\/\d+<\/p>/);
+});
+
+test('getFieldServicesSummary reports charted repeatable services, inn discount, and renders .frontier-atlas__services and .nearby-patrol-preview', () => {
+  const state = createInitialState();
+  ensureMapState(state);
+
+  const beforeSnap = JSON.stringify(state);
+  const initialServices = getFieldServicesSummary(state);
+  assert.equal(JSON.stringify(state), beforeSnap, 'getFieldServicesSummary must not mutate gameState');
+  assert.equal(initialServices.currentZoneId, 'greyhaven');
+  assert.equal(initialServices.innCost, 5);
+  assert.equal(initialServices.shelterNetworkActive, false);
+  assert.equal(initialServices.routeNetworkActive, false);
+  assert.equal(initialServices.stormCalmed, false);
+  assert.equal(initialServices.inns.length, 1);
+  assert.equal(initialServices.shops.length, 1);
+  assert.equal(initialServices.musters.length, 1);
+  assert.equal(initialServices.summary, 'Inn rest: 5g · Charted posts: 1 shop (Greyhaven)');
+
+  // In Greyhaven (no roaming hostiles), no .nearby-patrol-preview is rendered, while .frontier-atlas__services is present
+  const townHtml = exploreScene.render({ state });
+  assert.match(townHtml, /<p class="frontier-atlas__services">Inn rest: 5g · Charted posts: 1 shop \(Greyhaven\)<\/p>/);
+  assert.doesNotMatch(townHtml, /nearby-patrol-preview/);
+
+  // Unlock and travel to Saltmere Coast and Sunscar Relay with shelter_network active
+  state.story.flags.beacon_lit = true;
+  state.story.flags.relay_choice = 'shelter_network';
+  travelToZone(state, 'saltmere_coast');
+  travelToZone(state, 'sunscar_relay');
+
+  const midServices = getFieldServicesSummary(state);
+  assert.equal(midServices.innCost, 2);
+  assert.equal(midServices.shelterNetworkActive, true);
+  assert.equal(midServices.shops.length, 3);
+  assert.equal(
+    midServices.summary,
+    'Inn rest: 2g (Shelter Network) · Charted posts: 3 shops (Greyhaven, Saltmere Coast, Sunscar Relay)',
+  );
+
+  // Switch to route_network and victory_storm_heart, and verify visible .nearby-patrol-preview in wild zone
+  state.story.flags.relay_choice = 'route_network';
+  state.story.flags.victory_storm_heart = true;
+  const routeServices = getFieldServicesSummary(state);
+  assert.equal(
+    routeServices.summary,
+    'Inn rest: 5g · Charted posts: 3 shops (Greyhaven, Saltmere Coast, Sunscar Relay) · Route Network (-50% ambushes) · Storm Heart calmed',
+  );
+
+  const wildHtml = exploreScene.render({ state });
+  assert.match(
+    wildHtml,
+    /<p class="frontier-atlas__services">Inn rest: 5g · Charted posts: 3 shops \(Greyhaven, Saltmere Coast, Sunscar Relay\) · Route Network \(-50% ambushes\) · Storm Heart calmed<\/p>/,
+  );
+  assert.match(
+    wildHtml,
+    /<p class="nearby-threat-preview nearby-patrol-preview">Step ambush: \d+% · Roaming \(0\/\d+ scouted\):/,
+  );
 });

@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFrontierAtlas, getRouteBriefing, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFieldServicesSummary, getFrontierAtlas, getRouteBriefing, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -217,10 +217,13 @@ function frontierAtlasPanel(state, zone, mapState) {
   const unchartedLine = unvisitedCount > 0
     ? `<p class="frontier-atlas__uncharted">${unvisitedCount} frontier ${unvisitedCount === 1 ? 'region remains' : 'regions remain'} uncharted.</p>`
     : '<p class="frontier-atlas__uncharted">All frontier regions charted.</p>';
+  const services = getFieldServicesSummary(state ? { ...state, map: effectiveMap } : { map: effectiveMap });
   const totalsLine = `<p class="frontier-atlas__totals">Total threats cleared: ${atlas.totalEncountersCleared}/${atlas.totalEncounters} · Caches opened: ${atlas.totalCachesOpened}/${atlas.totalCaches}</p>`;
+  const servicesLine = `<p class="frontier-atlas__services">${escapeHTML(services.summary)}</p>`;
   return `<details class="shortcut-guide frontier-atlas"><summary>Frontier atlas (${atlas.zonesVisited}/${atlas.zonesTotal} regions · ${atlas.overallPercent}% recon)</summary>
     <ul class="frontier-atlas__list" aria-label="Charted frontier regions">${items}</ul>
     ${totalsLine}
+    ${servicesLine}
     ${unchartedLine}
   </details>`;
 }
@@ -259,6 +262,10 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
   const nearbyRoutePreviews = (nearbyActions || [])
     .filter(action => action?.kind === 'exit' && action.briefing?.summary)
     .map(action => `<p class="nearby-threat-preview nearby-route-preview">${escapeHTML(action.briefing.summary)}</p>`)
+    .join('');
+  const nearbyPatrolPreviews = (nearbyActions || [])
+    .filter(action => action?.kind === 'patrol' && action.patrol?.summary)
+    .map(action => `<p class="nearby-threat-preview nearby-patrol-preview">${escapeHTML(action.patrol.summary)}</p>`)
     .join('');
   const routes = (visitedZones || [])
     .filter(zoneId => zoneId !== zone.id && ZONES[zoneId])
@@ -335,6 +342,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           <div class="nearby-actions">${contextButtons || '<p class="empty-state">Move beside a person, route, cache, or threat to interact.</p>'}</div>
           ${nearbyThreatPreviews}
           ${nearbyRoutePreviews}
+          ${nearbyPatrolPreviews}
           ${fieldPack(state.inventory, state.party)}
           ${routes ? `<div class="visited-routes"><h3>${icon('map')}Visited Routes:</h3><div>${routes}</div></div>` : ''}
           <div class="explore-utilities">
