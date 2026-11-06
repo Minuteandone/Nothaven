@@ -1291,6 +1291,14 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
   white-space: normal;
 }
 
+/* Bag-count hints on shop buy rows */
+.bag-owned {
+  display: block;
+  color: var(--muted);
+  font-size: 0.9em;
+  white-space: normal;
+}
+
 /* Sort control on the Bag screen */
 .bag-sort {
   display: flex;
