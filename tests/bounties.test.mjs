@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { MASTERY_CLAIMS, bountyMastered, bountyItems, masteredCount, masteryText } from '../src/core/bounties.js';
 import { BOUNTIES, bountyHabitats, acceptBounty, abandonBounty, bountyRows, bountyState, claimBounty, recordBountyKill, totalBountiesClaimed, bountyRewardText } from '../src/core/bounties.js';
 import { bountiesScene, installBounties } from '../src/scenes/bounties.js';
 import { townScene } from '../src/scenes/town.js';
@@ -370,4 +371,62 @@ test('board scene shows the urgent notice line and marks only the unlocked urgen
   assert.match(html, /bounty--urgent">\s*<h2 class="bounty__title">Rusted Watchmen<\/h2>\s*<p class="bounty__urgent">Urgent notice — premium pay until the next claim\.<\/p>/);
   assert.match(html, /Reward: 68 gold/);
   assertEggFree(html, 'urgent board');
+});
+
+test('three claims master a contract and later claims pay one extra of its first item', () => {
+  assert.equal(MASTERY_CLAIMS, 3);
+  const s = fresh(); s.bestiary = { reef_crawler: 1, storm_rat: 1 }; s.gold = 0; s.inventory = [];
+  const claimPier = () => { assert.equal(acceptBounty(s, 'pier_clearance').ok, true); for (let i = 0; i < 3; i++) recordBountyKill(s, 'reef_crawler'); return claimBounty(s); };
+  const wiring = () => s.inventory.find((i) => i.id === 'salvaged_wiring')?.qty || 0;
+  const pier = BOUNTIES.find((b) => b.id === 'pier_clearance');
+  const r1 = claimPier(); assert.equal(wiring(), 2); assert.ok(!r1.message.includes('Mastery'));
+  claimPier(); assert.equal(wiring(), 4);
+  assert.equal(bountyMastered(s, 'pier_clearance'), false);
+  const r3 = claimPier();
+  assert.equal(wiring(), 6, 'the third claim itself pays the base items');
+  assert.ok(!r3.message.includes('Mastery bonus'));
+  assert.match(r3.message, /“Pier Clearance” is now mastered: future claims pay one extra of its first item\./);
+  assert.equal(bountyMastered(s, 'pier_clearance'), true);
+  assert.deepEqual(bountyItems(s, pier), [{ id: 'salvaged_wiring', qty: 3 }]);
+  assert.deepEqual(pier.items, [{ id: 'salvaged_wiring', qty: 2 }], 'catalogue stays untouched');
+  const r4 = claimPier();
+  assert.equal(wiring(), 9);
+  assert.match(r4.message, /3× Salvaged Wiring\..* Mastery bonus: \+1 Salvaged Wiring\./);
+  assert.ok(!r4.message.includes('is now mastered'));
+  assert.equal(masteredCount(s), 1);
+  assert.equal(masteryText(s), `Contracts mastered: 1 of ${BOUNTIES.length}. A contract is mastered after 3 claims and then pays one extra of its first item.`);
+  const row = bountyRows(s).find((b) => b.id === 'pier_clearance');
+  assert.equal(row.mastered, true);
+  assert.equal(bountyRows(s).find((b) => b.id === 'ridge_rats').mastered, false);
+  assertEggFree(`${r3.message} ${r4.message} ${masteryText(s)}`, 'mastery text');
+});
+
+test('only the first item of a multi-item contract gains the mastery bonus', () => {
+  const s = fresh(); s.bounties = { active: null, progress: 0, completed: { colossus_thunder: 3 } };
+  const b = BOUNTIES.find((x) => x.id === 'colossus_thunder');
+  assert.deepEqual(bountyItems(s, b), [{ id: 'relay_brass', qty: 3 }, { id: 'storm_glass', qty: 1 }]);
+  s.bounties.completed = { colossus_thunder: 2 };
+  assert.deepEqual(bountyItems(s, b), [{ id: 'relay_brass', qty: 2 }, { id: 'storm_glass', qty: 1 }]);
+});
+
+test('a mastered claim whose item grant fails changes nothing', () => {
+  const s = fresh(); s.bestiary = { reef_crawler: 1 }; s.gold = 5;
+  s.bounties = { active: 'pier_clearance', progress: 3, completed: { pier_clearance: 3 } };
+  const fake = { ...BOUNTIES.find((b) => b.id === 'pier_clearance'), items: [{ id: 'no_such_item', qty: 1 }] };
+  const before = structuredClone(s);
+  const r = claimBounty(s, () => fake);
+  if (!r.ok) assert.deepEqual(s, before);
+});
+
+test('the board shows mastered badges only on posted mastered contracts and counts them', () => {
+  const s = fresh(); s.bestiary = { reef_crawler: 1 }; s.scene = 'bounties';
+  s.bounties = { active: null, progress: 0, completed: { pier_clearance: 3, ridge_rats: 5 } };
+  const game = { state: s, bountyMessage: '' };
+  bountiesScene.onEnter(game);
+  const html = bountiesScene.render(game);
+  assert.match(html, /<p class="bounties__mastery">Contracts mastered: 2 of 18\. A contract is mastered after 3 claims and then pays one extra of its first item\.<\/p>/);
+  assert.equal((html.match(/class="bounty__mastered"/g) || []).length, 1, 'locked ridge_rats keeps its badge hidden');
+  assert.match(html, /<p class="bounty__mastered">Mastered — \+1 Salvaged Wiring per claim\.<\/p>/);
+  assert.match(html, /Reward: \d+ gold, 3× Salvaged Wiring/);
+  assertEggFree(html, 'bounty board with mastery');
 });

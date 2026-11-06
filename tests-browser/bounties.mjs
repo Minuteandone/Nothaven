@@ -248,8 +248,10 @@ try {
           assert.match(await page.locator('.bounty').filter({has:page.locator('[data-action="claimBounty"]')}).textContent(),new RegExp(`Reward: ${pay} gold`));
           await click('claimBounty');
           const expected = structuredClone(before); expected.gold += pay;
-          expected.inventory.find(i => i.id === 'scrap_metal').qty++;
+          // Claim four is the first after mastery (three claims), so it pays one extra Scrap Metal.
+          expected.inventory.find(i => i.id === 'scrap_metal').qty += count === 4 ? 2 : 1;
           expected.bounties = { active: null, progress: 0, completed: { ridge_rats: count } };
+          assert.equal((await page.locator('#app').textContent()).includes('Mastery bonus: +1 Scrap Metal.'), count === 4);
           assert.deepEqual(await state(), expected);
           assert.equal((await page.locator('#app').textContent()).includes('Board rank raised to Contract Hand.'),count === 3);
           assert.match(await page.locator('.bounties__rank').textContent(),count >= 3 ? /Contract Hand \(\+10% gold\)/:/Notice Runner \(\+0% gold\)/);
@@ -262,7 +264,7 @@ try {
           await click('closeBounties'); await click('explore');
         }
         assert.deepEqual(errors, []);
-        console.log(`PASS ${id}: Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained, 130% fit; errors []`);
+        console.log(`PASS ${id}: Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33 plus a mastery Scrap Metal, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained, 130% fit; errors []`);
       } catch (error) {
         await page.screenshot({ path: path.join(artifacts, `${id}-failure.png`), fullPage: true }).catch(() => {});
         console.error(`FAIL ${id}; browser errors: ${JSON.stringify(errors)}`);
