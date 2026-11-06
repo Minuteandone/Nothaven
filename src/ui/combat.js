@@ -23,6 +23,24 @@ function elementChip(element, suffix = '') {
   return `<span class="element-chip ${elementClass(element)}">${escapeHTML(elementLabel(element))}${suffix ? ` <em>${escapeHTML(suffix)}</em>` : ''}</span>`;
 }
 
+/** Human-readable summary of an enemy ability for the combat tooltip. */
+export function abilityDetail(ability) {
+  if (!ability || typeof ability !== 'object' || !ability.name) return '';
+  const parts = [];
+  const chance = Number(ability.chance);
+  if (Number.isFinite(chance) && chance > 0) parts.push(`${Math.round(chance * 100)}% chance`);
+  const mult = Number(ability.mult);
+  if (Number.isFinite(mult) && mult > 1) parts.push(`${mult}× damage`);
+  if (typeof ability.status === 'string' && ability.status) {
+    let text = `Inflicts ${ability.status}`;
+    const turns = Number(ability.turns);
+    if (Number.isFinite(turns) && turns > 0) text += ` for ${turns} ${turns === 1 ? 'turn' : 'turns'}`;
+    parts.push(text);
+  }
+  return parts.join(' · ');
+}
+
+
 /** Renders a log line, replacing ::elem:X:: markers with element chips. */
 function renderLogLine(line) {
   return escapeHTML(line).replace(/::elem:(fire|ice|lightning|water|earth)::/g, (_m, el) => `${elementChip(el)} `);
@@ -81,7 +99,7 @@ function unitCard(member, { enemy = false, leader = false, enraged = false } = {
     ${enemy ? '' : meter({ label: 'MP', value: member?.mp, max: stats.maxMp, tone: 'mp' })}
     ${statList(stats)}
     ${enemy && member?.element ? enemyMatchupHint(member.element) : ''}
-    ${enemy && member?.ability ? `<p class="enemy-ability">${icon('focus')}<span>Signature move<strong>${escapeHTML(member.ability.name)}</strong></span></p>` : ''}
+    ${enemy && member?.ability ? `<p class="enemy-ability">${icon('focus')}<span>Signature move<strong>${escapeHTML(member.ability.name)}</strong></span></p>${abilityDetail(member.ability) ? `<p class="enemy-ability-detail">${escapeHTML(abilityDetail(member.ability))}</p>` : ''}` : ''}
     ${enemy && Array.isArray(member?.tags) && member.tags.length ? `<div class="enemy-tags">${member.tags.map(tag => `<span>${escapeHTML(tag)}</span>`).join('')}</div>` : ''}
   </article>`;
 }
