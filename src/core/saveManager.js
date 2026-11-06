@@ -1,14 +1,24 @@
-import { createInitialState, saveGame } from '../state.js';
+import { createInitialState } from '../state.js';
 import { migrateSave, SAVE_VERSION } from './save.js';
 
 const SAVE_KEY = 'stormhaven-save';
+const AUTOSAVE_KEY = 'stormhaven-autosave';
 
 /**
- * Export the current game state as a downloadable JSON file.
+ * Export the current saved game as a downloadable JSON file.
+ * Reads directly from localStorage so the latest persisted state is always
+ * exported — not a stale in-memory default.
  * Returns true if the download was triggered successfully.
  */
-export function exportSave(state) {
-  const data = { ...state, combat: null, saveVersion: SAVE_VERSION };
+export function exportSave() {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) return false;
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    return false;
+  }
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -57,12 +67,13 @@ export function importSave(jsonString) {
 }
 
 /**
- * Delete the current save and any backup.
+ * Delete the current save, backup, and any autosave.
  * Returns true after removal.
  */
 export function deleteSave() {
   localStorage.removeItem(SAVE_KEY);
   localStorage.removeItem(SAVE_KEY + '.backup');
+  localStorage.removeItem(AUTOSAVE_KEY);
   return true;
 }
 

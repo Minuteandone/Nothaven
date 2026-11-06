@@ -40,7 +40,6 @@ export const titleScene = {
         </section>
         <div class="title-art-frame">${beaconArt()}<span class="art-caption">Greyhaven waits beyond the storm</span></div>
       </div>
-      <!-- Hidden import file input (positioned outside main flow so it stays accessible) -->
       <div id="save-import-overlay" class="save-import-overlay" style="display:none">
         <div class="save-import-dialog">
           <p id="save-import-message">Select a save file to import.</p>
@@ -51,36 +50,6 @@ export const titleScene = {
         </div>
       </div>
     </main>`;
-  },
-  afterRender(game) {
-    // Set up import file input handler
-    const fileInput = document.getElementById('save-import-input');
-    if (fileInput) {
-      const handleFile = () => {
-        const file = fileInput.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = importSave(reader.result);
-          const msgEl = document.getElementById('save-import-message');
-          if (result.ok) {
-            if (msgEl) msgEl.textContent = 'Save imported. Reloading…';
-            setTimeout(() => { window.location.reload(); }, 600);
-          } else {
-            if (msgEl) msgEl.textContent = result.error || 'Import failed.';
-            // Re-show dialog buttons so user can retry
-            const overlay = document.getElementById('save-import-overlay');
-            if (overlay) overlay.style.display = '';
-          }
-        };
-        reader.onerror = () => {
-          const msgEl = document.getElementById('save-import-message');
-          if (msgEl) msgEl.textContent = 'Could not read the selected file.';
-        };
-        reader.readAsText(file);
-      };
-      fileInput.addEventListener('change', handleFile);
-    }
   },
   actions: {
     archive(game) { if (game.state.scene === 'title' && game.scenes?.archive && !game.state.combat) game.setScene('archive', { returnScene: 'title' }); },
@@ -93,22 +62,49 @@ export const titleScene = {
     },
     exportSave(game) {
       if (!hasSave()) return;
-      exportSave(game.state);
+      exportSave();
     },
     promptImport(game) {
       const overlay = document.getElementById('save-import-overlay');
       if (overlay) overlay.style.display = 'flex';
-      // Wire the choose-file button
       const confirmBtn = document.getElementById('save-import-confirm');
       const cancelBtn = document.getElementById('save-import-cancel');
       const fileInput = document.getElementById('save-import-input');
       const msgEl = document.getElementById('save-import-message');
       if (msgEl) msgEl.textContent = 'Select a save file to import. This will overwrite your current save.';
-      if (confirmBtn && fileInput) {
+
+      // Wire file input change handler (was in afterRender; now inline so it
+      // always fires regardless of whether the engine calls afterRender).
+      if (fileInput) {
+        const newInput = fileInput.cloneNode(true);
+        fileInput.parentNode.replaceChild(newInput, fileInput);
+        const freshInput = document.getElementById('save-import-input');
+        freshInput.addEventListener('change', () => {
+          const file = freshInput.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = importSave(reader.result);
+            if (result.ok) {
+              if (msgEl) msgEl.textContent = 'Save imported. Reloading…';
+              setTimeout(() => { window.location.reload(); }, 600);
+            } else {
+              if (msgEl) msgEl.textContent = result.error || 'Import failed.';
+              if (overlay) overlay.style.display = 'flex';
+            }
+          };
+          reader.onerror = () => {
+            if (msgEl) msgEl.textContent = 'Could not read the selected file.';
+          };
+          reader.readAsText(file);
+        });
+      }
+
+      if (confirmBtn) {
         const newConfirm = confirmBtn.cloneNode(true);
         confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
         newConfirm.addEventListener('click', () => {
-          fileInput.click();
+          document.getElementById('save-import-input').click();
         });
       }
       if (cancelBtn) {
