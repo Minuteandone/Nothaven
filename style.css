@@ -1500,3 +1500,13 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .matchup-weak { color: #f87171; font-weight: 600; }
 .matchup-neutral { color: var(--muted); }
 
+
+/* Incoming enemy damage estimate in combat */
+.incoming-damage-hint {
+  margin: 0.25em 0 0;
+  font-size: 0.8em;
+  color: var(--muted);
+  text-align: center;
+}
+.incoming-damage-label { font-weight: 600; }
+
