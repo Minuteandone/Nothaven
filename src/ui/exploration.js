@@ -1,6 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
+import { bountyFieldText } from '../core/bounties.js';
 import { getEntityAt, getTileInfo, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
@@ -199,6 +200,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
     </div>
     ${partyStatus(state.party)}
     ${renderPinnedQuest(state, { journalAction: 'openQuests', hasJournal: hasQuestJournal })}
+    ${(() => { const line = bountyFieldText(state, zone); return line ? `<p class="explore-bounty-summary" role="status">${escapeHTML(line)}</p>` : ''; })()}
     <div class="explore-layout">
       <section class="panel exploration-map-panel" aria-labelledby="zone-map-title">
         <div class="section-heading">

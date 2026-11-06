@@ -84,3 +84,24 @@ test('empty and stocked Field Packs remain readable and consumables stay actiona
   assert.ok(stocked.includes('data-action="useFieldItem"'));
   assert.ok(stocked.includes('data-arg="bandage"'));
 });
+
+test('exploration HUD shows the active bounty contract and whether its foe roams the zone', async () => {
+  const { bountyFieldText } = await import('../src/core/bounties.js');
+  assert.ok(!renderAt('ridge_road').includes('explore-bounty-summary'), 'no line without a contract');
+
+  const active = { bounties: { active: 'ridge_rats', progress: 1, completed: {} } };
+  const ridge = renderAt('ridge_road', { state: active });
+  assert.match(ridge, /<p class="explore-bounty-summary" role="status">Bounty contract: “Ridge Road Rat Cull” — 1\/4 defeated\. The Storm Rat roams this area\.<\/p>/);
+
+  const coast = renderAt('saltmere_coast', { state: active });
+  assert.match(coast, /The Storm Rat does not roam this area\./);
+
+  const done = renderAt('saltmere_coast', { state: { bounties: { active: 'ridge_rats', progress: 4, completed: {} } } });
+  assert.match(done, /“Ridge Road Rat Cull” complete — claim it at the Greyhaven bounty board\./);
+  assert.ok(!done.includes('roam'), 'finished contracts point home instead of to the field');
+
+  assert.equal(bountyFieldText({ bounties: { active: 'nope', progress: 0, completed: {} } }, null), null);
+  assert.match(bountyFieldText(active, null), /does not roam this area/);
+  const hostile = renderAt('ridge_road', { state: active, zone: { randomEncounters: [{ enemyId: 'storm_rat' }], name: '<b>x</b>' } });
+  assert.ok(!hostile.includes('<b>x</b>'), 'zone names stay escaped');
+});
