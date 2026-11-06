@@ -12,7 +12,7 @@ const validState = state => object(state) && ['town', 'explore'].includes(state.
 /** Portable text is local, editable data, not an authenticated record. */
 export const ARCHIVE_TEXT_LIMIT = 250000;
 const forbiddenKeys = new Set(['__proto__', 'prototype', 'constructor']);
-function boundedTree(value) {
+export function boundedTree(value) {
   const queue = [[value, 0]];
   let nodes = 0;
   while (queue.length) {
