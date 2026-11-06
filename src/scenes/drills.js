@@ -85,6 +85,11 @@ export function drillsSummaryText(state) {
   return `Drills unlocked: ${unlocked} of ${entries.length} · Foes bested in drills: ${bested} · Drill victories: ${wins}`;
 }
 
+export function gauntletRecordText(grec) {
+  if (!grec || !grec.runs) return 'No gauntlet attempted yet.';
+  return `Best run: ${grec.best} ${grec.best === 1 ? 'foe' : 'foes'} beaten · ${grec.runs} ${grec.runs === 1 ? 'attempt' : 'attempts'}`;
+}
+
 function recordText(rec) {
   if (!rec.wins) return 'No drills won yet.';
   return `Won ${rec.wins} ${rec.wins === 1 ? 'time' : 'times'} · best ${rec.best} ${rec.best === 1 ? 'round' : 'rounds'}`;
@@ -96,14 +101,14 @@ export const drillsScene = {
   },
   render(game) {
     const rows = drillEntries(game.state).map((r) => `<li class="drill${r.unlocked ? '' : ' drill--locked'}">
-        <div><h2>${escapeHTML(r.name)}</h2><p>${r.unlocked ? `+${r.xp} XP per drill` : 'Defeat this foe in the field first.'}</p>${r.unlocked ? `<p class="drill__record">${escapeHTML(recordText(r.record))}</p>` : ''}</div>
+        <div><h2>${escapeHTML(r.name)}</h2><p>${escapeHTML(r.unlocked ? `+${r.xp} XP per drill` : 'Defeat this foe in the field first.')}</p>${r.unlocked ? `<p class="drill__record">${escapeHTML(recordText(r.record))}</p>` : ''}</div>
         ${r.unlocked ? uiButton({ action: 'startDrill', arg: r.id, label: 'Begin drill', iconName: 'sword', variant: 'ghost' }) : ''}
       </li>`).join('');
     const queue = gauntletQueue(game.state), grec = gauntletRecord(game.state);
     const gauntlet = `<section class="panel drills__gauntlet" aria-label="Yard Gauntlet">
         <h2>Yard Gauntlet</h2>
         <p>Face every drill you have unlocked, one after another. Wounds and spent MP carry over between bouts, and each win still grants its drill experience.</p>
-        <p class="drill__record">${grec.runs ? `Best run: ${grec.best} of ${queue.length} foes · ${grec.runs} ${grec.runs === 1 ? 'attempt' : 'attempts'}` : 'No gauntlet attempted yet.'}</p>
+        <p class="drill__record">${escapeHTML(gauntletRecordText(grec))}</p>
         ${queue.length >= GAUNTLET_MIN ? uiButton({ action: 'startGauntlet', label: `Begin gauntlet (${queue.length} foes)`, iconName: 'sword', variant: 'ghost' }) : `<p class="drills__gauntlet-progress">${escapeHTML(`Unlock ${GAUNTLET_MIN} drills to open the gauntlet (${queue.length} of ${GAUNTLET_MIN} unlocked so far).`)}</p>`}
       </section>`;
     const msg = game.drillsMessage ? `<p class="drills__message" role="status">${escapeHTML(game.drillsMessage)}</p>` : '';
