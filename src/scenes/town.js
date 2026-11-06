@@ -70,7 +70,7 @@ export const townScene = {
     bag(game) { if (game.scenes?.bag) game.setScene('bag', { returnScene: 'town' }); },
     muster(game) { if (game.scenes?.muster) game.setScene('muster', { returnScene: 'town' }); },
     feats(game) { if (game.scenes?.feats) game.setScene('feats', { returnScene: 'town' }); },
-    bounties(game) { if (game.scenes?.bounties) game.setScene('bounties'); },
+    bounties(game) { if (game.state.scene === 'town' && !game.state.combat && game.scenes?.bounties) game.setScene('bounties'); },
     drills(game) { if (game.scenes?.drills) game.setScene('drills'); },
     forge(game) { if (game.scenes?.forge) game.setScene('forge', { returnScene: 'town' }); },
     questJournal(game) { if (game.scenes?.quests) game.setScene('quests', { returnScene: 'town' }); },

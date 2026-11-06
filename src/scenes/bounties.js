@@ -40,10 +40,19 @@ export const bountiesScene = {
     </main>`;
   },
   actions: {
-    acceptBounty(game, el) { game.bountyMessage = acceptBounty(game.state, el?.dataset?.arg).message; },
-    abandonBounty(game) { game.bountyMessage = abandonBounty(game.state).message; },
-    claimBounty(game) { game.bountyMessage = claimBounty(game.state).message; },
-    closeBounties(game) { game.setScene('town'); },
+    acceptBounty(game, el) {
+      if (game.state.scene !== 'bounties' || game.state.combat) return;
+      game.bountyMessage = acceptBounty(game.state, el?.dataset?.arg).message;
+    },
+    abandonBounty(game) {
+      if (game.state.scene !== 'bounties' || game.state.combat) return;
+      game.bountyMessage = abandonBounty(game.state).message;
+    },
+    claimBounty(game) {
+      if (game.state.scene !== 'bounties' || game.state.combat) return;
+      game.bountyMessage = claimBounty(game.state).message;
+    },
+    closeBounties(game) { if (game.state.scene === 'bounties' && !game.state.combat) game.setScene('town'); },
   },
 };
 

@@ -2,7 +2,7 @@
 // A contract opens once its foe appears in the Field Journal. One contract is
 // active at a time; only real victories count (drills never emit combat:victory).
 import { ENEMIES } from '../data/enemies.js';
-import { addItem } from '../items/inventory.js';
+import { grantRewards } from '../items/inventory.js';
 import { getItem } from '../items/items.js';
 
 export const BOUNTIES = Object.freeze([
@@ -102,13 +102,14 @@ export function recordBountyKill(state, enemyId) {
   return progress >= b.count ? `Bounty complete: “${b.title}”. Claim it at the Greyhaven bounty board.` : `Bounty progress: ${progress}/${b.count} for “${b.title}”.`;
 }
 
-export function claimBounty(state) {
+export function claimBounty(state, lookup = getBounty) {
   const v = bountyState(state);
-  const b = v.active ? getBounty(v.active) : null;
+  const b = v.active ? lookup(v.active) : null;
   if (!b || v.progress < b.count) return { ok: false, message: 'No contract is ready to claim.' };
-  let inv = Array.isArray(state.inventory) ? state.inventory : [];
-  for (const it of b.items) { const r = addItem(inv, it.id, it.qty); if (r.ok) inv = r.inv; }
-  state.inventory = inv;
+  const inv = Array.isArray(state.inventory) ? state.inventory : [];
+  const granted = grantRewards(inv, b.items);
+  if (!granted || !granted.ok) return { ok: false, message: 'The bounty clerk cannot pay out that contract right now.' };
+  state.inventory = granted.inv;
   state.gold = (Number.isFinite(state.gold) ? state.gold : 0) + b.gold;
   const completed = { ...v.completed, [b.id]: (v.completed[b.id] || 0) + 1 };
   writeState(state, { active: null, progress: 0, completed });
