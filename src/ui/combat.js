@@ -2,7 +2,7 @@ import { companionTactic } from '../party/tactics.js';
 import { isCompanionId } from '../party/companions.js';
 import { BEACON_CHARGE_MAX, chargeReady, battleSummary, enemyWindingUp } from '../combat/rules.js';
 import { heroStats, knownSkills } from '../combat/rules.js';
-import { elementLabel, elementClass, elementEffectivenessText } from '../combat/elements.js';
+import { elementLabel, elementClass, elementEffectivenessText, elementMatchups } from '../combat/elements.js';
 import { getItem, TYPES } from '../items/items.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
 
@@ -78,9 +78,18 @@ function unitCard(member, { enemy = false, leader = false, enraged = false } = {
     ${meter({ label: 'HP', value: member?.hp, max: enemy ? member?.maxHp || member?.hp : stats.maxHp, tone: 'hp' })}
     ${enemy ? '' : meter({ label: 'MP', value: member?.mp, max: stats.maxMp, tone: 'mp' })}
     ${statList(stats)}
+    ${enemy && member?.element ? enemyMatchupHint(member.element) : ''}
     ${enemy && member?.ability ? `<p class="enemy-ability">${icon('focus')}<span>Signature move<strong>${escapeHTML(member.ability.name)}</strong></span></p>` : ''}
     ${enemy && Array.isArray(member?.tags) && member.tags.length ? `<div class="enemy-tags">${member.tags.map(tag => `<span>${escapeHTML(tag)}</span>`).join('')}</div>` : ''}
   </article>`;
+}
+
+function enemyMatchupHint(element) {
+  const mu = elementMatchups(element);
+  const parts = [];
+  if (mu.strong.length) parts.push(`Weak to ${mu.strong.map(el => escapeHTML(elementLabel(el))).join(', ')}`);
+  if (mu.resist.length) parts.push(`Resists ${mu.resist.map(el => escapeHTML(elementLabel(el))).join(', ')}`);
+  return parts.length ? `<p class="enemy-matchup-hint">${parts.join(' · ')}</p>` : '';
 }
 
 function keyHint(key) {
