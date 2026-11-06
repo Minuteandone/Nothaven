@@ -230,26 +230,34 @@ function frontierAtlasPanel(state, zone, mapState) {
   </details>`;
 }
 
+function formatChecklistDistance(poi) {
+  const dist = Math.max(0, Number(poi?.distance) || 0);
+  if (dist === 0) return 'Here';
+  return `${dist} ${dist === 1 ? 'tile' : 'tiles'} ${poi?.bearing || ''}`.trim();
+}
+
 function zoneChecklistPanel(state, zone, mapState) {
   const effectiveState = state ? { ...state, map: mapState || state.map } : { map: mapState };
   const checklist = getZoneChecklist(effectiveState, zone);
   const rows = [];
   for (const npc of checklist.npcs) {
-    rows.push(`<li data-poi-kind="npc" data-poi-id="${escapeHTML(npc.id)}"><strong>${escapeHTML(npc.name)}</strong>${npc.role ? ` (${escapeHTML(npc.role)})` : ''} · (${escapeHTML(String(npc.x))}, ${escapeHTML(String(npc.y))})</li>`);
+    rows.push(`<li title="${escapeHTML(npc.summary || npc.name)}" data-poi-kind="npc" data-poi-id="${escapeHTML(npc.id)}"><strong>${escapeHTML(npc.name)}</strong>${npc.role ? ` (${escapeHTML(npc.role)})` : ''} · (${escapeHTML(String(npc.x))}, ${escapeHTML(String(npc.y))}) · ${escapeHTML(formatChecklistDistance(npc))}</li>`);
   }
   for (const enc of checklist.encounters) {
-    rows.push(`<li data-poi-kind="encounter" data-poi-id="${escapeHTML(enc.id)}" data-poi-status="${escapeHTML(enc.status)}"><strong>${escapeHTML(enc.name)}</strong> · ${escapeHTML(enc.status)} · (${escapeHTML(String(enc.x))}, ${escapeHTML(String(enc.y))})</li>`);
+    rows.push(`<li title="${escapeHTML(enc.summary || enc.name)}" data-poi-kind="encounter" data-poi-id="${escapeHTML(enc.id)}" data-poi-status="${escapeHTML(enc.status)}"><strong>${escapeHTML(enc.name)}</strong> · ${escapeHTML(enc.status)} · (${escapeHTML(String(enc.x))}, ${escapeHTML(String(enc.y))}) · ${escapeHTML(formatChecklistDistance(enc))}</li>`);
   }
   for (const inter of checklist.interactables) {
-    rows.push(`<li data-poi-kind="interactable" data-poi-id="${escapeHTML(inter.id)}" data-poi-status="${escapeHTML(inter.status)}"><strong>${escapeHTML(inter.name)}</strong> · ${escapeHTML(inter.status)} · (${escapeHTML(String(inter.x))}, ${escapeHTML(String(inter.y))})</li>`);
+    rows.push(`<li title="${escapeHTML(inter.summary || inter.name)}" data-poi-kind="interactable" data-poi-id="${escapeHTML(inter.id)}" data-poi-status="${escapeHTML(inter.status)}"><strong>${escapeHTML(inter.name)}</strong> · ${escapeHTML(inter.status)} · (${escapeHTML(String(inter.x))}, ${escapeHTML(String(inter.y))}) · ${escapeHTML(formatChecklistDistance(inter))}</li>`);
   }
   for (const ex of checklist.exits) {
     const routeStatus = !ex.unlocked ? 'Locked' : ex.visited ? 'Charted' : 'Uncharted';
-    rows.push(`<li data-poi-kind="exit" data-poi-id="${escapeHTML(ex.toZone)}" data-poi-status="${routeStatus}"><strong>${escapeHTML(ex.label)}</strong> · ${routeStatus} · (${escapeHTML(String(ex.x))}, ${escapeHTML(String(ex.y))})</li>`);
+    rows.push(`<li title="${escapeHTML(ex.summary || ex.label)}" data-poi-kind="exit" data-poi-id="${escapeHTML(ex.toZone)}" data-poi-status="${routeStatus}"><strong>${escapeHTML(ex.label)}</strong> · ${routeStatus} · (${escapeHTML(String(ex.x))}, ${escapeHTML(String(ex.y))}) · ${escapeHTML(formatChecklistDistance(ex))}</li>`);
   }
   const totalPois = rows.length;
+  const summaryLine = checklist.summary ? `<p class="zone-checklist__summary">${escapeHTML(checklist.summary)}</p>` : '';
   return `<details class="shortcut-guide zone-checklist"><summary>Zone field checklist (${totalPois} ${totalPois === 1 ? 'landmark' : 'landmarks'})</summary>
     <ul class="zone-checklist__list" aria-label="Zone landmarks and coordinates">${rows.join('')}</ul>
+    ${summaryLine}
   </details>`;
 }
 
