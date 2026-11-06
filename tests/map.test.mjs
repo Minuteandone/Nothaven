@@ -1043,9 +1043,17 @@ test('getEncounterPreview and getZoneThreatIntel resolve difficulty-scaled threa
 
   const ridgeIntel = getZoneThreatIntel(state, 'ridge_road');
   assert.equal(ridgeIntel.zoneId, 'ridge_road');
-  assert.ok(ridgeIntel.fixedEncounters.some((e) => e.id === 'ridge_patrol' && e.preview.name === 'Ridge Bandit' && !e.cleared));
+  assert.ok(ridgeIntel.fixedEncounters.some((e) => e.id === 'ridge_patrol' && e.preview.name === 'Ridge Bandit' && !e.cleared && !e.locked));
+  const lockedRidgeEncounters = ridgeIntel.fixedEncounters.filter((e) => e.locked);
+  assert.equal(lockedRidgeEncounters.length, 2);
+  assert.ok(lockedRidgeEncounters.every((e) => e.id === 'sealed_challenge' && e.name === 'Sealed challenge' && e.enemyId === 'sealed_challenge' && e.preview === null && e.summary === 'Sealed challenge · Locked'));
+  assert.doesNotMatch(JSON.stringify(ridgeIntel.fixedEncounters), /Old Tusk|old_tusk|Thunderhoof|thunderhoof/);
   assert.ok(ridgeIntel.roamingEncounters.some((r) => r.enemyId === 'storm_rat' && r.preview.name === 'Storm Rat'));
   assert.equal(JSON.stringify(state), snapshot);
+
+  const unlockedIntel = getZoneThreatIntel({ ...state, story: { flags: { rescue_reward: true } } }, 'ridge_road');
+  assert.ok(unlockedIntel.fixedEncounters.some((e) => e.id === 'ridge_old_tusk' && e.enemyId === 'old_tusk' && !e.locked && e.preview?.name === 'Old Tusk'));
+  assert.ok(unlockedIntel.fixedEncounters.some((e) => e.locked && e.id === 'sealed_challenge' && e.x === 6 && e.y === 4));
 
   // Verify exploration UI renders threat preview in encounter cell, Engage button tooltip, and visible .nearby-threat-preview
   const game = makeMockGame();
