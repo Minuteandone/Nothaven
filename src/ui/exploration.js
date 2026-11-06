@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { getEncounterPreview, getEntityAt, getFrontierAtlas, getTileInfo, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFrontierAtlas, getRouteBriefing, getTileInfo, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -84,7 +84,8 @@ function mapGrid(zone, mapState, state = null) {
         } else if (entityInfo.type === 'exit') {
           symbol = '╬';
           label = entityInfo.entity.label;
-          cellTitle = label;
+          const briefing = getRouteBriefing(state ? { ...state, map: mapState } : { map: mapState }, entityInfo.entity.toZone);
+          cellTitle = briefing?.summary ? `${label} — ${briefing.summary}` : label;
         }
       }
 
@@ -121,9 +122,12 @@ function nearbyActionButton(action, index, characterShortcuts) {
   const type = NEARBY_ACTION_TYPES[action.kind];
   if (!type) return '';
   const shortcut = characterShortcuts && index < 9 ? String(index + 1) : null;
-  const titleAttr = action.kind === 'encounter' && action.preview?.summary
-    ? ` title="${escapeHTML(action.preview.summary)}"`
-    : '';
+  const tooltipText = action.kind === 'encounter'
+    ? action.preview?.summary
+    : action.kind === 'exit'
+      ? action.briefing?.summary
+      : '';
+  const titleAttr = tooltipText ? ` title="${escapeHTML(tooltipText)}"` : '';
   return `<button type="button" class="action-button action-button--${type.variant || 'secondary'} nearby-action" data-action="${escapeHTML(type.name)}" data-arg="${escapeHTML(action.id)}"${titleAttr}${shortcut ? ` aria-keyshortcuts="${shortcut}"` : ''}>
     ${icon(type.iconName)}<span>${escapeHTML(action.label)}</span>${shortcut ? keyHint(shortcut) : ''}
   </button>`;
@@ -220,6 +224,10 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
     .filter(action => action?.kind === 'encounter' && action.preview?.summary)
     .map(action => `<p class="nearby-threat-preview">${escapeHTML(action.preview.summary)}</p>`)
     .join('');
+  const nearbyRoutePreviews = (nearbyActions || [])
+    .filter(action => action?.kind === 'exit' && action.briefing?.summary)
+    .map(action => `<p class="nearby-threat-preview nearby-route-preview">${escapeHTML(action.briefing.summary)}</p>`)
+    .join('');
   const routes = (visitedZones || [])
     .filter(zoneId => zoneId !== zone.id && ZONES[zoneId])
     .map(zoneId => uiButton({
@@ -230,7 +238,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
       variant: 'ghost',
     }))
     .join('');
-  const logLines = (mapState.log || []).slice(-6).reverse();
+  const logLines = formatExpeditionLog(mapState.log, 6);
 
   return `<div class="game-shell explore-screen">
     <div class="explore-heading-row">
@@ -289,6 +297,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           <p class="eyebrow">Within reach</p><h2 id="nearby-title">Nearby Actions:</h2>
           <div class="nearby-actions">${contextButtons || '<p class="empty-state">Move beside a person, route, cache, or threat to interact.</p>'}</div>
           ${nearbyThreatPreviews}
+          ${nearbyRoutePreviews}
           ${fieldPack(state.inventory, state.party)}
           ${routes ? `<div class="visited-routes"><h3>${icon('map')}Visited Routes:</h3><div>${routes}</div></div>` : ''}
           <div class="explore-utilities">

@@ -7,6 +7,8 @@ export {
   getZoneProgress,
   getZoneVantage,
   getFrontierAtlas,
+  getRouteBriefing,
+  formatExpeditionLog,
   getEncounterPreview,
   getZoneThreatIntel,
   getCompassBearing,

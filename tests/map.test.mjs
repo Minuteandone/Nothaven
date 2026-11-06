@@ -10,6 +10,8 @@ import {
   getZoneProgress,
   getZoneVantage,
   getFrontierAtlas,
+  getRouteBriefing,
+  formatExpeditionLog,
   getCompassBearing,
   getZoneCompassHint,
   findSafePath,
@@ -1105,4 +1107,78 @@ test('getFrontierAtlas computes read-only Frontier Atlas overview across all 9 z
   assert.match(html, /Routes: Greyhaven, Observatory Ruins, Highwatch Pass/);
   assert.match(html, /7 frontier regions remain uncharted\./);
   assert.doesNotMatch(html, /data-zone-id="storms_eye"/);
+});
+
+
+test('getRouteBriefing and formatExpeditionLog provide spoiler-safe route briefings and collapse consecutive duplicate log entries without mutating state', () => {
+  const game = makeMockGame();
+  const state = game.state;
+
+  // Unknown and inherited keys return null
+  assert.equal(getRouteBriefing(state, 'unknown_zone'), null);
+  assert.equal(getRouteBriefing(state, 'toString'), null);
+  assert.equal(getRouteBriefing(state, '__proto__'), null);
+
+  // Unvisited unlocked route masks weather and objective counts
+  const unvisitedRidge = getRouteBriefing(state, 'ridge_road');
+  assert.ok(unvisitedRidge);
+  assert.equal(unvisitedRidge.visited, false);
+  assert.equal(unvisitedRidge.unlocked, true);
+  assert.equal(unvisitedRidge.summary, 'Ridge Road · Uncharted region (Danger 1)');
+
+  // Locked route shows lock reason without spoiling weather or objective counts
+  const lockedEye = getRouteBriefing(state, 'storms_eye');
+  assert.ok(lockedEye);
+  assert.equal(lockedEye.visited, false);
+  assert.equal(lockedEye.unlocked, false);
+  assert.match(lockedEye.summary, /^The Storm’s Eye · Locked — /);
+
+  // Visited safe haven route
+  const greyhavenBrief = getRouteBriefing(state, 'greyhaven');
+  assert.equal(greyhavenBrief.visited, true);
+  assert.equal(greyhavenBrief.summary, 'Greyhaven · Lantern Shelter · Safe haven');
+
+  // Visit Ridge Road and clear one objective, then return near East Gate in Greyhaven
+  travelToZone(state, 'ridge_road', 'from_greyhaven');
+  recordEncounterVictory(state, 'ridge_patrol', 'ridge_bandit');
+  travelToZone(state, 'greyhaven', 'from_ridge_road');
+  state.map.x = 7;
+  state.map.y = 3;
+
+  const beforeSnapshot = JSON.stringify(state);
+  const visitedRidge = getRouteBriefing(state, 'ridge_road');
+  assert.equal(JSON.stringify(state), beforeSnapshot, 'getRouteBriefing must not mutate gameState');
+  assert.equal(visitedRidge.visited, true);
+  assert.equal(visitedRidge.conditionName, 'Coastal Squall');
+  assert.equal(visitedRidge.encountersCleared, 1);
+  assert.match(visitedRidge.summary, /^Ridge Road · Coastal Squall · \d+% recon \(1\/\d+ threats, 0\/1 caches\)$/);
+
+  // formatExpeditionLog collapses consecutive identical lines newest-first without mutating array
+  const rawLogs = [
+    'Entered Greyhaven: Storm-Battered Frontier Town.',
+    'Path blocked by Stone Wall.',
+    'Path blocked by Stone Wall.',
+    'Path blocked by Stone Wall.',
+    'Surveyed Cobblestone Road.',
+    'Surveyed Cobblestone Road.',
+  ];
+  const rawCopy = [...rawLogs];
+  const formatted = formatExpeditionLog(rawLogs, 6);
+  assert.deepEqual(rawLogs, rawCopy, 'formatExpeditionLog must not mutate input array');
+  assert.deepEqual(formatted, [
+    'Surveyed Cobblestone Road. (×2)',
+    'Path blocked by Stone Wall. (×3)',
+    'Entered Greyhaven: Storm-Battered Frontier Town.',
+  ]);
+  assert.deepEqual(formatExpeditionLog(null), []);
+
+  // Verify exploration UI renders route briefing on exit cell, exit button, visible .nearby-route-preview, and deduplicated log
+  state.map.log = [...rawLogs];
+  const html = exploreScene.render(game);
+  assert.match(html, /class="nearby-threat-preview nearby-route-preview">Ridge Road · Coastal Squall · \d+% recon/);
+  assert.match(html, /data-action="mapTravel" data-arg="ridge_road" title="Ridge Road · Coastal Squall · \d+% recon/);
+  assert.match(html, /East Gate → Ridge Road — Ridge Road · Coastal Squall · \d+% recon/);
+  assert.match(html, /<p>Surveyed Cobblestone Road\. \(×2\)<\/p>/);
+  assert.match(html, /<p>Path blocked by Stone Wall\. \(×3\)<\/p>/);
+  assert.deepEqual(state.map.log, rawCopy, 'exploreScene.render must not mutate state.map.log');
 });
