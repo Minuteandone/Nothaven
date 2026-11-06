@@ -560,6 +560,31 @@ em.enraged {
 .element-chip.element--water { color: #86b7e8; border-color: rgba(134, 183, 232, .45); }
 .element-chip.element--earth { color: #b3a585; border-color: rgba(179, 165, 133, .45); }
 .command-card .element-chip { margin-top: 0; }
+
+/* Damage preview range in skill cards */
+.damage-range {
+  display: inline-block;
+  font-size: .71rem;
+  font-weight: 600;
+  color: var(--accent-bright);
+  background: rgba(212, 175, 55, .08);
+  border: 1px solid rgba(212, 175, 55, .2);
+  border-radius: 4px;
+  padding: .15rem .4rem;
+  line-height: 1.4;
+  margin-top: .1rem;
+}
+
+/* Damage preview badge inside main-menu Attack button */
+.damage-preview-badge {
+  font-size: .68rem;
+  font-weight: 600;
+  color: var(--accent-bright);
+  background: rgba(212, 175, 55, .12);
+  border-radius: 4px;
+  padding: .1rem .35rem;
+  margin-left: auto;
+}
 .combat-dashboard { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); align-items: start; gap: 1rem; }
 .combat-dashboard > .panel { margin: 0; }
 .command-panel h2 { margin-bottom: 1rem; font-size: 1.3rem; }
