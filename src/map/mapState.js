@@ -1,9 +1,9 @@
 import { TILE_TYPES, ZONE_CONDITIONS, ZONES, ZONE_ORDER } from './zones.js';
 import { grantRewards } from '../items/inventory.js';
 import { useConsumable } from '../items/consumables.js';
-import { craft } from '../items/crafting.js';
+import { craft, listRecipes, recipeInputsMet } from '../items/crafting.js';
 import { effectiveStats } from '../items/equipment.js';
-import { getItem, isKnownItem } from '../items/items.js';
+import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { ENEMIES } from '../data/enemies.js';
 import { getDifficulty, scaleEnemy } from '../combat/difficulty.js';
 import { createStoryState, getDialogue } from '../story/index.js';
@@ -206,6 +206,28 @@ export function getFieldServicesSummary(gameState = null) {
   if (routeNetworkActive) parts.push('Route Network (-50% ambushes)');
   if (stormCalmed) parts.push('Storm Heart calmed');
 
+  const stacks = Array.isArray(gameState?.inventory)
+    ? gameState.inventory.filter((stack) => stack && Number(stack.qty) > 0)
+    : [];
+  let consumableStacks = 0;
+  let consumableUnits = 0;
+  for (const stack of stacks) {
+    if (!isKnownItem(stack.id)) continue;
+    const item = getItem(stack.id);
+    if (item.type === TYPES.CONSUMABLE) {
+      consumableStacks += 1;
+      consumableUnits += Math.max(0, Math.floor(Number(stack.qty) || 0));
+    }
+  }
+  const craftableNames = listRecipes()
+    .filter((recipe) => recipeInputsMet(stacks, recipe).ok)
+    .map((recipe) => recipe.name);
+  const craftableCount = craftableNames.length;
+  const packParts = [
+    `Field pack: ${consumableUnits} ${consumableUnits === 1 ? 'consumable' : 'consumables'}${consumableStacks > 0 ? ` (${consumableStacks} ${consumableStacks === 1 ? 'stack' : 'stacks'})` : ''}`,
+    `Craft ready: ${craftableCount}${craftableNames.length > 0 ? ` (${craftableNames.join(', ')})` : ''}`,
+  ];
+
   return {
     currentZoneId,
     innCost,
@@ -216,6 +238,11 @@ export function getFieldServicesSummary(gameState = null) {
     shops,
     musters,
     services,
+    consumableStacks,
+    consumableUnits,
+    craftableCount,
+    craftableNames,
+    packSummary: packParts.join(' · '),
     summary: parts.join(' · '),
   };
 }
