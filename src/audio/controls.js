@@ -2,11 +2,18 @@ import { StormSoundscape, loadAudioPreferences, saveAudioPreferences } from './s
 
 const SPEAKER_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path class="sound-waves" d="M16 8q4 4 0 8M18.5 5.5q6 6.5 0 13"/></svg>';
 
-function cueForAction(action) {
-  if (action === 'attack' || action === 'flee') return 'attack';
+function cueForAction(action, arg) {
+  if (action === 'attack') return 'attack';
+  if (action === 'flee') return 'warning';
   if (action === 'skill') return 'skill';
   if (action === 'defend') return 'defend';
-  if (['item', 'useItem', 'useFieldItem', 'buyItem', 'sellItem', 'craftItem', 'craftFieldItem', 'use', 'buy', 'buy5', 'sell', 'sellAll', 'craft'].includes(action)) return 'item';
+  if (action === 'rest') return 'rest';
+  if (['buyItem', 'sellItem', 'buy', 'buy5', 'buyMax', 'buyEquip', 'sell', 'sellQty', 'sellAll', 'trade', 'tradeAll'].includes(action)) return 'trade';
+  if (['craftItem', 'craftFieldItem', 'craft', 'craftAll'].includes(action)) return 'craft';
+  if (['item', 'useItem', 'useFieldItem', 'use', 'equip', 'unequip'].includes(action)) return 'item';
+  if (['storyRescue', 'storyRelayAccept', 'storyHeart', 'storySpire', 'storyWatch', 'storyCalibration', 'storySupplyLine', 'storyCommissionAccept', 'storyCommissionReport', 'storyRelief'].includes(action)) return 'quest';
+  if (action === 'storyExpedition') return arg === 'cancel' ? 'warning' : 'quest';
+  if (['storyChoose', 'storyRelayChoose'].includes(action)) return 'discovery';
   return 'ui';
 }
 
@@ -97,15 +104,28 @@ export function installAudio(game, options = {}) {
   const clickHandler = (event) => {
     const control = event.target.closest?.('[data-action]');
     if (!control || control.disabled || control.getAttribute('aria-disabled') === 'true') return;
-    audio.playCue(cueForAction(control.dataset.action));
+    audio.setRegion(game.state.map?.zoneId || game.state.location);
+    audio.playCue(cueForAction(control.dataset.action, control.dataset.arg));
   };
   game.root.addEventListener('click', clickHandler);
-  const sceneHandler = ({ name }) => audio.setScene(name);
+  const sceneHandler = ({ name, data } = {}) => {
+    audio.setRegion(data?.zoneId || game.state.map?.zoneId || game.state.location);
+    audio.setScene(name);
+  };
+  const storyHandler = (event = {}) => {
+    if (event.type !== 'visit' || !event.locationId) return;
+    audio.setRegion(event.locationId);
+    audio.playCue('travel');
+  };
   const victoryHandler = () => audio.playCue('victory');
+  const defeatHandler = () => audio.playCue('warning');
   const levelHandler = () => audio.playCue('levelup');
   game.bus.on('scene:enter', sceneHandler);
+  game.bus.on('story:event', storyHandler);
   game.bus.on('combat:victory', victoryHandler);
+  game.bus.on('combat:defeat', defeatHandler);
   game.bus.on('party:levelup', levelHandler);
+  audio.setRegion(game.state.map?.zoneId || game.state.location);
   audio.setScene(game.state.scene);
 
   const visibilityHandler = async () => {
@@ -125,7 +145,9 @@ export function installAudio(game, options = {}) {
     async destroy() {
       game.root.removeEventListener('click', clickHandler);
       game.bus.off('scene:enter', sceneHandler);
+      game.bus.off('story:event', storyHandler);
       game.bus.off('combat:victory', victoryHandler);
+      game.bus.off('combat:defeat', defeatHandler);
       game.bus.off('party:levelup', levelHandler);
       doc.removeEventListener?.('visibilitychange', visibilityHandler);
       dock.remove();

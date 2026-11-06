@@ -123,7 +123,7 @@ test('controls opt in explicitly, persist settings, react to events, and clean u
   f.game.bus.emit('combat:victory', {});
   f.game.bus.emit('party:levelup', {});
   assert.equal(controller.audio.scene, 'combat');
-  assert.deepEqual(cues, ['ui', 'attack', 'skill', 'defend', 'item', 'victory', 'levelup']);
+  assert.deepEqual(cues, ['ui', 'attack', 'skill', 'defend', 'trade', 'victory', 'levelup']);
 
   f.slider.value = '70';
   f.slider.emit('input');
@@ -140,6 +140,8 @@ test('controls opt in explicitly, persist settings, react to events, and clean u
   assert.equal(f.dock.removed, true);
   assert.equal(f.root.listeners.click, undefined);
   assert.equal(f.handlers['scene:enter'].size, 0);
+  assert.equal(f.handlers['story:event'].size, 0);
+  assert.equal(f.handlers['combat:defeat'].size, 0);
   assert.equal(controller.audio.context, null);
 });
 
@@ -202,7 +204,7 @@ test('unsupported audio disables only the controls and non-DOM installs are safe
   await controller.destroy();
 });
 
-test('real shop and bag transaction actions cue the item sound', async () => {
+test('real shop and bag transaction actions use distinct trade and craft cues', async () => {
   FakeAudioContext.instances = [];
   const f = fixture();
   const controller = installAudio(f.game, { document: f.document, random: () => 0.5 });
@@ -210,12 +212,41 @@ test('real shop and bag transaction actions cue the item sound', async () => {
   controller.audio.playCue = name => { cues.push(name); return true; };
   await f.button.emit('click');
   cues.length = 0;
-  for (const action of ['buy', 'buy5', 'sell', 'sellAll', 'craft', 'use']) {
+  for (const action of ['buy', 'buy5', 'sell', 'sellAll', 'trade', 'tradeAll']) {
     f.root.emit('click', actionEvent(action));
   }
-  assert.deepEqual(cues, ['item', 'item', 'item', 'item', 'item', 'item'],
-    'purchases, sales, crafting, and item use all cue the item sound');
+  assert.deepEqual(cues, ['trade', 'trade', 'trade', 'trade', 'trade', 'trade'],
+    'purchases, sales, and barter share the transaction cue');
+  for (const action of ['craft', 'craftAll', 'craftFieldItem']) f.root.emit('click', actionEvent(action));
+  assert.deepEqual(cues.slice(-3), ['craft', 'craft', 'craft']);
+  f.root.emit('click', actionEvent('use'));
+  assert.deepEqual(cues.slice(-1), ['item']);
   f.root.emit('click', actionEvent('leave'));
   assert.deepEqual(cues.slice(-1), ['ui'], 'navigation stays on the generic cue');
+  await controller.destroy();
+});
+
+test('real region events retune exploration and action cues cover story and rest', async () => {
+  const f = fixture();
+  f.game.state.location = 'greyhaven';
+  const controller = installAudio(f.game, { document: f.document, random: () => 0.5 });
+  const cues = [];
+  controller.audio.playCue = name => { cues.push(name); return true; };
+  await f.button.emit('click');
+  cues.length = 0;
+  f.game.bus.emit('scene:enter', { name: 'explore', data: { zoneId: 'ridge_road' } });
+  assert.equal(controller.audio.region, 'ridge_road');
+  f.game.bus.emit('story:event', { type: 'visit', locationId: 'saltmere_coast' });
+  assert.equal(controller.audio.region, 'saltmere_coast');
+  assert.deepEqual(cues, ['travel']);
+  f.game.bus.emit('story:event', { type: 'talk', locationId: 'greyhaven' });
+  assert.equal(controller.audio.region, 'saltmere_coast', 'dialogue does not retune or add cues');
+  assert.deepEqual(cues, ['travel']);
+  for (const [action, expected] of [['rest', 'rest'], ['storyHeart', 'quest'], ['storyChoose', 'discovery'], ['flee', 'warning']]) {
+    f.root.emit('click', actionEvent(action));
+    assert.deepEqual(cues.slice(-1), [expected]);
+  }
+  f.game.bus.emit('combat:defeat', {});
+  assert.deepEqual(cues.slice(-1), ['warning']);
   await controller.destroy();
 });

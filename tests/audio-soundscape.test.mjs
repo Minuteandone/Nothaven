@@ -8,6 +8,7 @@ import {
   normalizeAudioPreferences,
   saveAudioPreferences,
 } from '../src/audio/soundscape.js';
+import { DEFAULT_SOUND_REGION, SOUND_REGIONS, getSoundRegion, normalizeSoundRegion } from '../src/audio/regions.js';
 
 class FakeParam {
   constructor(value = 0) { this.value = value; this.events = []; }
@@ -77,7 +78,7 @@ test('soundscape construction is silent and start creates one resumable context'
   assert.equal(FakeAudioContext.instances.length, 1);
   assert.equal(audio.context.state, 'running');
   assert.equal(audio.ambience.master.gain.value, 0.5);
-  assert.equal(audio.sources.length, 5);
+  assert.equal(audio.sources.length, 6);
   assert.equal(audio.sources.every(source => source.started), true);
   await audio.destroy();
   assert.equal(audio.context, null);
@@ -94,6 +95,13 @@ test('muting, scene mixes, and synthesized cues do not throw', async () => {
   assert.equal(audio.playCue('item'), true);
   assert.equal(audio.playCue('victory'), true);
   assert.equal(audio.playCue('levelup'), true);
+  assert.equal(audio.playCue('travel'), true);
+  assert.equal(audio.playCue('quest'), true);
+  assert.equal(audio.playCue('rest'), true);
+  assert.equal(audio.playCue('discovery'), true);
+  assert.equal(audio.playCue('trade'), true);
+  assert.equal(audio.playCue('craft'), true);
+  assert.equal(audio.playCue('warning'), true);
   assert.ok(audio.context.oscillators.length > baselineOscillators);
   audio.setScene('combat');
   assert.equal(audio.ambience.droneGain.gain.value, 0.018);
@@ -107,6 +115,50 @@ test('muting, scene mixes, and synthesized cues do not throw', async () => {
   await audio.destroy();
 });
 
+
+test('all nine expedition regions have bounded distinct mixes and safe fallback', () => {
+  const ids = ['greyhaven', 'ridge_road', 'observatory_ruins', 'beacon_tower', 'saltmere_coast',
+    'highwatch_pass', 'sunscar_relay', 'stormcrown_spire', 'storms_eye'];
+  assert.deepEqual(Object.keys(SOUND_REGIONS).sort(), [...ids, DEFAULT_SOUND_REGION].sort());
+  for (const id of ids) {
+    const mix = getSoundRegion(id);
+    assert.equal(normalizeSoundRegion(id), id);
+    assert.ok(mix.wind > 0 && mix.wind <= 0.105);
+    assert.ok(mix.sea >= 0 && mix.sea <= 0.068);
+    assert.ok(mix.drone > 0 && mix.drone <= 0.024);
+    assert.ok(mix.cutoff >= 500 && mix.cutoff <= 1400);
+    assert.ok(mix.gust > 0 && mix.gust <= 0.17);
+    assert.ok(mix.tide > 0 && mix.tide <= 1);
+  }
+  assert.equal(new Set(ids.map(id => SOUND_REGIONS[id].cutoff)).size, ids.length);
+  for (const invalid of [null, undefined, '', 'unknown', '__proto__', 'constructor', 42]) {
+    assert.equal(normalizeSoundRegion(invalid), DEFAULT_SOUND_REGION);
+    assert.equal(getSoundRegion(invalid), SOUND_REGIONS[DEFAULT_SOUND_REGION]);
+  }
+});
+
+test('regional expedition mixes update immediately without changing other scenes', async () => {
+  const audio = new StormSoundscape({ AudioContextClass: FakeAudioContext, random: () => 0.5 });
+  audio.setMuted(false);
+  await audio.start();
+  audio.setRegion('saltmere_coast');
+  audio.setScene('explore');
+  assert.equal(audio.ambience.seaGain.gain.value, SOUND_REGIONS.saltmere_coast.sea);
+  assert.equal(audio.ambience.windFilter.frequency.value, SOUND_REGIONS.saltmere_coast.cutoff);
+  assert.equal(audio.ambience.gust.frequency.value, SOUND_REGIONS.saltmere_coast.gust);
+  assert.equal(audio.ambience.sea.playbackRate.value, SOUND_REGIONS.saltmere_coast.tide);
+  audio.setRegion('highwatch_pass');
+  assert.equal(audio.ambience.windGain.gain.value, SOUND_REGIONS.highwatch_pass.wind);
+  assert.equal(audio.ambience.windFilter.frequency.value, SOUND_REGIONS.highwatch_pass.cutoff);
+  audio.setScene('combat');
+  assert.equal(audio.ambience.droneGain.gain.value, 0.018);
+  assert.equal(audio.ambience.gust.frequency.value, 0.085);
+  audio.setRegion('not-a-zone');
+  audio.setScene('explore');
+  assert.equal(audio.region, DEFAULT_SOUND_REGION);
+  assert.equal(audio.ambience.windGain.gain.value, SOUND_REGIONS[DEFAULT_SOUND_REGION].wind);
+  await audio.destroy();
+});
 
 test('a pending audio resume rejects promptly instead of locking the controls', async () => {
   class PendingAudioContext extends FakeAudioContext {
