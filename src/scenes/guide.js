@@ -46,7 +46,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'The paid calibration also wakes the Glacierward Colossus, an old guardian of stone and ice by the south wall of Highwatch Pass. Tougher than Thunderhoof (plan on level 16 or above), its Rime Shard Volley leaves you bleeding and it sometimes gathers a Glacier Slam; it is a separate challenge outside Trial Warden and the drill yard; defeating it earns the Thaw the Sentinel feat and it sometimes drops a Frostward Cloak.',
     'Each drill keeps a record of your wins and your fewest rounds, so you can try to beat your best time. Winning a drill against every boss in the Watch House yard earns the Yard Champion feat.',
     'Once three drills are unlocked, the Yard Gauntlet sends you through every unlocked drill back to back. HP and MP carry over between bouts, and your longest run is recorded.',
-    'The Greyhaven bounty board posts repeatable hunts against roaming foes. A contract opens once that foe is in your Field Journal; take one at a time, defeat the listed number in the wilds (ambushes and patrols count, drills do not), then claim gold and crafting materials back at the board. Every contract can be taken again.',
+    'The Greyhaven bounty board posts repeatable hunts against roaming foes. A contract opens once that foe is in your Field Journal; take one at a time, defeat the listed number in the wilds (ambushes and patrols count, drills do not), then claim gold and crafting materials back at the board. Every contract can be taken again. While a contract is active, its progress shows in the town square and in the Journey Journal.',
   ] }),
 ]);
 
