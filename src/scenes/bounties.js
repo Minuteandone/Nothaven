@@ -15,7 +15,8 @@ function rowHTML(r, anyActive) {
   return `<li class="bounty${r.active ? ' bounty--active' : ''}${r.unlocked ? '' : ' bounty--locked'}">
     <h2 class="bounty__title">${escapeHTML(title)}</h2>
     ${r.unlocked ? `<p class="bounty__brief">${escapeHTML(r.brief)}</p>
-    <p class="bounty__terms">Defeat ${r.count} × ${escapeHTML(r.foe)} · Reward: ${escapeHTML(bountyRewardText(r, r.pay))}</p>` : ''}
+    <p class="bounty__terms">Defeat ${r.count} × ${escapeHTML(r.foe)} · Reward: ${escapeHTML(bountyRewardText(r, r.pay))}</p>
+    ${r.roams.length ? `<p class="bounty__roams">Roams: ${escapeHTML(r.roams.join(', '))}.</p>` : ''}` : ''}
     <p class="bounty__status">${escapeHTML(status)}</p>
     ${button}
   </li>`;
