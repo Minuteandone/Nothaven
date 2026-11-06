@@ -1,10 +1,11 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { getEntityAt, getTileInfo, getZoneVantage } from '../map/mapState.js';
+import { getEntityAt, getTileInfo, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
+import { bountyFieldText } from '../core/bounties.js';
 
 function safeClass(value) {
   return String(value || '').replace(/[^a-z0-9_-]/gi, '');
@@ -129,7 +130,7 @@ function movementButton(action, label, key, arrow, className, characterShortcuts
   </button>`;
 }
 
-function terrainCompass(zone, mapState, characterShortcuts) {
+function terrainCompass(zone, mapState, characterShortcuts, state = null) {
   const x = Number(mapState?.x);
   const y = Number(mapState?.y);
   const terrainAt = (tx, ty) => {
@@ -154,8 +155,12 @@ function terrainCompass(zone, mapState, characterShortcuts) {
       <span class="terrain-compass__terrain"><strong>${escapeHTML(terrain.name)}</strong><small>${escapeHTML(`${tx}, ${ty}`)} · ${terrain.passable ? 'Passable' : 'Blocked'}</small></span>
     </li>`;
   }).join('');
+  const compassHint = getZoneCompassHint(state ? { ...state, map: mapState } : { map: mapState }, zone);
+  const bearingLine = compassHint
+    ? `<p class="terrain-compass__bearing">Compass bearing: <strong>${escapeHTML(compassHint.label)}</strong> (${escapeHTML(compassHint.bearing)}, ${compassHint.distance} ${compassHint.distance === 1 ? 'tile' : 'tiles'})</p>`
+    : '';
   return `<section class="terrain-compass" aria-labelledby="terrain-compass-title">
-    <div class="terrain-compass__heading"><h3 id="terrain-compass-title">Terrain compass</h3><p>Standing on <strong>${escapeHTML(current.name)}</strong> at ${escapeHTML(`${x}, ${y}`)}.</p></div>
+    <div class="terrain-compass__heading"><h3 id="terrain-compass-title">Terrain compass</h3><p>Standing on <strong>${escapeHTML(current.name)}</strong> at ${escapeHTML(`${x}, ${y}`)}.</p>${bearingLine}</div>
     <ul aria-label="Adjacent terrain and passability">${items}</ul>
   </section>`;
 }
@@ -199,6 +204,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
     </div>
     ${partyStatus(state.party)}
     ${renderPinnedQuest(state, { journalAction: 'openQuests', hasJournal: hasQuestJournal })}
+    ${(() => { const line = bountyFieldText(state, zone); return line ? `<p class="explore-bounty-summary" role="status">${escapeHTML(line)}</p>` : ''; })()}
     <div class="explore-layout">
       <section class="panel exploration-map-panel" aria-labelledby="zone-map-title">
         <div class="section-heading">
@@ -216,7 +222,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
         })()}
         ${zoneVista(zone)}
         ${mapGrid(zone, mapState)}
-        ${terrainCompass(zone, mapState, characterShortcuts)}
+        ${terrainCompass(zone, mapState, characterShortcuts, state)}
         <ul class="map-legend" aria-label="Map legend">
           <li><span class="legend-symbol legend-symbol--player">@</span>You</li>
           <li><span class="legend-symbol legend-symbol--npc">M/I/T</span>People</li>
@@ -236,7 +242,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
             ${movementButton('moveEast', 'East', 'D', '→', 'movement-button--east', characterShortcuts)}
             ${movementButton('moveSouth', 'South', 'S', '↓', 'movement-button--south', characterShortcuts)}
           </div>
-          <p class="control-hint">Survey to inspect the tile beneath you. Movement never spends supplies.</p>
+          <p class="control-hint">Survey to inspect the tile beneath you, or click a passable map tile to step along a safe route (takes normal movement steps where random encounters may occur, pauses beside threats, and engages a threat if clicked directly). Movement never spends supplies.</p>
           ${explorationShortcutGuide(characterShortcuts)}
         </section>
         <section class="panel nearby-panel" aria-labelledby="nearby-title">

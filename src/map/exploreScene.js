@@ -18,6 +18,7 @@ import {
   movePlayer,
   patrolZone,
   recordEncounterVictory,
+  stepAlongSafePath,
   travelToZone,
   useFieldConsumable,
 } from './mapState.js';
@@ -121,6 +122,18 @@ export const exploreScene = {
     moveEast(game) {
       handleActionResult(game, movePlayer(game.state, 1, 0, { rng: game.mapRng || Math.random }));
     },
+    mapStepTo(game, el) {
+      const arg = el?.dataset?.arg;
+      let tx = el?.dataset?.x !== undefined ? Number.parseInt(el.dataset.x, 10) : NaN;
+      let ty = el?.dataset?.y !== undefined ? Number.parseInt(el.dataset.y, 10) : NaN;
+      if ((!Number.isInteger(tx) || !Number.isInteger(ty)) && typeof arg === 'string' && arg.includes(',')) {
+        const [xStr, yStr] = arg.split(',');
+        tx = Number.parseInt(xStr, 10);
+        ty = Number.parseInt(yStr, 10);
+      }
+      if (!Number.isInteger(tx) || !Number.isInteger(ty)) return;
+      handleActionResult(game, stepAlongSafePath(game.state, tx, ty, { rng: game.mapRng || Math.random }));
+    },
     waitTurn(game) {
       const mapState = ensureMapState(game.state);
       const zone = getZone(mapState.zoneId);
@@ -218,6 +231,19 @@ export function installMap(game, options = {}) {
   };
   game.bus.on('combat:victory', onCombatVictory);
 
+  let clickHandler = null;
+  if (options.enableGridClick !== false && typeof game.root?.addEventListener === 'function') {
+    clickHandler = (e) => {
+      if (game.state?.scene !== 'explore' || game.state?.combat) return;
+      if (e.target?.closest?.('[data-action]')) return;
+      const cell = e.target?.closest?.('.map-cell[data-x][data-y]');
+      if (!cell) return;
+      exploreScene.actions.mapStepTo(game, cell);
+      game.render?.();
+    };
+    game.root.addEventListener('click', clickHandler);
+  }
+
   const doc = options.document || game.root?.ownerDocument || globalThis.document;
   const view = options.window || doc?.defaultView || globalThis.window;
   let keyHandler = null;
@@ -252,6 +278,9 @@ export function installMap(game, options = {}) {
 
   const cleanup = () => {
     game.bus.off('combat:victory', onCombatVictory);
+    if (clickHandler && typeof game.root?.removeEventListener === 'function') {
+      game.root.removeEventListener('click', clickHandler);
+    }
     if (keyHandler && view?.removeEventListener) {
       view.removeEventListener('keydown', keyHandler);
     }

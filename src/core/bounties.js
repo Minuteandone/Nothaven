@@ -91,6 +91,21 @@ export function bountySummaryText(state) {
     : `Bounty contract: “${b.title}” — ${view.progress}/${b.count} defeated.`;
 }
 
+// Exploration-screen line: the active contract plus whether its foe roams the
+// zone being explored. `zone` is a ZONES entry (or null); kept pure for tests.
+export function bountyFieldText(state, zone) {
+  const base = bountySummaryText(state);
+  if (!base) return null;
+  const b = getBounty(bountyState(state).active);
+  if (bountyState(state).progress >= b.count) return base;
+  const roams = Array.isArray(zone?.randomEncounters)
+    && zone.randomEncounters.some((r) => r?.enemyId === b.enemyId);
+  const foe = ENEMIES[b.enemyId]?.name || b.enemyId;
+  return roams
+    ? `${base} The ${foe} roams this area.`
+    : `${base} The ${foe} does not roam this area.`;
+}
+
 export function bountyUnlocked(state, id) {
   const b = getBounty(id);
   return Boolean(b) && count(state?.bestiary?.[b.enemyId]) >= 1;
