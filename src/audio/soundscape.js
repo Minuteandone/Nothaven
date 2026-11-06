@@ -1,3 +1,5 @@
+import { getSoundRegion, normalizeSoundRegion } from './regions.js';
+
 export const AUDIO_STORAGE_KEY = 'stormhaven.audio.v1';
 export const DEFAULT_AUDIO_PREFERENCES = Object.freeze({ muted: true, volume: 0.35 });
 
@@ -39,6 +41,7 @@ export class StormSoundscape {
     this.muted = true;
     this.volume = DEFAULT_AUDIO_PREFERENCES.volume;
     this.scene = 'title';
+    this.region = 'frontier';
     this.ambience = null;
     this.sources = [];
   }
@@ -85,6 +88,11 @@ export class StormSoundscape {
     this.applySceneMix();
   }
 
+  setRegion(name) {
+    this.region = normalizeSoundRegion(name);
+    this.applySceneMix();
+  }
+
   applyVolume() {
     if (!this.context || !this.ambience) return;
     const gain = this.ambience.master.gain;
@@ -101,12 +109,15 @@ export class StormSoundscape {
       combat: { wind: 0.082, sea: 0.025, drone: 0.018, cutoff: 1080 },
       ending: { wind: 0.022, sea: 0.026, drone: 0.005, cutoff: 620 },
     };
-    const mix = mixes[this.scene] || { wind: 0.036, sea: 0.022, drone: 0.005, cutoff: 620 };
+    const regional = this.scene === 'explore' ? getSoundRegion(this.region) : null;
+    const mix = regional || mixes[this.scene] || { wind: 0.036, sea: 0.022, drone: 0.005, cutoff: 620 };
     const now = this.context.currentTime;
     this.ambience.windGain.gain.setTargetAtTime(mix.wind, now, 0.8);
     this.ambience.seaGain.gain.setTargetAtTime(mix.sea, now, 1.1);
     this.ambience.droneGain.gain.setTargetAtTime(mix.drone, now, 0.7);
     this.ambience.windFilter.frequency.setTargetAtTime(mix.cutoff, now, 0.65);
+    this.ambience.gust.frequency.setTargetAtTime(regional?.gust || 0.085, now, 0.9);
+    this.ambience.sea.playbackRate.setTargetAtTime(regional?.tide || 0.72, now, 1.2);
   }
 
   buildAmbience() {
@@ -174,7 +185,7 @@ export class StormSoundscape {
     upperDrone.connect(upperGain);
     upperGain.connect(droneGain);
 
-    this.ambience = { master, windGain, seaGain, droneGain, windFilter, noiseBuffer };
+    this.ambience = { master, windGain, seaGain, droneGain, windFilter, noiseBuffer, gust, sea };
     this.sources = [wind, sea, gust, lowDrone, upperDrone];
     for (const source of this.sources) source.start();
   }
@@ -229,6 +240,35 @@ export class StormSoundscape {
       this.noiseBurst({ duration: 0.12, level: 0.022, frequency: 320 });
     } else if (name === 'item') {
       this.tone({ frequency: 520, endFrequency: 690, duration: 0.13, level: 0.038 });
+    } else if (name === 'travel') {
+      [293.66, 349.23, 440].forEach((frequency, index) => {
+        this.tone({ frequency, duration: 0.2, type: 'triangle', level: 0.032, delay: index * 0.085 });
+      });
+    } else if (name === 'quest') {
+      [523.25, 659.25, 880, 1046.5].forEach((frequency, index) => {
+        this.tone({ frequency, duration: 0.24, type: 'triangle', level: 0.035, delay: index * 0.075 });
+      });
+    } else if (name === 'rest') {
+      [220, 277.18, 329.63].forEach((frequency, index) => {
+        this.tone({ frequency, duration: 0.36, level: 0.035, delay: index * 0.13 });
+      });
+    } else if (name === 'discovery') {
+      [523.25, 698.46, 880, 1046.5].forEach((frequency, index) => {
+        this.tone({ frequency, duration: 0.27, type: 'triangle', level: 0.036, delay: index * 0.07 });
+      });
+    } else if (name === 'trade') {
+      [440, 554.37, 698.46].forEach((frequency, index) => {
+        this.tone({ frequency, duration: 0.13, level: 0.026, delay: index * 0.06 });
+      });
+    } else if (name === 'craft') {
+      [293.66, 369.99, 493.88].forEach((frequency, index) => {
+        this.tone({ frequency, duration: 0.16, type: 'triangle', level: 0.03, delay: index * 0.075 });
+      });
+      this.noiseBurst({ duration: 0.055, level: 0.014, frequency: 1400 });
+    } else if (name === 'warning') {
+      [220, 233.08, 246.94].forEach((frequency, index) => {
+        this.tone({ frequency, duration: 0.2, type: 'sawtooth', level: 0.025, delay: index * 0.11 });
+      });
     } else if (name === 'victory') {
       [261.63, 329.63, 392, 523.25].forEach((frequency, index) => {
         this.tone({ frequency, duration: 0.3, type: 'triangle', level: 0.048, delay: index * 0.105 });
