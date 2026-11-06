@@ -1473,4 +1473,10 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
   font-size: .85rem;
   margin: .25rem 0;
 }
+/* Locked skill preview */
+.command-card--locked { opacity: 0.55; cursor: not-allowed; }
+.command-card--locked:hover { transform: none; box-shadow: none; }
+.locked-skills { margin-top: 0.5rem; }
+.locked-skills summary { font-size: 0.85rem; color: var(--muted); cursor: pointer; }
+
 .quest-bounty-record { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
