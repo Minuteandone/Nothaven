@@ -248,13 +248,23 @@ All regions with all eighteen rows, and 44px controls fitting at 130% text.
 The journey then earns three more rat contracts through ordinary acceptance,
 rest, travel, and four real patrol victories each. Claims two and three pay 30
 gold; promotion to Contract Hand happens only on claim three, and claim four
-pays the advertised 33 gold. Each claim checks the entire resulting state,
+pays the advertised 33 gold plus a second Scrap Metal from mastery. Each claim checks the entire resulting state,
 reward item, cleared contract, rank text, and disappearance of the claim control.
 Whole Explore Save/reload/Continue checkpoints after each claim preserve the rank.
 
 The Feats Service Record shows Notice Runner when fresh and after claim two,
 then Contract Hand after claims three and four. All/earned/pending filters check
 that exact rank, whole live-state and quick-save stability, and native Back.
+They also verify Contracts mastered stays at 0 of 18 until claim three, then
+reads 1 of 18 after claims three and four; this is not an all-contract mastery run.
+
+Native Board order, Highest pay, and Fewest claims controls are checked on the
+fresh locked board, each earned region, the reopened full board, and after real
+claims two through four. Explicit expected orders cover tied and non-tied claim
+counts, higher-paying Bandit before Rat, locked rows last, active-outside-region
+retention, one pressed sort, region preservation, and reset to Board order on
+reentry. Sorting preserves the whole live state and raw quick save; all three
+widths check 44px controls and 130% text fit.
 
 On the original contract route, the Journey Journal is checked before acceptance,
 after acceptance and every victory, after reload, and after claiming. All three filters preserve the whole

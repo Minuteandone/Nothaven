@@ -167,6 +167,11 @@ try {
             has: page.locator('dt', { hasText: /^Board rank$/ }),
           });
           assert.equal(await row.locator('dd').textContent(), expected);
+          const masteryRow = page.locator('.service-record__list div').filter({
+            has: page.locator('dt', { hasText: /^Contracts mastered$/ }),
+          });
+          const mastered = ['claim-3', 'claim-4'].includes(label) ? 1 : 0;
+          assert.equal(await masteryRow.locator('dd').textContent(), `${mastered} of 18`);
           assert.deepEqual(await state(), opened);
           assert.equal(await quick(), raw);
           await fit(`record-${label}-${filter}`, '#app button');
@@ -174,6 +179,25 @@ try {
         await click('closeFeats');
         assert.deepEqual(await state(), before);
         assert.equal(await quick(), raw);
+      };
+      const checkSort = async (label, boardTitles, claimTitles, locked) => {
+        const before = await state(), raw = await quick();
+        const region = await page.locator('[data-action="filterBounties"][aria-pressed="true"]').getAttribute('data-arg').catch(() => null);
+        assert.deepEqual(await page.locator('[data-action="sortBounties"]').evaluateAll(ns => ns.map(n => n.dataset.arg)), ['board', 'pay', 'claims']);
+        // Only Rat and Bandit are genuinely discovered: Bandit's pay exceeds Rat's,
+        // while unclaimed Bandit precedes Rat by fewest claims after a real payout.
+        const payTitles = [...boardTitles].reverse();
+        for (const [sort, titles] of [['pay', payTitles], ['claims', claimTitles], ['board', boardTitles]]) {
+          await click('sortBounties', sort);
+          assert.deepEqual(await page.locator('.bounty__title').allTextContents(), [...titles, ...Array(locked).fill('Unposted contract')]);
+          assert.equal(await page.locator('.bounty--locked').count(), locked);
+          assert.equal(await page.locator('[data-action="sortBounties"][aria-pressed="true"]').count(), 1);
+          assert.equal(await control('sortBounties', sort).getAttribute('aria-pressed'), 'true');
+          assert.equal(await page.locator('[data-action="filterBounties"][aria-pressed="true"]').getAttribute('data-arg').catch(() => null), region);
+          assert.deepEqual(await state(), before, 'sorting is free and preserves the entire earned state');
+          assert.equal(await quick(), raw, 'sorting never rewrites quick save');
+          await fit(`sort-${label}-${sort}`, '#app [data-action="sortBounties"]');
+        }
       };
       const talk = async (npc, reward, stage) => {
         const before = await state(); await click('storyTalk', npc); const after = await state();
@@ -194,6 +218,8 @@ try {
         assert.equal(await page.locator('.bounty__brief').count(), 0);
         assert.equal(await page.locator('.bounties__rank').textContent(), 'Board rank: Notice Runner (+0% gold). 3 more claims to Contract Hand (+10% gold).');
         await fit('locked', '#app button');
+        assert.equal(await control('sortBounties', 'board').getAttribute('aria-pressed'), 'true');
+        await checkSort('locked', [], [], 18);
         await click('closeBounties'); assert.deepEqual(await state(), freshTown);
         await click('explore'); await talk('mara', 0, 'road');
         await exit('ridge_road'); await fight('ridge_patrol');
@@ -230,6 +256,7 @@ try {
           assert.deepEqual(await state(), active);
           assert.equal(await quick(), rawFilter);
           await fit(`filter-${region.replaceAll(' ', '-')}`, '#app button');
+          await checkSort(region.replaceAll(' ', '-'), titles, titles, 0);
         }
         await click('closeBounties'); await click('bounties');
         assert.equal(await control('filterBounties', '').getAttribute('aria-pressed'), 'true');
@@ -237,6 +264,14 @@ try {
         assert.equal(await page.locator('.bounty--locked').count(), 16);
         assert.equal(await page.locator('.bounties__filter-note').count(), 0);
         assert.equal(await page.locator('[data-action="filterBounties"][aria-pressed="true"]').count(), 1);
+        assert.deepEqual(await state(), active);
+        assert.equal(await quick(), rawFilter);
+
+        await checkSort('all-active', ['Ridge Road Rat Cull', 'Bandit Toll Road'], ['Ridge Road Rat Cull', 'Bandit Toll Road'], 16);
+        await click('sortBounties', 'pay');
+        await click('closeBounties'); await click('bounties');
+        assert.equal(await control('sortBounties', 'board').getAttribute('aria-pressed'), 'true');
+        assert.equal(await control('filterBounties', '').getAttribute('aria-pressed'), 'true');
         assert.deepEqual(await state(), active);
         assert.equal(await quick(), rawFilter);
 
@@ -290,6 +325,7 @@ try {
           assert.match(await page.locator('.bounties__rank').textContent(),count >= 3 ? /Contract Hand \(\+10% gold\)/:/Notice Runner \(\+0% gold\)/);
           assert.equal(await control('claimBounty').count(),0);
           await fit(`claim-${count}`, '#app button');
+          await checkSort(`paid-${count}`, ['Ridge Road Rat Cull', 'Bandit Toll Road'], ['Bandit Toll Road', 'Ridge Road Rat Cull'], 16);
           await click('closeBounties'); await serviceRank(count >= 3 ? 'Contract Hand':'Notice Runner',`claim-${count}`); await click('explore');
           await checkpoint((await state()).story.stage,`claim-${count}-saved`);
           await click('toTownScene'); await click('bounties');
@@ -297,7 +333,7 @@ try {
           await click('closeBounties'); await click('explore');
         }
         assert.deepEqual(errors, []);
-        console.log(`PASS ${id}: earned regional filters/active-outside count/reset; Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33 plus a mastery Scrap Metal, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained, 130% fit; errors []`);
+        console.log(`PASS ${id}: earned native sorting/locked-last/non-tied claims/reset and mastery Record 0→1; earned regional filters/active-outside count/reset; Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33 plus a mastery Scrap Metal, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained, 130% fit; errors []`);
       } catch (error) {
         await page.screenshot({ path: path.join(artifacts, `${id}-failure.png`), fullPage: true }).catch(() => {});
         console.error(`FAIL ${id}; browser errors: ${JSON.stringify(errors)}`);
