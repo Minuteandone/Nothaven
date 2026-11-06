@@ -2,7 +2,7 @@ import { companionTactic } from '../party/tactics.js';
 import { isCompanionId } from '../party/companions.js';
 import { BEACON_CHARGE_MAX, chargeReady, battleSummary, enemyWindingUp } from '../combat/rules.js';
 import { heroStats, knownSkills, lockedSkills } from '../combat/rules.js';
-import { elementLabel, elementClass, elementEffectivenessText, elementMatchups } from '../combat/elements.js';
+import { elementLabel, elementClass, elementEffectivenessText, elementMatchups, elementMultiplier } from '../combat/elements.js';
 import { damagePreview } from '../combat/damagePreview.js';
 import { getItem, TYPES } from '../items/items.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
@@ -215,6 +215,37 @@ export function difficultyNote(combat) {
   return Object.prototype.hasOwnProperty.call(DIFFICULTY_NOTES, id) ? ` · ${DIFFICULTY_NOTES[id]}` : '';
 }
 
+/** Small banner summarising elemental matchups between the hero's known skills and the enemy. */
+export function elementalMatchupBanner(hero, enemy) {
+  if (!hero || !enemy || !enemy.element) return '';
+  const skills = knownSkills(hero);
+  if (!skills.length) return '';
+  const heroElements = [...new Set(skills.map(s => s.element).filter(Boolean))];
+  if (!heroElements.length) return '';
+
+  const defEl = enemy.element;
+  const strong = [];
+  const weak = [];
+  const neutral = [];
+
+  for (const atkEl of heroElements) {
+    const mult = elementMultiplier(atkEl, defEl);
+    const label = elementLabel(atkEl);
+    if (mult > 1) strong.push(label);
+    else if (mult < 1) weak.push(label);
+    else neutral.push(label);
+  }
+
+  const defLabel = elementLabel(defEl);
+  const parts = [];
+  if (strong.length) parts.push('<span class="matchup-strong">' + escapeHTML(strong.join(', ')) + ' skills strong vs ' + escapeHTML(defLabel) + ' (' + escapeHTML('1.5×') + ')</span>');
+  if (weak.length) parts.push('<span class="matchup-weak">' + escapeHTML(weak.join(', ')) + ' skills weak vs ' + escapeHTML(defLabel) + ' (' + escapeHTML('0.75×') + ')</span>');
+  if (neutral.length) parts.push('<span class="matchup-neutral">' + escapeHTML(neutral.join(', ')) + ' skills neutral vs ' + escapeHTML(defLabel) + '</span>');
+
+  if (!parts.length) return '';
+  return '<div class="elemental-matchup-banner">' + parts.join(' · ') + '</div>';
+}
+
 export function renderCombat({ combat, party, inventory = [], menu = 'main', itemTargetIndex = 0 }) {
   const hero = party[0];
   const round = Math.max(1, number(combat.turn, 1));
@@ -227,6 +258,7 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main', ite
       ${sceneHeader({ eyebrow: 'Turn-based encounter', title: `Battle — Round ${round}`, subtitle: `${combat.enemy.name} · ${combat.enemy.boss ? 'Boss encounter' : 'Hostile encounter'}${difficultyNote(combat)}`, iconName: 'sword' })}
       <div class="turn-indicator"><span class="status-dot"></span><span>${phase}</span><strong>Round ${round}</strong></div>
     </div>
+    ${elementalMatchupBanner(hero, combat.enemy)}
     <section class="panel combat combat-arena" aria-label="Combatants">
       <div class="combatants">
         <section class="combat-side combat-side--party" aria-labelledby="combat-party-title">
