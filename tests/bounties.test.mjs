@@ -201,3 +201,46 @@ test('town shows the active bounty contract only while one is accepted', async (
   assert.ok(townScene.render(game).includes('complete — claim it at the Greyhaven bounty board.'));
   assert.ok(!townScene.render({ ...game, scenes: {} }).includes('town-bounty-summary'));
 });
+
+test('board ranks raise contract gold as claims accumulate', async () => {
+  const { BOUNTY_RANKS, bountyRank, bountyPay, bountyRankText } = await import('../src/core/bounties.js');
+  assert.deepEqual(BOUNTY_RANKS.map((r) => r.min), [0, 3, 8, 15, 25]);
+  assert.deepEqual(BOUNTY_RANKS.map((r) => r.bonus), [0, 0.1, 0.2, 0.3, 0.4]);
+  assert.ok(Object.isFrozen(BOUNTY_RANKS) && BOUNTY_RANKS.every(Object.isFrozen));
+  const withClaims = (n) => { const s = fresh(); s.bounties = { active: null, progress: 0, completed: n ? { ridge_rats: n } : {} }; return s; };
+  const rat = BOUNTIES.find((b) => b.id === 'ridge_rats');
+  const shades = BOUNTIES.find((b) => b.id === 'vortex_shades');
+  for (const [n, id, ratPay, shadePay] of [[0, 'runner', 30, 220], [2, 'runner', 30, 220], [3, 'hand', 33, 242], [8, 'regular', 36, 264], [15, 'tracker', 39, 286], [25, 'warden', 42, 308], [99, 'warden', 42, 308]]) {
+    const s = withClaims(n);
+    assert.equal(bountyRank(s).rank.id, id, `rank at ${n}`);
+    assert.equal(bountyPay(s, rat), ratPay, `rat pay at ${n}`);
+    assert.equal(bountyPay(s, shades), shadePay, `shade pay at ${n}`);
+  }
+  assert.equal(bountyRankText(withClaims(0)), 'Board rank: Notice Runner (+0% gold). 3 more claims to Contract Hand (+10% gold).');
+  assert.equal(bountyRankText(withClaims(7)), 'Board rank: Contract Hand (+10% gold). 1 more claim to Board Regular (+20% gold).');
+  assert.equal(bountyRankText(withClaims(30)), 'Board rank: Warden of the Board (+40% gold). The highest rank on the board.');
+  for (const r of BOUNTY_RANKS) assertEggFree(r.title, `rank ${r.id}`);
+  // Malformed saves fall back to the first rank.
+  assert.equal(bountyRank({ bounties: { completed: { ridge_rats: -4, x: 'lots' } } }).rank.id, 'runner');
+});
+
+test('claiming pays the rank bonus, announces promotions, and the board shows the rank', () => {
+  const s = fresh();
+  s.bestiary = { storm_rat: 1 };
+  s.gold = 0;
+  s.bounties = { active: 'ridge_rats', progress: 4, completed: { ridge_rats: 2 } };
+  const r = claimBounty(s);
+  assert.equal(r.ok, true);
+  assert.equal(s.gold, 30, 'pay uses the rank held before the claim');
+  assert.match(r.message, /Claimed “Ridge Road Rat Cull”: 30 gold, .*\. Board rank raised to Contract Hand\.$/);
+  s.bounties = { ...s.bounties, active: 'ridge_rats', progress: 4 };
+  const r2 = claimBounty(s);
+  assert.equal(s.gold, 63);
+  assert.ok(!r2.message.includes('rank raised'));
+  assert.equal(bountyRows(s).find((b) => b.id === 'ridge_rats').pay, 33);
+  s.scene = 'bounties';
+  const html = bountiesScene.render({ state: s, bountyMessage: '' });
+  assert.match(html, /<p class="bounties__rank">Board rank: Contract Hand \(\+10% gold\)\. 4 more claims to Board Regular \(\+20% gold\)\.<\/p>/);
+  assert.match(html, /Reward: 33 gold/);
+  assertEggFree(html, 'bounty board with rank');
+});
