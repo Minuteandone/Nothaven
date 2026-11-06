@@ -412,10 +412,15 @@ test('only the first item of a multi-item contract gains the mastery bonus', () 
 test('a mastered claim whose item grant fails changes nothing', () => {
   const s = fresh(); s.bestiary = { reef_crawler: 1 }; s.gold = 5;
   s.bounties = { active: 'pier_clearance', progress: 3, completed: { pier_clearance: 3 } };
-  const fake = { ...BOUNTIES.find((b) => b.id === 'pier_clearance'), items: [{ id: 'no_such_item', qty: 1 }] };
-  const before = structuredClone(s);
+  s.inventory = [{ id: 'salvaged_wiring', qty: 1 }];
+  const fake = { ...BOUNTIES.find((b) => b.id === 'pier_clearance'), items: [{ id: 'salvaged_wiring', qty: 2 }, { id: 'no_such_item', qty: 1 }] };
+  const before = JSON.stringify(s);
   const r = claimBounty(s, () => fake);
-  if (!r.ok) assert.deepEqual(s, before);
+  assert.equal(r.ok, false);
+  assert.equal(JSON.stringify(s), before);
+  const ok = claimBounty(s);
+  assert.equal(ok.ok, true);
+  assert.deepEqual(s.inventory, [{ id: 'salvaged_wiring', qty: 4 }], 'the real mastered claim pays 2 + 1 wiring');
 });
 
 test('the board shows mastered badges only on posted mastered contracts and counts them', () => {
