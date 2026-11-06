@@ -8,6 +8,11 @@ function clearStoryTransients(game) {
   game.storyMessage = '';
 }
 
+// Title-screen save actions are only meaningful when no run is in progress.
+function isTitleScreen(game) {
+  return game && game.state && game.state.scene === 'title' && !game.state.combat;
+}
+
 function buildSaveActions(hasExistingSave, hasExistingAutosave) {
   const buttons = [];
   // Always show Import so fresh devices can load a save
@@ -26,14 +31,15 @@ function buildSaveActions(hasExistingSave, hasExistingAutosave) {
 }
 
 function importPreviewBlock(preview) {
+  const partyLabel = `${preview.partyCount} member${preview.partyCount !== 1 ? 's' : ''}`;
   const rows = [
-    ['Hero', escapeHTML(preview.heroName)],
-    ['Level', String(preview.level)],
-    ['Location', escapeHTML(preview.location)],
-    ['Scene', escapeHTML(preview.scene)],
-    ['Gold', String(preview.gold)],
-    ['Party', `${preview.partyCount} member${preview.partyCount !== 1 ? 's' : ''}`],
-    ['Save version', String(preview.saveVersion)],
+    ['Hero', escapeHTML(String(preview.heroName ?? ''))],
+    ['Level', escapeHTML(String(preview.level))],
+    ['Location', escapeHTML(String(preview.location ?? ''))],
+    ['Scene', escapeHTML(String(preview.scene ?? ''))],
+    ['Gold', escapeHTML(String(preview.gold))],
+    ['Party', escapeHTML(partyLabel)],
+    ['Save version', escapeHTML(String(preview.saveVersion))],
   ];
   return `<div class="import-preview" role="region" aria-label="Import preview">
     <h3>Import this save?</h3>
@@ -96,12 +102,14 @@ export const titleScene = {
       resumeJourney(game, s);
     },
     exportSave(game) {
+      if (!isTitleScreen(game)) return;
       if (!hasSave()) return;
       if (!exportSave()) {
         game.importResult = { ok: false, message: 'Could not export save. No save data found.' };
       }
     },
     promptImport(game) {
+      if (!isTitleScreen(game)) return;
       // Clean up any stale import state
       delete game.pendingImportState;
       delete game.pendingImportPreview;
@@ -134,6 +142,7 @@ export const titleScene = {
       input.click();
     },
     confirmImport(game) {
+      if (!isTitleScreen(game)) return;
       if (!game.pendingImportState) return;
       const result = commitImportSave(game.pendingImportState);
       if (result.ok) {
@@ -147,11 +156,13 @@ export const titleScene = {
       if (result.ok) setTimeout(() => { window.location.reload(); }, 800);
     },
     cancelImport(game) {
+      if (!isTitleScreen(game)) return;
       delete game.pendingImportState;
       delete game.pendingImportPreview;
       game.render();
     },
     promptDelete(game) {
+      if (!isTitleScreen(game)) return;
       if (!hasSave()) return;
       if (window.confirm('Delete your save file? This cannot be undone. You can export your save first to keep a backup.')) {
         deleteSave();
@@ -164,6 +175,7 @@ export const titleScene = {
       resumeJourney(game, s);
     },
     toggleAutosave(game) {
+      if (!isTitleScreen(game)) return;
       if (isAutosaveEnabled()) {
         disableAutosave();
       } else {

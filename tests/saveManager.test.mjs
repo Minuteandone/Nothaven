@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createInitialState, saveGame, hasSave, enableAutosave, disableAutosave, scheduleAutosave, isAutosaveEnabled, hasAutosave, loadAutosave, clearAutosave } from '../src/state.js';
+import { createInitialState, saveGame, hasSave, enableAutosave, disableAutosave, scheduleAutosave, isAutosaveEnabled, hasAutosave, loadAutosave, clearAutosave, installAutosave } from '../src/state.js';
+import { bus } from '../src/events.js';
 import { exportSave, importSave, validateImportSave, commitImportSave, deleteSave, SAVE_TEXT_LIMIT } from '../src/core/saveManager.js';
 import { SAVE_VERSION } from '../src/core/save.js';
 
@@ -530,5 +531,67 @@ test('two-phase import: validate → preview → confirm writes save', () => {
     assert.equal(written.gold, 888);
   } finally {
     globalThis.localStorage = old;
+  }
+});
+
+
+// --- Stale-capture regression (GPT-6: same-scene state replacement) ---
+
+test('autosave getter reads current state at fire time, not the scheduled snapshot', (_, done) => {
+  const st = storage();
+  const old = globalThis.localStorage;
+  globalThis.localStorage = st;
+  enableAutosave();
+  try {
+    let current = createInitialState();
+    current.gold = 50;
+    scheduleAutosave(() => current, 10);
+    // Replace the state object before the timer fires (same scene).
+    current = createInitialState();
+    current.gold = 20;
+    setTimeout(() => {
+      try {
+        const parsed = JSON.parse(st.getItem(AUTOSAVE_KEY));
+        assert.equal(parsed.gold, 20, 'autosave must capture the replacement state');
+      } finally {
+        disableAutosave();
+        globalThis.localStorage = old;
+        done();
+      }
+    }, 60);
+  } catch (e) {
+    disableAutosave();
+    globalThis.localStorage = old;
+    throw e;
+  }
+});
+
+test('installAutosave scene handler reads live game.state after replacement', (_, done) => {
+  const st = storage();
+  const old = globalThis.localStorage;
+  globalThis.localStorage = st;
+  const game = { bus, state: createInitialState() };
+  game.state.gold = 50;
+  installAutosave(game, 10);
+  enableAutosave();
+  try {
+    // Trigger the scene handler, then swap state (a real quest transaction).
+    bus.emit('scene:enter', { name: 'town' });
+    game.state = createInitialState();
+    game.state.gold = 20;
+    setTimeout(() => {
+      try {
+        const parsed = JSON.parse(st.getItem(AUTOSAVE_KEY));
+        assert.equal(parsed.gold, 20, 'autosave must read the live game.state');
+      } finally {
+        disableAutosave();
+        globalThis.localStorage = old;
+        done();
+      }
+    }, 60);
+  } catch (e) {
+    disableAutosave();
+    globalThis.localStorage = old;
+    throw e;
   }
 });

@@ -74,11 +74,17 @@ export function loadAutosave() {
  * Schedule a debounced autosave. Call this on scene transitions when
  * autosave is enabled. The save fires after a quiet period (no calls
  * to scheduleAutosave for AUTOSAVE_INTERVAL_MS).
+ *
+ * Pass either a state object or a getter function `() => state`. When a
+ * getter is supplied, the callback reads the *current* state at fire time
+ * so that a same-scene state replacement (e.g. a quest transaction that
+ * swaps game.state) is never saved stale.
  */
-export function scheduleAutosave(state, _testInterval) {
+export function scheduleAutosave(stateOrGetter, _testInterval) {
   if (!_autosaveEnabled) return;
   if (_autosaveTimer !== null) clearTimeout(_autosaveTimer);
   _autosaveTimer = setTimeout(() => {
+    const state = typeof stateOrGetter === 'function' ? stateOrGetter() : stateOrGetter;
     // Don't autosave during combat
     if (state && state.combat) return;
     try {
@@ -91,10 +97,10 @@ export function clearAutosave() {
   localStorage.removeItem(AUTOSAVE_KEY);
 }
 
-export function installAutosave(game) {
+export function installAutosave(game, _testInterval) {
   if (!game?.bus) return;
   game.bus.on('scene:enter', () => {
-    scheduleAutosave(game.state);
+    scheduleAutosave(() => game.state, _testInterval);
   });
   // Start disabled; player opts in via UI
   _autosaveEnabled = false;
