@@ -424,6 +424,8 @@ button:disabled, .action-button:disabled { opacity: .42; cursor: not-allowed; }
 .foe-stats div { display: flex; justify-content: space-between; gap: .3rem; padding: .4rem .5rem; background: #111f2d; }
 .foe-stats dt { color: var(--muted); font-size: .65rem; }
 .foe-stats dd { margin: 0; color: var(--text); font-size: .75rem; font-weight: 700; }
+.foe-element { margin: .3rem 0 0; }
+.foe-element .element-chip { margin-top: 0; }
 .foe-tactic { margin: .75rem 0; padding: .65rem .75rem; border-left: 2px solid #94c7d4; background: #142535; }
 .foe-tactic > span { display: flex; align-items: center; gap: .3rem; color: #a8d3d9; font-size: .65rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .foe-tactic .icon { width: .85rem; height: .85rem; }
