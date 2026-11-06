@@ -6,6 +6,7 @@ import { elementLabel, elementClass, elementEffectivenessText, elementMatchups, 
 import { damagePreview, incomingDamagePreview } from '../combat/damagePreview.js';
 
 import { getItem, TYPES } from '../items/items.js';
+import { useConsumable } from '../items/consumables.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
 
 function number(value, fallback = 0) {
@@ -131,12 +132,27 @@ function shortcutGuide() {
   return `<details class="shortcut-guide"><summary>Keyboard commands</summary><dl class="shortcut-guide__grid">${bindings.map(([key, label]) => `<div><dt><kbd>${key}</kbd></dt><dd>${label}</dd></div>`).join('')}</dl><p class="character-shortcuts-off">Letter and number shortcuts are off. Use buttons; Escape still returns to commands.</p><p>Turn letter and number shortcuts on or off in Display settings. Shortcuts never activate disabled commands. Text fields and modified key presses are ignored.</p></details>`;
 }
 
-function commandCard({ action, arg, name, meta, description, iconName = 'focus', disabled = false, shortcut = null, badge = '', damageRange = '', className = '' }) {
+/** Immediate item effect only; allies, enemy replies and status ticks are excluded. */
+export function itemRestorationPreview(recipient, inventory, itemId) {
+  if (!recipient || !(recipient.hp > 0) || !Array.isArray(inventory)) return '';
+  const result = useConsumable(recipient, inventory, itemId);
+  if (!result.ok) return '';
+  const parts = [];
+  if (result.effects.hp) parts.push(`+${result.actor.hp - (recipient.hp ?? 0)} HP`);
+  if (result.effects.mp) parts.push(`+${result.actor.mp - (recipient.mp ?? 0)} MP`);
+  const cure = result.effects.cure;
+  if (cure && Array.isArray(recipient.statuses) && recipient.statuses.includes(cure)
+      && !result.actor.statuses.includes(cure)) parts.push(`Clears ${cure}`);
+  return parts.length ? `On ${recipient.name || 'Wren'} now: ${parts.join(' · ')}.` : '';
+}
+
+function commandCard({ action, arg, name, meta, description, preview = '', iconName = 'focus', disabled = false, shortcut = null, badge = '', damageRange = '', className = '' }) {
   const extraClass = className ? ` ${escapeHTML(className)}` : '';
   return `<button type="button" class="command-card${extraClass}" data-action="${escapeHTML(action)}" data-arg="${escapeHTML(arg)}" title="${escapeHTML(description)}"${disabled ? ' disabled' : ''}>
     <span class="command-card__top"><span>${icon(iconName)}${escapeHTML(name)}</span><span class="command-card__meta"><strong>${escapeHTML(meta)}</strong>${keyHint(shortcut)}</span></span>
     ${badge}${damageRange ? `<span class="damage-range">${escapeHTML(damageRange)}</span>` : ''}
     <span class="command-card__description">${escapeHTML(description)}</span>
+    ${preview ? `<span class="command-card__description item-use-preview">${escapeHTML(preview)}</span>` : ''}
   </button>`;
 }
 
@@ -194,13 +210,13 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
     const recipients = `<div class="item-recipients" role="group" aria-label="Item recipient">${party.map((member, index) => {
       const stats = heroStats(member), down = !(member.hp > 0);
       return `<button type="button" data-action="itemTarget" data-arg="${index}" aria-pressed="${index === itemTargetIndex && !down}"${down ? ' disabled' : ''}><strong>${escapeHTML(member.name)}</strong><span>HP ${number(member.hp)}/${number(stats.maxHp)} · MP ${number(member.mp)}/${number(stats.maxMp)}${down ? ' · Down' : ''}</span></button>`;
-    }).join('')}</div><p class="item-recipient-note" role="status">${validRecipient ? `Using items on ${escapeHTML(recipient.name)}. Choosing a recipient does not spend a turn.` : 'Choose a living party member to use an item.'}</p><p class="item-recipient-note">Items cannot revive downed allies. Rekindle can revive them once learned.</p>`;
+    }).join('')}</div><p class="item-recipient-note" role="status">${validRecipient ? `Using items on ${escapeHTML(recipient.name)}. Choosing a recipient does not spend a turn.` : 'Choose a living party member to use an item.'}</p><p class="item-recipient-note">Items cannot revive downed allies. Rekindle can revive them once learned.</p><p class="item-recipient-note">Preview shows immediate restoration before allies act and the normal enemy reply, not end-of-turn totals.</p>`;
     const usable = (inventory || []).filter((stack) => {
       try { return getItem(stack.id).type === TYPES.CONSUMABLE; } catch { return false; }
     });
     const items = usable.map((stack, index) => {
       const item = getItem(stack.id);
-      return commandCard({ action: 'item', arg: stack.id, name: item.name, meta: `×${stack.qty}`, description: item.description || 'Use this consumable item.', iconName: 'bag', disabled: !validRecipient, shortcut: index < 9 ? String(index + 1) : null });
+      return commandCard({ action: 'item', arg: stack.id, name: item.name, meta: `×${stack.qty}`, description: item.description || 'Use this consumable item.', preview: itemRestorationPreview(recipient, inventory, stack.id), iconName: 'bag', disabled: !validRecipient, shortcut: index < 9 ? String(index + 1) : null });
     }).join('');
     return `<div class="actions command-list" role="group" aria-label="Item actions">${recipients}${items || '<p class="empty-state">No usable items. Visit Hesta or search caches to stock your pack.</p>'}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
   }

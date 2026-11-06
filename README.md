@@ -330,3 +330,17 @@ at the rendering boundary. `tests/incoming-damage-hint.test.mjs` exercises froze
 full-render inputs, fixed ranges, protections, omissions, and hostile text. This
 is synthetic renderer coverage, not browser, screen-reader, or balance evidence;
 combat rules and preview arithmetic are unchanged.
+
+Combat item cards preview the selected living recipient's **immediate** HP/MP
+restoration, including equipment and forge caps, and show a status cure only
+when it applies. Full or over-cap resources show `+0`; those items remain usable.
+The preview uses the pure consumable result without consuming anything. It is
+not an end-of-turn prediction: companions, the normal enemy reply and status
+ticks can change the final totals. Choosing a recipient still costs no turn;
+using an item keeps its existing consumption and turn cost.
+
+`tests/item-restoration-preview.test.mjs` checks literal cap/over-cap/cure cases,
+read-only full renders, escaping, target switching, and all consumables against
+real item-action restoration logs for three recipients, bare/fitted equipment,
+and low/near-cap/full/over-cap resources. These synthetic fixtures do not claim
+an earned journey, screen-reader validation, or combat balance coverage.
