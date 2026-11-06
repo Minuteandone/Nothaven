@@ -21,9 +21,9 @@ export const GUIDE_SECTIONS = Object.freeze([
   ] }),
   Object.freeze({ title: 'Elements', lines: [
     'Five elements shape the battlefield: Fire melts Ice, Ice grounds Lightning, Lightning parts Water, and Water douses Fire. Earth stands neutral, neither strong nor weak against any element.',
-    'Some skills carry an element: Spark and Tempest Cleave (Lightning), Beacon Lance and Signal Flare (Fire), and Stillpoint Strike (Ice). Basic attacks are untyped and ignore the elemental wheel.',
+    'Some skills carry an element: Spark, Stormbreaker and Tempest Cleave (Lightning), Beacon Lance, Signal Flare and Skyfire Lance (Fire), and Stillpoint Strike (Ice). Basic attacks are untyped and ignore the elemental wheel.',
     'Enemies have elemental affinities too — a Gale Hound channels lightning, a Cinderclaw burns with fire, a Wrack Eel draws from water. Check the element badge under an enemy\'s name to plan your approach.',
-    'Super-effective hits deal 1.5× damage and flash It\'s super effective! in the log. Resisted hits deal 0.75× and warn It\'s not very effective… Earth-element foes show no label; they never multiply or resist.',
+    'Super-effective hits deal 1.5× damage and flash It\'s super effective! in the log. Resisted hits deal 0.75× and warn It\'s not very effective… Earth-element foes still show their badge but never multiply or resist damage.',
   ] }),
 
   Object.freeze({ title: 'Conditions', lines: [
