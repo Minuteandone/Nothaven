@@ -344,3 +344,14 @@ read-only full renders, escaping, target switching, and all consumables against
 real item-action restoration logs for three recipients, bare/fitted equipment,
 and low/near-cap/full/over-cap resources. These synthetic fixtures do not claim
 an earned journey, screen-reader validation, or combat balance coverage.
+
+### Combat card title layout regression
+
+`npm run test:browser:cards` serves the real app and styles locally and renders
+frozen synthetic combat fixtures for all 11 consumables and 15 learned skills.
+At 320, 375 and 768 pixels, 100/115/130% text size, and with shortcut hints on
+and off, it checks that each title word stays on one line, card text fits the
+viewport, and buttons remain at least 44 pixels tall. It also checks unchanged
+fixture/live journey state and the quick-save key. Header metadata can wrap to
+its own row rather than squeezing the title. This is renderer/layout coverage,
+not an earned campaign, screen-reader assessment, or balance test.

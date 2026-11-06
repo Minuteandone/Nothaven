@@ -7,7 +7,8 @@
     "test:browser": "node tests-browser/smoke.mjs",
     "test:browser:chapter": "node tests-browser/chapter.mjs",
     "test:browser:bounties": "node tests-browser/bounties.mjs",
-    "test:browser:regions": "node tests-browser/regions.mjs"
+    "test:browser:regions": "node tests-browser/regions.mjs",
+    "test:browser:cards": "node tests-browser/command-card-layout.mjs"
   },
   "devDependencies": {
     "playwright": "1.64.1"
