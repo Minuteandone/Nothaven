@@ -33,6 +33,9 @@ export const GUIDE_SECTIONS = Object.freeze([
   Object.freeze({ title: 'Settings and saving', lines: [
     'The Difficulty button in Greyhaven switches between Story, Standard, Veteran and Stormborn foes at any time; overcoming any boss on Stormborn earns the Calm in the Gale feat.',
     'Use Save journey in town to keep your progress on this device, and Continue on the title screen to return.',
+    "Journey Archive keeps three manual slots on this device, separate from Save journey. Open it from the title screen, Greyhaven or the expedition screen. Save a slot while in town or exploring; loading a slot replaces the current journey after confirmation.",
+    "To move a saved slot to another browser, choose Export and manually copy all its text. In the other browser, open Journey Archive, paste the text, choose Preview for a destination slot, then Confirm. Import writes only that slot, leaving your current journey and quick save unchanged; choose Load separately to play it. Confirming an import can overwrite the chosen slot.",
+    "Archive text is editable and is not verified proof of progress. Import only text you trust. There is no cloud sync, and leaving the Archive clears its text fields; keep your own copy before leaving.",
     'Sound is muted by default. The audio controls let you turn on the storm ambience and adjust the volume.',
     'The Journey Journal lists every active task, the Character Sheet shows gear and effective stats, and Wardens’ Feats records the milestones of your journey — all open from Greyhaven or the expedition screen. In Wardens’ Feats, the All, Earned and Not yet buttons narrow the list.',
     'Sparring Drills in Greyhaven let you refight the yard bosses you have already beaten for half their experience. Optional field trials such as Old Tusk, Gloomfin, Frostmane and the Lenswarden stay out on the map. Drills pay no gold or spoils, and losing one costs nothing.',
