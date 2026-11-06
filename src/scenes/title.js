@@ -24,10 +24,15 @@ function buildSaveActions(hasExistingSave, hasExistingAutosave) {
 export const titleScene = {
   render(game) {
     const saveActions = buildSaveActions(hasSave(), hasAutosave());
+    const result = game && game.importResult;
+    const importBanner = result
+      ? `<div role="alert" class="import-banner import-banner--${result.ok ? 'success' : 'error'}">${result.message}</div>`
+      : '';
     return `<main class="game-shell title-screen">
       <div class="title-layout">
         <section class="title-copy">
           ${sceneHeader({ eyebrow: 'A turn-based expedition', title: 'Beacon of Stormhaven', subtitle: 'The storms have broken the beacon that shields Greyhaven. Someone must set it alight again.', iconName: 'beacon' })}
+          ${importBanner}
           <div class="title-actions">
             ${uiButton({ action: 'newGame', label: 'New journey', iconName: 'compass', variant: 'primary' })}
             ${uiButton({ action: 'continue', label: 'Continue', iconName: 'save', disabled: !hasSave() })}
@@ -36,18 +41,8 @@ export const titleScene = {
           </div>
           ${saveActions ? `<div class="title-save-actions">${saveActions}</div>` : ''}
           <p class="save-note">Single player <span aria-hidden="true">•</span> Your progress is saved on this device</p>
-          <input type="file" id="save-import-input" accept=".json,application/json" style="display:none" aria-hidden="true">
         </section>
         <div class="title-art-frame">${beaconArt()}<span class="art-caption">Greyhaven waits beyond the storm</span></div>
-      </div>
-      <div id="save-import-overlay" class="save-import-overlay" style="display:none">
-        <div class="save-import-dialog">
-          <p id="save-import-message">Select a save file to import.</p>
-          <div class="save-import-buttons">
-            <button type="button" id="save-import-confirm" class="action-button action-button--primary">Choose file</button>
-            <button type="button" id="save-import-cancel" class="action-button action-button--secondary">Cancel</button>
-          </div>
-        </div>
       </div>
     </main>`;
   },
@@ -62,58 +57,39 @@ export const titleScene = {
     },
     exportSave(game) {
       if (!hasSave()) return;
-      exportSave();
+      if (!exportSave()) {
+        game.importResult = { ok: false, message: 'Could not export save. No save data found.' };
+      }
     },
     promptImport(game) {
-      const overlay = document.getElementById('save-import-overlay');
-      if (overlay) overlay.style.display = 'flex';
-      const confirmBtn = document.getElementById('save-import-confirm');
-      const cancelBtn = document.getElementById('save-import-cancel');
-      const fileInput = document.getElementById('save-import-input');
-      const msgEl = document.getElementById('save-import-message');
-      if (msgEl) msgEl.textContent = 'Select a save file to import. This will overwrite your current save.';
-
-      // Wire file input change handler (was in afterRender; now inline so it
-      // always fires regardless of whether the engine calls afterRender).
-      if (fileInput) {
-        const newInput = fileInput.cloneNode(true);
-        fileInput.parentNode.replaceChild(newInput, fileInput);
-        const freshInput = document.getElementById('save-import-input');
-        freshInput.addEventListener('change', () => {
-          const file = freshInput.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = () => {
-            const result = importSave(reader.result);
-            if (result.ok) {
-              if (msgEl) msgEl.textContent = 'Save imported. Reloading…';
-              setTimeout(() => { window.location.reload(); }, 600);
-            } else {
-              if (msgEl) msgEl.textContent = result.error || 'Import failed.';
-              if (overlay) overlay.style.display = 'flex';
-            }
-          };
-          reader.onerror = () => {
-            if (msgEl) msgEl.textContent = 'Could not read the selected file.';
-          };
-          reader.readAsText(file);
-        });
-      }
-
-      if (confirmBtn) {
-        const newConfirm = confirmBtn.cloneNode(true);
-        confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
-        newConfirm.addEventListener('click', () => {
-          document.getElementById('save-import-input').click();
-        });
-      }
-      if (cancelBtn) {
-        const newCancel = cancelBtn.cloneNode(true);
-        cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
-        newCancel.addEventListener('click', () => {
-          if (overlay) overlay.style.display = 'none';
-        });
-      }
+      // Create a temporary file input. The browser's file dialog holds a
+      // reference to it until the user selects a file or cancels, so it
+      // survives the engine's render() call that fires after every action.
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json,application/json';
+      input.onchange = () => {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = importSave(reader.result);
+          if (result.ok) {
+            game.importResult = { ok: true, message: 'Save imported. Reloading…' };
+            game.render();
+            setTimeout(() => { window.location.reload(); }, 800);
+          } else {
+            game.importResult = { ok: false, message: result.error || 'Import failed.' };
+            game.render();
+          }
+        };
+        reader.onerror = () => {
+          game.importResult = { ok: false, message: 'Could not read the selected file.' };
+          game.render();
+        };
+        reader.readAsText(file);
+      };
+      input.click();
     },
     promptDelete(game) {
       if (!hasSave()) return;
