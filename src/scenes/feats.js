@@ -92,6 +92,12 @@ export function featsEarned(state) {
   return featStatus(state).filter(f => f.done).length;
 }
 
+// The first feat (in list order) not yet earned, as a one-line pointer; null when all are earned.
+export function nextFeatText(state) {
+  const next = featStatus(state).find(f => !f.done);
+  return next ? `Next unearned feat: ${next.title} — ${next.detail}` : null;
+}
+
 export const FEAT_FILTERS = ['all', 'earned', 'pending'];
 const FEAT_FILTER_LABELS = { all: 'All', earned: 'Earned', pending: 'Not yet' };
 const FEAT_FILTER_EMPTY = { earned: 'No feats earned yet. Your first victories will start this list.', pending: 'Every feat is earned. The whole frontier knows your name.' };
@@ -118,6 +124,7 @@ export const featsScene = {
   render(game) {
     const rows = featStatus(game.state);
     const earned = rows.filter(r => r.done).length;
+    const nextFeat = nextFeatText(game.state);
     const ledger = ledgerOf(game.state);
     const record = SERVICE_ROWS.map(r => `<div><dt>${escapeHTML(r.label)}</dt><dd>${ledger[r.key]}</dd></div>`).join('');
     const bountyRecord = `<div><dt>Bounties claimed</dt><dd>${totalBountiesClaimed(game.state)}</dd></div>`;
@@ -136,6 +143,7 @@ export const featsScene = {
       ${sceneHeader({ eyebrow: 'Watch House records', title: 'Wardens’ Feats', subtitle: 'Milestones of your journey across the storm frontier.', iconName: 'beacon' })}
       <section class="panel" aria-label="Feats earned">
         <p class="feats__count">${earned} of ${rows.length} feats earned</p>
+        ${nextFeat ? `<p class="feats__next">${escapeHTML(nextFeat)}</p>` : ''}
         <div class="feats__filters" role="group" aria-label="Show feats">${filters}</div>
         ${shown.length ? `<ul class="feats__list">${items}</ul>` : `<p class="feats__empty">${escapeHTML(FEAT_FILTER_EMPTY[filter] || '')}</p>`}
       </section>
