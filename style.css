@@ -1477,7 +1477,7 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .command-card--locked { opacity: 0.55; cursor: not-allowed; }
 .command-card--locked:hover { transform: none; box-shadow: none; }
 .locked-skills { margin-top: 0.5rem; }
-.locked-skills summary { font-size: 0.85rem; color: var(--muted); cursor: pointer; }
+.locked-skills summary { min-height: 44px; padding: .75rem .15rem .35rem; font-size: 0.85rem; color: var(--muted); cursor: pointer; }
 
 .quest-bounty-record { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
 
@@ -1499,4 +1499,14 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .matchup-strong { color: #4ade80; font-weight: 600; }
 .matchup-weak { color: #f87171; font-weight: 600; }
 .matchup-neutral { color: var(--muted); }
+
+
+/* Incoming enemy damage estimate in combat */
+.incoming-damage-hint {
+  margin: 0.25em 0 0;
+  font-size: 0.8em;
+  color: var(--muted);
+  text-align: center;
+}
+.incoming-damage-label { font-weight: 600; }
 
