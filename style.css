@@ -1519,3 +1519,6 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 
 
 .drills__summary { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; margin: .4rem 0 .6rem; }
+
+/* Feats: next unearned feat pointer */
+.feats__next { color: var(--muted); font-size: .9rem; margin: .25rem 0 .5rem; overflow-wrap: anywhere; }
