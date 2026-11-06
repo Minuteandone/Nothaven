@@ -562,7 +562,7 @@ em.enraged {
 .combat-dashboard > .panel { margin: 0; }
 .command-panel h2 { margin-bottom: 1rem; font-size: 1.3rem; }
 .command-panel .actions button { margin: 0; }
-.command-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+.command-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: .55rem; }
 .command-grid .command-button { justify-content: flex-start; min-height: 52px; padding: .75rem .85rem; }
 .command-grid .command-button--flee { grid-column: 1 / -1; justify-content: center; min-height: 44px; }
 .command-hint { grid-column: 1 / -1; margin: .15rem 0 0; color: var(--muted); font-size: .74rem; line-height: 1.5; }
