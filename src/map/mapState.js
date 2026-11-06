@@ -157,6 +157,82 @@ export function getZoneVantage(gameState, zoneOrId = null) {
   };
 }
 
+export function getFrontierAtlas(gameState = null) {
+  const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
+  const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
+  let zonesVisited = 0;
+  let totalEncountersCleared = 0;
+  let totalEncounters = 0;
+  let totalCachesOpened = 0;
+  let totalCaches = 0;
+  let completedObjectives = 0;
+  let totalObjectives = 0;
+
+  const zones = ZONE_ORDER.map((zoneId) => {
+    const zone = ZONES[zoneId];
+    const progress = getZoneProgress(gameState, zone);
+    const condition = getZoneCondition(gameState, zone);
+    const isCurrent = zoneId === currentZoneId;
+    const visited = Boolean(progress.visited || isCurrent);
+    const unlocked = !zoneLockReason(gameState || {}, zone);
+    const connections = Array.from(
+      new Set(
+        (zone.exits || [])
+          .map((ex) => ex.toZone)
+          .filter((id) => typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id))
+      )
+    );
+    const connectedNames = connections.map((id) => ZONES[id].name);
+
+    if (visited) zonesVisited += 1;
+    totalEncountersCleared += progress.encountersCleared;
+    totalEncounters += progress.encountersTotal;
+    totalCachesOpened += progress.cachesOpened;
+    totalCaches += progress.cachesTotal;
+    completedObjectives += progress.completedObjectives;
+    totalObjectives += progress.totalObjectives;
+
+    return {
+      zoneId,
+      name: zone.name,
+      subtitle: zone.subtitle,
+      dangerLevel: zone.dangerLevel ?? 0,
+      visited,
+      isCurrent,
+      unlocked,
+      conditionId: condition.id,
+      conditionName: condition.name,
+      encountersCleared: progress.encountersCleared,
+      encountersTotal: progress.encountersTotal,
+      cachesOpened: progress.cachesOpened,
+      cachesTotal: progress.cachesTotal,
+      completedObjectives: progress.completedObjectives,
+      totalObjectives: progress.totalObjectives,
+      percent: progress.percent,
+      connections,
+      connectedNames,
+    };
+  });
+
+  const overallPercent = totalObjectives > 0
+    ? Math.round((completedObjectives / totalObjectives) * 100)
+    : 100;
+
+  return {
+    currentZoneId,
+    zonesVisited,
+    zonesTotal: zones.length,
+    totalEncountersCleared,
+    totalEncounters,
+    totalCachesOpened,
+    totalCaches,
+    completedObjectives,
+    totalObjectives,
+    overallPercent,
+    zones,
+  };
+}
+
 
 export function getEffectiveRandomEncounterChance(gameState, zone) {
   const base = typeof zone?.randomEncounterChance === 'number' ? zone.randomEncounterChance : 0;

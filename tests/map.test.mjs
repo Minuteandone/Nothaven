@@ -9,6 +9,7 @@ import {
   getZoneCondition,
   getZoneProgress,
   getZoneVantage,
+  getFrontierAtlas,
   getCompassBearing,
   getZoneCompassHint,
   findSafePath,
@@ -1048,4 +1049,60 @@ test('getEncounterPreview and getZoneThreatIntel resolve difficulty-scaled threa
   assert.match(html, /aria-label="Threat: Ridge Patrol Pack"[^>]*title="Threat: Ridge Patrol Pack — Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage \(50%\), Scrap Metal \(50%\), Waterlogged Dispatch \(10%\)"/);
   assert.match(html, /data-action="mapEncounter" data-arg="ridge_patrol" title="Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage \(50%\), Scrap Metal \(50%\), Waterlogged Dispatch \(10%\)"/);
   assert.match(html, /<p class="nearby-threat-preview">Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage \(50%\), Scrap Metal \(50%\), Waterlogged Dispatch \(10%\)<\/p>/);
+});
+
+test('getFrontierAtlas computes read-only Frontier Atlas overview across all 9 zones and renders .frontier-atlas in exploration UI without spoiling uncharted regions', () => {
+  const game = makeMockGame();
+  const state = game.state;
+    const initialAtlas = getFrontierAtlas(state);
+    assert.equal(initialAtlas.currentZoneId, 'greyhaven');
+    assert.equal(initialAtlas.zonesTotal, 9);
+    assert.equal(initialAtlas.zonesVisited, 1);
+    assert.equal(initialAtlas.totalEncountersCleared, 0);
+    assert.equal(initialAtlas.totalCachesOpened, 0);
+    assert.equal(initialAtlas.overallPercent, 0);
+    assert.equal(initialAtlas.zones.length, 9);
+
+    const greyhavenEntry = initialAtlas.zones.find((z) => z.zoneId === 'greyhaven');
+    assert.ok(greyhavenEntry);
+    assert.equal(greyhavenEntry.visited, true);
+    assert.equal(greyhavenEntry.isCurrent, true);
+    assert.equal(greyhavenEntry.conditionName, 'Lantern Shelter');
+    assert.deepEqual(greyhavenEntry.connections, ['ridge_road', 'saltmere_coast']);
+    assert.deepEqual(greyhavenEntry.connectedNames, ['Ridge Road', 'Saltmere Coast']);
+
+    const eyeEntry = initialAtlas.zones.find((z) => z.zoneId === 'storms_eye');
+    assert.ok(eyeEntry);
+    assert.equal(eyeEntry.visited, false);
+    assert.equal(eyeEntry.unlocked, false);
+
+    // Travel to Ridge Road, clear an encounter and open a cache
+    travelToZone(state, 'ridge_road', 'from_greyhaven');
+    recordEncounterVictory(state, 'ridge_patrol', 'ridge_bandit');
+    state.map.completedInteractions.ridge_supply_cache = true;
+    const beforeSnapshot = JSON.stringify(state);
+
+    const updatedAtlas = getFrontierAtlas(state);
+    assert.equal(JSON.stringify(state), beforeSnapshot, 'getFrontierAtlas must not mutate gameState');
+    assert.equal(updatedAtlas.currentZoneId, 'ridge_road');
+    assert.equal(updatedAtlas.zonesVisited, 2);
+    assert.equal(updatedAtlas.totalEncountersCleared, 1);
+    assert.equal(updatedAtlas.totalCachesOpened, 1);
+    assert.ok(updatedAtlas.overallPercent > 0);
+
+    const ridgeEntry = updatedAtlas.zones.find((z) => z.zoneId === 'ridge_road');
+    assert.equal(ridgeEntry.visited, true);
+    assert.equal(ridgeEntry.isCurrent, true);
+    assert.equal(ridgeEntry.encountersCleared, 1);
+    assert.equal(ridgeEntry.cachesOpened, 1);
+
+    // Render exploration UI and verify .frontier-atlas shows visited regions and masks uncharted ones
+  const html = exploreScene.render(game);
+  assert.match(html, /class="shortcut-guide frontier-atlas"/);
+  assert.match(html, /Frontier atlas \(2\/9 regions · \d+% recon\)/);
+  assert.match(html, /data-zone-id="greyhaven" data-current="false"/);
+  assert.match(html, /data-zone-id="ridge_road" data-current="true"/);
+  assert.match(html, /Routes: Greyhaven, Observatory Ruins, Highwatch Pass/);
+  assert.match(html, /7 frontier regions remain uncharted\./);
+  assert.doesNotMatch(html, /data-zone-id="storms_eye"/);
 });
