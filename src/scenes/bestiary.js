@@ -2,6 +2,7 @@
 // installBestiary(game) records victories (state.bestiary[enemyId] = count)
 // from the combat:victory event and registers the 'bestiary' scene.
 import { ENEMIES } from '../data/enemies.js';
+import { bountyHabitats, bountyJournalText } from '../core/bounties.js';
 import { BESTIARY_COMPARISON_LIMIT, BESTIARY_ELEMENT_FILTERS, bestiaryComparisonIds, bestiaryQueryText, renderBestiary } from '../ui/bestiary.js';
 
 const own = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);
@@ -16,7 +17,7 @@ export function recordDefeat(state, enemyId) {
 
 export function bestiaryEntries(state) {
   const book = state?.bestiary && typeof state.bestiary === 'object' ? state.bestiary : {};
-  return Object.keys(ENEMIES).map((id) => ({ enemy: ENEMIES[id], count: own(book, id) && Number.isInteger(book[id]) ? book[id] : 0 }));
+  return Object.keys(ENEMIES).map((id) => ({ enemy: ENEMIES[id], count: own(book, id) && Number.isInteger(book[id]) ? book[id] : 0, roams: bountyHabitats(id), contract: bountyJournalText(state, id) }));
 }
 
 function currentComparison(game) {
