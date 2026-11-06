@@ -104,7 +104,7 @@ export const drillsScene = {
         <h2>Yard Gauntlet</h2>
         <p>Face every drill you have unlocked, one after another. Wounds and spent MP carry over between bouts, and each win still grants its drill experience.</p>
         <p class="drill__record">${grec.runs ? `Best run: ${grec.best} of ${queue.length} foes · ${grec.runs} ${grec.runs === 1 ? 'attempt' : 'attempts'}` : 'No gauntlet attempted yet.'}</p>
-        ${queue.length >= GAUNTLET_MIN ? uiButton({ action: 'startGauntlet', label: `Begin gauntlet (${queue.length} foes)`, iconName: 'sword', variant: 'ghost' }) : `<p>Unlock ${GAUNTLET_MIN} drills to open the gauntlet.</p>`}
+        ${queue.length >= GAUNTLET_MIN ? uiButton({ action: 'startGauntlet', label: `Begin gauntlet (${queue.length} foes)`, iconName: 'sword', variant: 'ghost' }) : `<p class="drills__gauntlet-progress">${escapeHTML(`Unlock ${GAUNTLET_MIN} drills to open the gauntlet (${queue.length} of ${GAUNTLET_MIN} unlocked so far).`)}</p>`}
       </section>`;
     const msg = game.drillsMessage ? `<p class="drills__message" role="status">${escapeHTML(game.drillsMessage)}</p>` : '';
     return `<main class="game-shell drills">
