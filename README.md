@@ -379,3 +379,16 @@ when the enemy next acts. The marker remains decorative. Tests compare each
 canonical enrage cutoff with the actual phase check and preserve whole render
 inputs. This adds visible text and an `aria-describedby` association, not a
 claim of completed screen-reader testing; combat rules and saves are unchanged.
+
+### Earned victory receipt browser regression
+
+The retained fresh-game smoke route now checks the solo Ridge Bandit victory's
+exact +10 XP and +9 gold receipt against independent literals and actual party,
+gold, and inventory deltas. Its unchanged RNG of 0.5 earns no loot: the ration
+actually used earlier is the only inventory change. Native Display115/130 and
+shortcut hints on/off give four receipt renders per width (12 overall), checking
+text glyph bounds, document fit, Continue's 44px target, whole-journey and actual
+quick-save stability. Continue must not repay XP, gold, or items. The original
+Chronicle, save/reload, Journal, and Archive route/assertions remain intact.
+No reward-helper oracle or injected progress/markup is used. This is not earned
+item-drop or drill coverage, a balance study, or real screen-reader testing.
