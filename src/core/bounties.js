@@ -70,8 +70,26 @@ export function bountyRank(state) {
   return { rank: BOUNTY_RANKS[i], next, total, toNext: next ? next.min - total : 0 };
 }
 
+// Urgent notice: one contract at a time pays a premium on top of rank. It
+// rotates by a fixed stride after every claim (7 is coprime with 18, so all
+// contracts take a turn) and never depends on unlocks, so it stays put while
+// a contract is being worked.
+export const URGENT_BONUS = 0.25;
+export function urgentBountyId(state) {
+  return BOUNTIES[(totalBountiesClaimed(state) * 7 + 5) % BOUNTIES.length].id;
+}
+
 export function bountyPay(state, b) {
-  return b.gold + Math.floor(b.gold * bountyRank(state).rank.bonus);
+  const urgent = b.id === urgentBountyId(state) ? Math.floor(b.gold * URGENT_BONUS) : 0;
+  return b.gold + Math.floor(b.gold * bountyRank(state).rank.bonus) + urgent;
+}
+
+export function urgentBountyText(state) {
+  const b = getBounty(urgentBountyId(state));
+  const pct = `+${Math.round(URGENT_BONUS * 100)}% gold`;
+  return bountyUnlocked(state, b.id)
+    ? `Urgent notice: “${b.title}” pays ${pct} until the next claim.`
+    : `Urgent notice: an unposted contract pays ${pct} until the next claim — meet new foes in the wilds to open it.`;
 }
 
 export function bountyRankText(state) {
@@ -154,6 +172,7 @@ export function bountyRows(state) {
     progress: v.active === b.id ? v.progress : 0,
     ready: v.active === b.id && v.progress >= b.count,
     claimed: v.completed[b.id] || 0,
+    urgent: b.id === urgentBountyId(state),
   }));
 }
 
@@ -194,6 +213,7 @@ export function claimBounty(state, lookup = getBounty) {
   const granted = grantRewards(inv, b.items);
   if (!granted || !granted.ok) return { ok: false, message: 'The bounty clerk cannot pay out that contract right now.' };
   const before = bountyRank(state).rank;
+  const urgent = b.id === urgentBountyId(state) ? ' Urgent notice premium included.' : '';
   const gold = bountyPay(state, b);
   state.inventory = granted.inv;
   state.gold = (Number.isFinite(state.gold) ? state.gold : 0) + gold;
@@ -201,5 +221,5 @@ export function claimBounty(state, lookup = getBounty) {
   writeState(state, { active: null, progress: 0, completed });
   const after = bountyRank(state).rank;
   const promoted = after.id !== before.id ? ` Board rank raised to ${after.title}.` : '';
-  return { ok: true, message: `Claimed “${b.title}”: ${bountyRewardText(b, gold)}.${promoted}` };
+  return { ok: true, message: `Claimed “${b.title}”: ${bountyRewardText(b, gold)}.${urgent}${promoted}` };
 }

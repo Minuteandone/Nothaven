@@ -1,6 +1,6 @@
 // Greyhaven bounty board scene: accept, track, abandon and claim hunt contracts.
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
-import { abandonBounty, acceptBounty, bountyRankText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
+import { abandonBounty, acceptBounty, bountyRankText, urgentBountyText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
 
 function rowHTML(r, anyActive) {
   const status = !r.unlocked ? 'Defeat this foe once to open the contract.'
@@ -12,8 +12,9 @@ function rowHTML(r, anyActive) {
     : r.ready ? uiButton({ action: 'claimBounty', label: `Claim reward`, iconName: 'coin', variant: 'primary' })
     : r.active ? uiButton({ action: 'abandonBounty', label: 'Abandon contract', iconName: 'compass', variant: 'ghost' })
     : uiButton({ action: 'acceptBounty', arg: r.id, label: `Accept: ${r.title}`, iconName: 'sword', variant: 'ghost', disabled: anyActive });
-  return `<li class="bounty${r.active ? ' bounty--active' : ''}${r.unlocked ? '' : ' bounty--locked'}">
+  return `<li class="bounty${r.active ? ' bounty--active' : ''}${r.unlocked ? '' : ' bounty--locked'}${r.unlocked && r.urgent ? ' bounty--urgent' : ''}">
     <h2 class="bounty__title">${escapeHTML(title)}</h2>
+    ${r.unlocked && r.urgent ? '<p class="bounty__urgent">Urgent notice — premium pay until the next claim.</p>' : ''}
     ${r.unlocked ? `<p class="bounty__brief">${escapeHTML(r.brief)}</p>
     <p class="bounty__terms">Defeat ${r.count} × ${escapeHTML(r.foe)} · Reward: ${escapeHTML(bountyRewardText(r, r.pay))}</p>
     ${r.roams.length ? `<p class="bounty__roams">Roams: ${escapeHTML(r.roams.join(', '))}.</p>` : ''}` : ''}
@@ -64,6 +65,7 @@ export const bountiesScene = {
         <p class="bounties__intro">Take one contract at a time, then defeat its foe in the wilds — roaming ambushes and patrols both count, sparring drills do not. Claim the reward here; every contract can be taken again, and each claim counts toward a board rank that raises contract gold.</p>
         <p class="bounties__total">Contracts claimed: ${total}</p>
         <p class="bounties__rank">${escapeHTML(bountyRankText(game.state))}</p>
+        <p class="bounties__urgent">${escapeHTML(urgentBountyText(game.state))}</p>
         ${regionFilterHTML(options, region)}
         ${filterNote}
         <ul class="bounties__list">${shown.map((r) => rowHTML(r, anyActive)).join('')}</ul>
