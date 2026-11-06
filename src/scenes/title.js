@@ -85,7 +85,7 @@ export const titleScene = {
       game.state = createInitialState();
       clearStoryTransients(game);
       // Clear any pending import
-      delete game.pendingImportRaw;
+      delete game.pendingImportState;
       delete game.pendingImportPreview;
       delete game.importResult;
       game.setScene('town');
@@ -103,7 +103,7 @@ export const titleScene = {
     },
     promptImport(game) {
       // Clean up any stale import state
-      delete game.pendingImportRaw;
+      delete game.pendingImportState;
       delete game.pendingImportPreview;
       const input = document.createElement('input');
       input.type = 'file';
@@ -119,8 +119,8 @@ export const titleScene = {
             game.render();
             return;
           }
-          // Store raw JSON and preview; show confirmation UI
-          game.pendingImportRaw = reader.result;
+          // Store the migrated state and preview; show confirmation UI
+          game.pendingImportState = validation.migrated;
           game.pendingImportPreview = validation.preview;
           delete game.importResult;
           game.render();
@@ -134,20 +134,20 @@ export const titleScene = {
       input.click();
     },
     confirmImport(game) {
-      if (!game.pendingImportRaw) return;
-      const result = commitImportSave(game.pendingImportRaw);
+      if (!game.pendingImportState) return;
+      const result = commitImportSave(game.pendingImportState);
       if (result.ok) {
         game.importResult = { ok: true, message: 'Save imported. Reloading…' };
       } else {
         game.importResult = { ok: false, message: result.error || 'Could not write save.' };
       }
-      delete game.pendingImportRaw;
+      delete game.pendingImportState;
       delete game.pendingImportPreview;
       game.render();
       if (result.ok) setTimeout(() => { window.location.reload(); }, 800);
     },
     cancelImport(game) {
-      delete game.pendingImportRaw;
+      delete game.pendingImportState;
       delete game.pendingImportPreview;
       game.render();
     },

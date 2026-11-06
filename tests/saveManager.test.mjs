@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createInitialState, saveGame, hasSave, enableAutosave, disableAutosave, scheduleAutosave, isAutosaveEnabled, hasAutosave, loadAutosave, clearAutosave } from '../src/state.js';
-import { exportSave, importSave, validateImportSave, commitImportSave, deleteSave } from '../src/core/saveManager.js';
+import { exportSave, importSave, validateImportSave, commitImportSave, deleteSave, SAVE_TEXT_LIMIT } from '../src/core/saveManager.js';
 import { SAVE_VERSION } from '../src/core/save.js';
 
 const SAVE_KEY = 'stormhaven-save';
@@ -95,7 +95,7 @@ test('validateImportSave rejects object with empty party', () => {
 test('validateImportSave rejects object with __proto__ key', () => {
   const result = validateImportSave('{"__proto__": {}, "gold": 100, "party": [{"id":"h","name":"W"}], "scene": "town"}');
   assert.equal(result.ok, false);
-  assert.ok(result.error.includes('disallowed'));
+  assert.ok(result.error.includes('not a valid game state'));
 });
 
 test('validateImportSave rejects object missing scene', () => {
@@ -156,6 +156,51 @@ test('validateImportSave accepts save with null combat', () => {
   assert.equal(result.ok, true);
 });
 
+test('validateImportSave rejects oversized JSON', () => {
+  const state = createInitialState();
+  const json = JSON.stringify(state);
+  const padded = json + ' ' + 'x'.repeat(SAVE_TEXT_LIMIT);
+  const result = validateImportSave(padded);
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('too large'));
+});
+
+test('validateImportSave rejects nested forbidden key at depth', () => {
+  // Raw JSON so "__proto__" survives as an own key (object literals would
+  // treat it as a prototype assignment and drop it from the stringified text).
+  const json = '{"gold":100,"scene":"town","party":[{"id":"h","name":"W"}],"flags":{"quest":{"__proto__":{"polluted":true}}}}';
+  const result = validateImportSave(json);
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes('not a valid game state'));
+});
+
+test('validateImportSave rejects deeply nested forbidden key', () => {
+  const state = createInitialState();
+  state.scene = 'town';
+  state.flags = { a: { b: { c: { 'constructor': {} } } } };
+  const json = JSON.stringify(state);
+  const result = validateImportSave(json);
+  assert.equal(result.ok, false);
+});
+
+test('commitImportSave writes exactly the passed migrated state (no re-parse)', () => {
+  const st = storage();
+  const old = globalThis.localStorage;
+  globalThis.localStorage = st;
+  try {
+    const migrated = createInitialState();
+    migrated.scene = 'town';
+    migrated.gold = 4242;
+    const result = commitImportSave(migrated);
+    assert.equal(result.ok, true);
+    const written = JSON.parse(st.getItem(SAVE_KEY));
+    assert.equal(written.gold, 4242);
+    assert.equal(written.scene, 'town');
+  } finally {
+    globalThis.localStorage = old;
+  }
+});
+
 // --- commitImportSave tests ---
 
 test('commitImportSave writes to localStorage', () => {
@@ -165,8 +210,7 @@ test('commitImportSave writes to localStorage', () => {
   try {
     const state = createInitialState();
     state.scene = 'town';
-    const json = JSON.stringify(state);
-    const result = commitImportSave(json);
+    const result = commitImportSave(state);
     assert.equal(result.ok, true);
     assert.ok(st.getItem(SAVE_KEY), 'save should be written');
   } finally {
@@ -182,8 +226,7 @@ test('commitImportSave backs up existing save before overwriting', () => {
   try {
     const state = createInitialState();
     state.scene = 'explore';
-    const json = JSON.stringify(state);
-    const result = commitImportSave(json);
+    const result = commitImportSave(state);
     assert.equal(result.ok, true);
     const backup = st.getItem(SAVE_KEY + '.backup');
     assert.ok(backup, 'backup should exist');
@@ -479,7 +522,7 @@ test('two-phase import: validate → preview → confirm writes save', () => {
     assert.equal(validation.preview.scene, 'town');
 
     // Phase 2: confirm
-    const result = commitImportSave(json);
+    const result = commitImportSave(validation.migrated);
     assert.equal(result.ok, true);
 
     // Phase 3: verify written data

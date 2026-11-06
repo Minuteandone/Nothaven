@@ -1,8 +1,12 @@
 import { createInitialState } from '../state.js';
 import { migrateSave, SAVE_VERSION } from './save.js';
+import { boundedTree } from './archive.js';
 
 const SAVE_KEY = 'stormhaven-save';
 const AUTOSAVE_KEY = 'stormhaven-autosave';
+
+/** Matches the Archive envelope cap; a single-slot save is far smaller. */
+export const SAVE_TEXT_LIMIT = 250000;
 
 /**
  * Export the current saved game as a downloadable JSON file.
@@ -33,27 +37,26 @@ export function exportSave() {
 }
 
 /**
- * Structural validation that mirrors the Archive parser's validState
- * check: the imported state must be an object with a valid scene, a
- * non-empty party array, no active combat, and pass migrateSave.
- * Returns { ok, error?, preview? } where preview has human-readable
- * summary fields for a confirmation step.
+ * Structural validation that mirrors the Archive parser's guards: a size
+ * cap, the shared boundedTree walk (which rejects proto/constructor keys at
+ * any depth and bounds total nodes/depth), a non-empty object party, a
+ * valid scene, numeric gold, no active combat, and a successful migrateSave.
+ * Returns { ok, error?, preview?, migrated? }. `migrated` is the fully
+ * upgraded state that should be committed verbatim, so the confirmation
+ * step writes exactly what was previewed (no re-parse).
  */
 export function validateImportSave(jsonString) {
+  if (typeof jsonString !== 'string' || jsonString.length > SAVE_TEXT_LIMIT) {
+    return { ok: false, error: 'Save file is too large to import.' };
+  }
   let raw;
   try {
     raw = JSON.parse(jsonString);
   } catch {
     return { ok: false, error: 'Invalid JSON file. Please select a valid save file.' };
   }
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+  if (!boundedTree(raw) || !raw || typeof raw !== 'object' || Array.isArray(raw)) {
     return { ok: false, error: 'Save file is not a valid game state.' };
-  }
-
-  // Reject proto / constructor poisoning before any key access
-  const forbidden = new Set(['__proto__', 'prototype', 'constructor']);
-  for (const k of Object.keys(raw)) {
-    if (forbidden.has(k)) return { ok: false, error: 'Save file contains disallowed keys.' };
   }
 
   // Structural pre-check: must have a party array, a scene string, gold
@@ -92,22 +95,19 @@ export function validateImportSave(jsonString) {
     saveVersion: migrated.saveVersion ?? SAVE_VERSION,
   };
 
-  return { ok: true, preview };
+  return { ok: true, preview, migrated };
 }
 
 /**
- * Write a validated JSON string to the main save slot, backing up the
- * existing save first.  Call only after validateImportSave succeeds and
- * the user has confirmed the preview.
- * Returns { ok: boolean, error?: string }
+ * Write an already-validated, migrated state object to the main save slot,
+ * backing up the existing save first. Call only with the `migrated` value
+ * returned by validateImportSave after the user has confirmed the preview.
+ * Returns { ok: boolean, error?: string }.
  */
-export function commitImportSave(jsonString) {
-  let raw;
-  try { raw = JSON.parse(jsonString); } catch {
-    return { ok: false, error: 'Invalid JSON.' };
+export function commitImportSave(migratedState) {
+  if (!migratedState || typeof migratedState !== 'object' || Array.isArray(migratedState)) {
+    return { ok: false, error: 'Invalid save state.' };
   }
-  const migrated = migrateSave(raw, createInitialState);
-  if (!migrated) return { ok: false, error: 'Save format not recognised.' };
 
   // Backup current save before overwriting
   const existing = localStorage.getItem(SAVE_KEY);
@@ -116,7 +116,7 @@ export function commitImportSave(jsonString) {
     catch { /* storage full — proceed without backup */ }
   }
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(migrated));
+    localStorage.setItem(SAVE_KEY, JSON.stringify(migratedState));
   } catch {
     return { ok: false, error: 'Could not write save to this device. Storage may be full.' };
   }
@@ -125,18 +125,14 @@ export function commitImportSave(jsonString) {
 
 /**
  * Import a validated save in a single step (legacy path kept for tests).
- * Returns { ok: boolean, error?: string, data?: object }
+ * Returns { ok: boolean, error?: string, data?: object }.
  */
 export function importSave(jsonString) {
   const validation = validateImportSave(jsonString);
   if (!validation.ok) return { ok: false, error: validation.error };
-  const result = commitImportSave(jsonString);
+  const result = commitImportSave(validation.migrated);
   if (!result.ok) return result;
-  // Return the migrated data for callers that need it
-  let raw;
-  try { raw = JSON.parse(jsonString); } catch { return { ok: true }; }
-  const migrated = migrateSave(raw, createInitialState);
-  return { ok: true, data: migrated };
+  return { ok: true, data: validation.migrated };
 }
 
 /**
