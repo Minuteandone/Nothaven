@@ -24,6 +24,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'Some skills carry an element: Spark, Stormbreaker and Tempest Cleave (Lightning), Beacon Lance, Signal Flare and Skyfire Lance (Fire), and Stillpoint Strike (Ice). Basic attacks are untyped and ignore the elemental wheel.',
     'Enemies have elemental affinities too — a Gale Hound channels lightning, a Cinderclaw burns with fire, a Wrack Eel draws from water. Check the element badge under an enemy\'s name to plan your approach.',
     'Super-effective hits deal 1.5× damage and flash It\'s super effective! in the log. Resisted hits deal 0.75× and warn It\'s not very effective… Earth-element foes still show their badge but never multiply or resist damage.',
+    'Companion techniques get elements too: Iven\'s Spark is Lightning, and Sela\'s Signal Flare is Fire, both making full use of the wheel.',
   ] }),
 
   Object.freeze({ title: 'Conditions', lines: [
