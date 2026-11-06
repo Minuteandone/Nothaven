@@ -725,6 +725,13 @@ export function getZoneChecklist(gameState, zoneOrId = null) {
   const clearedEncounters = gameState?.map?.clearedEncounters || {};
   const completedInteractions = gameState?.map?.completedInteractions || {};
   const mapLike = { clearedEncounters, completedInteractions };
+  const isCurrentZone = (gameState?.map?.zoneId || gameState?.location || 'greyhaven') === resolvedZone.id;
+  const originX = isCurrentZone && Number.isInteger(gameState?.map?.x)
+    ? gameState.map.x
+    : (resolvedZone.spawns?.default?.x ?? 0);
+  const originY = isCurrentZone && Number.isInteger(gameState?.map?.y)
+    ? gameState.map.y
+    : (resolvedZone.spawns?.default?.y ?? 0);
 
   const npcs = (Array.isArray(resolvedZone.npcs) ? resolvedZone.npcs : []).map((n) => ({
     id: n.id,
@@ -732,6 +739,8 @@ export function getZoneChecklist(gameState, zoneOrId = null) {
     role: n.role || '',
     x: n.x,
     y: n.y,
+    distance: Math.abs(n.x - originX) + Math.abs(n.y - originY),
+    bearing: getCompassBearing(originX, originY, n.x, n.y).bearing,
     summary: getNpcBriefing(gameState, n, resolvedZone)?.summary || n.name,
   }));
 
@@ -742,15 +751,24 @@ export function getZoneChecklist(gameState, zoneOrId = null) {
     const unlocked = !lockReason;
     const status = cleared ? 'Cleared' : unlocked ? 'Active' : 'Locked';
     const isLocked = status === 'Locked';
+    const preview = isLocked ? null : getEncounterPreview(e.enemyId, gameState);
+    const summary = isLocked
+      ? 'Sealed challenge · Locked'
+      : preview?.summary
+        ? `${e.name} · ${status} — ${preview.summary}`
+        : `${e.name} · ${status}`;
     return {
       id: isLocked ? 'sealed_challenge' : id,
       name: isLocked ? 'Sealed challenge' : e.name,
       x: e.x,
       y: e.y,
+      distance: Math.abs(e.x - originX) + Math.abs(e.y - originY),
+      bearing: getCompassBearing(originX, originY, e.x, e.y).bearing,
       cleared,
       unlocked,
       lockReason: lockReason || null,
       status,
+      summary,
     };
   });
 
@@ -767,6 +785,8 @@ export function getZoneChecklist(gameState, zoneOrId = null) {
       once,
       x: inter.x,
       y: inter.y,
+      distance: Math.abs(inter.x - originX) + Math.abs(inter.y - originY),
+      bearing: getCompassBearing(originX, originY, inter.x, inter.y).bearing,
       completed,
       guardianCleared: briefing ? briefing.guardianCleared : true,
       guardianName: briefing ? briefing.guardianName : null,
@@ -782,19 +802,55 @@ export function getZoneChecklist(gameState, zoneOrId = null) {
       label: ex.label,
       x: ex.x,
       y: ex.y,
+      distance: Math.abs(ex.x - originX) + Math.abs(ex.y - originY),
+      bearing: getCompassBearing(originX, originY, ex.x, ex.y).bearing,
       visited: Boolean(briefing?.visited),
       unlocked: Boolean(briefing?.unlocked),
       summary: briefing?.summary || ex.label,
     };
   });
 
+  const counts = {
+    total: npcs.length + encounters.length + interactables.length + exits.length,
+    npcs: npcs.length,
+    encountersActive: encounters.filter((e) => e.status === 'Active').length,
+    encountersCleared: encounters.filter((e) => e.status === 'Cleared').length,
+    encountersLocked: encounters.filter((e) => e.status === 'Locked').length,
+    interactablesAvailable: interactables.filter((i) => i.status === 'Available').length,
+    interactablesCompleted: interactables.filter((i) => i.status === 'Completed').length,
+    interactablesService: interactables.filter((i) => i.status === 'Service').length,
+    exitsCharted: exits.filter((x) => x.unlocked && x.visited).length,
+    exitsUncharted: exits.filter((x) => x.unlocked && !x.visited).length,
+    exitsLocked: exits.filter((x) => !x.unlocked).length,
+  };
+  const summaryParts = [];
+  if (counts.npcs > 0) summaryParts.push(`${counts.npcs} ${counts.npcs === 1 ? 'contact' : 'contacts'}`);
+  if (encounters.length > 0) {
+    summaryParts.push(`Threats: ${counts.encountersActive} active, ${counts.encountersCleared} cleared${counts.encountersLocked > 0 ? `, ${counts.encountersLocked} locked` : ''}`);
+  }
+  if (interactables.length > 0) {
+    const interParts = [];
+    if (counts.interactablesAvailable > 0) interParts.push(`${counts.interactablesAvailable} available`);
+    if (counts.interactablesCompleted > 0) interParts.push(`${counts.interactablesCompleted} completed`);
+    if (counts.interactablesService > 0) interParts.push(`${counts.interactablesService} ${counts.interactablesService === 1 ? 'service' : 'services'}`);
+    summaryParts.push(`Stations: ${interParts.join(', ')}`);
+  }
+  if (exits.length > 0) {
+    summaryParts.push(`Routes: ${counts.exitsCharted} charted, ${counts.exitsUncharted} uncharted${counts.exitsLocked > 0 ? `, ${counts.exitsLocked} locked` : ''}`);
+  }
+  const summary = summaryParts.join(' · ');
+
   return {
     zoneId: resolvedZone.id,
     name: resolvedZone.name,
+    originX,
+    originY,
     npcs,
     encounters,
     interactables,
     exits,
+    counts,
+    summary,
   };
 }
 
