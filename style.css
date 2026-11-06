@@ -1431,4 +1431,7 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .bounty-filter { min-height: 44px; padding: .35rem .8rem; border-radius: 999px; border: 1px solid var(--muted); background: transparent; color: inherit; font: inherit; cursor: pointer; }
 .bounty-filter--on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .bounties__filter-note { margin: .2rem 0; color: var(--muted); font-size: .9rem; }
+.bounties__urgent { margin: .25rem 0 .5rem; padding: .35rem .6rem; border-left: 3px solid var(--accent); overflow-wrap: anywhere; }
+.bounty--urgent { border-color: var(--accent); }
+.bounty__urgent { margin: .1rem 0 .25rem; color: var(--accent); font-weight: 600; font-size: .85rem; }
 .enemy-matchup-hint { margin: .25rem 0 0; font-size: .82rem; color: var(--muted); }

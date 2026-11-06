@@ -203,7 +203,9 @@ test('town shows the active bounty contract only while one is accepted', async (
 });
 
 test('board ranks raise contract gold as claims accumulate', async () => {
-  const { BOUNTY_RANKS, bountyRank, bountyPay, bountyRankText } = await import('../src/core/bounties.js');
+  const { BOUNTY_RANKS, bountyRank, bountyPay, bountyRankText, urgentBountyId } = await import('../src/core/bounties.js');
+  // Urgent-notice premium is tested separately; strip it here so ranks stay isolated.
+  const premium = (s, b) => (urgentBountyId(s) === b.id ? Math.floor(b.gold * 0.25) : 0);
   assert.deepEqual(BOUNTY_RANKS.map((r) => r.min), [0, 3, 8, 15, 25]);
   assert.deepEqual(BOUNTY_RANKS.map((r) => r.bonus), [0, 0.1, 0.2, 0.3, 0.4]);
   assert.ok(Object.isFrozen(BOUNTY_RANKS) && BOUNTY_RANKS.every(Object.isFrozen));
@@ -213,8 +215,8 @@ test('board ranks raise contract gold as claims accumulate', async () => {
   for (const [n, id, ratPay, shadePay] of [[0, 'runner', 30, 220], [2, 'runner', 30, 220], [3, 'hand', 33, 242], [8, 'regular', 36, 264], [15, 'tracker', 39, 286], [25, 'warden', 42, 308], [99, 'warden', 42, 308]]) {
     const s = withClaims(n);
     assert.equal(bountyRank(s).rank.id, id, `rank at ${n}`);
-    assert.equal(bountyPay(s, rat), ratPay, `rat pay at ${n}`);
-    assert.equal(bountyPay(s, shades), shadePay, `shade pay at ${n}`);
+    assert.equal(bountyPay(s, rat) - premium(s, rat), ratPay, `rat pay at ${n}`);
+    assert.equal(bountyPay(s, shades) - premium(s, shades), shadePay, `shade pay at ${n}`);
   }
   assert.equal(bountyRankText(withClaims(0)), 'Board rank: Notice Runner (+0% gold). 3 more claims to Contract Hand (+10% gold).');
   assert.equal(bountyRankText(withClaims(7)), 'Board rank: Contract Hand (+10% gold). 1 more claim to Board Regular (+20% gold).');
@@ -306,4 +308,66 @@ test('region filter narrows posted notices and keeps the active contract in view
   bountiesScene.onEnter(game);
   assert.equal(game.bountyRegion, '');
   assertEggFree(bountiesScene.render(game), 'bounty filter');
+});
+
+test('urgent notice rotates through every contract and pays a premium on top of rank', async () => {
+  const { URGENT_BONUS, urgentBountyId, urgentBountyText, bountyPay } = await import('../src/core/bounties.js');
+  const withClaims = (n) => { const s = fresh(); s.bounties = { active: null, progress: 0, completed: n ? { ridge_rats: n } : {} }; return s; };
+  assert.equal(URGENT_BONUS, 0.25);
+  assert.equal(urgentBountyId(fresh()), 'rusted_watchmen');
+  const seen = new Set();
+  for (let n = 0; n < BOUNTIES.length; n += 1) seen.add(urgentBountyId(withClaims(n)));
+  assert.equal(seen.size, BOUNTIES.length, 'every contract takes a turn within 18 claims');
+  assert.notEqual(urgentBountyId(withClaims(0)), urgentBountyId(withClaims(1)), 'rotates after a claim');
+  // Unlocking new foes never moves the notice.
+  const s = fresh(); const before = urgentBountyId(s); s.bestiary = { storm_rat: 1, rust_sentinel: 1, frost_wolf: 1 };
+  assert.equal(urgentBountyId(s), before);
+  // Rusted Watchmen 55 gold: +13 premium at Notice Runner.
+  const watch = BOUNTIES.find((b) => b.id === 'rusted_watchmen');
+  assert.equal(bountyPay(fresh(), watch), 68);
+  // Stacks with rank: 25 claims → Warden +40% (22) + urgent (13) on 55.
+  const w = withClaims(25); const id = urgentBountyId(w); const b = BOUNTIES.find((x) => x.id === id);
+  assert.equal(bountyPay(w, b), b.gold + Math.floor(b.gold * 0.4) + Math.floor(b.gold * 0.25));
+  // Text never names a locked contract or its foe.
+  const locked = urgentBountyText(fresh());
+  assert.equal(locked, 'Urgent notice: an unposted contract pays +25% gold until the next claim — meet new foes in the wilds to open it.');
+  assert.ok(!/Rusted|Sentinel/i.test(locked));
+  const open = fresh(); open.bestiary = { rust_sentinel: 1 };
+  assert.equal(urgentBountyText(open), 'Urgent notice: “Rusted Watchmen” pays +25% gold until the next claim.');
+  assertEggFree(locked, 'urgent locked'); assertEggFree(urgentBountyText(open), 'urgent open');
+});
+
+test('claiming the urgent contract pays the premium, says so, and moves the notice', () => {
+  const s = fresh();
+  s.bestiary = { rust_sentinel: 1 };
+  s.gold = 0;
+  s.bounties = { active: 'rusted_watchmen', progress: 2, completed: {} };
+  const r = claimBounty(s);
+  assert.equal(r.ok, true);
+  assert.equal(s.gold, 68);
+  assert.match(r.message, /^Claimed “Rusted Watchmen”: 68 gold, .*\. Urgent notice premium included\.$/);
+  const rows = bountyRows(s);
+  assert.equal(rows.filter((x) => x.urgent).length, 1);
+  assert.notEqual(rows.find((x) => x.urgent).id, 'rusted_watchmen');
+  // A non-urgent claim carries no premium line.
+  const t = fresh(); t.bestiary = { storm_rat: 1 }; t.gold = 0;
+  t.bounties = { active: 'ridge_rats', progress: 4, completed: {} };
+  const q = claimBounty(t);
+  assert.equal(t.gold, 30); assert.ok(!q.message.includes('Urgent'));
+});
+
+test('board scene shows the urgent notice line and marks only the unlocked urgent row', () => {
+  const game = { state: fresh(), bus: { on() {} } };
+  game.state.scene = 'bounties';
+  bountiesScene.onEnter?.(game);
+  let html = bountiesScene.render(game);
+  assert.match(html, /<p class="bounties__urgent">Urgent notice: an unposted contract pays \+25% gold until the next claim — meet new foes in the wilds to open it\.<\/p>/);
+  assert.ok(!html.includes('bounty--urgent'), 'locked urgent row is not marked');
+  assert.ok(!html.includes('Rusted Watchmen'));
+  game.state.bestiary = { rust_sentinel: 1, storm_rat: 1 };
+  html = bountiesScene.render(game);
+  assert.equal((html.match(/bounty--urgent/g) || []).length, 1);
+  assert.match(html, /bounty--urgent">\s*<h2 class="bounty__title">Rusted Watchmen<\/h2>\s*<p class="bounty__urgent">Urgent notice — premium pay until the next claim\.<\/p>/);
+  assert.match(html, /Reward: 68 gold/);
+  assertEggFree(html, 'urgent board');
 });
