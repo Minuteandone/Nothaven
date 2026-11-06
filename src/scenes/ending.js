@@ -51,7 +51,7 @@ export const POSTGAME_DEEDS = [
   { id: 'stormborn', test: (f, b, l) => l.stormbornBossVictories >= 1,
     text: 'A Stormborn victory is entered in the Service Record: a calm kept in the fiercest gale.' },
   { id: 'bounties', test: (f, b, l, s) => BOUNTIES.every((x) => (bountyState(s).completed[x.id] || 0) >= 1),
-    text: 'Every contract on the Greyhaven bounty board is claimed, and the clerk has nothing left to post.' },
+    text: 'Every contract on the Greyhaven bounty board has been claimed at least once, and each notice bears the warden’s mark.' },
 ];
 
 /** Postgame deed lines the player has earned, in POSTGAME_DEEDS order. */
