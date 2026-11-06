@@ -9,6 +9,7 @@ export {
   getFrontierAtlas,
   getRouteBriefing,
   formatExpeditionLog,
+  getTileInspection,
   getZoneChecklist,
   getEncounterPreview,
   getZoneThreatIntel,

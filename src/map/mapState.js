@@ -306,6 +306,129 @@ export function formatExpeditionLog(lines, limit = 6) {
  * Pure read-only point-of-interest checklist for a zone (NPCs, fixed encounters,
  * interactables/caches, and outbound exits with coordinates and live status).
  */
+export function getTileInspection(gameState, x = null, y = null, zoneOrId = null) {
+  const mapLike = gameState?.map || gameState || {};
+  const resolvedZone = typeof zoneOrId === 'string'
+    ? getZone(zoneOrId)
+    : (zoneOrId && typeof zoneOrId === 'object' ? zoneOrId : getZone(mapLike.zoneId || mapLike.currentZoneId || 'greyhaven'));
+  if (!resolvedZone) return null;
+
+  const tx = Number.isInteger(x) ? x : (Number.isInteger(Number(mapLike.x)) ? Number(mapLike.x) : 0);
+  const ty = Number.isInteger(y) ? y : (Number.isInteger(Number(mapLike.y)) ? Number(mapLike.y) : 0);
+
+  const inspectCell = (cx, cy) => {
+    const inBounds = Number.isInteger(cx) && Number.isInteger(cy)
+      && cx >= 0 && cx < resolvedZone.width && cy >= 0 && cy < resolvedZone.height;
+    const tile = inBounds
+      ? getTileInfo(resolvedZone, cx, cy)
+      : { id: 'edge', name: 'Map edge', walkable: false, glyph: ' ' };
+    const passable = Boolean(inBounds && tile.walkable === true);
+    let entity = null;
+    if (inBounds) {
+      const raw = getEntityAt(resolvedZone, mapLike, cx, cy);
+      if (raw?.type === 'npc') {
+        entity = {
+          kind: 'npc',
+          id: raw.entity.id,
+          name: raw.entity.name,
+          role: raw.entity.role || '',
+          status: 'Present',
+          label: raw.entity.role ? `${raw.entity.name} (${raw.entity.role})` : raw.entity.name,
+        };
+      } else if (raw?.type === 'encounter') {
+        const id = raw.entity.encounterId || raw.entity.id;
+        const lockReason = encounterLockReason(mapLike, raw.entity, gameState);
+        const locked = Boolean(lockReason);
+        entity = {
+          kind: 'encounter',
+          id: locked ? 'sealed_challenge' : id,
+          name: locked ? 'Sealed challenge' : raw.entity.name,
+          status: locked ? 'Locked' : 'Active',
+          locked,
+          label: locked ? 'Sealed challenge' : `Threat: ${raw.entity.name}`,
+        };
+      } else if (raw?.type === 'interactable') {
+        const id = raw.entity.interactionId || raw.entity.id;
+        entity = {
+          kind: 'interactable',
+          id,
+          name: raw.entity.name,
+          status: raw.entity.once ? 'Available' : 'Service',
+          label: raw.entity.name,
+        };
+      } else if (raw?.type === 'exit') {
+        const briefing = getRouteBriefing(gameState, raw.entity.toZone);
+        const status = !briefing?.unlocked ? 'Locked' : briefing?.visited ? 'Charted' : 'Uncharted';
+        entity = {
+          kind: 'exit',
+          id: raw.entity.toZone,
+          name: raw.entity.label,
+          status,
+          label: raw.entity.label,
+        };
+      }
+    }
+    return {
+      x: cx,
+      y: cy,
+      inBounds,
+      tileName: tile.name,
+      passable,
+      entity,
+    };
+  };
+
+  const current = inspectCell(tx, ty);
+  const neighbors = {
+    north: inspectCell(tx, ty - 1),
+    west: inspectCell(tx - 1, ty),
+    east: inspectCell(tx + 1, ty),
+    south: inspectCell(tx, ty + 1),
+  };
+
+  const dirOrder = [
+    { key: 'north', dir: 'North' },
+    { key: 'west', dir: 'West' },
+    { key: 'east', dir: 'East' },
+    { key: 'south', dir: 'South' },
+  ];
+  const adjacentLandmarks = [];
+  for (const { key, dir } of dirOrder) {
+    const cell = neighbors[key];
+    if (cell?.entity) {
+      adjacentLandmarks.push({
+        dir,
+        key,
+        x: cell.x,
+        y: cell.y,
+        kind: cell.entity.kind,
+        id: cell.entity.id,
+        label: cell.entity.label,
+        status: cell.entity.status,
+      });
+    }
+  }
+
+  const currentDesc = `${current.tileName} (${tx}, ${ty}) · ${current.passable ? 'Passable' : 'Blocked'}${current.entity ? ` · ${current.entity.label}` : ''}`;
+  const adjDesc = adjacentLandmarks.length > 0
+    ? `Adjacent: ${adjacentLandmarks.map((a) => `${a.dir} ${a.label}`).join(', ')}`
+    : 'Adjacent: Clear';
+
+  return {
+    zoneId: resolvedZone.id,
+    zoneName: resolvedZone.name,
+    x: tx,
+    y: ty,
+    inBounds: current.inBounds,
+    tileName: current.tileName,
+    passable: current.passable,
+    entity: current.entity,
+    neighbors,
+    adjacentLandmarks,
+    summary: `${currentDesc} · ${adjDesc}`,
+  };
+}
+
 export function getZoneChecklist(gameState, zoneOrId = null) {
   const resolvedZone =
     typeof zoneOrId === 'string'
