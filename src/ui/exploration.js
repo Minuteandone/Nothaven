@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { getEntityAt, getTileInfo, getZoneVantage } from '../map/mapState.js';
+import { getEntityAt, getTileInfo, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -129,7 +129,7 @@ function movementButton(action, label, key, arrow, className, characterShortcuts
   </button>`;
 }
 
-function terrainCompass(zone, mapState, characterShortcuts) {
+function terrainCompass(zone, mapState, characterShortcuts, state = null) {
   const x = Number(mapState?.x);
   const y = Number(mapState?.y);
   const terrainAt = (tx, ty) => {
@@ -154,8 +154,12 @@ function terrainCompass(zone, mapState, characterShortcuts) {
       <span class="terrain-compass__terrain"><strong>${escapeHTML(terrain.name)}</strong><small>${escapeHTML(`${tx}, ${ty}`)} · ${terrain.passable ? 'Passable' : 'Blocked'}</small></span>
     </li>`;
   }).join('');
+  const compassHint = getZoneCompassHint(state ? { ...state, map: mapState } : { map: mapState }, zone);
+  const bearingLine = compassHint
+    ? `<p class="terrain-compass__bearing">Compass bearing: <strong>${escapeHTML(compassHint.label)}</strong> (${escapeHTML(compassHint.bearing)}, ${compassHint.distance} ${compassHint.distance === 1 ? 'tile' : 'tiles'})</p>`
+    : '';
   return `<section class="terrain-compass" aria-labelledby="terrain-compass-title">
-    <div class="terrain-compass__heading"><h3 id="terrain-compass-title">Terrain compass</h3><p>Standing on <strong>${escapeHTML(current.name)}</strong> at ${escapeHTML(`${x}, ${y}`)}.</p></div>
+    <div class="terrain-compass__heading"><h3 id="terrain-compass-title">Terrain compass</h3><p>Standing on <strong>${escapeHTML(current.name)}</strong> at ${escapeHTML(`${x}, ${y}`)}.</p>${bearingLine}</div>
     <ul aria-label="Adjacent terrain and passability">${items}</ul>
   </section>`;
 }
@@ -216,7 +220,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
         })()}
         ${zoneVista(zone)}
         ${mapGrid(zone, mapState)}
-        ${terrainCompass(zone, mapState, characterShortcuts)}
+        ${terrainCompass(zone, mapState, characterShortcuts, state)}
         <ul class="map-legend" aria-label="Map legend">
           <li><span class="legend-symbol legend-symbol--player">@</span>You</li>
           <li><span class="legend-symbol legend-symbol--npc">M/I/T</span>People</li>

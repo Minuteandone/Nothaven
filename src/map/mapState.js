@@ -657,3 +657,242 @@ export function patrolZone(gameState, options = {}) {
     triggerCombat: { encounterId: null, enemyId: pick.enemyId, name: enemyName },
   };
 }
+
+const COMPASS_LABELS = Object.freeze({
+  N: 'North',
+  NE: 'Northeast',
+  E: 'East',
+  SE: 'Southeast',
+  S: 'South',
+  SW: 'Southwest',
+  W: 'West',
+  NW: 'Northwest',
+  HERE: 'Here',
+});
+
+export function getCompassBearing(fromX, fromY, toX, toY) {
+  const fx = Number(fromX) || 0;
+  const fy = Number(fromY) || 0;
+  const tx = Number(toX) || 0;
+  const ty = Number(toY) || 0;
+  const dx = tx - fx;
+  const dy = ty - fy;
+  const distance = Math.abs(dx) + Math.abs(dy);
+  const ns = dy < 0 ? 'N' : dy > 0 ? 'S' : '';
+  const ew = dx < 0 ? 'W' : dx > 0 ? 'E' : '';
+  const bearing = (ns + ew) || 'HERE';
+  return {
+    bearing,
+    directionLabel: COMPASS_LABELS[bearing] || 'Here',
+    distance,
+    dx,
+    dy,
+  };
+}
+
+export function getZoneCompassHint(gameState, zoneOrId = null) {
+  const mapState = gameState?.map || {};
+  const resolvedZone =
+    typeof zoneOrId === 'string'
+      ? getZone(zoneOrId)
+      : zoneOrId && typeof zoneOrId === 'object'
+        ? zoneOrId
+        : getZone(mapState.zoneId || gameState?.location || 'greyhaven');
+  const px = Number.isInteger(mapState.x) ? mapState.x : (resolvedZone.spawns?.default?.x ?? 0);
+  const py = Number.isInteger(mapState.y) ? mapState.y : (resolvedZone.spawns?.default?.y ?? 0);
+  const cleared = mapState.clearedEncounters || {};
+  const completed = mapState.completedInteractions || {};
+  const visited = mapState.visitedZones || {};
+
+  const byDistance = (a, b) =>
+    (Math.abs(a.x - px) + Math.abs(a.y - py)) - (Math.abs(b.x - px) + Math.abs(b.y - py));
+
+  const encounters = (resolvedZone.encounters || [])
+    .filter((enc) => !cleared[enc.encounterId || enc.id] && !encounterLockReason(mapState, enc, gameState))
+    .map((enc) => ({ kind: 'encounter', id: enc.encounterId || enc.id, label: enc.name, x: enc.x, y: enc.y }))
+    .sort(byDistance);
+
+  const interactables = (resolvedZone.interactables || [])
+    .filter((inter) => inter.once && !completed[inter.interactionId || inter.id])
+    .map((inter) => ({ kind: 'interactable', id: inter.interactionId || inter.id, label: inter.name, x: inter.x, y: inter.y }))
+    .sort(byDistance);
+
+  const unlockedExits = (resolvedZone.exits || [])
+    .filter((ex) => !zoneLockReason(gameState || {}, ZONES[ex.toZone]))
+    .map((ex) => ({
+      kind: 'exit',
+      id: ex.toZone,
+      label: ex.label,
+      x: ex.x,
+      y: ex.y,
+      unvisited: !visited[ex.toZone],
+    }));
+  const unvisitedExits = unlockedExits.filter((ex) => ex.unvisited).sort(byDistance);
+  const fallbackExits = unlockedExits.sort(byDistance);
+
+  const target = encounters[0] || interactables[0] || unvisitedExits[0] || fallbackExits[0] || null;
+  if (!target) return null;
+
+  const nav = getCompassBearing(px, py, target.x, target.y);
+  const summary = nav.distance === 0
+    ? `${target.label} (here)`
+    : `${target.label} (${nav.bearing}, ${nav.distance} ${nav.distance === 1 ? 'tile' : 'tiles'})`;
+
+  return {
+    kind: target.kind,
+    id: target.id,
+    label: target.label,
+    x: target.x,
+    y: target.y,
+    bearing: nav.bearing,
+    directionLabel: nav.directionLabel,
+    distance: nav.distance,
+    summary,
+  };
+}
+
+function isIntermediateStepSafe(zone, mapState, x, y) {
+  if (!isWalkable(zone, mapState, x, y)) return false;
+  if ((zone.npcs || []).some((n) => n.x === x && n.y === y)) return false;
+  if ((zone.exits || []).some((ex) => ex.x === x && ex.y === y)) return false;
+  if ((zone.encounters || []).some((e) => e.x === x && e.y === y && !mapState?.clearedEncounters?.[e.encounterId || e.id])) {
+    return false;
+  }
+  if ((zone.interactables || []).some((i) => i.x === x && i.y === y && i.kind === 'dispatch' && !(i.once && mapState?.completedInteractions?.[i.interactionId || i.id]))) {
+    return false;
+  }
+  return true;
+}
+
+export function findSafePath(zone, mapState, targetX, targetY, gameState = null) {
+  if (!zone || !mapState) return null;
+  const startX = Number(mapState.x);
+  const startY = Number(mapState.y);
+  const tx = Number(targetX);
+  const ty = Number(targetY);
+  if (!Number.isInteger(startX) || !Number.isInteger(startY) || !Number.isInteger(tx) || !Number.isInteger(ty)) {
+    return null;
+  }
+  if (tx < 0 || tx >= zone.width || ty < 0 || ty >= zone.height) return null;
+  if (startX === tx && startY === ty) return [];
+  if (!isWalkable(zone, mapState, tx, ty)) return null;
+
+  if (gameState) {
+    const destExit = (zone.exits || []).find((ex) => ex.x === tx && ex.y === ty);
+    const destEnc = (zone.encounters || []).find((e) => e.x === tx && e.y === ty && !mapState?.clearedEncounters?.[e.encounterId || e.id]);
+    if (zoneLockReason(gameState, ZONES[destExit?.toZone]) || encounterLockReason(mapState, destEnc, gameState)) {
+      return null;
+    }
+  }
+
+  const dirs = [
+    { dx: 0, dy: -1 },
+    { dx: 0, dy: 1 },
+    { dx: -1, dy: 0 },
+    { dx: 1, dy: 0 },
+  ];
+  const visited = new Set([`${startX},${startY}`]);
+  const queue = [{ x: startX, y: startY, path: [] }];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    for (const { dx, dy } of dirs) {
+      const nx = current.x + dx;
+      const ny = current.y + dy;
+      const key = `${nx},${ny}`;
+      if (visited.has(key)) continue;
+      if (nx < 0 || nx >= zone.width || ny < 0 || ny >= zone.height) continue;
+
+      const isDest = nx === tx && ny === ty;
+      if (!isDest && !isIntermediateStepSafe(zone, mapState, nx, ny)) continue;
+      if (isDest && !isWalkable(zone, mapState, nx, ny)) continue;
+
+      const nextPath = [...current.path, { x: nx, y: ny, dx, dy }];
+      if (isDest) return nextPath;
+
+      visited.add(key);
+      queue.push({ x: nx, y: ny, path: nextPath });
+    }
+  }
+
+  return null;
+}
+
+export function stepAlongSafePath(gameState, targetX, targetY, options = {}) {
+  const mapState = ensureMapState(gameState);
+  const zone = getZone(mapState.zoneId);
+  const tx = Number(targetX);
+  const ty = Number(targetY);
+
+  if (!Number.isInteger(tx) || !Number.isInteger(ty)) {
+    return { state: gameState, moved: false, stepsTaken: 0, events: [], log: [], triggerCombat: null };
+  }
+  if (tx === mapState.x && ty === mapState.y) {
+    return { state: gameState, moved: false, stepsTaken: 0, events: [], log: [], triggerCombat: null };
+  }
+
+  if (Math.abs(tx - mapState.x) + Math.abs(ty - mapState.y) === 1) {
+    const single = movePlayer(gameState, tx - mapState.x, ty - mapState.y, options);
+    return { ...single, stepsTaken: single.moved ? 1 : 0 };
+  }
+
+  const path = findSafePath(zone, mapState, tx, ty, gameState);
+  if (!path || path.length === 0) {
+    const msg = `No clear route to (${tx}, ${ty}).`;
+    appendLog(mapState, msg);
+    return { state: gameState, moved: false, stepsTaken: 0, events: [], log: [msg], triggerCombat: null };
+  }
+
+  const maxSteps = Number.isInteger(options.maxSteps) && options.maxSteps > 0 ? options.maxSteps : 16;
+  const events = [];
+  const logs = [];
+  let stepsTaken = 0;
+
+  for (let i = 0; i < Math.min(path.length, maxSteps); i += 1) {
+    const step = path[i];
+    const res = movePlayer(gameState, step.dx, step.dy, options);
+    if (Array.isArray(res.events) && res.events.length > 0) events.push(...res.events);
+    if (Array.isArray(res.log) && res.log.length > 0) logs.push(...res.log);
+    if (res.moved) stepsTaken += 1;
+
+    if (!res.moved || res.transitioned || res.triggerCombat || res.triggerShop || res.triggerMuster || (res.events && res.events.length > 0)) {
+      return {
+        state: gameState,
+        moved: stepsTaken > 0,
+        stepsTaken,
+        transitioned: Boolean(res.transitioned),
+        events,
+        log: logs,
+        triggerCombat: res.triggerCombat || null,
+        triggerShop: res.triggerShop,
+        triggerMuster: res.triggerMuster,
+      };
+    }
+
+    const isLastStep = i === path.length - 1;
+    if (!isLastStep) {
+      const adjacentThreat = (zone.encounters || []).find(
+        (e) =>
+          !mapState.clearedEncounters[e.encounterId || e.id] &&
+          !(e.x === tx && e.y === ty) &&
+          isAdjacentOrOn(mapState.x, mapState.y, e.x, e.y)
+      );
+      if (adjacentThreat) {
+        const cautionMsg = `Paused near ${adjacentThreat.name} (${mapState.x}, ${mapState.y}).`;
+        appendLog(mapState, cautionMsg);
+        logs.push(cautionMsg);
+        break;
+      }
+    }
+  }
+
+  return {
+    state: gameState,
+    moved: stepsTaken > 0,
+    stepsTaken,
+    transitioned: false,
+    events,
+    log: logs,
+    triggerCombat: null,
+  };
+}
