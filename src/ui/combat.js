@@ -2,6 +2,7 @@ import { companionTactic } from '../party/tactics.js';
 import { isCompanionId } from '../party/companions.js';
 import { BEACON_CHARGE_MAX, chargeReady, battleSummary, enemyWindingUp } from '../combat/rules.js';
 import { heroStats, knownSkills } from '../combat/rules.js';
+import { elementLabel, elementClass, elementEffectivenessText } from '../combat/elements.js';
 import { getItem, TYPES } from '../items/items.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
 
@@ -12,6 +13,12 @@ function number(value, fallback = 0) {
 
 function safeClass(value) {
   return String(value || '').replace(/[^a-z0-9_-]/gi, '');
+}
+
+/** Small colored badge showing an element and optional effectiveness suffix. */
+function elementChip(element, suffix = '') {
+  if (!element) return '';
+  return `<span class="element-chip ${elementClass(element)}">${escapeHTML(elementLabel(element))}${suffix ? ` <em>${escapeHTML(suffix)}</em>` : ''}</span>`;
 }
 
 /** Readable names and short hints for combat statuses, shown on unit cards. */
@@ -59,7 +66,7 @@ function unitCard(member, { enemy = false, leader = false, enraged = false } = {
   return `<article class="unit ${kind}${down ? ' down' : ''}${boss ? ' boss' : ''}" aria-label="${escapeHTML(`${name}, ${role}`)}">
     <div class="unit-card__heading">
       <span class="unit-card__portrait" aria-hidden="true">${icon(enemy ? 'sword' : leader ? 'shield' : 'heart')}</span>
-      <div class="unit-card__identity"><span class="unit-card__role">${role}</span><h3>${escapeHTML(name)}</h3></div>
+      <div class="unit-card__identity"><span class="unit-card__role">${role}</span><h3>${escapeHTML(name)}</h3>${enemy && member?.element ? elementChip(member.element) : ''}</div>
       ${enraged ? '<em class="enraged">(enraged)</em>' : ''}${enemy ? '' : `<span class="level-badge">Lv ${Math.max(1, number(member?.level, 1))}</span>`}
     </div>
     <div class="unit-card__statuses" aria-label="Status effects">${statusChips(member)}${down ? ' <em>Down</em>' : ''}</div>
@@ -89,9 +96,10 @@ function shortcutGuide() {
   return `<details class="shortcut-guide"><summary>Keyboard commands</summary><dl class="shortcut-guide__grid">${bindings.map(([key, label]) => `<div><dt><kbd>${key}</kbd></dt><dd>${label}</dd></div>`).join('')}</dl><p class="character-shortcuts-off">Letter and number shortcuts are off. Use buttons; Escape still returns to commands.</p><p>Turn letter and number shortcuts on or off in Display settings. Shortcuts never activate disabled commands. Text fields and modified key presses are ignored.</p></details>`;
 }
 
-function commandCard({ action, arg, name, meta, description, iconName = 'focus', disabled = false, shortcut = null }) {
+function commandCard({ action, arg, name, meta, description, iconName = 'focus', disabled = false, shortcut = null, badge = '' }) {
   return `<button type="button" class="command-card" data-action="${escapeHTML(action)}" data-arg="${escapeHTML(arg)}" title="${escapeHTML(description)}"${disabled ? ' disabled' : ''}>
     <span class="command-card__top"><span>${icon(iconName)}${escapeHTML(name)}</span><span class="command-card__meta"><strong>${escapeHTML(meta)}</strong>${keyHint(shortcut)}</span></span>
+    ${badge}
     <span class="command-card__description">${escapeHTML(description)}</span>
   </button>`;
 }
@@ -101,11 +109,16 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
     return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'skills') {
-    const skills = knownSkills(hero).map((skill, index) => commandCard({
-      action: 'skill', arg: skill.id, name: skill.name, meta: `${skill.mp} MP`,
-      description: skill.description, iconName: skill.kind === 'heal' || skill.kind === 'party_heal' || skill.kind === 'revive' || skill.kind === 'vigil' ? 'heart' : (skill.kind === 'ward' || skill.kind === 'party_ward') ? 'shield' : 'focus',
-      disabled: hero.mp < skill.mp, shortcut: index < 9 ? String(index + 1) : null,
-    })).join('');
+    const skills = knownSkills(hero).map((skill, index) => {
+      const effectiveness = elementEffectivenessText(skill.element, combat.enemy?.element);
+      const effSuffix = effectiveness === 'strong' ? 'strong' : effectiveness === 'weak' ? 'weak' : '';
+      return commandCard({
+        action: 'skill', arg: skill.id, name: skill.name, meta: `${skill.mp} MP`,
+        description: skill.description, iconName: skill.kind === 'heal' || skill.kind === 'party_heal' || skill.kind === 'revive' || skill.kind === 'vigil' ? 'heart' : (skill.kind === 'ward' || skill.kind === 'party_ward') ? 'shield' : 'focus',
+        disabled: hero.mp < skill.mp, shortcut: index < 9 ? String(index + 1) : null,
+        badge: skill.element ? elementChip(skill.element, effSuffix) : '',
+      });
+    }).join('');
     return `<div class="actions command-list" role="group" aria-label="Skill actions">${skills || '<p class="empty-state">No skills learned yet.</p>'}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'tactics') {

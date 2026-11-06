@@ -1,4 +1,5 @@
 import { companionTactic } from '../party/tactics.js';
+import { elementMultiplier, elementEffectivenessText } from './elements.js';
 // Combat rules for Beacon of Stormhaven. Pure-ish functions over a combat
 // object and the party; randomness is injected (`rng`) so tests are deterministic.
 import { ENEMIES } from '../data/enemies.js';
@@ -8,7 +9,7 @@ import { effectiveStats } from '../items/equipment.js';
 export const SKILLS = Object.freeze({
   power_strike: { id: 'power_strike', name: 'Power Strike', mp: 3, kind: 'damage', mult: 1.6,
     description: 'A heavy two-handed blow for 160% damage.' },
-  spark: { id: 'spark', name: 'Spark', mp: 4, kind: 'magic', power: 8,
+  spark: { id: 'spark', name: 'Spark', mp: 4, kind: 'magic', power: 8, element: 'lightning',
     description: 'Call a lightning lash that ignores armour. Half again as effective on constructs.' },
   mend: { id: 'mend', name: 'Mend', mp: 4, kind: 'heal', power: 10,
     description: 'Steady breath and practiced hands restore health.' },
@@ -16,25 +17,25 @@ export const SKILLS = Object.freeze({
     description: 'Halve damage for two enemy turns.' },
   rallying_light: { id: 'rallying_light', name: 'Rallying Light', mp: 6, kind: 'party_heal', power: 6,
     description: 'Lift the beacon lantern high: every standing ally recovers health and stops bleeding.' },
-  stormbreaker: { id: 'stormbreaker', name: 'Stormbreaker', mp: 7, kind: 'damage', mult: 2.2,
+  stormbreaker: { id: 'stormbreaker', name: 'Stormbreaker', mp: 7, kind: 'damage', mult: 2.2, element: 'lightning',
     description: 'Channel the gale into one devastating swing for 220% damage.' },
   steady_signal: { id: 'steady_signal', name: 'Steady Signal', mp: 3, kind: 'cleanse',
     description: 'Sound a calm, steady note on the signal whistle: every standing ally shakes off bleeding and shock. Usable while shocked.' },
-  beacon_lance: { id: 'beacon_lance', name: 'Beacon Lance', mp: 9, kind: 'pierce', mult: 1.8,
+  beacon_lance: { id: 'beacon_lance', name: 'Beacon Lance', mp: 9, kind: 'pierce', mult: 1.8, element: 'fire',
     description: 'Focus the beacon light into a single piercing spear for 180% damage that ignores armour.' },
   beacon_aegis: { id: 'beacon_aegis', name: 'Beacon Aegis', mp: 8, kind: 'party_ward', turns: 3,
     description: 'Spread a dome of steady beacon light over the whole party: all damage taken is halved for three enemy turns.' },
-  signal_flare: { id: 'signal_flare', name: 'Signal Flare', mp: 8, kind: 'magic', power: 20,
+  signal_flare: { id: 'signal_flare', name: 'Signal Flare', mp: 8, kind: 'magic', power: 20, element: 'fire',
     description: 'Fire a blazing signal flare straight into the foe. Ignores armour and is half again as effective on constructs.' },
-  tempest_cleave: { id: 'tempest_cleave', name: 'Tempest Cleave', mp: 11, kind: 'damage', mult: 2.8,
+  tempest_cleave: { id: 'tempest_cleave', name: 'Tempest Cleave', mp: 11, kind: 'damage', mult: 2.8, element: 'lightning',
     description: 'Ride the last gust of the broken storm into one sweeping strike for 280% damage.' },
   rekindle: { id: 'rekindle', name: 'Rekindle', mp: 12, kind: 'revive', share: 0.4,
     description: 'Relight the lantern for the fallen: every knocked-out ally rises with 40% of their health and no lingering conditions.' },
-  skyfire_lance: { id: 'skyfire_lance', name: 'Skyfire Lance', mp: 14, kind: 'pierce', mult: 2.6,
+  skyfire_lance: { id: 'skyfire_lance', name: 'Skyfire Lance', mp: 14, kind: 'pierce', mult: 2.6, element: 'fire',
     description: 'Gather the whole beacon into one blinding spear for 260% damage that ignores armour.' },
   stormhaven_vigil: { id: 'stormhaven_vigil', name: 'Stormhaven Vigil', mp: 16, kind: 'vigil', share: 0.35,
     description: 'Keep the long watch for everyone at once: every standing ally recovers 35% of their health and shakes off bleeding and shock. Usable while shocked.' },
-  stillpoint_strike: { id: 'stillpoint_strike', name: 'Stillpoint Strike', mp: 13, kind: 'break', mult: 2,
+  stillpoint_strike: { id: 'stillpoint_strike', name: 'Stillpoint Strike', mp: 13, kind: 'break', mult: 2, element: 'ice',
     description: 'Wait for the calm at the centre of the storm, then strike for 200% damage that ignores armour. Breaks a heavy blow the foe is gathering. Usable while shocked.' },
 });
 
@@ -325,6 +326,19 @@ export function gainCharge(c, amount) {
 function chargeFromHit(c, d, maxHp) { gainCharge(c, (d * 60) / Math.max(1, maxHp || 1)); }
 export function chargeReady(c) { return (c?.charge || 0) >= BEACON_CHARGE_MAX; }
 
+/** Apply element multiplier to damage and return adjusted value + optional log line. */
+function applyElement(c, action, baseDmg) {
+  const skill = action && action.type === 'skill' ? SKILLS[action.skillId] : null;
+  const atkEl = skill ? skill.element : null;
+  const defEl = c && c.enemy ? c.enemy.element : null;
+  if (!atkEl && !defEl) return { dmg: baseDmg, note: '' };
+  const mult = elementMultiplier(atkEl, defEl);
+  const effective = elementEffectivenessText(atkEl, defEl);
+  if (effective === 'strong') return { dmg: Math.max(1, Math.floor(baseDmg * mult)), note: ' It\'s super effective!' };
+  if (effective === 'weak') return { dmg: Math.max(1, Math.floor(baseDmg * mult)), note: ' It\'s not very effective…' };
+  return { dmg: baseDmg, note: '' };
+}
+
 export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
   if (c.over) return { ok: false, lines: ['The battle is over.'] };
   const lines = [];
@@ -332,9 +346,10 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
   const shocked = hasStatus(hero, 'shocked');
   switch (action?.type) {
     case 'attack': {
-      const d = physicalDamage(hs.atk, c.enemy.def, rng);
+      let d = physicalDamage(hs.atk, c.enemy.def, rng);
+      const el = applyElement(c, action, d); d = el.dmg;
       c.enemy.hp = Math.max(0, c.enemy.hp - d);
-      lines.push(`${hero.name} strikes for ${d}.`);
+      lines.push(`${hero.name} strikes for ${d}.${el.note}`);
       break;
     }
     case 'defend':
@@ -349,15 +364,17 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
       if ((hero.mp || 0) < sk.mp) return { ok: false, lines: [`Not enough MP for ${sk.name}.`] };
       hero.mp -= sk.mp;
       if (sk.kind === 'damage') {
-        const d = physicalDamage(hs.atk, c.enemy.def, rng, { mult: sk.mult });
+        let d = physicalDamage(hs.atk, c.enemy.def, rng, { mult: sk.mult });
+        const el = applyElement(c, action, d); d = el.dmg;
         c.enemy.hp = Math.max(0, c.enemy.hp - d);
-        lines.push(`${hero.name} uses ${sk.name} for ${d}!`);
+        lines.push(`${hero.name} uses ${sk.name} for ${d}!${el.note}`);
         if (rng() < 0.25) { addStatus(c.enemy, 'stunned', 1, c.enemyTimers); lines.push(`${c.enemy.name} reels, stunned.`); }
       } else if (sk.kind === 'magic') {
         let d = sk.power + (hero.level || 1) * 2 + randInt(rng, 0, 2);
         if (c.enemy.tags?.includes('construct')) d = Math.floor(d * 1.5);
+        const el = applyElement(c, action, d); d = el.dmg;
         c.enemy.hp = Math.max(0, c.enemy.hp - d);
-        lines.push(`${hero.name} casts ${sk.name} for ${d}!`);
+        lines.push(`${hero.name} casts ${sk.name} for ${d}!${el.note}`);
       } else if (sk.kind === 'heal') {
         const before = hero.hp;
         hero.hp = Math.min(hs.maxHp, hero.hp + sk.power + (hero.level || 1) * 2);
@@ -375,13 +392,15 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
         if (c.heroTimers) delete c.heroTimers.bleeding;
         lines.unshift(`${hero.name} raises a Rallying Light!`);
       } else if (sk.kind === 'pierce') {
-        const d = Math.max(1, Math.floor(hs.atk * sk.mult) + randInt(rng, -1, 2));
+        let d = Math.max(1, Math.floor(hs.atk * sk.mult) + randInt(rng, -1, 2));
+        const el = applyElement(c, action, d); d = el.dmg;
         c.enemy.hp = Math.max(0, c.enemy.hp - d);
-        lines.push(`${hero.name} hurls a ${sk.name} for ${d}!`);
+        lines.push(`${hero.name} hurls a ${sk.name} for ${d}!${el.note}`);
       } else if (sk.kind === 'break') {
-        const d = Math.max(1, Math.floor(hs.atk * sk.mult) + randInt(rng, -1, 2));
+        let d = Math.max(1, Math.floor(hs.atk * sk.mult) + randInt(rng, -1, 2));
+        const el = applyElement(c, action, d); d = el.dmg;
         c.enemy.hp = Math.max(0, c.enemy.hp - d);
-        lines.push(`${hero.name} finds the stillpoint and strikes for ${d}!`);
+        lines.push(`${hero.name} finds the stillpoint and strikes for ${d}!${el.note}`);
         if (c.windup) {
           lines.push(`${c.windup.name || c.enemy.windup?.name || 'The heavy blow'} scatters before it can land!`);
           c.windup = null;
@@ -515,7 +534,9 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
     }
     if (e.tags?.includes('construct') && (m.mp || 0) >= SKILLS.spark.mp) {
       m.mp -= SKILLS.spark.mp;
-      const d = Math.floor((SKILLS.spark.power + (m.level || 1) * 2 + randInt(rng, 0, 2)) * 1.5);
+      const sparkBase = SKILLS.spark.power + (m.level || 1) * 2 + randInt(rng, 0, 2);
+      const sparkMult = elementMultiplier('lightning', e.element);
+      const d = Math.max(1, Math.floor(sparkBase * sparkMult * 1.5));
       e.hp = Math.max(0, e.hp - d);
       lines.push(`${m.name} casts Spark for ${d}!`);
       return lines;
@@ -534,7 +555,8 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
   if (m.role === 'signaler' && !shocked && companionTactic(m) !== 'conserve' && (m.mp || 0) >= 3) {
     m.mp -= 3;
     const base = 5 + (m.level || 1) * 2 + randInt(rng, 0, 2);
-    const d = master ? Math.floor(base * 1.5) : base;
+    const flareMult = elementMultiplier("fire", e.element);
+    const d = Math.max(1, Math.floor((master ? base * 1.5 : base) * flareMult));
     e.hp = Math.max(0, e.hp - d);
     lines.push(`${m.name} hurls a ${master ? COMPANION_MASTERY.signaler.name : 'Signal Flare'} for ${d}!`);
     return lines;
