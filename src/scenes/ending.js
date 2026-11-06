@@ -142,9 +142,9 @@ export const endingScene = {
       ${postgameLines(s).length ? `<h3>Beyond the storm</h3><ul class="postgame-deeds">${postgameLines(s).map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}
       <h3>Your journey</h3>
       <ul>
-        <li>${esc(hero.name || 'Hero')} reached level ${Number(hero.level) || 1}</li>
-        <li>Gold carried home: ${Number(s.gold) || 0}</li>
-        <li>Items in pack: ${(s.inventory || []).reduce((n, i) => n + (Number(i.qty) || 0), 0)}</li>
+        <li>${esc(hero.name || 'Hero')} reached level ${esc(String(Number(hero.level) || 1))}</li>
+        <li>Gold carried home: ${esc(String(Number(s.gold) || 0))}</li>
+        <li>Items in pack: ${esc(String((s.inventory || []).reduce((n, i) => n + (Number(i.qty) || 0), 0)))}</li>
         <li class="ending-difficulty">${esc(difficultyText(s))}</li>
         ${companionsText(s) ? `<li class="ending-companions">${esc(companionsText(s))}</li>` : ''}
         <li class="ending-battles">${esc(battlesText(s))}</li>
