@@ -240,7 +240,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
             ${movementButton('moveEast', 'East', 'D', '→', 'movement-button--east', characterShortcuts)}
             ${movementButton('moveSouth', 'South', 'S', '↓', 'movement-button--south', characterShortcuts)}
           </div>
-          <p class="control-hint">Survey to inspect the tile beneath you. Movement never spends supplies.</p>
+          <p class="control-hint">Survey to inspect the tile beneath you, or click a passable map tile to step along a safe route (takes normal movement steps where random encounters may occur, pauses beside threats, and engages a threat if clicked directly). Movement never spends supplies.</p>
           ${explorationShortcutGuide(characterShortcuts)}
         </section>
         <section class="panel nearby-panel" aria-labelledby="nearby-title">

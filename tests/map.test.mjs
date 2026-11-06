@@ -944,4 +944,45 @@ test('findSafePath and stepAlongSafePath navigate walkable routes, pause adjacen
   exploreScene.actions.mapStepTo(game, { dataset: { x: '5', y: '3' } });
   assert.equal(game.state.map.x, 5);
   assert.equal(game.state.map.y, 3);
+
+  // Verify installMap detaches the root click listener on cleanup and attaches cleanly on reinstall
+  const clickListeners = [];
+  const rootGame = makeMockGame();
+  rootGame.state.scene = 'explore';
+  let renderCount = 0;
+  rootGame.render = () => { renderCount += 1; };
+  rootGame.root = {
+    addEventListener(type, fn) {
+      if (type === 'click') clickListeners.push(fn);
+    },
+    removeEventListener(type, fn) {
+      if (type === 'click') {
+        const idx = clickListeners.indexOf(fn);
+        if (idx !== -1) clickListeners.splice(idx, 1);
+      }
+    },
+  };
+  const cleanup1 = installMap(rootGame, { enableKeyboard: false });
+  assert.equal(clickListeners.length, 1);
+  cleanup1();
+  assert.equal(clickListeners.length, 0);
+  // Clicking after cleanup leaves Wren at (2, 3)
+  for (const fn of [...clickListeners]) {
+    fn({ target: { closest: (sel) => (sel === '.map-cell[data-x][data-y]' ? { dataset: { x: '6', y: '3' } } : null) } });
+  }
+  assert.equal(rootGame.state.map.x, 2);
+  assert.equal(rootGame.state.map.y, 3);
+  assert.equal(renderCount, 0);
+
+  // Reinstall attaches exactly one handler and moves Wren once
+  const cleanup2 = installMap(rootGame, { enableKeyboard: false });
+  assert.equal(clickListeners.length, 1);
+  for (const fn of [...clickListeners]) {
+    fn({ target: { closest: (sel) => (sel === '.map-cell[data-x][data-y]' ? { dataset: { x: '6', y: '3' } } : null) } });
+  }
+  assert.equal(rootGame.state.map.x, 6);
+  assert.equal(rootGame.state.map.y, 3);
+  assert.equal(renderCount, 1);
+  cleanup2();
+  assert.equal(clickListeners.length, 0);
 });

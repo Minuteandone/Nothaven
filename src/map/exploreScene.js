@@ -231,14 +231,17 @@ export function installMap(game, options = {}) {
   };
   game.bus.on('combat:victory', onCombatVictory);
 
+  let clickHandler = null;
   if (options.enableGridClick !== false && typeof game.root?.addEventListener === 'function') {
-    game.root.addEventListener('click', (e) => {
+    clickHandler = (e) => {
       if (game.state?.scene !== 'explore' || game.state?.combat) return;
+      if (e.target?.closest?.('[data-action]')) return;
       const cell = e.target?.closest?.('.map-cell[data-x][data-y]');
       if (!cell) return;
       exploreScene.actions.mapStepTo(game, cell);
       game.render?.();
-    });
+    };
+    game.root.addEventListener('click', clickHandler);
   }
 
   const doc = options.document || game.root?.ownerDocument || globalThis.document;
@@ -275,6 +278,9 @@ export function installMap(game, options = {}) {
 
   const cleanup = () => {
     game.bus.off('combat:victory', onCombatVictory);
+    if (clickHandler && typeof game.root?.removeEventListener === 'function') {
+      game.root.removeEventListener('click', clickHandler);
+    }
     if (keyHandler && view?.removeEventListener) {
       view.removeEventListener('keydown', keyHandler);
     }
