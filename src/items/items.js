@@ -86,6 +86,11 @@ export const ITEMS = Object.freeze({
     use: { hp: 10 }, price: 6, sellPrice: 2,
     description: 'Hard biscuit and dried fish. Not tasty, but it keeps you walking.',
   },
+  salted_roe: {
+    id: 'salted_roe', name: 'Salted Roe', type: TYPES.CONSUMABLE,
+    use: { hp: 25 }, price: 17, sellPrice: 8,
+    description: 'Silvery fish roe, dry-cured in sea salt at the Saltmere smokehouses. Rich and briny; keeps for weeks in a waxed tin.',
+  },
 
   // ---- Equipment: weapons ----
   rusted_pipe: {

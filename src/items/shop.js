@@ -19,7 +19,7 @@ export const SALTMERE_POST = Object.freeze({
   id: 'saltmere_post',
   name: 'Saltmere Trading Post',
   greeting: 'The salvage stall smells of tar and brine. "Everything here floats or cuts," the keeper says. "Mostly both."',
-  stock: ['hearty_chowder', 'field_dressing', 'storm_tonic', 'saltweather_jerkin', 'tidebound_cutlass', 'warden_blade', 'pearl_focus', 'rations'],
+  stock: ['hearty_chowder', 'salted_roe', 'field_dressing', 'storm_tonic', 'saltweather_jerkin', 'tidebound_cutlass', 'warden_blade', 'pearl_focus', 'rations'],
 });
 
 /** The Sunscar Relay signal-station post (chapter three). Quartermaster for the

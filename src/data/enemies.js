@@ -117,6 +117,7 @@ export const ENEMIES = {
     loot: [
       { id: 'field_dressing', chance: 0.25, minQty: 1, maxQty: 1 },
       { id: 'storm_glass', chance: 0.35, minQty: 1, maxQty: 1 },
+      { id: 'salted_roe', chance: 0.35, minQty: 1, maxQty: 1 },
     ],
   },
   rime_wight: {
