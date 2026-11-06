@@ -186,3 +186,18 @@ test('the Journey Journal shows the active bounty contract and its progress', as
   assert.equal(bountySummaryText(s), null);
   assertEggFree(html, 'journal bounty line');
 });
+
+test('town shows the active bounty contract only while one is accepted', async () => {
+  const { townScene } = await import('../src/scenes/town.js');
+  const { createInitialState } = await import('../src/state.js');
+  const s = createInitialState();
+  s.scene = 'town'; s.combat = null;
+  const game = { state: s, scenes: { bounties: {} }, message: '' };
+  assert.ok(!townScene.render(game).includes('town-bounty-summary'));
+  s.bounties = { active: 'ridge_rats', progress: 2, completed: {} };
+  const html = townScene.render(game);
+  assert.ok(html.includes('<p class="town-bounty-summary" role="status">Bounty contract: “Ridge Road Rat Cull” — 2/4 defeated.</p>'), html);
+  s.bounties.progress = 4;
+  assert.ok(townScene.render(game).includes('complete — claim it at the Greyhaven bounty board.'));
+  assert.ok(!townScene.render({ ...game, scenes: {} }).includes('town-bounty-summary'));
+});
