@@ -169,7 +169,7 @@ try {
         await journal(null, 'fresh');
         const freshTown = await state();
         await click('bounties');
-        assert.equal(await page.locator('.bounty--locked').count(), 9);
+        assert.equal(await page.locator('.bounty--locked').count(), 14);
         assert.equal(await page.locator('[data-action="acceptBounty"]').count(), 0);
         assert.equal(await page.locator('.bounty__brief').count(), 0);
         await fit('locked', '#app button');
