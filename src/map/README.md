@@ -125,6 +125,11 @@ Each zone defines a `vantage` metadata block (`{ landmark, elevation, surveyNote
 
 ## Encounter Threat & Loot Drop Previews (`getEncounterPreview`, `getZoneThreatIntel`)
 
-- `getEncounterPreview(enemyId, gameState)`: Returns a read-only summary (`{ enemyId, name, hp, atk, def, spd, boss, tier, known, defeatedCount, drops, summary }`) for any enemy species in `ENEMIES`, resolving item names and guaranteed (`100%`) vs. chance drops without mutating `gameState`.
+- `getEncounterPreview(enemyId, gameState)`: Returns a read-only difficulty-scaled summary (`{ enemyId, name, hp, baseHp, atk, def, spd, gold, difficulty, boss, tier, known, defeatedCount, drops, summary }`) for own-property enemy species in `ENEMIES` using `scaleEnemy(baseEnemy, getDifficulty(gameState))` without mutating `gameState`. Drop item names are revealed once the species is recorded in `gameState.bestiary` (`known: true`, `Drops: <Item> (<percent>%)`) and masked behind `Drops: Unscouted (<percent>%)` when `known: false`.
 - `getZoneThreatIntel(gameState, zoneOrId)`: Returns read-only threat and drop intel for all fixed and roaming encounters in a zone (`{ zoneId, fixedEncounters, roamingEncounters }`).
-- `getAvailableActions` attaches `preview` to nearby `encounter` actions, and `renderExploration` exposes the threat and drop summary in the `title` tooltip of encounter map cells and nearby `Engage` buttons while preserving existing `aria-label` text.
+- `getAvailableActions` attaches `preview` to nearby `encounter` actions, and `renderExploration` exposes the threat and drop summary both in a visible `<p class="nearby-threat-preview">` readout in the `Within reach / Nearby Actions` panel and in the `title` tooltip of encounter map cells and nearby `Engage` buttons while preserving existing `aria-label` text.
+
+## Frontier Atlas / World Map Overview (`getFrontierAtlas`)
+
+- `getFrontierAtlas(gameState)`: Pure, read-only helper returning world-level recon progress across all 9 zones in `ZONE_ORDER` (`{ currentZoneId, zonesVisited, zonesTotal, totalEncountersCleared, totalEncounters, totalCachesOpened, totalCaches, completedObjectives, totalObjectives, overallPercent, zones }`), including each zone's active weather `conditionName`, recon completion `percent`, unlocked status, and outbound route `connections` / `connectedNames`.
+- `renderExploration` renders a collapsible `<details class="shortcut-guide frontier-atlas">` summary listing charted frontier regions, active weather conditions, recon progress, and connected routes while keeping uncharted regions unspoiled.

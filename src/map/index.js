@@ -6,6 +6,7 @@ export {
   getZoneCondition,
   getZoneProgress,
   getZoneVantage,
+  getFrontierAtlas,
   getEncounterPreview,
   getZoneThreatIntel,
   getCompassBearing,

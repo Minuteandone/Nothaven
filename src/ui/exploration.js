@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { getEncounterPreview, getEntityAt, getTileInfo, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
+import { getEncounterPreview, getEntityAt, getFrontierAtlas, getTileInfo, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -187,6 +187,31 @@ function explorationShortcutGuide(characterShortcuts) {
   </details>`;
 }
 
+function frontierAtlasPanel(state, zone, mapState) {
+  const effectiveMap = mapState
+    ? { ...mapState, zoneId: mapState.zoneId || zone?.id || 'greyhaven' }
+    : { zoneId: zone?.id || 'greyhaven' };
+  const atlas = getFrontierAtlas(state ? { ...state, map: effectiveMap } : { map: effectiveMap });
+  const visitedEntries = atlas.zones.filter(entry => entry.visited);
+  const unvisitedCount = Math.max(0, atlas.zonesTotal - atlas.zonesVisited);
+  const items = visitedEntries.map(entry => {
+    const reconText = entry.totalObjectives > 0
+      ? `${entry.percent}% recon (${entry.encountersCleared}/${entry.encountersTotal} threats, ${entry.cachesOpened}/${entry.cachesTotal} caches)`
+      : 'Safe haven';
+    const routesText = entry.connectedNames.length > 0
+      ? `Routes: ${entry.connectedNames.join(', ')}`
+      : 'No outbound routes';
+    return `<li data-zone-id="${escapeHTML(entry.zoneId)}" data-current="${entry.isCurrent}"><strong>${escapeHTML(entry.name)}</strong>${entry.isCurrent ? ' <em>(Current)</em>' : ''} · ${escapeHTML(entry.conditionName)} · ${escapeHTML(reconText)} · ${escapeHTML(routesText)}</li>`;
+  }).join('');
+  const unchartedLine = unvisitedCount > 0
+    ? `<p class="frontier-atlas__uncharted">${unvisitedCount} frontier ${unvisitedCount === 1 ? 'region remains' : 'regions remain'} uncharted.</p>`
+    : '<p class="frontier-atlas__uncharted">All frontier regions charted.</p>';
+  return `<details class="shortcut-guide frontier-atlas"><summary>Frontier atlas (${atlas.zonesVisited}/${atlas.zonesTotal} regions · ${atlas.overallPercent}% recon)</summary>
+    <ul class="frontier-atlas__list" aria-label="Charted frontier regions">${items}</ul>
+    ${unchartedLine}
+  </details>`;
+}
+
 export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '', hasArchive = false, hasQuestJournal = false, hasCharacter = false, hasFeats = false, characterShortcuts = true }) {
   const contextButtons = (nearbyActions || [])
     .filter(action => NEARBY_ACTION_TYPES[action?.kind])
@@ -258,6 +283,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           </div>
           <p class="control-hint">Survey to inspect the tile beneath you, or click a passable map tile to step along a safe route (takes normal movement steps where random encounters may occur, pauses beside threats, and engages a threat if clicked directly). Movement never spends supplies.</p>
           ${explorationShortcutGuide(characterShortcuts)}
+          ${frontierAtlasPanel(state, zone, mapState)}
         </section>
         <section class="panel nearby-panel" aria-labelledby="nearby-title">
           <p class="eyebrow">Within reach</p><h2 id="nearby-title">Nearby Actions:</h2>
