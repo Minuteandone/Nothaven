@@ -16,7 +16,7 @@ function rowHTML(r, anyActive) {
     <h2 class="bounty__title">${escapeHTML(title)}</h2>
     ${r.unlocked && r.urgent ? '<p class="bounty__urgent">Urgent notice — premium pay until the next claim.</p>' : ''}
     ${r.unlocked ? `<p class="bounty__brief">${escapeHTML(r.brief)}</p>
-    <p class="bounty__terms">Defeat ${r.count} × ${escapeHTML(r.foe)} · Reward: ${escapeHTML(bountyRewardText({ ...r, items: r.rewardItems || r.items }, r.pay))}</p>
+    <p class="bounty__terms">Defeat ${escapeHTML(String(r.count))} × ${escapeHTML(r.foe)} · Reward: ${escapeHTML(bountyRewardText({ ...r, items: r.rewardItems || r.items }, r.pay))}</p>
     ${r.mastered && r.items.length ? `<p class="bounty__mastered">Mastered — +1 ${escapeHTML(r.rewardName || '')} per claim.</p>` : ''}
     ${!r.mastered && r.items.length && r.claimed > 0 ? `<p class="bounty__mastery-progress">Mastery progress: ${escapeHTML(`${Math.min(r.claimed, MASTERY_CLAIMS)} of ${MASTERY_CLAIMS}`)} claims.</p>` : ''}
     ${r.roams.length ? `<p class="bounty__roams">Roams: ${escapeHTML(r.roams.join(', '))}.</p>` : ''}` : ''}
@@ -81,7 +81,7 @@ export const bountiesScene = {
     const shown = sortBountyRows(filterBountyRows(rows, region), sort);
     const matching = shown.filter((r) => r.unlocked && r.roams.includes(region)).length;
     const elsewhere = shown.find((r) => r.active && !r.roams.includes(region));
-    const filterNote = region ? `<p class="bounties__filter-note" role="status">${matching} ${matching === 1 ? 'contract roams' : 'contracts roam'} ${escapeHTML(region)}.${elsewhere ? ` Your active contract, ${escapeHTML(elsewhere.title)}, stays listed too.` : ''}</p>` : '';
+    const filterNote = region ? `<p class="bounties__filter-note" role="status">${escapeHTML(String(matching))} ${matching === 1 ? 'contract roams' : 'contracts roam'} ${escapeHTML(region)}.${elsewhere ? ` Your active contract, ${escapeHTML(elsewhere.title)}, stays listed too.` : ''}</p>` : '';
     const total = totalBountiesClaimed(game.state);
     const msg = game.bountyMessage ? `<p class="bounties__message" role="status">${escapeHTML(game.bountyMessage)}</p>` : '';
     return `<main class="game-shell bounties">
@@ -89,7 +89,7 @@ export const bountiesScene = {
       <section class="panel" aria-label="Posted contracts">
         ${msg}
         <p class="bounties__intro">Take one contract at a time, then defeat its foe in the wilds — roaming ambushes and patrols both count, sparring drills do not. Claim the reward here; every contract can be taken again, and each claim counts toward a board rank that raises contract gold.</p>
-        <p class="bounties__total">Contracts claimed: ${total}</p>
+        <p class="bounties__total">Contracts claimed: ${escapeHTML(String(total))}</p>
         <p class="bounties__rank">${escapeHTML(bountyRankText(game.state))}</p>
         <p class="bounties__urgent">${escapeHTML(urgentBountyText(game.state))}</p>
         <p class="bounties__mastery">${escapeHTML(masteryText(game.state))}</p>
