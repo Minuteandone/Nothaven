@@ -113,3 +113,42 @@ export function damagePreview(skill, hero, enemy) {
 
   return null;
 }
+
+/**
+ * Incoming damage preview — estimate physical damage the enemy will deal
+ * to the hero. Most accurate during enemy windup (telegraphed heavy blow).
+ *
+ * @param {object} combat — combat state (enemy, windup, defending, wardTurns, aegisTurns)
+ * @param {object} hero   — party hero object
+ * @returns {{min:number, max:number, warded:boolean, windupName:string|null}|null}
+ */
+export function incomingDamagePreview(combat, hero) {
+  if (!combat || !hero) return null;
+  const enemy = combat?.enemy;
+  if (!enemy || !enemy.atk || enemy.hp <= 0) return null;
+
+  const hs = heroStats(hero);
+  const def = hs?.def ?? 0;
+  const warded = combat.defending || combat.wardTurns > 0 || (combat.aegisTurns || 0) > 0;
+
+  // Windup attacks use a telegraphed multiplier (default 2×); normal attacks use 1×
+  let mult = 1;
+  let windupName = null;
+  if (combat.windup && enemy.windup) {
+    mult = enemy.windup.mult ?? 2;
+    windupName = combat.windup.name || enemy.windup.name || 'heavy blow';
+  }
+
+  // Physical damage formula: floor(atk * mult) - def + randInt(-1, 2), min 1
+  const base = Math.floor(enemy.atk * mult) - def;
+  const rawMin = Math.max(1, base - 1);
+  const rawMax = Math.max(1, base + 2);
+
+  let min = rawMin, max = rawMax;
+  if (warded) {
+    min = Math.max(1, Math.floor(rawMin / 2));
+    max = Math.max(1, Math.floor(rawMax / 2));
+  }
+
+  return { min, max, warded, windupName };
+}
