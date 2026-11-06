@@ -1477,7 +1477,7 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .command-card--locked { opacity: 0.55; cursor: not-allowed; }
 .command-card--locked:hover { transform: none; box-shadow: none; }
 .locked-skills { margin-top: 0.5rem; }
-.locked-skills summary { font-size: 0.85rem; color: var(--muted); cursor: pointer; }
+.locked-skills summary { min-height: 44px; padding: .75rem .15rem .35rem; font-size: 0.85rem; color: var(--muted); cursor: pointer; }
 
 .quest-bounty-record { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
 
