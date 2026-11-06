@@ -1,5 +1,5 @@
 // "How to play" field guide, reachable from the title screen.
-import { sceneHeader, uiButton } from '../ui/components.js';
+import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { SKILLS, SKILL_UNLOCKS } from '../combat/rules.js';
 
 export const GUIDE_SECTIONS = Object.freeze([
@@ -72,8 +72,8 @@ export const guideScene = {
     game.guideReturn = data && typeof data.returnScene === 'string' ? data.returnScene : 'title';
   },
   render() {
-    const sections = GUIDE_SECTIONS.map((s) => `<section class="guide-section"><h2>${s.title}</h2><ul>${s.lines.map((l) => `<li>${l}</li>`).join('')}</ul></section>`).join('');
-    const roadmap = skillRoadmap().map((r) => `<li>Level ${r.level}: ${r.name}</li>`).join('');
+    const sections = GUIDE_SECTIONS.map((s) => `<section class="guide-section"><h2>${escapeHTML(s.title)}</h2><ul>${s.lines.map((l) => `<li>${l}</li>`).join('')}</ul></section>`).join('');
+    const roadmap = skillRoadmap().map((r) => `<li>${escapeHTML(`Level ${r.level}: ${r.name}`)}</li>`).join('');
     return `<main class="game-shell guide">
       ${sceneHeader({ eyebrow: 'How to play', title: 'Wardens’ Field Guide', subtitle: 'Everything a new keeper of the beacon should know before setting out.', iconName: 'journal' })}
       <div class="panel">${sections}<section class="guide-section"><h2>Skill roadmap</h2><ul class="guide-skills">${roadmap}</ul></section></div>
