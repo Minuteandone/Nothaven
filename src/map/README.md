@@ -141,5 +141,6 @@ Each zone defines a `vantage` metadata block (`{ landmark, elevation, surveyNote
 
 ## Zone Field Checklist & Fast-Travel Route Tooltips (`getZoneChecklist`)
 
+- `getTileInspection(gameState, x, y, zoneOrId)`: Returns a spoiler-safe inspection of the tile at `(x, y)` (defaulting to current position) and its 4 cardinal neighbors (`north`, `west`, `east`, `south`), plus `adjacentLandmarks` and `summary` (masking locked encounters as `'Sealed challenge'`). Rendered in `.terrain-compass__adjacent`.
 - `getZoneChecklist(gameState, zoneOrId)`: Pure, read-only helper returning a structured point-of-interest roster for the zone (`{ zoneId, name, npcs, encounters, interactables, exits }`) with coordinates and live status (`Active`, `Cleared`, `Locked`, `Available`, `Completed`, `Service`, `Charted`, `Uncharted`).
 - `renderExploration` renders a collapsible `<details class="shortcut-guide zone-checklist">` in the Navigator panel and attaches spoiler-safe `getRouteBriefing` summaries as `title` tooltips on `Visited Routes` fast-travel buttons via `uiButton({ ..., title })`.
