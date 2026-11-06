@@ -186,7 +186,7 @@ function lockedSkillsHtml(hero, combat) {
 
 function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
   if (combat.over) {
-    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
+    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat) + rewardsLine(combat) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'skills') {
     const skills = knownSkills(hero).map((skill, index) => {
@@ -362,3 +362,20 @@ export function summaryLine(combat) {
   if (sm.bursts > 0) parts.push(plural(sm.bursts, 'Beacon Burst'));
   return `<p class="battle-summary">${parts.join(' · ')}</p>`;
 }
+
+/** Brief rewards summary shown on the victory outcome screen. */
+export function rewardsLine(combat) {
+  const r = combat?.rewards;
+  if (!r) return '';
+  const parts = [];
+  if (Number.isFinite(r.xp) && r.xp > 0) parts.push(`+${r.xp} XP`);
+  if (Number.isFinite(r.gold) && r.gold > 0) parts.push(`+${r.gold} gold`);
+  if (Array.isArray(r.items) && r.items.length) {
+    const names = r.items.map((s) => {
+      try { return `${escapeHTML(String(s.qty))}× ${escapeHTML(getItem(s.id).name)}`; } catch { return escapeHTML(String(s.id)); }
+    });
+    parts.push(`Found: ${names.join(', ')}`);
+  }
+  return parts.length ? `<p class="battle-rewards">${parts.join(' · ')}</p>` : '';
+}
+

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCombat } from '../src/combat/rules.js';
-import { renderCombat } from '../src/ui/combat.js';
+import { renderCombat, rewardsLine } from '../src/ui/combat.js';
 
 function hero(overrides = {}) {
   return {
@@ -102,4 +102,58 @@ test('down allies and dynamic combat content are presented safely', () => {
   assert.ok(html.includes('&lt;shocked&gt; · 2'));
   assert.match(html, /class="unit ally down"/);
   assert.match(html, /<em>Down<\/em>/);
+});
+
+
+test('rewardsLine returns XP, gold, and items for victory', () => {
+  const combat = { over: 'victory', rewards: { xp: 50, gold: 30, items: [{ id: 'healing_herb', qty: 2 }, { id: 'bandage', qty: 1 }] } };
+  const html = rewardsLine(combat);
+  assert.match(html, /\+50 XP/);
+  assert.match(html, /\+30 gold/);
+  assert.match(html, /Found:/);
+  assert.match(html, /2× Healing Herb/);
+  assert.match(html, /1× Linen Bandage/);
+  assert.match(html, /class="battle-rewards"/);
+});
+
+test('rewardsLine shows only XP for drill victory (no gold or items)', () => {
+  const combat = { over: 'victory', rewards: { xp: 25, gold: 0, items: [] } };
+  const html = rewardsLine(combat);
+  assert.match(html, /\+25 XP/);
+  assert.ok(!html.includes('gold'));
+  assert.ok(!html.includes('Found:'));
+});
+
+test('rewardsLine returns empty string when combat has no rewards', () => {
+  assert.strictEqual(rewardsLine({ over: 'defeat' }), '');
+  assert.strictEqual(rewardsLine({ over: 'escaped' }), '');
+  assert.strictEqual(rewardsLine(null), '');
+  assert.strictEqual(rewardsLine({}), '');
+});
+
+test('rewardsLine falls back to item ID when getItem throws for unknown id', () => {
+  const combat = { over: 'victory', rewards: { xp: 10, gold: 0, items: [{ id: 'nonexistent_xyz', qty: 1 }] } };
+  const html = rewardsLine(combat);
+  assert.match(html, /\+10 XP/);
+  assert.match(html, /nonexistent_xyz/);
+  assert.ok(!html.includes('undefined'));
+});
+
+test('rewardsLine escapes hostile item quantity values', () => {
+  const combat = { over: 'victory', rewards: { xp: 5, gold: 0, items: [{ id: 'healing_herb', qty: '<script>alert(1)</script>' }] } };
+  const html = rewardsLine(combat);
+  assert.ok(!html.includes('<script>alert(1)</script>'));
+  assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
+  assert.match(html, /Healing Herb/);
+});
+
+test('rewardsLine renders via renderCombat on victory outcome screen', () => {
+  const combat = createCombat({ enemyId: 'storm_rat' });
+  combat.over = 'victory';
+  combat.rewards = { xp: 40, gold: 15, items: [{ id: 'healing_herb', qty: 1 }] };
+  const html = view({ combat });
+  assert.match(html, /battle-rewards/);
+  assert.match(html, /\+40 XP/);
+  assert.match(html, /\+15 gold/);
+  assert.match(html, /1× Healing Herb/);
 });
