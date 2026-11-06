@@ -1,6 +1,7 @@
 import { ledgerOf } from '../core/ledger.js';
 import { FEATS, featsEarned } from './feats.js';
 import { BOUNTIES, bountyState, bountyRecordText } from '../core/bounties.js';
+import { ENEMIES } from '../data/enemies.js';
 // Ending / credits scene. Shown once when the story reaches stage 'complete',
 // and again as a finale with epilogue after the Stormcrown Spire report.
 const ENDINGS = {
@@ -72,6 +73,14 @@ export function battlesText(state) {
   return l.bossVictories > 0 ? `${won} (${l.bossVictories} against bosses)` : won;
 }
 
+/** One-line Field Journal tally for “Your journey”: distinct foes recorded out of the full roster. */
+export function journalText(state) {
+  const book = state?.bestiary && typeof state.bestiary === 'object' && !Array.isArray(state.bestiary) ? state.bestiary : {};
+  const ids = Object.keys(ENEMIES);
+  const seen = ids.filter((id) => Object.prototype.hasOwnProperty.call(book, id) && Number.isInteger(book[id]) && book[id] > 0).length;
+  return `Field Journal: ${seen} of ${ids.length} foes recorded`;
+}
+
 export function isFinale(state) {
   return Boolean(state?.story?.flags?.spire_reward);
 }
@@ -111,6 +120,7 @@ export const endingScene = {
         <li>Gold carried home: ${Number(s.gold) || 0}</li>
         <li>Items in pack: ${(s.inventory || []).reduce((n, i) => n + (Number(i.qty) || 0), 0)}</li>
         <li class="ending-battles">${esc(battlesText(s))}</li>
+        <li class="ending-journal">${esc(journalText(s))}</li>
         <li class="ending-feats">Wardens’ Feats earned: ${esc(String(featsEarned(s)))} of ${esc(String(FEATS.length))}</li>
         ${bountyRecordText(s) ? `<li class="ending-bounty-record">${esc(bountyRecordText(s))}</li>` : ''}
       </ul>
