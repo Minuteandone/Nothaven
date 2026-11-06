@@ -298,3 +298,12 @@ Progress uses native UI actions; evaluations only observe state/catalog/layout,
 and Math.random is held at 0.5 to avoid incidental patrols. Ignored screenshots
 and traces go to `browser-artifacts/regions/`, including failures. This is not
 a full-campaign, screen-reader, cross-browser, or first-availability balance proof.
+
+`tests/protected-outgoing-preview.test.mjs` compares the actual rendered Attack badge
+and learned skill-card ranges with real solo `heroAction` damage endpoints, without
+reusing preview arithmetic. It checks baseline, Defend, Warding Stance, Beacon Aegis,
+and combined incoming protections across every foe, levels 2/17/20, bare/fitted
+gear, all four difficulties, and five RNG samples. Frozen whole render inputs stay
+unchanged, non-damaging skills have no range, and incoming protections do not reduce
+outgoing damage. This is synthetic regression coverage, not an earned journey,
+browser/screen-reader check, or balance survey.
