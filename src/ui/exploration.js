@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { getEntityAt, getTileInfo, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
+import { getEncounterPreview, getEntityAt, getTileInfo, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -53,7 +53,7 @@ function fieldPack(inventory, party = []) {
   </section>`;
 }
 
-function mapGrid(zone, mapState) {
+function mapGrid(zone, mapState, state = null) {
   const rows = [];
   for (let y = 0; y < zone.height; y += 1) {
     const cells = [];
@@ -64,21 +64,27 @@ function mapGrid(zone, mapState) {
       let symbol = tile.glyph;
       let cellClass = `map-cell tile-${safeClass(tile.id)}`;
       let label = `${tile.name}, column ${x + 1}, row ${y + 1}`;
+      let cellTitle = label;
 
       if (entityInfo) {
         cellClass += ` entity-${safeClass(entityInfo.type)}`;
         if (entityInfo.type === 'npc') {
           symbol = entityInfo.entity.symbol || 'N';
           label = `${entityInfo.entity.name}, ${entityInfo.entity.role}`;
+          cellTitle = label;
         } else if (entityInfo.type === 'encounter') {
           symbol = entityInfo.entity.symbol || '!';
           label = `Threat: ${entityInfo.entity.name}`;
+          const preview = getEncounterPreview(entityInfo.entity.enemyId, state);
+          cellTitle = preview?.summary ? `${label} — ${preview.summary}` : label;
         } else if (entityInfo.type === 'interactable') {
           symbol = entityInfo.entity.symbol || '?';
           label = entityInfo.entity.name;
+          cellTitle = label;
         } else if (entityInfo.type === 'exit') {
           symbol = '╬';
           label = entityInfo.entity.label;
+          cellTitle = label;
         }
       }
 
@@ -86,9 +92,10 @@ function mapGrid(zone, mapState) {
         symbol = '@';
         cellClass += ' map-player';
         label = `Wren, your position, column ${x + 1}, row ${y + 1}`;
+        cellTitle = label;
       }
 
-      cells.push(`<span class="${cellClass}" role="gridcell" aria-label="${escapeHTML(label)}"${isPlayer ? ' aria-current="location"' : ''} title="${escapeHTML(label)}" data-x="${x}" data-y="${y}"><span aria-hidden="true">${escapeHTML(symbol)}</span></span>`);
+      cells.push(`<span class="${cellClass}" role="gridcell" aria-label="${escapeHTML(label)}"${isPlayer ? ' aria-current="location"' : ''} title="${escapeHTML(cellTitle)}" data-x="${x}" data-y="${y}"><span aria-hidden="true">${escapeHTML(symbol)}</span></span>`);
     }
     rows.push(`<div class="map-row" role="row">${cells.join('')}</div>`);
   }
@@ -114,7 +121,10 @@ function nearbyActionButton(action, index, characterShortcuts) {
   const type = NEARBY_ACTION_TYPES[action.kind];
   if (!type) return '';
   const shortcut = characterShortcuts && index < 9 ? String(index + 1) : null;
-  return `<button type="button" class="action-button action-button--${type.variant || 'secondary'} nearby-action" data-action="${escapeHTML(type.name)}" data-arg="${escapeHTML(action.id)}"${shortcut ? ` aria-keyshortcuts="${shortcut}"` : ''}>
+  const titleAttr = action.kind === 'encounter' && action.preview?.summary
+    ? ` title="${escapeHTML(action.preview.summary)}"`
+    : '';
+  return `<button type="button" class="action-button action-button--${type.variant || 'secondary'} nearby-action" data-action="${escapeHTML(type.name)}" data-arg="${escapeHTML(action.id)}"${titleAttr}${shortcut ? ` aria-keyshortcuts="${shortcut}"` : ''}>
     ${icon(type.iconName)}<span>${escapeHTML(action.label)}</span>${shortcut ? keyHint(shortcut) : ''}
   </button>`;
 }
@@ -181,6 +191,10 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
   const contextButtons = (nearbyActions || [])
     .filter(action => NEARBY_ACTION_TYPES[action?.kind])
     .map((action, index) => nearbyActionButton(action, index, characterShortcuts)).join('');
+  const nearbyThreatPreviews = (nearbyActions || [])
+    .filter(action => action?.kind === 'encounter' && action.preview?.summary)
+    .map(action => `<p class="nearby-threat-preview">${escapeHTML(action.preview.summary)}</p>`)
+    .join('');
   const routes = (visitedZones || [])
     .filter(zoneId => zoneId !== zone.id && ZONES[zoneId])
     .map(zoneId => uiButton({
@@ -221,7 +235,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           return `<p class="zone-recon-summary"><strong>${escapeHTML(vantage.condition.name)}</strong> · ${escapeHTML(vantage.landmark)} (${escapeHTML(String(vantage.elevation))}m) · ${escapeHTML(objSummary)}${vantage.fieldNote ? ` — ${escapeHTML(vantage.fieldNote)}` : ''}</p>`;
         })()}
         ${zoneVista(zone)}
-        ${mapGrid(zone, mapState)}
+        ${mapGrid(zone, mapState, state)}
         ${terrainCompass(zone, mapState, characterShortcuts, state)}
         <ul class="map-legend" aria-label="Map legend">
           <li><span class="legend-symbol legend-symbol--player">@</span>You</li>
@@ -248,6 +262,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
         <section class="panel nearby-panel" aria-labelledby="nearby-title">
           <p class="eyebrow">Within reach</p><h2 id="nearby-title">Nearby Actions:</h2>
           <div class="nearby-actions">${contextButtons || '<p class="empty-state">Move beside a person, route, cache, or threat to interact.</p>'}</div>
+          ${nearbyThreatPreviews}
           ${fieldPack(state.inventory, state.party)}
           ${routes ? `<div class="visited-routes"><h3>${icon('map')}Visited Routes:</h3><div>${routes}</div></div>` : ''}
           <div class="explore-utilities">
