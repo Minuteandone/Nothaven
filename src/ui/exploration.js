@@ -191,6 +191,10 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
   const contextButtons = (nearbyActions || [])
     .filter(action => NEARBY_ACTION_TYPES[action?.kind])
     .map((action, index) => nearbyActionButton(action, index, characterShortcuts)).join('');
+  const nearbyThreatPreviews = (nearbyActions || [])
+    .filter(action => action?.kind === 'encounter' && action.preview?.summary)
+    .map(action => `<p class="nearby-threat-preview">${escapeHTML(action.preview.summary)}</p>`)
+    .join('');
   const routes = (visitedZones || [])
     .filter(zoneId => zoneId !== zone.id && ZONES[zoneId])
     .map(zoneId => uiButton({
@@ -258,6 +262,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
         <section class="panel nearby-panel" aria-labelledby="nearby-title">
           <p class="eyebrow">Within reach</p><h2 id="nearby-title">Nearby Actions:</h2>
           <div class="nearby-actions">${contextButtons || '<p class="empty-state">Move beside a person, route, cache, or threat to interact.</p>'}</div>
+          ${nearbyThreatPreviews}
           ${fieldPack(state.inventory, state.party)}
           ${routes ? `<div class="visited-routes"><h3>${icon('map')}Visited Routes:</h3><div>${routes}</div></div>` : ''}
           <div class="explore-utilities">

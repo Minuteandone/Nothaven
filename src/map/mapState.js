@@ -5,6 +5,7 @@ import { craft } from '../items/crafting.js';
 import { effectiveStats } from '../items/equipment.js';
 import { getItem, isKnownItem } from '../items/items.js';
 import { ENEMIES } from '../data/enemies.js';
+import { getDifficulty, scaleEnemy } from '../combat/difficulty.js';
 
 export function createMapState(initialZone = 'greyhaven') {
   const zone = ZONES[initialZone] || ZONES.greyhaven;
@@ -674,36 +675,55 @@ const COMPASS_LABELS = Object.freeze({
 });
 
 export function getEncounterPreview(enemyId, gameState = null) {
-  const enemy = enemyId ? ENEMIES[enemyId] : null;
-  if (!enemy) return null;
-  const defeatedCount = Math.max(0, Math.floor(Number(gameState?.bestiary?.[enemy.id]) || 0));
-  const tier = enemy.boss ? 'Boss' : enemy.hp >= 60 ? 'Elite' : enemy.hp >= 30 ? 'Veteran' : 'Standard';
-  const drops = Array.isArray(enemy.loot)
-    ? enemy.loot.map((entry) => {
+  if (typeof enemyId !== 'string' || !Object.prototype.hasOwnProperty.call(ENEMIES, enemyId)) {
+    return null;
+  }
+  const baseEnemy = ENEMIES[enemyId];
+  if (!baseEnemy) return null;
+  const difficulty = getDifficulty(gameState);
+  const enemy = scaleEnemy(baseEnemy, difficulty);
+  const book = gameState?.bestiary && typeof gameState.bestiary === 'object' && !Array.isArray(gameState.bestiary)
+    ? gameState.bestiary
+    : {};
+  const rawCount = Object.prototype.hasOwnProperty.call(book, baseEnemy.id) ? book[baseEnemy.id] : 0;
+  const defeatedCount = Number.isInteger(rawCount) && rawCount > 0 ? rawCount : 0;
+  const known = defeatedCount > 0;
+  const tier = baseEnemy.boss ? 'Boss' : baseEnemy.hp >= 60 ? 'Elite' : baseEnemy.hp >= 30 ? 'Veteran' : 'Standard';
+  const drops = Array.isArray(baseEnemy.loot)
+    ? baseEnemy.loot.map((entry) => {
         const item = isKnownItem(entry.id) ? getItem(entry.id) : { id: entry.id, name: entry.id };
         const chance = Number(entry.chance) || 0;
+        const percent = Math.round(chance * 100);
         return {
           id: entry.id,
           name: item.name,
           chance,
+          percent,
           minQty: Number.isInteger(entry.minQty) ? entry.minQty : 1,
           maxQty: Number.isInteger(entry.maxQty) ? entry.maxQty : 1,
           guaranteed: chance >= 1,
         };
       })
     : [];
-  const dropNames = drops.map((d) => (d.guaranteed ? `${d.name} (100%)` : d.name)).join(', ');
-  const summary = `${enemy.name} (${tier}, ${enemy.hp} HP)${dropNames ? ` · Drops: ${dropNames}` : ''}`;
+  const dropSummary = drops.length > 0
+    ? (known
+        ? drops.map((d) => `${d.name} (${d.percent}%)`).join(', ')
+        : `Unscouted (${drops.map((d) => `${d.percent}%`).join(', ')})`)
+    : '';
+  const summary = `${enemy.name} (${tier}, ${enemy.hp} HP)${dropSummary ? ` · Drops: ${dropSummary}` : ''}`;
   return {
-    enemyId: enemy.id,
+    enemyId: baseEnemy.id,
     name: enemy.name,
     hp: enemy.hp,
+    baseHp: baseEnemy.hp,
     atk: enemy.atk,
     def: enemy.def,
     spd: enemy.spd,
-    boss: Boolean(enemy.boss),
+    gold: enemy.gold,
+    difficulty,
+    boss: Boolean(baseEnemy.boss),
     tier,
-    known: defeatedCount > 0,
+    known,
     defeatedCount,
     drops,
     summary,

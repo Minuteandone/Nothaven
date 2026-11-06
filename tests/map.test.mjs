@@ -990,7 +990,7 @@ test('findSafePath and stepAlongSafePath navigate walkable routes, pause adjacen
 });
 
 
-test('getEncounterPreview and getZoneThreatIntel resolve threat tiers, loot drops, and exploration tooltips without mutating state', () => {
+test('getEncounterPreview and getZoneThreatIntel resolve difficulty-scaled threat tiers, drop percentages, unscouted gating, and visible exploration previews without mutating state', () => {
   const state = createInitialState();
   state.bestiary = { ridge_bandit: 2 };
   const snapshot = JSON.stringify(state);
@@ -1002,15 +1002,34 @@ test('getEncounterPreview and getZoneThreatIntel resolve threat tiers, loot drop
   assert.equal(banditPreview.hp, 20);
   assert.equal(banditPreview.known, true);
   assert.equal(banditPreview.defeatedCount, 2);
-  assert.ok(banditPreview.drops.some((d) => d.id === 'scrap_metal' && d.name === 'Scrap Metal'));
-  assert.match(banditPreview.summary, /Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage, Scrap Metal, Waterlogged Dispatch/);
+  assert.ok(banditPreview.drops.some((d) => d.id === 'scrap_metal' && d.name === 'Scrap Metal' && d.percent === 50));
+  assert.match(banditPreview.summary, /Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage \(50%\), Scrap Metal \(50%\), Waterlogged Dispatch \(10%\)/);
 
+  // Difficulty scaling matches actual combat scaling (15 / 20 / 26 / 32 HP for Ridge Bandit)
+  assert.equal(getEncounterPreview('ridge_bandit', { settings: { difficulty: 'story' } }).hp, 15);
+  assert.equal(getEncounterPreview('ridge_bandit', { settings: { difficulty: 'standard' } }).hp, 20);
+  assert.equal(getEncounterPreview('ridge_bandit', { settings: { difficulty: 'veteran' } }).hp, 26);
+  assert.equal(getEncounterPreview('ridge_bandit', { settings: { difficulty: 'stormborn' } }).hp, 32);
+
+  // Unscouted foes hide drop item names behind Unscouted (percent%) to avoid boss-loot spoilers
   const wraithPreview = getEncounterPreview('tide_wraith', state);
   assert.equal(wraithPreview.boss, true);
   assert.equal(wraithPreview.tier, 'Boss');
-  assert.ok(wraithPreview.drops.every((d) => d.guaranteed === true));
-  assert.match(wraithPreview.summary, /Tide Wraith \(Boss, 50 HP\) · Drops: Storm Tonic \(100%\), Storm Glass \(100%\)/);
+  assert.equal(wraithPreview.known, false);
+  assert.ok(wraithPreview.drops.every((d) => d.guaranteed === true && d.percent === 100));
+  assert.match(wraithPreview.summary, /Tide Wraith \(Boss, 50 HP\) · Drops: Unscouted \(100%, 100%\)/);
 
+  // Once recorded in bestiary, boss drop names are revealed
+  const scoutedWraith = getEncounterPreview('tide_wraith', { bestiary: { tide_wraith: 1 } });
+  assert.equal(scoutedWraith.known, true);
+  assert.match(scoutedWraith.summary, /Tide Wraith \(Boss, 50 HP\) · Drops: Storm Tonic \(100%\), Storm Glass \(100%\)/);
+
+  // Malformed bestiary counts and inherited enemy IDs are rejected safely
+  assert.equal(getEncounterPreview('ridge_bandit', { bestiary: { ridge_bandit: -3 } }).known, false);
+  assert.equal(getEncounterPreview('ridge_bandit', { bestiary: { ridge_bandit: 1.5 } }).known, false);
+  assert.equal(getEncounterPreview('ridge_bandit', { bestiary: { ridge_bandit: '2' } }).known, false);
+  assert.equal(getEncounterPreview('constructor', state), null);
+  assert.equal(getEncounterPreview('toString', state), null);
   assert.equal(getEncounterPreview('unknown_foe', state), null);
 
   const ridgeIntel = getZoneThreatIntel(state, 'ridge_road');
@@ -1019,12 +1038,14 @@ test('getEncounterPreview and getZoneThreatIntel resolve threat tiers, loot drop
   assert.ok(ridgeIntel.roamingEncounters.some((r) => r.enemyId === 'storm_rat' && r.preview.name === 'Storm Rat'));
   assert.equal(JSON.stringify(state), snapshot);
 
-  // Verify exploration UI renders threat preview in encounter cell and Engage button tooltips
+  // Verify exploration UI renders threat preview in encounter cell, Engage button tooltip, and visible .nearby-threat-preview
   const game = makeMockGame();
   travelToZone(game.state, 'ridge_road');
+  game.state.bestiary = { ridge_bandit: 1 };
   game.state.map.x = 4;
   game.state.map.y = 3;
   const html = exploreScene.render(game);
-  assert.match(html, /aria-label="Threat: Ridge Patrol Pack"[^>]*title="Threat: Ridge Patrol Pack — Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage, Scrap Metal, Waterlogged Dispatch"/);
-  assert.match(html, /data-action="mapEncounter" data-arg="ridge_patrol" title="Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage, Scrap Metal, Waterlogged Dispatch"/);
+  assert.match(html, /aria-label="Threat: Ridge Patrol Pack"[^>]*title="Threat: Ridge Patrol Pack — Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage \(50%\), Scrap Metal \(50%\), Waterlogged Dispatch \(10%\)"/);
+  assert.match(html, /data-action="mapEncounter" data-arg="ridge_patrol" title="Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage \(50%\), Scrap Metal \(50%\), Waterlogged Dispatch \(10%\)"/);
+  assert.match(html, /<p class="nearby-threat-preview">Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage \(50%\), Scrap Metal \(50%\), Waterlogged Dispatch \(10%\)<\/p>/);
 });
