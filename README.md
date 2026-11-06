@@ -112,6 +112,10 @@ The same fresh route also toggles letter/number shortcuts off and back on throug
 Display, checks device-local persistence after Save/reload, and exercises blocked
 exploration/combat keys alongside working arrows, Escape, and native buttons.
 These keyboard checks do not validate speech input or screen-reader support.
+At 115% and 130% text size in all three viewports, the earned Ridge fight also
+checks all seven command buttons, visible labels and shortcut hints for containment
+and 44px minimum height, while preference changes preserve the whole fight and
+quick-save bytes; this is layout coverage, not a full campaign or screen-reader test.
 
 Screenshots and Playwright traces are written to the ignored `browser-artifacts/`
 folder, including a failure screenshot when possible. View a trace with
