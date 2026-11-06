@@ -4,6 +4,7 @@ import { BEACON_CHARGE_MAX, chargeReady, battleSummary, enemyWindingUp } from '.
 import { heroStats, knownSkills, lockedSkills } from '../combat/rules.js';
 import { elementLabel, elementClass, elementEffectivenessText, elementMatchups, elementMultiplier } from '../combat/elements.js';
 import { damagePreview, incomingDamagePreview } from '../combat/damagePreview.js';
+import { skillRestorationPreview } from '../combat/restorationPreview.js';
 
 import { getItem, TYPES } from '../items/items.js';
 import { useConsumable } from '../items/consumables.js';
@@ -154,13 +155,13 @@ export function itemRestorationPreview(recipient, inventory, itemId) {
   return parts.length ? `On ${recipient.name || 'Wren'} now: ${parts.join(' · ')}.` : '';
 }
 
-function commandCard({ action, arg, name, meta, description, preview = '', iconName = 'focus', disabled = false, shortcut = null, badge = '', damageRange = '', className = '' }) {
+function commandCard({ action, arg, name, meta, description, preview = '', previewClass = 'item-use-preview', iconName = 'focus', disabled = false, shortcut = null, badge = '', damageRange = '', className = '' }) {
   const extraClass = className ? ` ${escapeHTML(className)}` : '';
   return `<button type="button" class="command-card${extraClass}" data-action="${escapeHTML(action)}" data-arg="${escapeHTML(arg)}" title="${escapeHTML(description)}"${disabled ? ' disabled' : ''}>
     <span class="command-card__top"><span>${icon(iconName)}${escapeHTML(name)}</span><span class="command-card__meta"><strong>${escapeHTML(meta)}</strong>${keyHint(shortcut)}</span></span>
     ${badge}${damageRange ? `<span class="damage-range">${escapeHTML(damageRange)}</span>` : ''}
     <span class="command-card__description">${escapeHTML(description)}</span>
-    ${preview ? `<span class="command-card__description item-use-preview">${escapeHTML(preview)}</span>` : ''}
+    ${preview ? `<span class="command-card__description ${escapeHTML(previewClass)}">${escapeHTML(preview)}</span>` : ''}
   </button>`;
 }
 
@@ -200,9 +201,10 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
         disabled: hero.mp < skill.mp, shortcut: index < 9 ? String(index + 1) : null,
         badge: skill.element ? elementChip(skill.element, effSuffix) : '',
         damageRange: dmgRange,
+        preview: skillRestorationPreview(skill.id, party), previewClass: 'skill-use-preview',
       });
     }).join('');
-    return `<div class="actions command-list" role="group" aria-label="Skill actions">${skills || '<p class="empty-state">No skills learned yet.</p>'}${lockedSkillsHtml(hero, combat)}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
+    return `<div class="actions command-list" role="group" aria-label="Skill actions"><p class="item-recipient-note">Restoration previews show immediate effects before allies act and the normal enemy reply, not end-of-turn totals.</p>${skills || '<p class="empty-state">No skills learned yet.</p>'}${lockedSkillsHtml(hero, combat)}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'tactics') {
     const allies = party.slice(1).filter(member => member && isCompanionId(member.id));

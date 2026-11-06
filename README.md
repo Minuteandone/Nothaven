@@ -379,3 +379,18 @@ when the enemy next acts. The marker remains decorative. Tests compare each
 canonical enrage cutoff with the actual phase check and preserve whole render
 inputs. This adds visible text and an `aria-describedby` association, not a
 claim of completed screen-reader testing; combat rules and saves are unchanged.
+
+### Immediate support-skill previews
+
+The Skills menu previews current named HP restoration and applicable condition
+removal for Mend, Rallying Light, Steady Signal, Rekindle, and Stormhaven Vigil.
+These are immediate effects before allies act, the enemy replies, or statuses
+expire—not end-of-turn totals. Effective equipment caps and partial/zero healing
+are reflected; downed allies appear only for Rekindle. Unknown, unlearned,
+unaffordable, or shock-blocked support skills have no effect preview. This changes
+neither skill availability nor combat mechanics, shortcuts, or saves.
+
+`tests/skill-restoration-preview.test.mjs` pins literal values, frozen inputs,
+escaping, and 416 real-action comparisons using each target's first HP/status
+write rather than post-turn totals. Browser layout checks remain distinct from
+an earned campaign or screen-reader test.
