@@ -75,6 +75,16 @@ export function drillEntries(state) {
   return DRILL_FOES.map((id) => ({ id, name: ENEMIES[id].name, xp: drillXp(id), unlocked: drillUnlocked(state, id), record: drillRecord(state, id) }));
 }
 
+// One-line roster tally: drills unlocked, distinct foes bested in drills,
+// and total drill victories. Malformed records count as no wins.
+export function drillsSummaryText(state) {
+  const entries = drillEntries(state);
+  const unlocked = entries.filter((r) => r.unlocked).length;
+  const bested = entries.filter((r) => r.record.wins > 0).length;
+  const wins = entries.reduce((sum, r) => sum + r.record.wins, 0);
+  return `Drills unlocked: ${unlocked} of ${entries.length} · Foes bested in drills: ${bested} · Drill victories: ${wins}`;
+}
+
 function recordText(rec) {
   if (!rec.wins) return 'No drills won yet.';
   return `Won ${rec.wins} ${rec.wins === 1 ? 'time' : 'times'} · best ${rec.best} ${rec.best === 1 ? 'round' : 'rounds'}`;
@@ -102,6 +112,7 @@ export const drillsScene = {
       <section class="panel" aria-label="Drill roster">
         ${msg}
         <p class="drills__intro">Warden Mara restages battles you have already won, with straw targets and signal flags standing in for the real foe. Drills grant half the usual experience and nothing else — no gold, no spoils — and a lost drill costs nothing but pride.</p>
+        <p class="drills__summary">${escapeHTML(drillsSummaryText(game.state))}</p>
         <ul class="drills__list">${rows}</ul>
       </section>
       ${gauntlet}
