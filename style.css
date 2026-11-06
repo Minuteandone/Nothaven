@@ -548,6 +548,16 @@ em.enraged {
 .enemy-ability strong { display: block; margin-top: .12rem; color: var(--text); font-size: .75rem; }
 .enemy-tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .55rem; }
 .enemy-tags span { color: var(--muted); font-size: .6rem; font-style: italic; text-transform: capitalize; }
+
+/* Elemental badges shown on combat units and skill cards. */
+.element-chip { display: inline-flex; align-items: center; gap: .3rem; margin-top: .28rem; padding: .12rem .5rem; width: fit-content; border: 1px solid currentColor; border-radius: 999px; font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: capitalize; line-height: 1.4; }
+.element-chip em { font-style: normal; font-weight: 500; opacity: .82; }
+.element-chip.element--fire { color: #f6a06b; border-color: rgba(246, 160, 107, .45); }
+.element-chip.element--ice { color: #9fd4f0; border-color: rgba(159, 212, 240, .45); }
+.element-chip.element--lightning { color: #f0d98a; border-color: rgba(240, 217, 138, .45); }
+.element-chip.element--water { color: #86b7e8; border-color: rgba(134, 183, 232, .45); }
+.element-chip.element--earth { color: #b3a585; border-color: rgba(179, 165, 133, .45); }
+.command-card .element-chip { margin-top: 0; }
 .combat-dashboard { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); align-items: start; gap: 1rem; }
 .combat-dashboard > .panel { margin: 0; }
 .command-panel h2 { margin-bottom: 1rem; font-size: 1.3rem; }
