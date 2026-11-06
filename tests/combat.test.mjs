@@ -281,9 +281,11 @@ test('fleeChance returns null for boss encounters', () => {
   assert.strictEqual(fleeChance(c, hero), null);
 });
 
-test('fleeChance returns null for missing combat or hero', () => {
+test('fleeChance returns null for missing combat, hero, or enemy', () => {
   assert.strictEqual(fleeChance(null, {}), null);
   assert.strictEqual(fleeChance({ enemy: { spd: 3 } }, null), null);
+  assert.strictEqual(fleeChance({}, { spd: 5 }), null);
+  assert.strictEqual(fleeChance({ enemy: null }, { spd: 5 }), null);
 });
 
 test('fleeChance returns 0.5 when hero and enemy SPD are equal', () => {
