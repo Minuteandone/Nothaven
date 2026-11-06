@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BOUNTIES, acceptBounty, abandonBounty, bountyRows, bountyState, claimBounty, recordBountyKill, totalBountiesClaimed, bountyRewardText } from '../src/core/bounties.js';
+import { BOUNTIES, bountyHabitats, acceptBounty, abandonBounty, bountyRows, bountyState, claimBounty, recordBountyKill, totalBountiesClaimed, bountyRewardText } from '../src/core/bounties.js';
 import { bountiesScene, installBounties } from '../src/scenes/bounties.js';
 import { townScene } from '../src/scenes/town.js';
 import { ENEMIES } from '../src/data/enemies.js';
@@ -263,4 +263,17 @@ test('the last four roamers have contracts and gold still rises down the board',
   assert.equal(byId.kelp_tangle, 'wrack_eel');
   assert.equal(byId.static_drones, 'relay_drone');
   for (let i = 1; i < BOUNTIES.length; i += 1) assert.ok(BOUNTIES[i].gold > BOUNTIES[i - 1].gold, BOUNTIES[i].id);
+});
+
+test('each posted contract lists the regions where its target roams', () => {
+  assert.deepEqual(bountyHabitats('gale_hound'), ['Ridge Road', 'Observatory Ruins', 'Saltmere Coast']);
+  assert.deepEqual(bountyHabitats('ridge_bandit'), ['Ridge Road', 'Highwatch Pass']);
+  assert.deepEqual(bountyHabitats('no_such_foe'), []);
+  for (const b of BOUNTIES) assert.ok(bountyHabitats(b.enemyId).length >= 1, b.id);
+  const s = fresh(); s.bestiary = { storm_rat: 1 }; s.scene = 'bounties'; s.combat = null;
+  const game = { state: s, setScene() {} };
+  bountiesScene.onEnter(game);
+  const html = bountiesScene.render(game);
+  assert.match(html, /<p class="bounty__roams">Roams: Ridge Road, Observatory Ruins\.<\/p>/);
+  assert.equal((html.match(/bounty__roams/g) || []).length, 1);
 });

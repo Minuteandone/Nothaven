@@ -4,6 +4,7 @@
 import { ENEMIES } from '../data/enemies.js';
 import { grantRewards } from '../items/inventory.js';
 import { getItem } from '../items/items.js';
+import { ZONES, ZONE_ORDER } from '../map/zones.js';
 
 export const BOUNTIES = Object.freeze([
   Object.freeze({ id: 'ridge_rats', title: 'Ridge Road Rat Cull', enemyId: 'storm_rat', count: 4, gold: 30, items: Object.freeze([{ id: 'scrap_metal', qty: 1 }]),
@@ -133,12 +134,21 @@ export function totalBountiesClaimed(state) {
   return Object.values(bountyState(state).completed).reduce((a, n) => a + n, 0);
 }
 
+// Region names (in journey order) where a foe turns up as a roaming encounter.
+export function bountyHabitats(enemyId) {
+  return ZONE_ORDER
+    .filter((id) => Array.isArray(ZONES[id]?.randomEncounters)
+      && ZONES[id].randomEncounters.some((r) => r?.enemyId === enemyId))
+    .map((id) => ZONES[id].name);
+}
+
 export function bountyRows(state) {
   const v = bountyState(state);
   return BOUNTIES.map((b) => ({
     ...b,
     pay: bountyPay(state, b),
     foe: ENEMIES[b.enemyId]?.name || b.enemyId,
+    roams: bountyHabitats(b.enemyId),
     unlocked: bountyUnlocked(state, b.id),
     active: v.active === b.id,
     progress: v.active === b.id ? v.progress : 0,
