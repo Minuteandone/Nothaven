@@ -52,3 +52,19 @@ test('companions salute the Warden of the Board rank above every other remark', 
   }
   assert.equal(lines.size, IDS.length);
 });
+
+test('companions honour a fully mastered board above the Warden salute', () => {
+  const mastered = n => ({ active: null, progress: 0, completed: Object.fromEntries(BOUNTIES.map((b, i) => [b.id, i === 0 ? n : 3])) });
+  const lines = new Set();
+  for (const id of IDS) {
+    const line = companionRemark(id, story, {}, { stormbornBossVictories: 1 }, mastered(3));
+    assert.match(line, /master/i, id);
+    assertEggFree(line, `${id} mastery remark`);
+    const short = companionRemark(id, story, {}, {}, mastered(2));
+    assert.notEqual(short, line, id);
+    assert.match(short, /Warden of the Board|twenty-five|forty percent/i, `${id} warden still shown one claim short`);
+    lines.add(line);
+  }
+  assert.equal(lines.size, IDS.length);
+  assert.equal(companionRemark('mara', story, {}, {}, mastered(3)), companionRemark('mara', story, {}, {}), 'mara');
+});

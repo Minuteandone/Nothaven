@@ -110,7 +110,8 @@ test('feats page shows an escaped, egg-free service record', () => {
   assert.match(html, /<h2 id="service-record-title">Service record<\/h2>/);
   assert.match(html, /<dt>Battles won<\/dt><dd>1<\/dd>/);
   assert.match(html, /<dt>Times carried home<\/dt><dd>1<\/dd>/);
-  assert.equal((html.match(/<dt>/g) || []).length, SERVICE_ROWS.length + 2);
+  assert.equal((html.match(/<dt>/g) || []).length, SERVICE_ROWS.length + 3);
+  assert.match(html, /<dt>Contracts mastered<\/dt><dd>0 of 18<\/dd>/);
   assert.match(html, /<dt>Bounties claimed<\/dt><dd>0<\/dd>/);
   assert.match(html, /<dt>Board rank<\/dt><dd>Notice Runner<\/dd>/);
   assertEggFree(html, 'feats page');
@@ -134,4 +135,13 @@ test('service record shows the board rank earned from valid claims', () => {
   assert.match(featsScene.render({ state }), /<dt>Board rank<\/dt><dd>Contract Hand<\/dd>/);
   state.bounties.completed = { ridge_rats: 20, bandit_toll: 5 };
   assert.match(featsScene.render({ state }), /<dt>Board rank<\/dt><dd>Warden of the Board<\/dd>/);
+});
+
+test('service record counts mastered contracts, ignoring junk counts', () => {
+  const state = createInitialState();
+  state.bounties = { active: null, progress: 0, completed: { ridge_rats: 3, bandit_toll: 2, wolf_trail: 'x', pier_clearance: 7, no_such: 9 } };
+  const html = featsScene.render({ state });
+  assert.match(html, /<dt>Contracts mastered<\/dt><dd>2 of 18<\/dd>/);
+  assert.ok(html.indexOf('<dt>Board rank</dt>') < html.indexOf('<dt>Contracts mastered</dt>'), 'mastery row follows the rank row');
+  assertEggFree(html, 'feats page with mastery');
 });
