@@ -3,7 +3,8 @@ import { isCompanionId } from '../party/companions.js';
 import { BEACON_CHARGE_MAX, chargeReady, battleSummary, enemyWindingUp } from '../combat/rules.js';
 import { heroStats, knownSkills, lockedSkills } from '../combat/rules.js';
 import { elementLabel, elementClass, elementEffectivenessText, elementMatchups, elementMultiplier } from '../combat/elements.js';
-import { damagePreview } from '../combat/damagePreview.js';
+import { damagePreview, incomingDamagePreview } from '../combat/damagePreview.js';
+
 import { getItem, TYPES } from '../items/items.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
 
@@ -269,6 +270,7 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main', ite
           <div class="combat-side__heading"><h2 id="combat-enemy-title">Opposition</h2><span>${combat.enemy.boss ? 'Boss' : 'Hostile'}</span></div>
           ${unitCard(combat.enemy, { enemy: true, enraged: Boolean(combat.enraged) })}
           ${windupCue(combat)}
+          ${incomingDamageHint(combat, hero)}
         </section>
       </div>
     </section>
@@ -293,6 +295,17 @@ export function windupCue(combat) {
   if (!enemyWindingUp(combat)) return '';
   const name = combat.windup?.name || combat.enemy?.windup?.name || 'a heavy blow';
   return `<p class="windup-cue" role="status"><strong>Gathering ${escapeHTML(name)}</strong> · Next turn it lands on your leader. Defend or a ward halves it; a stun or Stillpoint Strike breaks it.</p>`;
+}
+
+/** Subtle hint showing expected incoming physical damage from the enemy. */
+export function incomingDamageHint(combat, hero) {
+  const preview = incomingDamagePreview(combat, hero);
+  if (!preview) return '';
+  const { min, max, warded, windupName } = preview;
+  const range = min === max ? `${min}` : `${min}–${max}`;
+  const label = windupName ? `Unleashed ${escapeHTML(windupName)}` : 'Foe attack';
+  const note = warded ? ' (halved)' : '';
+  return `<p class="incoming-damage-hint"><span class="incoming-damage-label">${escapeHTML(label)}:</span> ${escapeHTML(range)}${escapeHTML(note)}</p>`;
 }
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;

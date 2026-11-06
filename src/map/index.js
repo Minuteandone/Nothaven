@@ -11,6 +11,7 @@ export {
   getRouteBriefing,
   formatExpeditionLog,
   getTileInspection,
+  getInteractableBriefing,
   getZoneChecklist,
   getPatrolBriefing,
   getEncounterPreview,
