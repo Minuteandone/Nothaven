@@ -2,12 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { endingScene, epilogueLines, postgameLines, POSTGAME_DEEDS } from '../src/scenes/ending.js';
 import { assertEggFree } from './helpers/eggGuard.mjs';
+import { BOUNTIES } from '../src/core/bounties.js';
 
 const full = {
   story: { flags: { spire_reward: true, heart_reward: true, victory_last_squall: true, watch_reward: true,
     calibration_reward: true, supply_reward: true } },
   bestiary: { cinderclaw: 1, thunderhoof: 2, glacierward_colossus: 1 },
   ledger: { stormbornBossVictories: 1 },
+  bounties: { active: null, progress: 0, completed: Object.fromEntries(BOUNTIES.map((b) => [b.id, 1])) },
   party: [{ name: 'Wren', level: 20 }], gold: 0, inventory: [],
 };
 
@@ -42,4 +44,14 @@ test('deeds key off strict flags, bestiary counts and the ledger', () => {
 test('postgame deeds leave the chapter epilogue unchanged and pass the content guard', () => {
   assert.equal(epilogueLines(full).length, 2);
   for (const d of POSTGAME_DEEDS) assertEggFree(d.text);
+});
+
+test('the bounty deed needs every contract claimed at least once', () => {
+  const deed = POSTGAME_DEEDS.find((d) => d.id === 'bounties').text;
+  const all = Object.fromEntries(BOUNTIES.map((b) => [b.id, 1]));
+  assert.deepEqual(postgameLines({ bounties: { completed: all } }), [deed]);
+  const missing = { ...all }; delete missing[BOUNTIES.at(-1).id];
+  assert.deepEqual(postgameLines({ bounties: { completed: missing } }), []);
+  assert.deepEqual(postgameLines({ bounties: { completed: { ...all, [BOUNTIES[0].id]: 'x' } } }), []);
+  assert.deepEqual(postgameLines({ bounties: 'nope' }), []);
 });
