@@ -156,6 +156,25 @@ try {
         assert.deepEqual(await state(), before, 'Journal Back preserves whole state');
         assert.equal(await quick(), raw);
       };
+      const serviceRank = async (expected, label) => {
+        const before = await state(), raw = await quick();
+        await click('feats');
+        const opened = await state();
+        assert.deepEqual(opened, { ...before, scene: 'feats' });
+        for (const filter of ['all', 'earned', 'pending']) {
+          await click('filterFeats', filter);
+          const row = page.locator('.service-record__list div').filter({
+            has: page.locator('dt', { hasText: /^Board rank$/ }),
+          });
+          assert.equal(await row.locator('dd').textContent(), expected);
+          assert.deepEqual(await state(), opened);
+          assert.equal(await quick(), raw);
+          await fit(`record-${label}-${filter}`, '#app button');
+        }
+        await click('closeFeats');
+        assert.deepEqual(await state(), before);
+        assert.equal(await quick(), raw);
+      };
       const talk = async (npc, reward, stage) => {
         const before = await state(); await click('storyTalk', npc); const after = await state();
         assert.equal(after.gold, before.gold + reward, `${npc}: exact turn-in payment`);
@@ -166,12 +185,13 @@ try {
         await page.locator('[aria-controls="display-settings"]').click();
         await page.locator('[data-display-scale]').selectOption('130');
         await page.locator('[data-display-done]').click();
-        await journal(null, 'fresh');
+        await journal(null, 'fresh'); await serviceRank('Notice Runner', 'fresh');
         const freshTown = await state();
         await click('bounties');
         assert.equal(await page.locator('.bounty--locked').count(), 18);
         assert.equal(await page.locator('[data-action="acceptBounty"]').count(), 0);
         assert.equal(await page.locator('.bounty__brief').count(), 0);
+        assert.equal(await page.locator('.bounties__rank').textContent(), 'Board rank: Notice Runner (+0% gold). 3 more claims to Contract Hand (+10% gold).');
         await fit('locked', '#app button');
         await click('closeBounties'); assert.deepEqual(await state(), freshTown);
         await click('explore'); await talk('mara', 0, 'road');
@@ -213,8 +233,36 @@ try {
         await click('abandonBounty'); assert.deepEqual(await state(), claimed, 'abandon retains rewards and resets only fresh contract');
         await click('closeBounties'); await journal(null, 'claimed'); await click('explore');
         await checkpoint((await state()).story.stage, 'claimed-home');
+        // Repeat actual patrol contracts: claims two and three pay 30; claim four pays 33.
+        for (let count = 2; count <= 4; count++) {
+          await click('toTownScene'); await click('bounties');
+          await click('acceptBounty', 'ridge_rats');
+          assert.deepEqual((await state()).bounties, { active: 'ridge_rats', progress: 0, completed: { ridge_rats: count - 1 } });
+          await click('closeBounties'); await click('rest'); await click('explore');
+          await exit('ridge_road');
+          for (let n = 1; n <= 4; n++) {
+            await fight(null); assert.equal((await state()).bounties.progress, n);
+          }
+          await exit('greyhaven'); await click('toTownScene'); await click('bounties');
+          const before = await state(), pay = count === 4 ? 33 : 30;
+          assert.match(await page.locator('.bounty').filter({has:page.locator('[data-action="claimBounty"]')}).textContent(),new RegExp(`Reward: ${pay} gold`));
+          await click('claimBounty');
+          const expected = structuredClone(before); expected.gold += pay;
+          expected.inventory.find(i => i.id === 'scrap_metal').qty++;
+          expected.bounties = { active: null, progress: 0, completed: { ridge_rats: count } };
+          assert.deepEqual(await state(), expected);
+          assert.equal((await page.locator('#app').textContent()).includes('Board rank raised to Contract Hand.'),count === 3);
+          assert.match(await page.locator('.bounties__rank').textContent(),count >= 3 ? /Contract Hand \(\+10% gold\)/:/Notice Runner \(\+0% gold\)/);
+          assert.equal(await control('claimBounty').count(),0);
+          await fit(`claim-${count}`, '#app button');
+          await click('closeBounties'); await serviceRank(count >= 3 ? 'Contract Hand':'Notice Runner',`claim-${count}`); await click('explore');
+          await checkpoint((await state()).story.stage,`claim-${count}-saved`);
+          await click('toTownScene'); await click('bounties');
+          assert.match(await page.locator('.bounties__rank').textContent(),count >= 3 ? /Contract Hand/:/Notice Runner/);
+          await click('closeBounties'); await click('explore');
+        }
         assert.deepEqual(errors, []);
-        console.log(`PASS ${id}: fresh locked board, earned unlock, six patrol wins, progress capped, exact explicit reward, reaccept/abandon, whole save/reload, Journal all filters whole-state/quick-save invariance and 130% fit; errors []`);
+        console.log(`PASS ${id}: Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained, 130% fit; errors []`);
       } catch (error) {
         await page.screenshot({ path: path.join(artifacts, `${id}-failure.png`), fullPage: true }).catch(() => {});
         console.error(`FAIL ${id}; browser errors: ${JSON.stringify(errors)}`);
