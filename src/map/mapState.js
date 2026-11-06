@@ -429,6 +429,64 @@ export function getTileInspection(gameState, x = null, y = null, zoneOrId = null
   };
 }
 
+/**
+ * Pure read-only patrol briefing for a zone's roaming encounters.
+ * Masks unscouted enemy identities and stats until defeated at least once in Bestiary.
+ */
+export function getPatrolBriefing(gameState, zoneOrId = null) {
+  const mapLike = gameState?.map || gameState || {};
+  const resolvedZone = typeof zoneOrId === 'string'
+    ? getZone(zoneOrId)
+    : (zoneOrId && typeof zoneOrId === 'object' ? zoneOrId : getZone(mapLike.zoneId || mapLike.currentZoneId || 'greyhaven'));
+  if (!resolvedZone) return null;
+
+  const rawEntries = Array.isArray(resolvedZone.randomEncounters) ? resolvedZone.randomEncounters : [];
+  const encounterChance = getEffectiveRandomEncounterChance(gameState, resolvedZone);
+  const encounterPercent = Math.round(encounterChance * 100);
+  const totalWeight = rawEntries.reduce(
+    (sum, entry) => sum + (typeof entry?.weight === 'number' && entry.weight > 0 ? entry.weight : 1),
+    0,
+  );
+
+  const hostiles = rawEntries.map((entry) => {
+    const weight = typeof entry?.weight === 'number' && entry.weight > 0 ? entry.weight : 1;
+    const chance = totalWeight > 0 ? weight / totalWeight : 0;
+    const percent = Math.round(chance * 100);
+    const preview = getEncounterPreview(entry?.enemyId, gameState);
+    const known = Boolean(preview?.known);
+    return {
+      enemyId: known ? (preview?.enemyId || entry.enemyId) : 'unscouted_hostile',
+      name: known ? (preview?.name || entry.name || 'Hostile') : 'Unscouted hostile',
+      known,
+      weight,
+      chance,
+      percent,
+      hp: known ? (preview?.hp ?? null) : null,
+      tier: known ? (preview?.tier ?? null) : null,
+    };
+  });
+
+  const scoutedCount = hostiles.filter((h) => h.known).length;
+  const totalCount = hostiles.length;
+  const summary = totalCount === 0
+    ? `No roaming hostiles in ${resolvedZone.name}.`
+    : `Step ambush: ${encounterPercent}% · Roaming (${scoutedCount}/${totalCount} scouted): ${hostiles
+        .map((h) => (h.known ? `${h.name} (${h.percent}%, ${h.hp} HP)` : `Unscouted hostile (${h.percent}%)`))
+        .join(', ')}`;
+
+  return {
+    zoneId: resolvedZone.id,
+    zoneName: resolvedZone.name,
+    hasHostiles: totalCount > 0,
+    encounterChance,
+    encounterPercent,
+    scoutedCount,
+    totalCount,
+    hostiles,
+    summary,
+  };
+}
+
 export function getZoneChecklist(gameState, zoneOrId = null) {
   const resolvedZone =
     typeof zoneOrId === 'string'
@@ -624,6 +682,7 @@ export function getAvailableActions(gameState) {
       id: zone.id,
       label: `Patrol ${zone.name} for Hostiles`,
       entity: null,
+      patrol: getPatrolBriefing(gameState, zone),
     });
   }
 

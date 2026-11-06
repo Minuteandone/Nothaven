@@ -11,6 +11,7 @@ export {
   formatExpeditionLog,
   getTileInspection,
   getZoneChecklist,
+  getPatrolBriefing,
   getEncounterPreview,
   getZoneThreatIntel,
   getCompassBearing,
