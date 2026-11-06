@@ -104,7 +104,7 @@ export function difficultyText(state) {
 export function companionsText(state) {
   const names = Object.keys(COMPANIONS).filter((id) => isUnlocked(state, id)).map((id) => COMPANIONS[id].name);
   if (!names.length) return null;
-  return `Companions recruited: ${names.join(', ')}`;
+  return `Companions available: ${names.join(', ')}`;
 }
 
 export function isFinale(state) {

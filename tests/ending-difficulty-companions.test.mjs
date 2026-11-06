@@ -14,10 +14,10 @@ test('companionsText lists unlocked companions in roster order, or null', () => 
   assert.equal(companionsText({}), null);
   assert.equal(companionsText({ story: { flags: {} } }), null);
   assert.equal(companionsText({ story: { flags: { rescue_victory_heights: true, victory_ridge_patrol: true } } }),
-    'Companions recruited: Tamsin, Sela');
+    'Companions available: Tamsin, Sela');
   assert.equal(companionsText({ story: { flags: {
     victory_ridge_patrol: true, victory_observatory_sentinel: true, rescue_victory_coast: true, rescue_victory_heights: true } } }),
-    'Companions recruited: Tamsin, Iven, Bram, Sela');
+    'Companions available: Tamsin, Iven, Bram, Sela');
 });
 
 test('ending renders difficulty always and companions only once any joined', () => {
@@ -26,7 +26,7 @@ test('ending renders difficulty always and companions only once any joined', () 
   assert.match(html, /<li class="ending-difficulty">Current difficulty: Veteran<\/li>/);
   assert.doesNotMatch(html, /ending-companions/);
   const joined = endingScene.render({ state: { ...base, story: { flags: { victory_observatory_sentinel: true } } } });
-  assert.match(joined, /<li class="ending-companions">Companions recruited: Iven<\/li>/);
+  assert.match(joined, /<li class="ending-companions">Companions available: Iven<\/li>/);
   assert.ok(joined.indexOf('ending-difficulty') < joined.indexOf('ending-companions'));
   assert.ok(joined.indexOf('ending-companions') < joined.indexOf('ending-battles'));
 });
