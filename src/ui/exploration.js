@@ -78,9 +78,15 @@ function mapGrid(zone, mapState, state = null) {
           cellTitle = briefing?.summary || label;
         } else if (entityInfo.type === 'encounter') {
           symbol = entityInfo.entity.symbol || '!';
-          label = `Threat: ${entityInfo.entity.name}`;
-          const preview = getEncounterPreview(entityInfo.entity.enemyId, state);
-          cellTitle = preview?.summary ? `${label} — ${preview.summary}` : label;
+          const cellInspection = getTileInspection(state ? { ...state, map: mapState } : { map: mapState }, x, y, zone);
+          if (cellInspection?.entity?.locked) {
+            label = 'Sealed challenge';
+            cellTitle = cellInspection.entity.summary || 'Sealed challenge · Locked';
+          } else {
+            label = `Threat: ${entityInfo.entity.name}`;
+            const preview = getEncounterPreview(entityInfo.entity.enemyId, state);
+            cellTitle = preview?.summary ? `${label} — ${preview.summary}` : label;
+          }
         } else if (entityInfo.type === 'interactable') {
           symbol = entityInfo.entity.symbol || '?';
           label = entityInfo.entity.name;
@@ -128,7 +134,7 @@ function nearbyActionButton(action, index, characterShortcuts) {
   if (!type) return '';
   const shortcut = characterShortcuts && index < 9 ? String(index + 1) : null;
   const tooltipText = action.kind === 'encounter'
-    ? action.preview?.summary
+    ? (action.locked ? 'Sealed challenge · Locked' : action.preview?.summary)
     : action.kind === 'exit' || action.kind === 'interact' || action.kind === 'talk'
       ? action.briefing?.summary
       : action.kind === 'patrol'
