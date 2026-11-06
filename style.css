@@ -1522,3 +1522,6 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 
 /* Feats: next unearned feat pointer */
 .feats__next { color: var(--muted); font-size: .9rem; margin: .25rem 0 .5rem; overflow-wrap: anywhere; }
+
+/* Drills: Yard Gauntlet unlock progress */
+.drills__gauntlet-progress { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
