@@ -3,10 +3,11 @@
 // the chapter-three relay choice.
 
 import { ledgerOf } from '../core/ledger.js';
-import { BOUNTIES, bountyRank, bountyState } from '../core/bounties.js';
+import { BOUNTIES, MASTERY_CLAIMS, bountyRank, bountyState } from '../core/bounties.js';
 
 const LINES = {
   tamsin: {
+    boardMastery: 'Every contract on the board mastered, three claims apiece at least. The clerk has started handing us spare parts before we even ask.',
     boardWarden: 'Warden of the Board, they call you at the clerk’s desk. I still say the title should be split two ways, since I chased down half those rats.',
     bounties: 'Every notice on the Greyhaven board carries your mark now. The clerk keeps reposting the rat cull just to see if I will race you for it.',
     stormborn: 'You set the frontier to its hardest and still walked back through the gate. I stopped counting the bruises and started counting the wins.',
@@ -31,6 +32,7 @@ const LINES = {
     rescued: 'Both roads are open again. I counted the caravans this morning and ran out of fingers.',
   },
   iven: {
+    boardMastery: 'Fifty-four claims at the very least, and every contract mastered. I keep the extra salvage in its own ledger column; it is the tidiest column we have.',
     boardWarden: 'Twenty-five claims and a forty percent premium. I ran the board’s accounts twice; at this rate the clerk will owe us the desk.',
     bounties: 'I cross-checked the bounty ledger against the Field Journal. Eighteen contracts, every one claimed, and the sums agree to the last coin.',
     stormborn: 'I logged our Stormborn battle beside the old storm tables. By every number we should have lost; I have checked the sums three times.',
@@ -55,6 +57,7 @@ const LINES = {
     rescued: 'Saltmere sent spare copper wire and Highwatch sent star charts. I may never sleep again.',
   },
   bram: {
+    boardMastery: 'The Saltmere smiths keep asking where our spare wiring comes from. I tell them a mastered board pays in metal as well as coin.',
     boardWarden: 'The Saltmere crews toast the Warden of the Board at every shift change. I let them think I carry half the contracts; you can correct them.',
     bounties: 'Saltmere dockhands read the Greyhaven bounty board aloud at the Post now. Your name comes up so often they cheer before the reward is read.',
     stormborn: 'Stormborn foes hit like a winter sea against the harbor wall. My shield rang for an hour, and I would still stand there again tomorrow.',
@@ -79,6 +82,7 @@ const LINES = {
     rescued: 'The harbor watch is back on the breakwater. I owe you a proper meal at the Saltmere Post.',
   },
   sela: {
+    boardMastery: 'Rusk asked how anyone masters every contract on the frontier. I told him you answer each one three times and never complain about the walk.',
     boardWarden: 'Rusk wants the Warden of the Board to drill his runners in tracking. I told him you charge forty percent over the posted rate now.',
     bounties: 'Rusk sent a runner to copy the Greyhaven bounty board for Highwatch. He says a frontier with every contract answered is one he can finally rest in.',
     stormborn: 'Highwatch runners heard we beat a boss on Stormborn and begged to train on the steepest slope. Rusk said yes before I could warn them.',
@@ -109,6 +113,7 @@ export function companionRemark(id, story = {}, bestiary = {}, ledger = {}, boun
   const set = LINES[id];
   const f = story?.flags || {};
   const claimed = bountyState({ bounties }).completed;
+  if (BOUNTIES.every(b => (claimed[b.id] || 0) >= MASTERY_CLAIMS) && set.boardMastery) return set.boardMastery;
   if (bountyRank({ bounties }).rank.id === 'warden' && set.boardWarden) return set.boardWarden;
   if (BOUNTIES.every(b => (claimed[b.id] || 0) >= 1) && set.bounties) return set.bounties;
   if (ledgerOf({ ledger }).stormbornBossVictories >= 1 && set.stormborn) return set.stormborn;
