@@ -72,7 +72,7 @@ test('a full gauntlet chains bouts, keeps HP between them, and records the run',
   const restored = migrateSave(JSON.parse(JSON.stringify(s)), createInitialState);
   assert.deepEqual(gauntletRecord(restored), { runs: 1, best: 3 });
   const text = strip(drillsScene.render(g));
-  assert.match(text, /Best run: 3 of 3 foes · 1 attempt/);
+  assert.match(text, /Best run: 3 foes beaten · 1 attempt/);
   assert.doesNotMatch(text, EGG_RE);
 });
 
