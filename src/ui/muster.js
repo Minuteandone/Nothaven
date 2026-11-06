@@ -99,7 +99,7 @@ function companionCard(game, companion) {
     action = `<div class="unlock-requirement"><span>${icon('journal')}Unlock requirement</span><p class="hint">${escapeHTML(companion.unlockHint)}</p></div>`;
   }
   const talk = unlocked ? `<button type="button" class="action-button action-button--ghost companion-talk" data-action="talk" data-arg="${companion.id}" aria-expanded="${talking}" aria-controls="remark-${companion.id}">${icon('journal')}<span>Talk with ${escapeHTML(companion.name)}</span></button>
-    <blockquote class="remark" id="remark-${companion.id}"${talking ? '' : ' hidden'}><span class="visually-hidden">${escapeHTML(companion.name)} says:</span>“${escapeHTML(companionRemark(companion.id, state?.story, state?.bestiary, state?.ledger))}”</blockquote>` : '';
+    <blockquote class="remark" id="remark-${companion.id}"${talking ? '' : ' hidden'}><span class="visually-hidden">${escapeHTML(companion.name)} says:</span>“${escapeHTML(companionRemark(companion.id, state?.story, state?.bestiary, state?.ledger, state?.bounties))}”</blockquote>` : '';
   return `<li class="panel companion-card" data-companion="${companion.id}" data-availability="${availability}">
     <div class="companion-card__art">${companionPortrait(companion.id, companion.name, !unlocked)}<span class="companion-state companion-state--${availability}">${statusLabel}</span></div>
     <div class="companion-card__body">
