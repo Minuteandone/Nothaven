@@ -6,6 +6,8 @@ export {
   getZoneCondition,
   getZoneProgress,
   getZoneVantage,
+  getEncounterPreview,
+  getZoneThreatIntel,
   getCompassBearing,
   getZoneCompassHint,
   findSafePath,

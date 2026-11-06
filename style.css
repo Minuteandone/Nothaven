@@ -1424,3 +1424,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .town-bounty-summary { margin: 0.25rem 0 0.75rem; overflow-wrap: anywhere; }
 .bounties__rank { margin: 0 0 0.75rem; color: var(--accent); overflow-wrap: anywhere; }
 .explore-bounty-summary { margin: 0.25rem 0 0.75rem; padding: 0.4rem 0.75rem; border-left: 3px solid var(--accent); overflow-wrap: anywhere; }
+
+.nearby-threat-preview { margin: 0.35rem 0 0; font-size: 0.85rem; color: var(--muted); overflow-wrap: anywhere; }
