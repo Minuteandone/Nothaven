@@ -4,6 +4,7 @@ import { BOUNTIES, bountyState, bountyRecordText } from '../core/bounties.js';
 import { ENEMIES } from '../data/enemies.js';
 import { DIFFICULTIES, getDifficulty } from '../combat/difficulty.js';
 import { COMPANIONS, isUnlocked } from '../party/companions.js';
+import { DRILL_FOES, drillRecord, gauntletRecord } from './drills.js';
 // Ending / credits scene. Shown once when the story reaches stage 'complete',
 // and again as a finale with epilogue after the Stormcrown Spire report.
 const ENDINGS = {
@@ -83,16 +84,27 @@ export function journalText(state) {
   return `Field Journal: ${seen} of ${ids.length} foes recorded`;
 }
 
-/** "Difficulty: Label" for the preset the run ended on. */
+/** "Current difficulty: Label" — the preset selected now, not a run history. */
+// Sparring drills won across every restaged boss, plus the best Yard Gauntlet
+// run. Null until the party has won a drill or run the gauntlet.
+export function drillsText(state) {
+  const wins = DRILL_FOES.reduce((sum, id) => sum + drillRecord(state, id).wins, 0);
+  const gauntlet = gauntletRecord(state);
+  if (!wins && !gauntlet.runs) return null;
+  let text = `Sparring drills won: ${wins}`;
+  if (gauntlet.runs) text += ` (Yard Gauntlet best: ${gauntlet.best} ${gauntlet.best === 1 ? 'foe' : 'foes'} beaten)`;
+  return text;
+}
+
 export function difficultyText(state) {
-  return `Difficulty: ${DIFFICULTIES[getDifficulty(state)].label}`;
+  return `Current difficulty: ${DIFFICULTIES[getDifficulty(state)].label}`;
 }
 
 /** Companions whose unlock flag is set, in roster order; null when none. */
 export function companionsText(state) {
   const names = Object.keys(COMPANIONS).filter((id) => isUnlocked(state, id)).map((id) => COMPANIONS[id].name);
   if (!names.length) return null;
-  return `Companions who answered the call: ${names.join(', ')}`;
+  return `Companions available: ${names.join(', ')}`;
 }
 
 export function isFinale(state) {
@@ -138,6 +150,7 @@ export const endingScene = {
         <li class="ending-battles">${esc(battlesText(s))}</li>
         <li class="ending-journal">${esc(journalText(s))}</li>
         <li class="ending-feats">Wardens’ Feats earned: ${esc(String(featsEarned(s)))} of ${esc(String(FEATS.length))}</li>
+        ${drillsText(s) ? `<li class="ending-drills">${esc(drillsText(s))}</li>` : ''}
         ${bountyRecordText(s) ? `<li class="ending-bounty-record">${esc(bountyRecordText(s))}</li>` : ''}
       </ul>
       <h3>Credits</h3>
