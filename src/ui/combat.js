@@ -29,7 +29,7 @@ export function abilityDetail(ability) {
   if (!ability || typeof ability !== 'object' || !ability.name) return '';
   const parts = [];
   const chance = Number(ability.chance);
-  if (Number.isFinite(chance) && chance > 0) parts.push(`${Math.round(chance * 100)}% chance`);
+  if (Number.isFinite(chance) && chance > 0) parts.push(`${Math.round(chance * 100)}% ability roll`);
   const mult = Number(ability.mult);
   if (Number.isFinite(mult) && mult > 1) parts.push(`${mult}× ATK`);
   if (typeof ability.status === 'string' && ability.status) {
