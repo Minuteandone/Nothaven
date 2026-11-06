@@ -30,14 +30,14 @@ function finiteNumber(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback;
 }
 
-export function meter({ label, value, max, tone = 'hp', marker = 0 }) {
+export function meter({ label, value, max, tone = 'hp', marker = 0, descriptionId = null }) {
   const safeMax = Math.max(1, finiteNumber(max, 1));
   const safeValue = Math.min(safeMax, Math.max(0, finiteNumber(value)));
   const percent = Math.round((safeValue / safeMax) * 100);
   const safeTone = ['hp', 'mp', 'xp'].includes(tone) ? tone : 'hp';
-  return `<div class="meter meter--${safeTone}" role="progressbar" aria-label="${escapeHTML(label)}" aria-valuemin="0" aria-valuemax="${safeMax}" aria-valuenow="${safeValue}">
+  return `<div class="meter meter--${safeTone}" role="progressbar" aria-label="${escapeHTML(label)}" aria-valuemin="0" aria-valuemax="${safeMax}" aria-valuenow="${safeValue}"${descriptionId ? ` aria-describedby="${escapeHTML(descriptionId)}"` : ''}>
     <div class="meter__labels"><span>${escapeHTML(label)}</span><span>${safeValue}/${safeMax}</span></div>
-    <div class="meter__track"><span class="meter__fill" style="width:${percent}%"></span>${marker > 0 && marker < 100 && safeTone === 'hp' ? `<span class="meter__marker" style="left:${marker}%" title="Boss enrages at or below ${marker}% HP"></span>` : ''}</div>
+    <div class="meter__track"><span class="meter__fill" style="width:${percent}%"></span>${marker > 0 && marker < 100 && safeTone === 'hp' ? `<span class="meter__marker" aria-hidden="true" style="left:${marker}%" title="Boss enrages at or below ${marker}% HP"></span>` : ''}</div>
   </div>`;
 }
 
