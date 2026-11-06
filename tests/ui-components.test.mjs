@@ -50,10 +50,32 @@ test('icons are decorative and unknown names use the compass fallback', () => {
 });
 
 test('party and headings escape content and render resources', () => {
-  const html = partyStatus([{ name: '<Wren>', level: 2, hp: 12, maxHp: 30, mp: 4, maxMp: 10, xp: 8 }]);
+  // level 2 with 30 XP: floor=15, ceiling=45, earned=15, needed=30
+  const html = partyStatus([{ name: '<Wren>', level: 2, hp: 12, maxHp: 30, mp: 4, maxMp: 10, xp: 30 }]);
   assert.match(html, /&lt;Wren&gt;/);
   assert.match(html, /Level 2/);
-  assert.match(html, /8 XP/);
+  assert.match(html, /15 \/ 30 XP/);
+  assert.match(html, /· to Level 3/);
   assert.doesNotMatch(html, /<Wren>/);
+});
+
+test('partyStatus shows XP progress toward next level', () => {
+  // level 2 at floor (15 XP): 0 / 30 earned
+  let html = partyStatus([{ name: 'Wren', level: 2, hp: 20, maxHp: 30, mp: 5, maxMp: 10, xp: 15 }]);
+  assert.match(html, /0 \/ 30 XP/);
+  assert.match(html, /· to Level 3/);
+
+  // level 20 max: should show (Max level) without progress
+  html = partyStatus([{ name: 'Wren', level: 20, hp: 200, maxHp: 200, mp: 50, maxMp: 50, xp: 9999 }]);
+  assert.match(html, /9999 XP \(Max level\)/);
+  assert.doesNotMatch(html, /· to Level/);
+
+  // level 1 fresh: 0 / 15 XP
+  html = partyStatus([{ name: 'Wren', level: 1, hp: 20, maxHp: 20, mp: 5, maxMp: 5, xp: 0 }]);
+  assert.match(html, /0 \/ 15 XP/);
+  assert.match(html, /· to Level 2/);
+});
+
+test('party headings escape', () => {
   assert.match(sceneHeader({ title: '<Greyhaven>', eyebrow: 'Ward' }), /&lt;Greyhaven&gt;/);
 });
