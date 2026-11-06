@@ -415,6 +415,79 @@ try {
       await page.locator('[data-action="attack"]').focus();
       await page.keyboard.press('Enter');
       assert.ok((await state()).combat.enemy.hp < beforeDisabledCombat.combat.enemy.hp, 'native Attack still works');
+      // A genuinely purchased ration previews immediate healing, not the enemy reply.
+      {
+        const beforeItem = await state();
+        const itemQuick = await page.evaluate(() => localStorage.getItem('stormhaven-save'));
+        assert.equal(beforeItem.party.length, 1, 'this earned fixture is solo Wren');
+        assert.equal(beforeItem.party[0].name, 'Wren');
+        assert.equal(beforeItem.party[0].maxHp, 30);
+        assert.ok(beforeItem.party[0].hp > 0 && beforeItem.party[0].hp < 30, 'real enemy damage creates healing room');
+        assert.equal(beforeItem.inventory.find(item => item.id === 'rations').qty, 3);
+        // Bare level-one Wren has a 30 HP cap; Trail Rations restore at most 10 HP.
+        const expectedHeal = Math.min(10, 30 - beforeItem.party[0].hp);
+        const ration = page.locator('[data-action="item"][data-arg="rations"]');
+        const checkPreview = async (snapshot, healing, qty) => {
+          assert.equal(await page.locator('[data-action="item"]').count(), 1);
+          assert.equal(await ration.locator('.item-use-preview').textContent(), `On Wren now: +${healing} HP.`);
+          assert.equal(await ration.locator('.command-card__meta strong').textContent(), `×${qty}`);
+          assert.equal(await page.locator('[data-action="itemTarget"]').count(), 1);
+          assert.equal(await page.locator('[data-action="itemTarget"][data-arg="0"]').getAttribute('aria-pressed'), 'true');
+          assert.equal(await page.locator('[data-action="itemTarget"]').isEnabled(), true);
+          assert.ok((await page.locator('.item-recipient-note').allTextContents()).includes(
+            'Preview shows immediate restoration before allies act and the normal enemy reply, not end-of-turn totals.'));
+          assert.deepEqual(await state(), snapshot, 'preview and device controls preserve the whole earned journey');
+          assert.equal(await page.evaluate(() => localStorage.getItem('stormhaven-save')), itemQuick);
+        };
+        await click('menu', 'items');
+        await checkPreview(beforeItem, expectedHeal, 3);
+        for (const scale of ['115', '130']) {
+          await page.locator('[aria-controls="display-settings"]').click();
+          await page.locator('[data-display-scale]').selectOption(scale);
+          await page.locator('[data-display-done]').click();
+          for (const hints of [true, false]) {
+            await setShortcuts(hints);
+            await checkPreview(beforeItem, expectedHeal, 3);
+            const geometry = await ration.evaluate(button => {
+              const box = button.getBoundingClientRect();
+              const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
+              let node, glyphsFit = true;
+              while ((node = walker.nextNode())) {
+                if (!node.textContent.trim() || !node.parentElement.getClientRects().length) continue;
+                const range = document.createRange(); range.selectNodeContents(node);
+                for (const r of range.getClientRects()) glyphsFit &&= r.left >= box.left - 1 && r.right <= box.right + 1
+                  && r.top >= box.top - 1 && r.bottom <= box.bottom + 1 && r.left >= 0 && r.right <= innerWidth + 1;
+              }
+              return { fits: box.left >= 0 && box.right <= innerWidth + 1 && box.height >= 44 && glyphsFit };
+            });
+            assert.equal(geometry.fits, true, `earned ration card fits ${width}px/${scale}%/hints ${hints}`);
+            await fit(`earned-item-preview-${scale}-${hints ? 'on' : 'off'}`);
+          }
+        }
+        await page.keyboard.press('Escape');
+        assert.deepEqual(await state(), beforeItem, 'closing the preview is free');
+        await click('menu', 'items');
+        await checkPreview(beforeItem, expectedHeal, 3);
+        await page.locator('[aria-controls="display-settings"]').click();
+        await page.locator('[data-display-scale]').selectOption('100');
+        await page.locator('[data-display-done]').click();
+        await setShortcuts(false);
+        await checkPreview(beforeItem, expectedHeal, 3);
+        await click('item', 'rations');
+        const afterItem = await state();
+        assert.equal(afterItem.inventory.find(item => item.id === 'rations').qty, 2);
+        assert.equal(afterItem.combat.turn, beforeItem.combat.turn + 1);
+        assert.equal(afterItem.combat.enemy.hp, beforeItem.combat.enemy.hp, 'solo item use does not attack');
+        const itemLines = afterItem.combat.log.slice(beforeItem.combat.log.length);
+        assert.ok(itemLines.some(line => line.startsWith('Wren: Trail Rations:') && line.includes(`restored ${expectedHeal} hp`)),
+          `immediate item log matches preview: ${JSON.stringify(itemLines)}`);
+        assert.ok(afterItem.party[0].hp < beforeItem.party[0].hp + expectedHeal, 'ordinary enemy reply follows immediate healing');
+        assert.equal(await page.evaluate(() => localStorage.getItem('stormhaven-save')), itemQuick);
+        await click('menu', 'items');
+        await checkPreview(afterItem, Math.min(10, 30 - afterItem.party[0].hp), 2);
+        await page.keyboard.press('Escape');
+        assert.deepEqual(await state(), afterItem, 'reopening the updated preview is free');
+      }
       await setShortcuts(true);
       for (let turn = 0; turn < 40 && !(await state()).combat.over; turn++) await page.keyboard.press('a');
       assert.equal((await state()).combat.over, 'victory');
