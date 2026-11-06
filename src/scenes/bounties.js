@@ -40,6 +40,29 @@ export function filterBountyRows(rows, region) {
   return rows.filter((r) => r.active || (r.unlocked && r.roams.includes(region)));
 }
 
+/** Sort orders for the board; locked notices always stay last, in posting order, so nothing about them leaks. */
+export const BOUNTY_SORTS = Object.freeze([
+  Object.freeze({ id: 'board', label: 'Board order' }),
+  Object.freeze({ id: 'pay', label: 'Highest pay' }),
+  Object.freeze({ id: 'claims', label: 'Fewest claims' }),
+]);
+
+export function sortBountyRows(rows, sort) {
+  const order = new Map(rows.map((r, i) => [r, i]));
+  const open = rows.filter((r) => r.unlocked);
+  const locked = rows.filter((r) => !r.unlocked);
+  const byBoard = (a, b) => order.get(a) - order.get(b);
+  const cmp = sort === 'pay' ? (a, b) => (b.pay - a.pay) || byBoard(a, b)
+    : sort === 'claims' ? (a, b) => (a.claimed - b.claimed) || byBoard(a, b)
+    : byBoard;
+  return [...open.sort(cmp), ...locked];
+}
+
+function sortHTML(sort) {
+  const chip = (o) => `<button type="button" class="bounty-filter${o.id === sort ? ' bounty-filter--on' : ''}" data-action="sortBounties" data-arg="${escapeHTML(o.id)}" aria-pressed="${o.id === sort ? 'true' : 'false'}">${escapeHTML(o.label)}</button>`;
+  return `<div class="bounties__filters bounties__sorts" role="group" aria-label="Sort contracts">${BOUNTY_SORTS.map(chip).join('')}</div>`;
+}
+
 function regionFilterHTML(options, region) {
   if (!options.length) return '';
   const chip = (arg, label, on) => `<button type="button" class="bounty-filter${on ? ' bounty-filter--on' : ''}" data-action="filterBounties" data-arg="${escapeHTML(arg)}" aria-pressed="${on ? 'true' : 'false'}">${escapeHTML(label)}</button>`;
@@ -47,13 +70,14 @@ function regionFilterHTML(options, region) {
 }
 
 export const bountiesScene = {
-  onEnter(game) { game.bountyMessage = ''; game.bountyRegion = ''; },
+  onEnter(game) { game.bountyMessage = ''; game.bountyRegion = ''; game.bountySort = 'board'; },
   render(game) {
     const rows = bountyRows(game.state);
     const anyActive = rows.some((r) => r.active);
     const options = bountyRegionOptions(rows);
     const region = options.includes(game.bountyRegion) ? game.bountyRegion : '';
-    const shown = filterBountyRows(rows, region);
+    const sort = BOUNTY_SORTS.some((o) => o.id === game.bountySort) ? game.bountySort : 'board';
+    const shown = sortBountyRows(filterBountyRows(rows, region), sort);
     const matching = shown.filter((r) => r.unlocked && r.roams.includes(region)).length;
     const elsewhere = shown.find((r) => r.active && !r.roams.includes(region));
     const filterNote = region ? `<p class="bounties__filter-note" role="status">${matching} ${matching === 1 ? 'contract roams' : 'contracts roam'} ${escapeHTML(region)}.${elsewhere ? ` Your active contract, ${escapeHTML(elsewhere.title)}, stays listed too.` : ''}</p>` : '';
@@ -69,6 +93,7 @@ export const bountiesScene = {
         <p class="bounties__urgent">${escapeHTML(urgentBountyText(game.state))}</p>
         <p class="bounties__mastery">${escapeHTML(masteryText(game.state))}</p>
         ${regionFilterHTML(options, region)}
+        ${sortHTML(sort)}
         ${filterNote}
         <ul class="bounties__list">${shown.map((r) => rowHTML(r, anyActive)).join('')}</ul>
       </section>
@@ -92,6 +117,11 @@ export const bountiesScene = {
       if (game.state.scene !== 'bounties' || game.state.combat) return;
       const arg = typeof el?.dataset?.arg === 'string' ? el.dataset.arg : '';
       game.bountyRegion = bountyRegionOptions(bountyRows(game.state)).includes(arg) ? arg : '';
+    },
+    sortBounties(game, el) {
+      if (game.state.scene !== 'bounties' || game.state.combat) return;
+      const arg = typeof el?.dataset?.arg === 'string' ? el.dataset.arg : '';
+      game.bountySort = BOUNTY_SORTS.some((o) => o.id === arg) ? arg : 'board';
     },
     closeBounties(game) { if (game.state.scene === 'bounties' && !game.state.combat) game.setScene('town'); },
   },
