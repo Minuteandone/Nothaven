@@ -407,3 +407,15 @@ neither skill availability nor combat mechanics, shortcuts, or saves.
 escaping, and 416 real-action comparisons using each target's first HP/status
 write rather than post-turn totals. Browser layout checks remain distinct from
 an earned campaign or screen-reader test.
+
+### Earned Mend preview browser regression
+
+`npm run test:browser:mend` starts three fresh, solo level-one journeys at
+320/375/768px. Actual Ridge Bandit damage creates a four-HP gap; twelve native
+115/130% and shortcut-hint layouts check Mend's literal capped preview, glyph
+bounds, 44px targets, and whole-state/quick-save stability. Two real Mend actions
+verify four immediate HP restored, four MP spent, and the normal enemy reply;
+insufficient MP disables Mend and omits its preview. The same fights finish with
+one earned victory receipt and no duplicate rewards. No saved progress, stats,
+or markup are injected. This covers Mend, not the other four support skills,
+high-level progression, balance, or real screen-reader operation.
