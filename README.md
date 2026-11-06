@@ -228,19 +228,30 @@ It is an opt-in local command, not included in the existing CI browser job.
 After `npm ci` and the Playwright Chromium installation described above, run
 `npm run test:browser:bounties`. This separate opt-in suite leaves the existing
 smoke, chapter, default unit-test command and CI jobs unchanged. Three fresh
-journeys at 320/375/768px and 130% text start with nine locked contracts, win the
+journeys at 320/375/768px and 130% text start with eighteen locked contracts, win the
 Ridge encounter and six real rat patrols, accept a newly unlocked contract with
 no historical progress, check the four-victory cap, and claim exactly 30 gold
 and one Scrap Metal. Reaccepting starts at zero; abandoning preserves rewards.
 Whole-state Save/reload/Continue checkpoints cover ready and claimed contracts.
 
-The Journey Journal is checked before acceptance, after acceptance and every
-victory, after reload, and after claiming. All three filters preserve the whole
+The journey then earns three more rat contracts through ordinary acceptance,
+rest, travel, and four real patrol victories each. Claims two and three pay 30
+gold; promotion to Contract Hand happens only on claim three, and claim four
+pays the advertised 33 gold. Each claim checks the entire resulting state,
+reward item, cleared contract, rank text, and disappearance of the claim control.
+Whole Explore Save/reload/Continue checkpoints after each claim preserve the rank.
+
+The Feats Service Record shows Notice Runner when fresh and after claim two,
+then Contract Hand after claims three and four. All/earned/pending filters check
+that exact rank, whole live-state and quick-save stability, and native Back.
+
+On the original contract route, the Journey Journal is checked before acceptance,
+after acceptance and every victory, after reload, and after claiming. All three filters preserve the whole
 live state and quick-save text, and native Back restores the previous scene.
 The active/ready text, document width, and control sizes are checked; screenshots
 and traces go under ignored `browser-artifacts/bounties/`, including failure
 screenshots when possible. Only randomness is controlled: no progress, items,
-stats, coordinates, or saves are injected. This is not completion of all nine
+stats, coordinates, or saves are injected. This is not completion of all eighteen
 contracts, actual screen-reader testing, cross-browser coverage, a full visual
 audit, or a balance certificate.
 
