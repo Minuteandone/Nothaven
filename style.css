@@ -545,6 +545,13 @@ em.enraged {
 .unit-stats div { display: flex; gap: .25rem; }
 .unit-stats dt { color: var(--muted); font-size: .57rem; font-weight: 650; letter-spacing: .05em; }
 .unit-stats dd { margin: 0; color: var(--text); font-size: .65rem; font-variant-numeric: tabular-nums; font-weight: 700; }
+.enemy-ability-detail {
+  font-size: 0.8em;
+  color: var(--muted);
+  margin: 0.2em 0 0 0;
+  padding-left: 0.3em;
+}
+
 .enemy-ability { display: flex; align-items: center; gap: .5rem; margin: .8rem 0 0; padding: .55rem .65rem; border: 1px solid rgba(212, 122, 106, .22); border-radius: 7px; background: rgba(8, 16, 26, .24); color: var(--muted); font-size: .65rem; }
 .enemy-ability .ui-icon { flex: 0 0 auto; color: #f09a89; }
 .enemy-ability strong { display: block; margin-top: .12rem; color: var(--text); font-size: .75rem; }
