@@ -201,3 +201,24 @@ system clipboard, downloads, or cloud synchronization. Separate transfer traces
 and screenshots use the `archive-transfer` filename prefix after the width. It
 remains a Chromium smoke check, not a full campaign, screen-reader, cross-browser,
 visual-design, or balance evaluation.
+
+
+## Optional earned first-chapter browser journey
+
+After the same Playwright installation above, run `npm run test:browser:chapter`.
+This separate suite leaves `npm run test:browser` and its optional CI job unchanged.
+It starts a restricted loopback server and six fresh Chromium journeys: both beacon
+endings at 320, 375, and 768px, using 130% text. Native buttons physically traverse
+Greyhaven, Ridge Road, the Observatory and Beacon Tower, win the two chapter fights,
+collect both dispatches, recruit Tamsin/Iven and rest, verify the premature tower
+visit cannot bypass the council, and check exact payments and exclusive endings.
+Five exploration checkpoints per journey save/reload/Continue and compare the whole
+state and unchanged saved bytes. Repeated home conversations and a chronicle roundtrip
+must not repay rewards. Choice/ending/save controls and document width are checked;
+screenshots and traces are retained under ignored `browser-artifacts/chapter/`, with
+case-specific failure screenshots when possible.
+
+Only `Math.random` is fixed to 0.5; no stats, items, locations, flags, saves, or
+victories are injected. This covers the normal first-chapter route, not early-order
+variants, the full postgame, balance, other browsers, or actual screen-reader use.
+It is an opt-in local command, not included in the existing CI browser job.
