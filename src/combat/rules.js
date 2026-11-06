@@ -47,6 +47,14 @@ export function knownSkills(member) {
   return Object.keys(SKILL_UNLOCKS).filter((id) => SKILL_UNLOCKS[id] <= lvl).map((id) => SKILLS[id]);
 }
 
+/** Skills not yet unlocked — sorted by unlock level ascending. */
+export function lockedSkills(member) {
+  const lvl = member?.level || 1;
+  const ids = Object.keys(SKILL_UNLOCKS).filter(id => SKILL_UNLOCKS[id] > lvl);
+  ids.sort((a, b) => SKILL_UNLOCKS[a] - SKILL_UNLOCKS[b]);
+  return ids.map(id => ({ ...SKILLS[id], unlockLevel: SKILL_UNLOCKS[id] }));
+}
+
 const randInt = (rng, a, b) => a + Math.floor(rng() * (b - a + 1));
 
 /** Physical damage: atk*mult - def + variance(-1..2), min 1; halved while warded. */

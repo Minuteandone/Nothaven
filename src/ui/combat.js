@@ -1,7 +1,7 @@
 import { companionTactic } from '../party/tactics.js';
 import { isCompanionId } from '../party/companions.js';
 import { BEACON_CHARGE_MAX, chargeReady, battleSummary, enemyWindingUp } from '../combat/rules.js';
-import { heroStats, knownSkills } from '../combat/rules.js';
+import { heroStats, knownSkills, lockedSkills } from '../combat/rules.js';
 import { elementLabel, elementClass, elementEffectivenessText, elementMatchups } from '../combat/elements.js';
 import { damagePreview } from '../combat/damagePreview.js';
 import { getItem, TYPES } from '../items/items.js';
@@ -112,12 +112,33 @@ function shortcutGuide() {
   return `<details class="shortcut-guide"><summary>Keyboard commands</summary><dl class="shortcut-guide__grid">${bindings.map(([key, label]) => `<div><dt><kbd>${key}</kbd></dt><dd>${label}</dd></div>`).join('')}</dl><p class="character-shortcuts-off">Letter and number shortcuts are off. Use buttons; Escape still returns to commands.</p><p>Turn letter and number shortcuts on or off in Display settings. Shortcuts never activate disabled commands. Text fields and modified key presses are ignored.</p></details>`;
 }
 
-function commandCard({ action, arg, name, meta, description, iconName = 'focus', disabled = false, shortcut = null, badge = '', damageRange = '' }) {
-  return `<button type="button" class="command-card" data-action="${escapeHTML(action)}" data-arg="${escapeHTML(arg)}" title="${escapeHTML(description)}"${disabled ? ' disabled' : ''}>
+function commandCard({ action, arg, name, meta, description, iconName = 'focus', disabled = false, shortcut = null, badge = '', damageRange = '', className = '' }) {
+  const extraClass = className ? ` ${escapeHTML(className)}` : '';
+  return `<button type="button" class="command-card${extraClass}" data-action="${escapeHTML(action)}" data-arg="${escapeHTML(arg)}" title="${escapeHTML(description)}"${disabled ? ' disabled' : ''}>
     <span class="command-card__top"><span>${icon(iconName)}${escapeHTML(name)}</span><span class="command-card__meta"><strong>${escapeHTML(meta)}</strong>${keyHint(shortcut)}</span></span>
     ${badge}${damageRange ? `<span class="damage-range">${escapeHTML(damageRange)}</span>` : ''}
     <span class="command-card__description">${escapeHTML(description)}</span>
   </button>`;
+}
+
+function lockedSkillsHtml(hero, combat) {
+  const locked = lockedSkills(hero);
+  if (!locked.length) return '';
+  const items = locked.map(skill => {
+    const effSuffix = skill.element ? (elementEffectivenessText(skill.element, combat?.enemy?.element) === 'strong' ? 'strong' : elementEffectivenessText(skill.element, combat?.enemy?.element) === 'weak' ? 'weak' : '') : '';
+    return commandCard({
+      action: '', arg: '', name: skill.name,
+      meta: `Lv ${skill.unlockLevel}`,
+      description: skill.description,
+      iconName: 'focus',
+      disabled: true,
+      badge: skill.element ? elementChip(skill.element, effSuffix) : '',
+      damageRange: '',
+      shortcut: null,
+      className: 'command-card--locked',
+    });
+  }).join('');
+  return `<details class="locked-skills"><summary>Upcoming skills (${locked.length})</summary>${items}</details>`;
 }
 
 function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
@@ -138,7 +159,7 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
         damageRange: dmgRange,
       });
     }).join('');
-    return `<div class="actions command-list" role="group" aria-label="Skill actions">${skills || '<p class="empty-state">No skills learned yet.</p>'}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
+    return `<div class="actions command-list" role="group" aria-label="Skill actions">${skills || '<p class="empty-state">No skills learned yet.</p>'}${lockedSkillsHtml(hero, combat)}${commandButton({ action: 'menu', arg: 'main', label: 'Back to commands', iconName: 'compass', variant: 'ghost', shortcut: 'Esc' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'tactics') {
     const allies = party.slice(1).filter(member => member && isCompanionId(member.id));
