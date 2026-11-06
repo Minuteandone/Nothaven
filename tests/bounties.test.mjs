@@ -277,3 +277,33 @@ test('each posted contract lists the regions where its target roams', () => {
   assert.match(html, /<p class="bounty__roams">Roams: Ridge Road, Observatory Ruins\.<\/p>/);
   assert.equal((html.match(/bounty__roams/g) || []).length, 1);
 });
+
+test('region filter narrows posted notices and keeps the active contract in view', () => {
+  const s = fresh(); s.bestiary = { storm_rat: 1, reef_crawler: 1, frost_wolf: 1 }; s.scene = 'bounties'; s.combat = null;
+  const game = { state: s, setScene() {} };
+  bountiesScene.onEnter(game);
+  let html = bountiesScene.render(game);
+  assert.equal((html.match(/data-action="filterBounties"/g) || []).length, 5);
+  assert.match(html, /aria-pressed="true">All regions</);
+  assert.equal((html.match(/class="bounty[ "]/g) || []).length, BOUNTIES.length);
+  bountiesScene.actions.filterBounties(game, { dataset: { arg: 'Saltmere Coast' } });
+  assert.equal(game.bountyRegion, 'Saltmere Coast');
+  html = bountiesScene.render(game);
+  assert.match(html, /1 contract roams Saltmere Coast\.<\/p>/);
+  assert.match(html, /Pier Clearance/);
+  assert.doesNotMatch(html, /Ridge Road Rat Cull|bounty--locked/);
+  acceptBounty(s, 'wolf_trail');
+  html = bountiesScene.render(game);
+  assert.match(html, /Wolves on the Pass/);
+  assert.match(html, /1 contract roams Saltmere Coast\. Your active contract, Wolves on the Pass, stays listed too\./);
+  bountiesScene.actions.filterBounties(game, { dataset: { arg: '<img>' } });
+  assert.equal(game.bountyRegion, '');
+  bountiesScene.actions.filterBounties(game, { dataset: { arg: 'Highwatch Pass' } });
+  s.scene = 'town';
+  bountiesScene.actions.filterBounties(game, { dataset: { arg: '' } });
+  assert.equal(game.bountyRegion, 'Highwatch Pass');
+  s.scene = 'bounties';
+  bountiesScene.onEnter(game);
+  assert.equal(game.bountyRegion, '');
+  assertEggFree(bountiesScene.render(game), 'bounty filter');
+});
