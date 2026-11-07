@@ -419,3 +419,15 @@ insufficient MP disables Mend and omits its preview. The same fights finish with
 one earned victory receipt and no duplicate rewards. No saved progress, stats,
 or markup are injected. This covers Mend, not the other four support skills,
 high-level progression, balance, or real screen-reader operation.
+
+### Earned Flee preview browser regression
+
+Run `npm run test:browser:flee` after installing Playwright and Chromium as above.
+The standalone runner starts a fresh game at 320, 375 and 768 px and reaches the
+first Ridge Bandit using native UI actions, without injected progress or markup.
+It checks the literal 50% speed-tie badge at 115/130% scale with hints on/off,
+whole-state/quick-save stability, text bounds and a 44px Flee target. Controlled
+RNG 0.5 fails at the strict boundary and gives one normal enemy reply; 0.49 then
+escapes without another reply. Finish returns to the uncleared encounter with
+one recorded escape and no rewards or quick-save write. This is not coverage
+of bosses, other speed gaps, screen readers, save/reload, or balance.
