@@ -821,6 +821,8 @@ test('getZoneProgress and getZoneVantage track encounters and caches without mut
   assert.equal(vantage0.landmark, 'Belfry Parapet');
   assert.equal(vantage0.elevation, 366);
   assert.equal(vantage0.condition.id, 'gale');
+  assert.match(vantage0.summary, /Belfry Parapet \(366m\) · Headland Gale:/);
+  assert.match(vantage0.summary, /0% recon \(0\/1 threats, 0\/1 caches\)/);
   assert.equal(JSON.stringify(game.state), snapshot, 'getZoneVantage must not mutate gameState');
 
   // Clearing an encounter and opening a cache updates getZoneProgress
@@ -837,7 +839,7 @@ test('getZoneProgress and getZoneVantage track encounters and caches without mut
   travelToZone(game.state, 'ridge_road');
   game.setScene('explore', { zoneId: 'ridge_road' });
   const html = exploreScene.render(game);
-  assert.match(html, /class="zone-recon-summary"/);
+  assert.match(html, /class="zone-recon-summary" title="Ridge Switchback Milestone \(144m\) · Coastal Squall:/);
   assert.match(html, /Coastal Squall/);
   assert.match(html, /Ridge Switchback Milestone \(144m\)/);
   assert.match(html, /Threats cleared 1\/4 · Caches 1\/1/);
