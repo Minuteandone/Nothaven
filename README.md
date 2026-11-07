@@ -392,3 +392,18 @@ quick-save stability. Continue must not repay XP, gold, or items. The original
 Chronicle, save/reload, Journal, and Archive route/assertions remain intact.
 No reward-helper oracle or injected progress/markup is used. This is not earned
 item-drop or drill coverage, a balance study, or real screen-reader testing.
+
+### Immediate support-skill previews
+
+The Skills menu previews current named HP restoration and applicable condition
+removal for Mend, Rallying Light, Steady Signal, Rekindle, and Stormhaven Vigil.
+These are immediate effects before allies act, the enemy replies, or statuses
+expire—not end-of-turn totals. Effective equipment caps and partial/zero healing
+are reflected; downed allies appear only for Rekindle. Unknown, unlearned,
+unaffordable, or shock-blocked support skills have no effect preview. This changes
+neither skill availability nor combat mechanics, shortcuts, or saves.
+
+`tests/skill-restoration-preview.test.mjs` pins literal values, frozen inputs,
+escaping, and 416 real-action comparisons using each target's first HP/status
+write rather than post-turn totals. Browser layout checks remain distinct from
+an earned campaign or screen-reader test.
