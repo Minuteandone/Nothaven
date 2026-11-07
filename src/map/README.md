@@ -113,8 +113,8 @@ Surveying the area (`exploreScene.actions.waitTurn`, keyboard `E`) appends the a
 
 Each zone defines a `vantage` metadata block (`{ landmark, elevation, surveyNote, fieldNote }`) in `src/map/zones.js`.
 - `getZoneProgress(gameState, zoneOrId)` returns a read-only summary `{ zoneId, visited, encountersCleared, encountersTotal, cachesOpened, cachesTotal, completedObjectives, totalObjectives, percent }` without mutating `gameState`.
-- `getZoneVantage(gameState, zoneOrId)` combines the zone's `vantage` metadata with its active weather `condition` and `progress`.
-- `renderExploration` displays a read-only `.zone-recon-summary` line with the active condition name, vantage landmark and elevation, threat/cache completion counts, and field note.
+- `getZoneVantage(gameState, zoneOrId)` combines the zone's `vantage` metadata with its active weather `condition`, `progress`, and a read-only `summary` string.
+- `renderExploration` displays a read-only `.zone-recon-summary` line with the active condition name, vantage landmark and elevation, threat/cache completion counts, field note, and `title` tooltip summarizing condition details and survey notes.
 
 
 ## Compass Bearing & Safe Click-to-Pathfind (`getCompassBearing`, `getZoneCompassHint`, `findSafePath`, `stepAlongSafePath`)
@@ -131,8 +131,8 @@ Each zone defines a `vantage` metadata block (`{ landmark, elevation, surveyNote
 
 ## Frontier Atlas / World Map Overview (`getFrontierAtlas`)
 
-- `getFrontierAtlas(gameState)`: Pure, read-only helper returning world-level recon progress across all 9 zones in `ZONE_ORDER` (`{ currentZoneId, zonesVisited, zonesTotal, totalEncountersCleared, totalEncounters, totalCachesOpened, totalCaches, completedObjectives, totalObjectives, overallPercent, zones }`), including each zone's active weather `conditionName`, recon completion `percent`, unlocked status, and outbound route `connections` / `connectedNames`.
-- `renderExploration` renders a collapsible `<details class="shortcut-guide frontier-atlas">` summary listing charted frontier regions, active weather conditions, recon progress, and connected routes while keeping uncharted regions unspoiled.
+- `getFrontierAtlas(gameState)`: Pure, read-only helper returning world-level recon progress across all 9 zones in `ZONE_ORDER` (`{ currentZoneId, zonesVisited, zonesTotal, totalEncountersCleared, totalEncounters, totalCachesOpened, totalCaches, completedObjectives, totalObjectives, overallPercent, summary, zones }`), including each zone's active weather `conditionName`, recon completion `percent`, unlocked status, outbound route `connections` / `connectedNames`, and spoiler-safe `summary`.
+- `renderExploration` renders a collapsible `<details class="shortcut-guide frontier-atlas">` summary listing charted frontier regions (with `title` tooltips), active weather conditions, recon progress, and connected routes while keeping uncharted regions unspoiled, and attaches `title` tooltips to item stack rows in `.field-pack__items`.
 
 ## Route Briefings & Expedition Log Deduplication (`getRouteBriefing`, `formatExpeditionLog`)
 

@@ -341,7 +341,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           const objSummary = prog.totalObjectives > 0
             ? `Threats cleared ${prog.encountersCleared}/${prog.encountersTotal} · Caches ${prog.cachesOpened}/${prog.cachesTotal}`
             : 'Safe haven';
-          return `<p class="zone-recon-summary"><strong>${escapeHTML(vantage.condition.name)}</strong> · ${escapeHTML(vantage.landmark)} (${escapeHTML(String(vantage.elevation))}m) · ${escapeHTML(objSummary)}${vantage.fieldNote ? ` — ${escapeHTML(vantage.fieldNote)}` : ''}</p>`;
+          return `<p class="zone-recon-summary" title="${escapeHTML(vantage.summary || vantage.landmark)}"><strong>${escapeHTML(vantage.condition.name)}</strong> · ${escapeHTML(vantage.landmark)} (${escapeHTML(String(vantage.elevation))}m) · ${escapeHTML(objSummary)}${vantage.fieldNote ? ` — ${escapeHTML(vantage.fieldNote)}` : ''}</p>`;
         })()}
         ${zoneVista(zone)}
         ${mapGrid(zone, mapState, state)}

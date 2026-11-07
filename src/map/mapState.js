@@ -148,13 +148,25 @@ export function getZoneVantage(gameState, zoneOrId = null) {
     surveyNote: '',
     fieldNote: '',
   };
+  const condition = getZoneCondition(gameState, resolvedZone);
+  const progress = getZoneProgress(gameState, resolvedZone);
+  const objSummary = progress.totalObjectives > 0
+    ? `${progress.percent}% recon (${progress.encountersCleared}/${progress.encountersTotal} threats, ${progress.cachesOpened}/${progress.cachesTotal} caches)`
+    : 'Safe haven';
+  const summaryParts = [
+    `${vantage.landmark} (${vantage.elevation}m)`,
+    `${condition.name}: ${condition.summary}`,
+    objSummary,
+  ];
+  if (vantage.surveyNote) summaryParts.push(vantage.surveyNote);
   return {
     landmark: vantage.landmark,
     elevation: vantage.elevation,
     surveyNote: vantage.surveyNote,
     fieldNote: vantage.fieldNote,
-    condition: getZoneCondition(gameState, resolvedZone),
-    progress: getZoneProgress(gameState, resolvedZone),
+    condition,
+    progress,
+    summary: summaryParts.join(' · '),
   };
 }
 
