@@ -22,7 +22,7 @@ function fieldPack(inventory, party = []) {
 
   for (const stack of stacks) {
     const item = isKnownItem(stack.id) ? getItem(stack.id) : { id: stack.id, name: stack.id };
-    summaries.push(`<li><span>${escapeHTML(item.name)} ×${Math.max(0, Number(stack.qty) || 0)}</span></li>`);
+    summaries.push(`<li title="${escapeHTML(item.description || item.name)}"><span>${escapeHTML(item.name)} ×${Math.max(0, Number(stack.qty) || 0)}</span></li>`);
     if (item.type === TYPES.CONSUMABLE) {
       const itemTitle = item.description || item.name;
       consumables.push(uiButton({
@@ -226,7 +226,8 @@ function frontierAtlasPanel(state, zone, mapState) {
     const routesText = entry.connectedNames.length > 0
       ? `Routes: ${entry.connectedNames.join(', ')}`
       : 'No outbound routes';
-    return `<li data-zone-id="${escapeHTML(entry.zoneId)}" data-current="${entry.isCurrent}"><strong>${escapeHTML(entry.name)}</strong>${entry.isCurrent ? ' <em>(Current)</em>' : ''} · ${escapeHTML(entry.conditionName)} · ${escapeHTML(reconText)} · ${escapeHTML(routesText)}</li>`;
+    const rowTitle = entry.summary || `${entry.name} · ${entry.conditionName} · ${reconText} · ${routesText}`;
+    return `<li data-zone-id="${escapeHTML(entry.zoneId)}" data-current="${entry.isCurrent}" title="${escapeHTML(rowTitle)}"><strong>${escapeHTML(entry.name)}</strong>${entry.isCurrent ? ' <em>(Current)</em>' : ''} · ${escapeHTML(entry.conditionName)} · ${escapeHTML(reconText)} · ${escapeHTML(routesText)}</li>`;
   }).join('');
   const unchartedLine = unvisitedCount > 0
     ? `<p class="frontier-atlas__uncharted">${unvisitedCount} frontier ${unvisitedCount === 1 ? 'region remains' : 'regions remain'} uncharted.</p>`
