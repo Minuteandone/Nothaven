@@ -369,6 +369,7 @@ button:disabled, .action-button:disabled { opacity: .42; cursor: not-allowed; }
 .explore-utilities { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-top: 1rem; padding-top: .8rem; border-top: 1px solid var(--line-soft); }
 .explore-utilities .action-button { margin: 0; padding: .6rem .65rem; font-size: .75rem; }
 .expedition-log { margin-top: 1rem; }
+.expedition-log__toggle { margin: .55rem 0; }
 .expedition-log .log { max-height: 180px; padding-left: .75rem; border-left: 2px solid var(--line); }
 .expedition-log .log p { margin: .3rem 0; font-size: .82rem; }
 .explore-screen > .story-panel { margin-top: 1rem; }

@@ -40,7 +40,7 @@ const base = `http://127.0.0.1:${server.address().port}`;
 
 // Literal expectations are independent of the production Guide catalogue.
 const rows = [
-  ['Exploring', 5, 'guide-exploring'],
+  ['Exploring', 6, 'guide-exploring'],
   ['Battle', 8, 'guide-battle'],
   ['Elements', 5, 'guide-elements'],
   ['Conditions', 3, 'guide-conditions'],

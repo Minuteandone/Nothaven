@@ -1,11 +1,14 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getExpeditionLogSummary, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneContactsSummary, getZoneStationsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { getEncounterPreview, getExpeditionLogSummary, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneContactsSummary, getZoneStationsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
 import { bountyFieldText } from '../core/bounties.js';
+
+const EXPEDITION_LOG_RECENT_LIMIT = 6;
+const EXPEDITION_LOG_EXPANDED_LIMIT = 20;
 
 function safeClass(value) {
   return String(value || '').replace(/[^a-z0-9_-]/gi, '');
@@ -317,7 +320,7 @@ function zoneChecklistPanel(state, zone, mapState) {
   </details>`;
 }
 
-export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '', hasArchive = false, hasQuestJournal = false, hasCharacter = false, hasFeats = false, characterShortcuts = true }) {
+export function renderExploration({ state, zone, mapState, nearbyActions, visitedZones, storyHtml = '', hasArchive = false, hasQuestJournal = false, hasCharacter = false, hasFeats = false, characterShortcuts = true, expeditionLogExpanded = false }) {
   const contextButtons = (nearbyActions || [])
     .filter(action => NEARBY_ACTION_TYPES[action?.kind])
     .map((action, index) => nearbyActionButton(action, index, characterShortcuts)).join('');
@@ -358,8 +361,14 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
   const fastTravelBriefing = routes
     ? getFastTravelBriefing({ ...(state || {}), map: mapState, visitedZones }, zone)
     : null;
-  const logSummary = getExpeditionLogSummary(state ? { ...state, map: mapState } : { map: mapState }, 6);
+  const logState = state ? { ...state, map: mapState } : { map: mapState };
+  const recentLogSummary = getExpeditionLogSummary(logState, EXPEDITION_LOG_RECENT_LIMIT);
+  const fullLogSummary = getExpeditionLogSummary(logState, EXPEDITION_LOG_EXPANDED_LIMIT);
+  const hasEarlierLogEntries = fullLogSummary.visibleCount > recentLogSummary.visibleCount;
+  const showFullLog = expeditionLogExpanded === true && hasEarlierLogEntries;
+  const logSummary = showFullLog ? fullLogSummary : recentLogSummary;
   const logLines = logSummary.entries;
+  const logToggleLabel = showFullLog ? 'Show recent entries only' : `Show earlier entries (${fullLogSummary.visibleCount - recentLogSummary.visibleCount})`;
 
   return `<div class="game-shell explore-screen">
     <div class="explore-heading-row">
@@ -449,7 +458,8 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
     <section class="panel expedition-log" aria-labelledby="expedition-log-title">
       <h2 id="expedition-log-title">Expedition log</h2>
       <p class="quiet-note expedition-log__summary">${escapeHTML(logSummary.summary)}</p>
-      <div class="log" aria-live="polite" aria-atomic="false">
+      ${hasEarlierLogEntries ? `<button type="button" class="action-button action-button--ghost expedition-log__toggle" data-action="toggleExpeditionLog" aria-expanded="${showFullLog}" aria-controls="expedition-log-entries">${icon('journal')}<span>${escapeHTML(logToggleLabel)}</span></button>` : ''}
+      <div class="log" id="expedition-log-entries" aria-live="polite" aria-atomic="false">
         ${logLines.length ? logLines.map(line => `<p>${escapeHTML(line)}</p>`).join('') : '<p>The road ahead is quiet. Choose a direction to begin.</p>'}
       </div>
     </section>
