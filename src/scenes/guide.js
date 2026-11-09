@@ -61,6 +61,8 @@ export const GUIDE_SECTIONS = Object.freeze([
 ]);
 
 const ROADMAP_TITLE = 'Skill roadmap';
+export const GUIDE_CONTENTS_ID = 'guide-contents';
+const BACK_LINK = `<p class="guide-section__back"><a class="guide-section__back-link" href="#${GUIDE_CONTENTS_ID}">Back to contents</a></p>`;
 
 /** Stable anchor id for a guide section title, e.g. 'Party and growth' -> 'guide-party-and-growth'. */
 export function guideSectionId(title) {
@@ -88,13 +90,13 @@ export const guideScene = {
     game.guideReturn = data && typeof data.returnScene === 'string' ? data.returnScene : 'title';
   },
   render() {
-    const sections = GUIDE_SECTIONS.map((s) => `<section class="guide-section" id="${escapeHTML(guideSectionId(s.title))}"><h2>${escapeHTML(s.title)}</h2><ul>${s.lines.map((l) => `<li>${escapeHTML(l)}</li>`).join('')}</ul></section>`).join('');
+    const sections = GUIDE_SECTIONS.map((s) => `<section class="guide-section" id="${escapeHTML(guideSectionId(s.title))}"><h2>${escapeHTML(s.title)}</h2><ul>${s.lines.map((l) => `<li>${escapeHTML(l)}</li>`).join('')}</ul>${BACK_LINK}</section>`).join('');
     const contents = guideContents().map((c) => `<li><a class="guide-toc__link" href="#${escapeHTML(c.id)}">${escapeHTML(`${c.title} (${c.count})`)}</a></li>`).join('');
     const roadmap = skillRoadmap().map((r) => `<li>${escapeHTML(`Level ${r.level}: ${r.name}`)}</li>`).join('');
     return `<main class="game-shell guide">
       ${sceneHeader({ eyebrow: 'How to play', title: 'Wardens’ Field Guide', subtitle: 'Everything a new keeper of the beacon should know before setting out.', iconName: 'journal' })}
-      <nav class="panel guide-toc" aria-label="Guide contents"><h2 class="guide-toc__title">Contents</h2><ul class="guide-toc__list">${contents}</ul></nav>
-      <div class="panel">${sections}<section class="guide-section" id="${escapeHTML(guideSectionId(ROADMAP_TITLE))}"><h2>${escapeHTML(ROADMAP_TITLE)}</h2><ul class="guide-skills">${roadmap}</ul></section></div>
+      <nav class="panel guide-toc" id="${GUIDE_CONTENTS_ID}" aria-label="Guide contents"><h2 class="guide-toc__title">Contents</h2><ul class="guide-toc__list">${contents}</ul></nav>
+      <div class="panel">${sections}<section class="guide-section" id="${escapeHTML(guideSectionId(ROADMAP_TITLE))}"><h2>${escapeHTML(ROADMAP_TITLE)}</h2><ul class="guide-skills">${roadmap}</ul>${BACK_LINK}</section></div>
       <div class="title-actions">${uiButton({ action: 'closeGuide', label: 'Back', iconName: 'compass', variant: 'primary' })}</div>
     </main>`;
   },
