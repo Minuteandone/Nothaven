@@ -380,6 +380,14 @@ export function summaryLine(combat) {
   const sm = battleSummary(combat);
   const parts = [plural(sm.rounds, 'round'), `${sm.dealt} damage dealt`, `${sm.taken} damage taken`];
   if (sm.bursts > 0) parts.push(plural(sm.bursts, 'Beacon Burst'));
+  const companionIds = Object.keys(sm.companionDamage || {});
+  if (companionIds.length) {
+    const breakdown = companionIds
+      .sort((a, b) => (sm.companionDamage[b] || 0) - (sm.companionDamage[a] || 0))
+      .map((id) => `${id}: ${sm.companionDamage[id]}`)
+      .join(', ');
+    parts.push(`Companions: ${breakdown}`);
+  }
   return `<p class="battle-summary">${parts.join(' · ')}</p>`;
 }
 
