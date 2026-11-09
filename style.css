@@ -1631,3 +1631,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .guide-section__back-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); font-size: .85rem; }
 .drill__element { margin: .15rem 0 0; font-size: .8rem; color: var(--muted); }
 .drill__stats { margin: .15rem 0 0; font-size: .8rem; color: var(--muted); }
+.bounty__foe-stats,
+.bounty__foe-element { margin: .15rem 0 0; font-size: .8rem; color: var(--muted); }

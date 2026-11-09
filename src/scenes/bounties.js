@@ -1,8 +1,12 @@
 // Greyhaven bounty board scene: accept, track, abandon and claim hunt contracts.
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
-import { EXCHANGE_OFFERS, boardMarks, boardMarksText, exchangeCost, exchangeMarks, exchangeOfferText, exchangePerkText, exchangeOwnedText, exchangeAffordText, markValue, MASTERY_CLAIMS, abandonBounty, acceptBounty, bountyRankText, urgentBountyText, masteryText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
+import { drillElementText, drillStatsText } from './drills.js';
+import { EXCHANGE_OFFERS, boardMarks, boardMarksText, exchangeCost, exchangeMarks, exchangeOfferText, exchangePerkText, exchangeOwnedText, exchangeAffordText, markValue, MASTERY_CLAIMS, abandonBounty, acceptBounty, getBounty, bountyRankText, urgentBountyText, masteryText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
 
-function rowHTML(r, anyActive) {
+function rowHTML(r, anyActive, state = {}) {
+  const foeId = r.enemyId || getBounty(r.id)?.enemyId;
+  const foeStats = foeId ? drillStatsText(state, foeId) : '';
+  const foeElement = foeId && foeStats ? drillElementText(foeId) : '';
   const status = !r.unlocked ? 'Defeat this foe once to open the contract.'
     : r.ready ? 'Complete — ready to claim.'
     : r.active ? `In progress: ${r.progress}/${r.count}.`
@@ -19,7 +23,9 @@ function rowHTML(r, anyActive) {
     <p class="bounty__terms">Defeat ${escapeHTML(String(r.count))} × ${escapeHTML(r.foe)} · Reward: ${escapeHTML(bountyRewardText({ ...r, items: r.rewardItems || r.items }, r.pay))}</p>
     ${r.mastered && r.items.length ? `<p class="bounty__mastered">Mastered — +1 ${escapeHTML(r.rewardName || '')} per claim.</p>` : ''}
     ${!r.mastered && r.items.length && r.claimed > 0 ? `<p class="bounty__mastery-progress">Mastery progress: ${escapeHTML(`${Math.min(r.claimed, MASTERY_CLAIMS)} of ${MASTERY_CLAIMS}`)} claims.</p>` : ''}
-    ${r.roams.length ? `<p class="bounty__roams">Roams: ${escapeHTML(r.roams.join(', '))}.</p>` : ''}` : ''}
+    ${r.roams.length ? `<p class="bounty__roams">Roams: ${escapeHTML(r.roams.join(', '))}.</p>` : ''}
+    ${foeStats ? `<p class="bounty__foe-stats">${escapeHTML(foeStats)}</p>` : ''}
+    ${foeElement ? `<p class="bounty__foe-element">${escapeHTML(foeElement)}</p>` : ''}` : ''}
     ${r.unlocked ? `<p class="bounty__marks">Earns ${escapeHTML(String(markValue(r.id)))} Board ${markValue(r.id) === 1 ? 'Mark' : 'Marks'} per claim.</p>` : ''}
     <p class="bounty__status">${escapeHTML(status)}</p>
     ${button}
@@ -114,7 +120,7 @@ export const bountiesScene = {
         ${regionFilterHTML(options, region)}
         ${sortHTML(sort)}
         ${filterNote}
-        <ul class="bounties__list">${shown.map((r) => rowHTML(r, anyActive)).join('')}</ul>
+        <ul class="bounties__list">${shown.map((r) => rowHTML(r, anyActive, game.state)).join('')}</ul>
       </section>
       ${exchangeHTML(game.state)}
       <div class="title-actions">${uiButton({ action: 'closeBounties', label: 'Back to Greyhaven', iconName: 'compass', variant: 'primary' })}</div>
