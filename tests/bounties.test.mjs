@@ -46,7 +46,7 @@ test('only one contract is active; abandoning frees the slot and resets progress
   recordBountyKill(s, 'storm_rat');
   assert.equal(acceptBounty(s, 'bandit_toll').ok, false);
   assert.equal(abandonBounty(s).ok, true);
-  assert.deepEqual(bountyState(s), { active: null, progress: 0, completed: {} });
+  assert.deepEqual(bountyState(s), { active: null, progress: 0, completed: {}, spent: 0 });
   assert.equal(abandonBounty(s).ok, false);
   assert.equal(acceptBounty(s, 'bandit_toll').ok, true);
 });
