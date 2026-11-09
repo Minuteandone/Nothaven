@@ -27,6 +27,7 @@ import { installExplorationControls } from './ui/explorationControls.js';
 import { installAnimations } from './ui/animations.js';
 import { installJourneyArchive } from './scenes/archive.js';
 import { installLedger } from './core/ledger.js';
+import { installGuidance } from './ui/guidance.js';
 
 const game = new Game(document.getElementById('app'));
 game.registerScene('title', titleScene);
@@ -56,6 +57,7 @@ installRecipeBook(game); // registers the 'recipes' scene (Field Recipe Book)
 installEnding(game); // after installStory so the story state is already updated
 installAudio(game); // creates no AudioContext until the player explicitly enables sound
 installDisplayControls(game); // device-local interface preferences; no game-state changes
+installGuidance(game); // device-local, dismissible quick briefings; no game-state changes
 installAnimations(game); // combat + level-up screen effects (shake/fade/popups)
 installAutosave(game);
 game.setScene('title');
