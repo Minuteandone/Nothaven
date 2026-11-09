@@ -5,6 +5,7 @@ import { elementMultiplier, elementEffectivenessText } from './elements.js';
 import { ENEMIES } from '../data/enemies.js';
 import { scaleEnemy, DIFFICULTIES } from './difficulty.js';
 import { effectiveStats } from '../items/equipment.js';
+import { combatBanter, isBigHit, isLowHealth, companionKillCheck } from '../party/combatBanter.js';
 
 export const SKILLS = Object.freeze({
   power_strike: { id: 'power_strike', name: 'Power Strike', mp: 3, kind: 'damage', mult: 1.6,
@@ -151,7 +152,16 @@ export function tickHeroStatuses(c, hero) {
       lines.push(id === 'bleeding' ? 'The bleeding stops.' : `${hero.name} shakes off the shock.`);
     }
   }
-  if (hero.hp <= 0) { c.over = 'defeat'; lines.push(`${hero.name} collapses...`); }
+  if (hero.hp <= 0) {
+    c.over = 'defeat';
+    lines.push(`${hero.name} collapses...`);
+  } else {
+    const hs = heroStats(hero);
+    if (hero.hp < hs.maxHp * 0.25) {
+      const lhBanter = combatBanter(c, 'lowHealth', { party: [hero], hero });
+      if (lhBanter) lines.push(lhBanter);
+    }
+  }
   return lines;
 }
 
@@ -169,7 +179,12 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
     }
     return lines;
   }
-  lines.push(...checkBossPhase(c));
+  const phaseLines = checkBossPhase(c);
+  lines.push(...phaseLines);
+  if (phaseLines.length) {
+    const banterEnrage = combatBanter(c, 'enemyEnrage', { party, hero });
+    if (banterEnrage) lines.push(banterEnrage);
+  }
   // Telegraphed heavy blow: a boss with a `windup` spends one turn gathering,
   // then strikes the hero next turn. Defend or a ward halves it; a stun breaks it.
   // rng is only consumed for enemies that define `windup`, keeping seeded runs stable.
@@ -177,6 +192,8 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   if (e.windup && rng() < (e.windup.chance ?? 0)) {
     c.windup = { name: e.windup.name };
     lines.push(`${e.name} begins gathering ${e.windup.name}! Brace yourself: Defend or a ward will blunt the blow.`);
+    const banterWindup = combatBanter(c, 'windupWarning', { party, hero });
+    if (banterWindup) lines.push(banterWindup);
     // Gathering is the enemy's action, so one-action defenses expire as usual.
     c.defending = false;
     if (c.wardTurns > 0) c.wardTurns -= 1;
@@ -194,10 +211,16 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
     target.hp = Math.max(0, target.hp - d);
     noteTaken(c, lost);
     lines.push(special ? `${e.name} uses ${e.ability.name}! ${target.name} takes ${d}.` : `${e.name} hits ${target.name} for ${d}.`);
-    if (target.hp <= 0) lines.push(`${target.name} is knocked out!`);
-    else if (special && e.ability.status) {
+    if (target.hp <= 0) {
+      lines.push(`${target.name} is knocked out!`);
+      const adBanter = combatBanter(c, 'allyDown', { party, hero, excludeId: target.id });
+      if (adBanter) lines.push(adBanter);
+    } else if (special && e.ability.status) {
       addStatus(target, e.ability.status, e.ability.turns || 3, allyTimers(c, target));
       lines.push(e.ability.status === 'bleeding' ? `${target.name} is bleeding!` : `${target.name} is shocked!`);
+      const csEvent = e.ability.status === 'bleeding' ? 'heroBleeding' : 'heroShocked';
+      const csBanter = combatBanter(c, csEvent, { party, hero });
+      if (csBanter) lines.push(csBanter);
     }
     c.defending = false;
     if (c.wardTurns > 0) c.wardTurns -= 1;
@@ -218,6 +241,15 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
     if (ab.status) {
       addStatus(hero, ab.status, ab.turns || 3, c.heroTimers);
       lines.push(ab.status === 'bleeding' ? `${hero.name} is bleeding!` : `${hero.name} is shocked!`);
+      if (hero.hp > 0 && isBigHit(lost, hero, hs.maxHp)) {
+        const bh = combatBanter(c, 'bigHit', { party, hero });
+        if (bh) lines.push(bh);
+      }
+      const statusEvent = ab.status === 'bleeding' ? 'heroBleeding' : 'heroShocked';
+      if (hero.hp > 0) {
+        const sbanter = combatBanter(c, statusEvent, { party, hero });
+        if (sbanter) lines.push(sbanter);
+      }
     }
   } else {
     const d = physicalDamage(e.atk, hs.def, rng, { warded });
@@ -226,6 +258,10 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
     noteTaken(c, lost);
     chargeFromHit(c, d, hs.maxHp);
     lines.push(`${e.name} hits ${hero.name} for ${d}.`);
+    if (hero.hp > 0 && isBigHit(lost, hero, hs.maxHp)) {
+      const bh = combatBanter(c, 'bigHit', { party, hero });
+      if (bh) lines.push(bh);
+    }
   }
   // Defend lasts exactly one enemy action; ward counts down per enemy action.
   c.defending = false;
@@ -247,6 +283,10 @@ function releaseWindup(c, hero, rng, lines) {
   noteTaken(c, lost);
   chargeFromHit(c, d, hs.maxHp);
   lines.push(`${e.name} unleashes ${w.name}! ${hero.name} takes ${d}${warded ? ', braced against the worst of it' : ''}.`);
+  if (hero.hp > 0 && isBigHit(lost, hero, hs.maxHp)) {
+    const bh = combatBanter(c, 'bigHit', { party: [hero], hero });
+    if (bh) lines.push(bh);
+  }
   c.defending = false;
   if (c.wardTurns > 0) c.wardTurns -= 1;
   if (c.aegisTurns > 0) c.aegisTurns -= 1;
@@ -291,11 +331,15 @@ export function tickAllyStatuses(c, party, hero) {
   return lines;
 }
 
-function checkVictory(c, lines) {
+function checkVictory(c, lines, hero, party) {
   if (c.enemy.hp <= 0 && !c.over) {
     c.over = 'victory';
     lines.push(`${c.enemy.name} is defeated!`);
     if (c.enemy.defeat) lines.push(c.enemy.defeat);
+    if (hero && party) {
+      const vb = combatBanter(c, 'victory', { party, hero });
+      if (vb) lines.push(vb);
+    }
   }
 }
 
@@ -483,15 +527,17 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
     case 'flee': {
       if (c.enemy.boss) return { ok: false, lines: ['There is no escaping this fight!'] };
       const chance = Math.min(0.9, 0.5 + (hs.spd - (c.enemy.spd || 0)) * 0.1);
-      if (rng() < chance) { c.over = 'fled'; lines.push('You get away safely.'); return { ok: true, lines }; }
+      if (rng() < chance) { c.over = 'fled'; lines.push('You get away safely.'); const fb = combatBanter(c, 'fleeSuccess', { party, hero }); if (fb) lines.push(fb); return { ok: true, lines }; }
       lines.push('You fail to get away!');
+      const ffBanter = combatBanter(c, 'fleeFail', { party, hero });
+      if (ffBanter) lines.push(ffBanter);
       break;
     }
     default:
       return { ok: false, lines: ['Unknown action.'] };
   }
   if (Object.prototype.hasOwnProperty.call(BEACON_CHARGE_GAIN, action.type)) gainCharge(c, BEACON_CHARGE_GAIN[action.type]);
-  checkVictory(c, lines);
+  checkVictory(c, lines, hero, party);
   lines.push(...afterHeroAction(c, hero, rng, party));
   return { ok: true, lines };
 }
@@ -503,8 +549,13 @@ export function afterHeroAction(c, hero, rng = Math.random, party = [hero]) {
   if (c.over) return lines;
   for (const m of party || []) {
     if (m === hero || !m || m.hp <= 0 || c.over) continue;
-    lines.push(...companionTurn(c, m, party, rng));
-    checkVictory(c, lines);
+    const compLines = companionTurn(c, m, party, rng);
+    lines.push(...compLines);
+    if (companionKillCheck(c, compLines)) {
+      const ckBanter = combatBanter(c, 'companionKill', { party, hero });
+      if (ckBanter) lines.push(ckBanter);
+    }
+    checkVictory(c, lines, hero, party);
   }
   if (c.over) { c.turn += 1; return lines; }
   lines.push(...enemyTurn(c, hero, rng, party));
