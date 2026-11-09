@@ -170,6 +170,74 @@ export function getZoneVantage(gameState, zoneOrId = null) {
   };
 }
 
+export function getZoneWeatherBriefing(gameState, zoneOrId = null) {
+  const resolvedZone =
+    typeof zoneOrId === 'string'
+      ? getZone(zoneOrId)
+      : zoneOrId && typeof zoneOrId === 'object'
+        ? zoneOrId
+        : getZone(gameState?.map?.zoneId || gameState?.location || 'greyhaven');
+  const condition = getZoneCondition(gameState, resolvedZone);
+  const story = gameState?.story;
+  const flags = story?.flags || {};
+  const beaconLit =
+    resolvedZone?.id === 'beacon_tower' &&
+    (story?.stage === 'complete' ||
+      story?.ending === 'protect_town' ||
+      story?.ending === 'share_signal' ||
+      Boolean(story?.ending) ||
+      Boolean(flags.beacon_lit));
+  const stormCalmed = Boolean(
+    flags.victory_storm_heart && STORM_CALMED_ZONES.includes(resolvedZone?.id)
+  );
+  const routeNetworkActive = flags.relay_choice === 'route_network';
+  const shelterNetworkActive = flags.relay_choice === 'shelter_network';
+  const hasRandomEncounters =
+    Array.isArray(resolvedZone?.randomEncounters) && resolvedZone.randomEncounters.length > 0;
+  const baseEncounterChance = hasRandomEncounters
+    ? (typeof resolvedZone?.randomEncounterChance === 'number' ? resolvedZone.randomEncounterChance : 0)
+    : 0;
+  const baseEncounterPercent = Math.round(baseEncounterChance * 100);
+  const effectiveEncounterChance = hasRandomEncounters
+    ? getEffectiveRandomEncounterChance(gameState, resolvedZone)
+    : 0;
+  const effectiveEncounterPercent = Math.round(effectiveEncounterChance * 100);
+  const modifiers = [];
+  if (beaconLit) modifiers.push('Beacon lit (Lantern Shelter)');
+  if (stormCalmed) modifiers.push('Storm calmed (-50% step ambush)');
+  if (routeNetworkActive && baseEncounterChance > 0) {
+    modifiers.push('Signal Relay route network (-50% step ambush)');
+  }
+  if (shelterNetworkActive) {
+    modifiers.push('Shelter network (2g inn rest)');
+  }
+  const dangerLevel = resolvedZone?.dangerLevel ?? 0;
+  const ambushSummary = baseEncounterChance > 0
+    ? `Step ambush: ${effectiveEncounterPercent}%${effectiveEncounterPercent !== baseEncounterPercent ? ` (base ${baseEncounterPercent}%)` : ''}`
+    : 'No roaming ambushes';
+  const modifierSummary = modifiers.length > 0
+    ? `Modifiers: ${modifiers.join(', ')}`
+    : 'Modifiers: Standard frontier conditions';
+  const summary = `${condition.name}: ${condition.summary} · Danger ${dangerLevel} · ${ambushSummary} · ${modifierSummary}`;
+  return {
+    zoneId: resolvedZone.id,
+    zoneName: resolvedZone.name,
+    dangerLevel,
+    condition,
+    baseConditionId: resolvedZone.condition || 'sheltered',
+    beaconLit,
+    stormCalmed,
+    routeNetworkActive,
+    shelterNetworkActive,
+    baseEncounterChance,
+    baseEncounterPercent,
+    effectiveEncounterChance,
+    effectiveEncounterPercent,
+    modifiers,
+    summary,
+  };
+}
+
 /**
  * Pure read-only summary of repeatable field services (inn, shop, muster)
  * across charted zones, plus live inn rest cost and active network status.
@@ -1680,6 +1748,183 @@ export function findSafePath(zone, mapState, targetX, targetY, gameState = null)
   }
 
   return null;
+}
+
+export function getSafePathPreview(gameState, targetX, targetY, zoneOrId = null) {
+  const resolvedZone =
+    typeof zoneOrId === 'string'
+      ? getZone(zoneOrId)
+      : zoneOrId && typeof zoneOrId === 'object'
+        ? zoneOrId
+        : getZone(gameState?.map?.zoneId || gameState?.location || 'greyhaven');
+  if (!resolvedZone) return null;
+  const tx = Number(targetX);
+  const ty = Number(targetY);
+  if (
+    !Number.isInteger(tx) ||
+    !Number.isInteger(ty) ||
+    tx < 0 ||
+    tx >= resolvedZone.width ||
+    ty < 0 ||
+    ty >= resolvedZone.height
+  ) {
+    return null;
+  }
+
+  const spawn = resolvedZone.spawns?.default || { x: 0, y: 0 };
+  const rawMap = gameState?.map && typeof gameState.map === 'object' ? gameState.map : null;
+  const mapState = rawMap
+    ? {
+        ...rawMap,
+        zoneId: rawMap.zoneId || resolvedZone.id,
+        x: Number.isInteger(Number(rawMap.x)) ? Number(rawMap.x) : spawn.x,
+        y: Number.isInteger(Number(rawMap.y)) ? Number(rawMap.y) : spawn.y,
+        visitedZones: rawMap.visitedZones || { [resolvedZone.id]: true },
+        clearedEncounters: rawMap.clearedEncounters || {},
+        completedInteractions: rawMap.completedInteractions || {},
+      }
+    : {
+        zoneId: resolvedZone.id,
+        x: spawn.x,
+        y: spawn.y,
+        visitedZones: { [resolvedZone.id]: true },
+        clearedEncounters: {},
+        completedInteractions: {},
+      };
+
+  const startX = Number(mapState.x);
+  const startY = Number(mapState.y);
+  const tile = getTileInfo(resolvedZone, tx, ty);
+  const hasRandomEncounters =
+    Array.isArray(resolvedZone.randomEncounters) && resolvedZone.randomEncounters.length > 0;
+  const encounterChance = hasRandomEncounters
+    ? getEffectiveRandomEncounterChance(gameState, resolvedZone)
+    : 0;
+  const encounterPercent = Math.round(encounterChance * 100);
+
+  if (tx === startX && ty === startY) {
+    return {
+      zoneId: resolvedZone.id,
+      x: tx,
+      y: ty,
+      tileId: tile.id,
+      tileName: tile.name,
+      walkable: Boolean(tile.walkable),
+      reachable: true,
+      steps: 0,
+      effectiveSteps: 0,
+      pausesNearThreat: false,
+      cautionThreatName: null,
+      encounterChance,
+      encounterPercent,
+      status: 'Current position',
+      summary: `${tile.name} (${tx}, ${ty}) · Current position`,
+    };
+  }
+
+  if (!tile.walkable) {
+    return {
+      zoneId: resolvedZone.id,
+      x: tx,
+      y: ty,
+      tileId: tile.id,
+      tileName: tile.name,
+      walkable: false,
+      reachable: false,
+      steps: null,
+      effectiveSteps: null,
+      pausesNearThreat: false,
+      cautionThreatName: null,
+      encounterChance: 0,
+      encounterPercent: 0,
+      status: 'Blocked terrain',
+      summary: `${tile.name} (${tx}, ${ty}) · Blocked terrain`,
+    };
+  }
+
+  const effectiveState = gameState ? { ...gameState, map: mapState } : { map: mapState };
+  const path = findSafePath(resolvedZone, mapState, tx, ty, effectiveState);
+  if (!path || path.length === 0) {
+    const destExit = (resolvedZone.exits || []).find((ex) => ex.x === tx && ex.y === ty);
+    const destEnc = (resolvedZone.encounters || []).find(
+      (e) => e.x === tx && e.y === ty && !mapState.clearedEncounters?.[e.encounterId || e.id]
+    );
+    const isLocked = Boolean(
+      zoneLockReason(effectiveState, ZONES[destExit?.toZone]) ||
+        encounterLockReason(mapState, destEnc, effectiveState)
+    );
+    const status = isLocked ? 'Locked destination' : 'No clear safe route';
+    return {
+      zoneId: resolvedZone.id,
+      x: tx,
+      y: ty,
+      tileId: tile.id,
+      tileName: tile.name,
+      walkable: true,
+      reachable: false,
+      steps: null,
+      effectiveSteps: null,
+      pausesNearThreat: false,
+      cautionThreatName: null,
+      encounterChance,
+      encounterPercent,
+      status,
+      summary: `${tile.name} (${tx}, ${ty}) · ${status}`,
+    };
+  }
+
+  const steps = path.length;
+  const maxSteps = 16;
+  let effectiveSteps = Math.min(steps, maxSteps);
+  let pausesNearThreat = false;
+  let cautionThreatName = null;
+
+  if (steps > 1) {
+    for (let i = 0; i < Math.min(steps, maxSteps); i += 1) {
+      const isLastStep = i === steps - 1;
+      if (!isLastStep) {
+        const step = path[i];
+        const adjacentThreat = (resolvedZone.encounters || []).find(
+          (e) =>
+            !mapState.clearedEncounters?.[e.encounterId || e.id] &&
+            !(e.x === tx && e.y === ty) &&
+            isAdjacentOrOn(step.x, step.y, e.x, e.y)
+        );
+        if (adjacentThreat) {
+          effectiveSteps = i + 1;
+          pausesNearThreat = true;
+          cautionThreatName = encounterLockReason(mapState, adjacentThreat, effectiveState)
+            ? 'Sealed challenge'
+            : adjacentThreat.name;
+          break;
+        }
+      }
+    }
+  }
+
+  const stepPart = `Safe route: ${steps} ${steps === 1 ? 'step' : 'steps'}${
+    pausesNearThreat ? ` (pauses at step ${effectiveSteps} near ${cautionThreatName})` : ''
+  }`;
+  const ambushPart = encounterPercent > 0 ? ` · Step ambush: ${encounterPercent}%` : '';
+  const summary = `${tile.name} (${tx}, ${ty}) · ${stepPart}${ambushPart}`;
+
+  return {
+    zoneId: resolvedZone.id,
+    x: tx,
+    y: ty,
+    tileId: tile.id,
+    tileName: tile.name,
+    walkable: true,
+    reachable: true,
+    steps,
+    effectiveSteps,
+    pausesNearThreat,
+    cautionThreatName,
+    encounterChance,
+    encounterPercent,
+    status: 'Safe route',
+    summary,
+  };
 }
 
 export function stepAlongSafePath(gameState, targetX, targetY, options = {}) {

@@ -109,19 +109,20 @@ Each zone defines a baseline field condition in `src/map/zones.js`, resolved dyn
 
 Surveying the area (`exploreScene.actions.waitTurn`, keyboard `E`) appends the active condition name and summary to the exploration log without mutating story or party state.
 
-## Zone Vantage & Recon Progress (`getZoneProgress`, `getZoneVantage`)
+## Zone Vantage & Recon Progress (`getZoneProgress`, `getZoneVantage`, `getZoneWeatherBriefing`)
 
 Each zone defines a `vantage` metadata block (`{ landmark, elevation, surveyNote, fieldNote }`) in `src/map/zones.js`.
 - `getZoneProgress(gameState, zoneOrId)` returns a read-only summary `{ zoneId, visited, encountersCleared, encountersTotal, cachesOpened, cachesTotal, completedObjectives, totalObjectives, percent }` without mutating `gameState`.
 - `getZoneVantage(gameState, zoneOrId)` combines the zone's `vantage` metadata with its active weather `condition`, `progress`, and a read-only `summary` string.
+- `getZoneWeatherBriefing(gameState, zoneOrId)` returns a read-only weather and field-modifier briefing (`{ zoneId, zoneName, dangerLevel, condition, baseConditionId, beaconLit, stormCalmed, routeNetworkActive, shelterNetworkActive, baseEncounterChance, baseEncounterPercent, effectiveEncounterChance, effectiveEncounterPercent, modifiers, summary }`).
 - `renderExploration` displays a read-only `.zone-recon-summary` line with the active condition name, vantage landmark and elevation, threat/cache completion counts, field note, and `title` tooltip summarizing condition details and survey notes.
 
 
-## Compass Bearing & Safe Click-to-Pathfind (`getCompassBearing`, `getZoneCompassHint`, `findSafePath`, `stepAlongSafePath`)
+## Compass Bearing & Safe Click-to-Pathfind (`getCompassBearing`, `getZoneCompassHint`, `findSafePath`, `getSafePathPreview`, `stepAlongSafePath`)
 
 - `getCompassBearing(fromX, fromY, toX, toY)`: Computes the 8-direction cardinal/intercardinal compass code (`N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW`, or `HERE`).
 - `getZoneCompassHint(gameState, zoneOrId)`: Resolves the highest-priority active point of interest in the zone (1: uncleared unlocked fixed encounters, 2: unopened one-time field caches/dispatches, 3: unlocked unvisited/available exits) and returns `{ kind, id, label, x, y, distance, bearing }`. Rendered in `.terrain-compass__bearing`.
-- `findSafePath(zone, mapState, targetX, targetY, gameState)` & `stepAlongSafePath(gameState, targetX, targetY, options)`: Computes the shortest walkable 4-directional path across the 9×7 grid avoiding intermediate NPCs, exits, dispatches, and uncleared threats. Clicking a passable `.map-cell[data-x][data-y]` steps along the route using normal movement steps (random encounters remain possible), pauses 1 tile away from any uncleared fixed encounter, and intentionally engages an uncleared encounter if clicked directly as the destination. `installMap` detaches the root click listener on cleanup.
+- `findSafePath(zone, mapState, targetX, targetY, gameState)`, `getSafePathPreview(gameState, targetX, targetY, zoneOrId)`, & `stepAlongSafePath(gameState, targetX, targetY, options)`: Computes the shortest walkable 4-directional path across the 9×7 grid avoiding intermediate NPCs, exits, dispatches, and uncleared threats, and previews step count, adjacent-threat caution pauses (masking locked encounters as `Sealed challenge`), and step ambush percentage on terrain grid cell tooltips. Clicking a passable `.map-cell[data-x][data-y]` steps along the route using normal movement steps (random encounters remain possible), pauses 1 tile away from any uncleared fixed encounter, and intentionally engages an uncleared encounter if clicked directly as the destination. `installMap` detaches the root click listener on cleanup.
 
 ## Encounter Threat & Loot Drop Previews (`getEncounterPreview`, `getZoneThreatIntel`)
 
