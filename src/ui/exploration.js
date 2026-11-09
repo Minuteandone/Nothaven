@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFieldConsumablePreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getPartyFieldReadiness, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getPartyFieldReadiness, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -239,13 +239,18 @@ function frontierAtlasPanel(state, zone, mapState) {
   const unchartedLine = unvisitedCount > 0
     ? `<p class="frontier-atlas__uncharted">${unvisitedCount} frontier ${unvisitedCount === 1 ? 'region remains' : 'regions remain'} uncharted.</p>`
     : '<p class="frontier-atlas__uncharted">All frontier regions charted.</p>';
-  const services = getFieldServicesSummary(state ? { ...state, map: effectiveMap } : { map: effectiveMap });
+  const effectiveState = state ? { ...state, map: effectiveMap } : { map: effectiveMap };
+  const services = getFieldServicesSummary(effectiveState);
+  const expedition = getExpeditionProgressSummary(effectiveState);
+  const actsTooltip = expedition.acts.map(act => act.summary).join(' | ');
   const totalsLine = `<p class="frontier-atlas__totals">Total threats cleared: ${atlas.totalEncountersCleared}/${atlas.totalEncounters} · Caches opened: ${atlas.totalCachesOpened}/${atlas.totalCaches}</p>`;
+  const actsLine = `<p class="frontier-atlas__acts" title="${escapeHTML(actsTooltip)}">${escapeHTML(expedition.summary)}</p>`;
   const servicesLine = `<p class="frontier-atlas__services">${escapeHTML(services.summary)}</p>`;
   const packLine = `<p class="frontier-atlas__pack">${escapeHTML(services.packSummary)}</p>`;
   return `<details class="shortcut-guide frontier-atlas"><summary>Frontier atlas (${atlas.zonesVisited}/${atlas.zonesTotal} regions · ${atlas.overallPercent}% recon)</summary>
     <ul class="frontier-atlas__list" aria-label="Charted frontier regions">${items}</ul>
     ${totalsLine}
+    ${actsLine}
     ${servicesLine}
     ${packLine}
     ${unchartedLine}

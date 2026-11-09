@@ -11,6 +11,7 @@ export {
   getFieldServicesSummary,
   getPartyFieldReadiness,
   getFrontierAtlas,
+  getExpeditionProgressSummary,
   getRouteBriefing,
   formatExpeditionLog,
   getTileInspection,
