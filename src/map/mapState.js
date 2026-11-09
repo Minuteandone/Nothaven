@@ -984,8 +984,10 @@ export function getTileInspection(gameState, x = null, y = null, zoneOrId = null
     : (zoneOrId && typeof zoneOrId === 'object' ? zoneOrId : getZone(mapLike.zoneId || mapLike.currentZoneId || 'greyhaven'));
   if (!resolvedZone) return null;
 
-  const tx = Number.isInteger(x) ? x : (Number.isInteger(Number(mapLike.x)) ? Number(mapLike.x) : 0);
-  const ty = Number.isInteger(y) ? y : (Number.isInteger(Number(mapLike.y)) ? Number(mapLike.y) : 0);
+  const defaultX = resolvedZone.spawns?.default?.x ?? 0;
+  const defaultY = resolvedZone.spawns?.default?.y ?? 0;
+  const tx = Number.isInteger(x) ? x : (Number.isInteger(Number(mapLike.x)) ? Number(mapLike.x) : defaultX);
+  const ty = Number.isInteger(y) ? y : (Number.isInteger(Number(mapLike.y)) ? Number(mapLike.y) : defaultY);
 
   const inspectCell = (cx, cy) => {
     const inBounds = Number.isInteger(cx) && Number.isInteger(cy)
@@ -1075,8 +1077,15 @@ export function getTileInspection(gameState, x = null, y = null, zoneOrId = null
     { key: 'south', dir: 'South' },
   ];
   const adjacentLandmarks = [];
+  const passableDirections = [];
+  const blockedDirections = [];
   for (const { key, dir } of dirOrder) {
     const cell = neighbors[key];
+    if (cell?.passable) {
+      passableDirections.push(dir);
+    } else {
+      blockedDirections.push(dir);
+    }
     if (cell?.entity) {
       adjacentLandmarks.push({
         dir,
@@ -1091,6 +1100,16 @@ export function getTileInspection(gameState, x = null, y = null, zoneOrId = null
       });
     }
   }
+
+  const passableCount = passableDirections.length;
+  const blockedCount = blockedDirections.length;
+  const openClause = passableCount > 0
+    ? `Open ways (${passableCount}/4): ${passableDirections.join(', ')}`
+    : 'Open ways (0/4): None';
+  const blockedClause = blockedCount > 0
+    ? `Blocked: ${blockedDirections.join(', ')}`
+    : 'No blocked directions';
+  const waysSummary = `${openClause} · ${blockedClause}`;
 
   const currentDesc = `${current.tileName} (${tx}, ${ty}) · ${current.passable ? 'Passable' : 'Blocked'}${current.entity ? ` · ${current.entity.label}` : ''}`;
   const adjDesc = adjacentLandmarks.length > 0
@@ -1107,6 +1126,11 @@ export function getTileInspection(gameState, x = null, y = null, zoneOrId = null
     passable: current.passable,
     entity: current.entity,
     neighbors,
+    passableDirections,
+    blockedDirections,
+    passableCount,
+    blockedCount,
+    waysSummary,
     adjacentLandmarks,
     summary: `${currentDesc} · ${adjDesc}`,
   };

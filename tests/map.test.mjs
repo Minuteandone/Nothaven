@@ -2509,3 +2509,48 @@ test("getExpeditionLogSummary reports steps taken, visited regions, visible entr
   );
   assert.equal(JSON.stringify(state), snapshot);
 });
+
+
+test("getTileInspection reports passable and blocked cardinal directions and renders .terrain-compass__ways without mutating state", () => {
+  const game = makeMockGame();
+  const state = game.state;
+  ensureMapState(state);
+  state.map.x = 3;
+  state.map.y = 3;
+  const snap0 = JSON.stringify(state);
+
+  // Default Greyhaven spawn (3, 3): surrounded by walkable tiles on all 4 cardinal sides
+  const openInfo = getTileInspection(state);
+  assert.equal(JSON.stringify(state), snap0);
+  assert.equal(openInfo.passableCount, 4);
+  assert.equal(openInfo.blockedCount, 0);
+  assert.deepEqual(openInfo.passableDirections, ["North", "West", "East", "South"]);
+  assert.deepEqual(openInfo.blockedDirections, []);
+  assert.equal(openInfo.waysSummary, "Open ways (4/4): North, West, East, South · No blocked directions");
+  assertEggFree(openInfo.waysSummary, "open waysSummary");
+
+  const htmlOpen = exploreScene.render(game);
+  assert.match(
+    htmlOpen,
+    /<p class="quiet-note terrain-compass__ways">Open ways \(4\/4\): North, West, East, South · No blocked directions<\/p>/,
+  );
+
+  // Tile (1, 1) in Greyhaven: North (1, 0) and West (0, 1) are Sea Cliff walls, East (2, 1) and South (1, 2) are passable
+  const cornerInfo = getTileInspection(state, 1, 1, "greyhaven");
+  assert.equal(cornerInfo.passableCount, 2);
+  assert.equal(cornerInfo.blockedCount, 2);
+  assert.deepEqual(cornerInfo.passableDirections, ["East", "South"]);
+  assert.deepEqual(cornerInfo.blockedDirections, ["North", "West"]);
+  assert.equal(cornerInfo.waysSummary, "Open ways (2/4): East, South · Blocked: North, West");
+  assertEggFree(cornerInfo.waysSummary, "corner waysSummary");
+
+  // Out-of-bounds tile (-10, -10): all 4 neighbors are out-of-bounds / blocked
+  const isolatedInfo = getTileInspection(state, -10, -10, "greyhaven");
+  assert.equal(isolatedInfo.passableCount, 0);
+  assert.equal(isolatedInfo.blockedCount, 4);
+  assert.deepEqual(isolatedInfo.passableDirections, []);
+  assert.deepEqual(isolatedInfo.blockedDirections, ["North", "West", "East", "South"]);
+  assert.equal(isolatedInfo.waysSummary, "Open ways (0/4): None · Blocked: North, West, East, South");
+  assertEggFree(isolatedInfo.waysSummary, "isolated waysSummary");
+  assert.equal(JSON.stringify(state), snap0);
+});
