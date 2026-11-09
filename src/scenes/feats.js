@@ -98,6 +98,15 @@ export function nextFeatText(state) {
   return next ? `Next unearned feat: ${next.title} — ${next.detail}` : null;
 }
 
+// Town-square progress line: earned count plus the next unearned feat's title; null before the first feat.
+export function townFeatsText(state, rows = featStatus(state)) {
+  const earned = rows.filter(f => f.done).length;
+  if (earned === 0) return null;
+  const next = rows.find(f => !f.done);
+  const head = `Wardens’ Feats: ${earned} of ${rows.length} earned.`;
+  return next ? `${head} Next: ${next.title}.` : `${head} Every feat earned.`;
+}
+
 export const FEAT_FILTERS = ['all', 'earned', 'pending'];
 const FEAT_FILTER_LABELS = { all: 'All', earned: 'Earned', pending: 'Not yet' };
 const FEAT_FILTER_EMPTY = { earned: 'No feats earned yet. Your first victories will start this list.', pending: 'Every feat is earned. The whole frontier knows your name.' };
