@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { assertEggFree } from './helpers/eggGuard.mjs';
 import { createInitialState } from '../src/state.js';
 import { installStory } from '../src/story/integration.js';
 import {
@@ -1895,52 +1896,52 @@ test('getFieldConsumablePreview and getPartyFieldReadiness compute non-mutating 
   assert.equal(getFieldConsumablePreview(state, 'storm_glass', 0), null);
   assert.equal(getFieldConsumablePreview(state, 'bandage', 9), null);
 
-  // Wound Wren + apply bleed, and lower Bram MP + apply shock
+  // Wound Wren + apply bleeding, and lower Bram MP + apply shocked
   state.party[0].hp = 18;
-  state.party[0].statuses = ['bleed'];
+  state.party[0].statuses = ['bleeding'];
   state.party[1].mp = 2;
-  state.party[1].statuses = ['shock'];
+  state.party[1].statuses = ['shocked'];
 
   const woundedSnap = JSON.stringify(state);
   const woundedReadiness = getPartyFieldReadiness(state);
   assert.equal(JSON.stringify(state), woundedSnap);
   assert.equal(woundedReadiness.woundedCount, 1);
   assert.equal(woundedReadiness.lowMpCount, 1);
-  assert.deepEqual(woundedReadiness.activeStatuses, ['bleed', 'shock']);
+  assert.deepEqual(woundedReadiness.activeStatuses, ['bleeding', 'shocked']);
   assert.equal(woundedReadiness.needsAttention, true);
   assert.equal(
     woundedReadiness.summary,
-    'Party readiness: 82% HP (53/65) · 67% MP (12/18) · Statuses: bleed, shock · Rest or supplies advised',
+    'Party readiness: 82% HP (53/65) · 67% MP (12/18) · Statuses: bleeding, shocked · Rest or supplies advised',
   );
 
   const wrenBandage = getFieldConsumablePreview(state, 'bandage', 0);
   assert.equal(JSON.stringify(state), woundedSnap, 'getFieldConsumablePreview must not mutate state');
   assert.equal(wrenBandage.wouldHaveEffect, true);
   assert.equal(wrenBandage.hpGain, 12);
-  assert.equal(wrenBandage.curedStatus, 'bleed');
+  assert.equal(wrenBandage.curedStatus, 'bleeding');
   assert.equal(
     wrenBandage.summary,
-    'Brine-washed linen strips. Stops bleeding and covers the ugliest wounds. — On Wren now: +12 HP (18/30), cures bleed',
+    'Brine-washed linen strips. Stops bleeding and covers the ugliest wounds. — On Wren now: +12 HP (18/30), cures bleeding',
   );
 
   const bramTonic = getFieldConsumablePreview(state, 'storm_tonic', 1);
   assert.equal(bramTonic.wouldHaveEffect, true);
   assert.equal(bramTonic.mpGain, 6);
-  assert.equal(bramTonic.curedStatus, 'shock');
+  assert.equal(bramTonic.curedStatus, 'shocked');
   assert.equal(
     bramTonic.summary,
-    'Sharp ozone draught that clears shock and restores focus. — On Bram now: +6 MP (2/8), cures shock',
+    'A sparking draught distilled from storm-charged salts. Restores focus. — On Bram now: +6 MP (2/8), cures shocked',
   );
 
   // Verify exploration UI attaches the live restoration preview to useFieldItem buttons
   const html = exploreScene.render({ state });
   assert.match(
     html,
-    /data-action="useFieldItem" data-arg="bandage" title="Brine-washed linen strips\. Stops bleeding and covers the ugliest wounds\. — On Wren now: \+12 HP \(18\/30\), cures bleed"/,
+    /data-action="useFieldItem" data-arg="bandage" title="Brine-washed linen strips\. Stops bleeding and covers the ugliest wounds\. — On Wren now: \+12 HP \(18\/30\), cures bleeding"/,
   );
   assert.match(
     html,
-    /data-action="useFieldItem" data-arg="storm_tonic:1" title="Sharp ozone draught that clears shock and restores focus\. — On Bram now: \+6 MP \(2\/8\), cures shock"/,
+    /data-action="useFieldItem" data-arg="storm_tonic:1" title="A sparking draught distilled from storm-charged salts\. Restores focus\. — On Bram now: \+6 MP \(2\/8\), cures shocked"/,
   );
   assertEggFree(woundedReadiness.summary);
   assertEggFree(wrenBandage.summary);
