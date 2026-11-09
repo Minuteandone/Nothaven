@@ -308,8 +308,24 @@ export const EXCHANGE_OFFERS = Object.freeze([
   Object.freeze({ id: 'iron', itemId: 'thunder_iron', qty: 1, cost: 9 }),
 ]);
 export const getExchangeOffer = (id) => EXCHANGE_OFFERS.find((o) => o.id === id) || null;
-export function exchangeOfferText(o) {
-  return `${o.qty}× ${getItem(o.itemId)?.name || o.itemId} for ${o.cost} ${o.cost === 1 ? 'mark' : 'marks'}`;
+/** Wardens of the Board pay this many marks less for every offer. */
+export const WARDEN_EXCHANGE_DISCOUNT = 1;
+/** Marks this save pays for an offer: list price, less the Warden discount (never below 1). */
+export function exchangeCost(state, o) {
+  const discount = bountyRank(state).rank.id === 'warden' ? WARDEN_EXCHANGE_DISCOUNT : 0;
+  return Math.max(1, o.cost - discount);
+}
+const marksWord = (n) => `${n} Board ${n === 1 ? 'Mark' : 'Marks'}`;
+export function exchangeOfferText(o, cost = o.cost) {
+  return `${o.qty}× ${getItem(o.itemId)?.name || o.itemId} for ${cost} ${cost === 1 ? 'mark' : 'marks'}`;
+}
+/** One line on the Warden discount: earned, or how far away. */
+export function exchangePerkText(state) {
+  const { rank, total } = bountyRank(state);
+  if (rank.id === 'warden') return `Warden of the Board: every offer costs ${WARDEN_EXCHANGE_DISCOUNT} mark less.`;
+  const warden = BOUNTY_RANKS.find((r) => r.id === 'warden');
+  const left = warden.min - total;
+  return `Reach Warden of the Board (${left} more ${left === 1 ? 'claim' : 'claims'}) and every offer costs ${WARDEN_EXCHANGE_DISCOUNT} mark less.`;
 }
 /** "Board Marks: N available (E earned, S spent)." */
 export function boardMarksText(state) {
@@ -321,12 +337,13 @@ export function exchangeMarks(state, offerId) {
   const o = getExchangeOffer(offerId);
   if (!o) return { ok: false, message: 'The clerk does not stock that.' };
   const m = boardMarks(state);
-  if (m.available < o.cost) return { ok: false, message: `You need ${o.cost} Board Marks for that; you have ${m.available}.` };
+  const cost = exchangeCost(state, o);
+  if (m.available < cost) return { ok: false, message: `You need ${marksWord(cost)} for that; you have ${m.available}.` };
   const inv = Array.isArray(state.inventory) ? state.inventory : [];
   const granted = grantRewards(inv, [{ id: o.itemId, qty: o.qty }]);
   if (!granted || !granted.ok) return { ok: false, message: 'Your pack cannot hold that right now.' };
   const v = bountyState(state);
   state.inventory = granted.inv;
-  writeState(state, { ...v, spent: v.spent + o.cost });
-  return { ok: true, message: `Exchanged ${o.cost} Board Marks for ${o.qty}× ${getItem(o.itemId)?.name || o.itemId}. ${m.available - o.cost} left.` };
+  writeState(state, { ...v, spent: v.spent + cost });
+  return { ok: true, message: `Exchanged ${marksWord(cost)} for ${o.qty}× ${getItem(o.itemId)?.name || o.itemId}. ${m.available - cost} left.` };
 }
