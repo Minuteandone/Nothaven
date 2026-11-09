@@ -18,6 +18,7 @@ import {
   getNpcBriefing,
   getFrontierAtlas,
   getExpeditionProgressSummary,
+  getFastTravelBriefing,
   getRouteBriefing,
   formatExpeditionLog,
   getTileInspection,
@@ -2037,3 +2038,70 @@ test('getExpeditionProgressSummary computes spoiler-safe regional Act I-III comp
     assertEggFree(act.summary);
   }
 });
+
+test("getFastTravelBriefing summarizes charted fast-travel routes, unfinished objectives, and .visited-routes__summary without mutating state", () => {
+  const game = makeMockGame();
+  const state = game.state;
+  exploreScene.onEnter(game, { zoneId: "greyhaven" });
+
+  // 1. At start in Greyhaven: 0 destinations outside current zone
+  const startSnap = JSON.stringify(state);
+  const initialBriefing = getFastTravelBriefing(state);
+  assert.equal(JSON.stringify(state), startSnap, "getFastTravelBriefing must not mutate state");
+  assert.equal(initialBriefing.currentZoneId, "greyhaven");
+  assert.equal(initialBriefing.destinationCount, 0);
+  assert.equal(initialBriefing.securedCount, 0);
+  assert.equal(initialBriefing.activeZoneCount, 0);
+  assert.equal(initialBriefing.remainingEncounters, 0);
+  assert.equal(initialBriefing.remainingCaches, 0);
+  assert.equal(initialBriefing.safeHavenAvailable, false);
+  assert.deepEqual(initialBriefing.destinations, []);
+  assert.equal(initialBriefing.summary, "No charted fast-travel routes available yet");
+
+  // 2. Travel to Ridge Road: Greyhaven is now a charted fast-travel destination (secured safe haven)
+  travelToZone(state, "ridge_road", "from_greyhaven");
+  const ridgeBriefing = getFastTravelBriefing(state);
+  assert.equal(ridgeBriefing.currentZoneId, "ridge_road");
+  assert.equal(ridgeBriefing.destinationCount, 1);
+  assert.equal(ridgeBriefing.securedCount, 1);
+  assert.equal(ridgeBriefing.activeZoneCount, 0);
+  assert.equal(ridgeBriefing.remainingEncounters, 0);
+  assert.equal(ridgeBriefing.remainingCaches, 0);
+  assert.equal(ridgeBriefing.safeHavenAvailable, true);
+  assert.equal(ridgeBriefing.destinations[0].zoneId, "greyhaven");
+  assert.equal(ridgeBriefing.destinations[0].secured, true);
+  assert.equal(ridgeBriefing.destinations[0].safeHaven, true);
+  assert.equal(
+    ridgeBriefing.summary,
+    "1 charted route (1/1 secured) · All charted routes fully secured · Safe haven reachable"
+  );
+
+  // 3. Travel to Observatory Ruins with 1 encounter cleared on Ridge Road
+  recordEncounterVictory(state, "ridge_patrol", "ridge_bandit");
+  travelToZone(state, "observatory_ruins", "from_ridge");
+  const obsSnap = JSON.stringify(state);
+  const obsBriefing = getFastTravelBriefing(state);
+  assert.equal(JSON.stringify(state), obsSnap, "getFastTravelBriefing must not mutate state");
+  assert.equal(obsBriefing.currentZoneId, "observatory_ruins");
+  assert.equal(obsBriefing.destinationCount, 2);
+  assert.equal(obsBriefing.securedCount, 1);
+  assert.equal(obsBriefing.activeZoneCount, 1);
+  assert.equal(obsBriefing.remainingEncounters, 3);
+  assert.equal(obsBriefing.remainingCaches, 1);
+  assert.equal(obsBriefing.safeHavenAvailable, true);
+  assert.equal(
+    obsBriefing.summary,
+    "2 charted routes (1/2 secured) · 3 threats, 1 cache remaining · Safe haven reachable"
+  );
+
+  // 4. Verify .visited-routes__summary renders in exploreScene.render
+  const html = exploreScene.render(game);
+  assert.match(
+    html,
+    /<p class="quiet-note visited-routes__summary">2 charted routes \(1\/2 secured\) · 3 threats, 1 cache remaining · Safe haven reachable<\/p>/
+  );
+  assertEggFree(initialBriefing.summary);
+  assertEggFree(ridgeBriefing.summary);
+  assertEggFree(obsBriefing.summary);
+});
+
