@@ -1,4 +1,9 @@
 import { xpForLevel, MAX_LEVEL } from "../core/progression.js";
+
+// role display names for exploration party sidebar
+const ROLE_DISPLAY = {
+  keeper: 'Keeper', guardian: 'Guardian', signaler: 'Signaler', scout: 'Scout',
+};
 const ICONS = {
   beacon: '<path d="M9 21h6M10 21l1-10h2l1 10M8 11h8l-4-6-4 6Z"/><path d="M4 8 1 6M20 8l3-2M4 13H1M20 13h3"/>',
   heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',
@@ -48,6 +53,7 @@ export function partyStatus(party) {
     const level = Math.max(0, finiteNumber(member?.level, 1));
     return `<article class="party-member">
       <div class="party-member__heading"><span class="party-member__name">${name}</span><span class="level-badge">Level ${level}</span></div>
+      ${member?.role && ROLE_DISPLAY[member.role] ? `<p class="party-member__role">${escapeHTML(ROLE_DISPLAY[member.role])}</p>` : ''}
       ${meter({ label: 'HP', value: member?.hp, max: member?.maxHp, tone: 'hp' })}
       ${meter({ label: 'MP', value: member?.mp, max: member?.maxMp, tone: 'mp' })}
       <div class="xp-line"><span>Experience</span><strong>${(() => { const xp = Math.max(0, finiteNumber(member?.xp)); if (level >= MAX_LEVEL) return `${xp} XP (Max level)`; const floor = xpForLevel(level); const ceiling = xpForLevel(level + 1); const earned = Math.max(0, xp - floor); const needed = ceiling - floor; return `${earned} / ${needed} XP`; })()}</strong>${level >= MAX_LEVEL ? "" : ` · to Level ${level + 1}`}</div>
