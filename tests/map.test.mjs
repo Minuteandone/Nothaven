@@ -12,6 +12,7 @@ import {
   getZoneVantage,
   getZoneWeatherBriefing,
   getFieldConsumablePreview,
+  getFieldCraftPreview,
   getFieldServicesSummary,
   getPartyFieldReadiness,
   getInteractableBriefing,
@@ -2128,3 +2129,51 @@ test("getFastTravelBriefing summarizes charted fast-travel routes, unfinished ob
   assertEggFree(obsBriefing.summary);
 });
 
+test('getFieldCraftPreview summarizes recipe batch capacity and recordEncounterVictory avoids duplicate log entries', () => {
+  assert.equal(getFieldCraftPreview(null, 'unknown_recipe'), null);
+  assert.equal(getFieldCraftPreview({}, 42), null);
+
+  const state = {
+    map: { zoneId: 'ridge_road', x: 4, y: 1, visitedZones: { greyhaven: true, ridge_road: true }, clearedEncounters: {}, completedInteractions: {}, log: [] },
+    party: [{ id: 'wren', name: 'Wren', hp: 40, maxHp: 40, mp: 15, maxMp: 15, statuses: [] }],
+    inventory: [
+      { id: 'healing_herb', qty: 3 },
+      { id: 'storm_glass', qty: 2 },
+      { id: 'storm_tonic', qty: 1 },
+    ],
+  };
+
+  const frozenInv = Object.freeze(state.inventory.map((s) => Object.freeze({ ...s })));
+  const preview = getFieldCraftPreview({ ...state, inventory: frozenInv }, 'distill_tonic');
+  assert.ok(preview);
+  assert.equal(preview.recipeId, 'distill_tonic');
+  assert.equal(preview.craftable, true);
+  assert.equal(preview.maxBatches, 2);
+  assert.equal(preview.outputId, 'storm_tonic');
+  assert.equal(preview.outputOwned, 1);
+  assert.equal(preview.missing.length, 0);
+  assert.match(preview.summary, /1 Healing Herb \+ 1 Storm Glass → 1 Storm Tonic · Craftable ×2 · In pack: 1/);
+
+  const missingPreview = getFieldCraftPreview({ ...state, inventory: [{ id: 'bandage', qty: 1 }] }, 'pack_field_dressing');
+  assert.ok(missingPreview);
+  assert.equal(missingPreview.craftable, false);
+  assert.equal(missingPreview.maxBatches, 0);
+  assert.equal(missingPreview.missing.length, 1);
+  assert.equal(missingPreview.missing[0].missing, 1);
+  assert.match(missingPreview.summary, /Missing: 1 Linen Bandage · In pack: 0/);
+
+  // Verify craftFieldItem tooltip and recordEncounterVictory log deduplication
+  const game = makeMockGame();
+  installMap(game, { enableKeyboard: false });
+  game.setScene('explore', { zoneId: 'ridge_road' });
+  game.state.inventory = state.inventory;
+  const html = exploreScene.render(game);
+  assert.match(html, /data-action="craftFieldItem" data-arg="distill_tonic" title="1 Healing Herb \+ 1 Storm Glass → 1 Storm Tonic · Craftable ×2 · In pack: 1"/);
+  game.setScene('explore', { zoneId: 'ridge_road' });
+  game.state.map.activeEncounterId = 'ridge_patrol';
+  game.bus.emit('combat:victory', { encounterId: 'ridge_patrol', enemyId: 'ridge_bandit' });
+  exploreScene.onEnter(game, { combatResult: 'victory', encounterId: 'ridge_patrol', message: 'You return victorious.' });
+
+  const clearedLines = game.state.map.log.filter((line) => line === 'Cleared encounter: ridge_patrol.');
+  assert.equal(clearedLines.length, 1);
+});

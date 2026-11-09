@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -18,7 +18,11 @@ function fieldPack(inventory, party = []) {
   const companions = Array.isArray(party) ? party.slice(1) : [];
   const crafts = listRecipes()
     .filter(recipe => recipeInputsMet(stacks, recipe).ok)
-    .map(recipe => `<button type="button" class="action-button action-button--ghost" data-action="craftFieldItem" data-arg="${escapeHTML(recipe.id)}" title="${escapeHTML(recipeSummary(recipe))}">${icon('focus')}<span>Craft: ${escapeHTML(recipe.name)}</span></button>`);
+    .map(recipe => {
+      const craftPreview = getFieldCraftPreview({ inventory, party }, recipe.id);
+      const craftTitle = craftPreview?.summary || recipeSummary(recipe);
+      return `<button type="button" class="action-button action-button--ghost" data-action="craftFieldItem" data-arg="${escapeHTML(recipe.id)}" title="${escapeHTML(craftTitle)}">${icon('focus')}<span>Craft: ${escapeHTML(recipe.name)}</span></button>`;
+    });
 
   for (const stack of stacks) {
     const item = isKnownItem(stack.id) ? getItem(stack.id) : { id: stack.id, name: stack.id };
