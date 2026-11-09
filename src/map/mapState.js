@@ -2175,7 +2175,17 @@ export function getZoneCompassHint(gameState, zoneOrId = null) {
   };
   const safeRoute = getSafePathPreview(effectiveState, target.x, target.y, resolvedZone);
   const routeSteps = Number.isInteger(safeRoute?.steps) ? safeRoute.steps : null;
+  const routeEffectiveSteps = Number.isInteger(safeRoute?.effectiveSteps) ? safeRoute.effectiveSteps : null;
+  const routePausesNearThreat = Boolean(safeRoute?.pausesNearThreat);
+  const routeEncounterPercent = Number.isInteger(safeRoute?.encounterPercent) ? safeRoute.encounterPercent : 0;
   const routeReachable = Boolean(safeRoute?.reachable);
+  const routeStepPart = routeSteps !== null && routeSteps > 0
+    ? `Safe route: ${routeSteps} ${routeSteps === 1 ? "step" : "steps"}${
+        routePausesNearThreat ? ` (pauses at step ${routeEffectiveSteps} near ${safeRoute.cautionThreatName})` : ""
+      }`
+    : null;
+  const routeAmbushPart = routeStepPart && routeEncounterPercent > 0 ? ` · Step ambush: ${routeEncounterPercent}%` : "";
+  const routeSummary = routeStepPart ? `${routeStepPart}${routeAmbushPart}` : null;
 
   let targetSummary = target.label;
   if (target.kind === 'encounter') {
@@ -2186,9 +2196,7 @@ export function getZoneCompassHint(gameState, zoneOrId = null) {
     targetSummary = getRouteBriefing(effectiveState, target.id)?.summary || target.label;
   }
 
-  const routeSuffix = routeSteps !== null && routeSteps > 0
-    ? ` · Safe route: ${routeSteps} ${routeSteps === 1 ? 'step' : 'steps'}`
-    : '';
+  const routeSuffix = routeSummary ? ` · ${routeSummary}` : '';
   const tooltip = targetSummary && targetSummary !== target.label
     ? `${summary} — ${targetSummary}${routeSuffix}`
     : `${summary}${routeSuffix}`;
@@ -2203,10 +2211,100 @@ export function getZoneCompassHint(gameState, zoneOrId = null) {
     directionLabel: nav.directionLabel,
     distance: nav.distance,
     routeSteps,
+    routeEffectiveSteps,
+    routePausesNearThreat,
+    routeEncounterPercent,
     routeReachable,
+    routeSummary,
     targetSummary,
     summary,
     tooltip,
+  };
+}
+
+/**
+ * Pure read-only summary of outbound exits in a zone, including charted/uncharted/locked counts
+ * and the nearest outbound route from the player's current position, without mutating gameState.
+ */
+export function getZoneExitsSummary(gameState = null, zoneOrId = null) {
+  const rawMap = gameState?.map && typeof gameState.map === 'object' ? gameState.map : {};
+  const resolvedZone =
+    typeof zoneOrId === 'string'
+      ? getZone(zoneOrId)
+      : zoneOrId && typeof zoneOrId === 'object'
+        ? zoneOrId
+        : getZone(rawMap.zoneId || gameState?.location || 'greyhaven');
+  const spawn = resolvedZone.spawns?.default || { x: 0, y: 0 };
+  const px = Number.isInteger(Number(rawMap.x)) ? Number(rawMap.x) : spawn.x;
+  const py = Number.isInteger(Number(rawMap.y)) ? Number(rawMap.y) : spawn.y;
+  const visited = rawMap.visitedZones && typeof rawMap.visitedZones === 'object' ? rawMap.visitedZones : {};
+  const effectiveState = {
+    ...(gameState || {}),
+    map: {
+      ...rawMap,
+      zoneId: resolvedZone.id,
+      x: px,
+      y: py,
+      visitedZones: visited,
+    },
+  };
+
+  const exits = (resolvedZone.exits || [])
+    .filter((ex) => ex && typeof ex.toZone === 'string' && Object.prototype.hasOwnProperty.call(ZONES, ex.toZone))
+    .map((ex) => {
+      const targetZone = ZONES[ex.toZone];
+      const lockReason = zoneLockReason(effectiveState, targetZone);
+      const unlocked = !lockReason;
+      const isVisited = Boolean(visited[ex.toZone]);
+      const nav = getCompassBearing(px, py, ex.x, ex.y);
+      const briefing = getRouteBriefing(effectiveState, ex.toZone);
+      return {
+        toZone: ex.toZone,
+        label: ex.label,
+        x: ex.x,
+        y: ex.y,
+        bearing: nav.bearing,
+        directionLabel: nav.directionLabel,
+        distance: nav.distance,
+        unlocked,
+        visited: isVisited,
+        lockReason: lockReason || null,
+        summary: briefing?.summary || ex.label,
+      };
+    })
+    .sort((a, b) => a.distance - b.distance);
+
+  const totalExits = exits.length;
+  const unlockedExits = exits.filter((ex) => ex.unlocked);
+  const unlockedCount = unlockedExits.length;
+  const chartedCount = unlockedExits.filter((ex) => ex.visited).length;
+  const unchartedCount = unlockedExits.filter((ex) => !ex.visited).length;
+  const lockedCount = totalExits - unlockedCount;
+  const nearestExit = unlockedExits[0] || exits[0] || null;
+
+  let summary = 'Outbound routes: None';
+  if (totalExits > 0) {
+    const statusParts = [];
+    if (chartedCount > 0) statusParts.push(`${chartedCount} charted`);
+    if (unchartedCount > 0) statusParts.push(`${unchartedCount} uncharted`);
+    if (lockedCount > 0) statusParts.push(`${lockedCount} locked`);
+    const nearestDistText = nearestExit.distance === 0
+      ? 'Here'
+      : `${nearestExit.bearing}, ${nearestExit.distance} ${nearestExit.distance === 1 ? 'tile' : 'tiles'}`;
+    summary = `Outbound routes (${totalExits}): ${statusParts.join(', ')} · Nearest: ${nearestExit.label} (${nearestDistText})`;
+  }
+
+  return {
+    zoneId: resolvedZone.id,
+    zoneName: resolvedZone.name,
+    totalExits,
+    unlockedCount,
+    chartedCount,
+    unchartedCount,
+    lockedCount,
+    nearestExit,
+    exits,
+    summary,
   };
 }
 
