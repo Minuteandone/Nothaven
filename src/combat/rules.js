@@ -536,6 +536,8 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
     default:
       return { ok: false, lines: ['Unknown action.'] };
   }
+  battleStats(c).rounds += 1;
+  lines.unshift(`::round::Round ${battleStats(c).rounds}`);
   if (Object.prototype.hasOwnProperty.call(BEACON_CHARGE_GAIN, action.type)) gainCharge(c, BEACON_CHARGE_GAIN[action.type]);
   checkVictory(c, lines, hero, party);
   lines.push(...afterHeroAction(c, hero, rng, party));
@@ -545,8 +547,6 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
 /** Enemy reply + end-of-round status ticks. Used after any hero action that consumes the turn. */
 export function afterHeroAction(c, hero, rng = Math.random, party = [hero]) {
   const lines = [];
-  battleStats(c).rounds += 1;
-  lines.push(`::round::Round ${battleStats(c).rounds}`);
   if (c.over) return lines;
   for (const m of party || []) {
     if (m === hero || !m || m.hp <= 0 || c.over) continue;

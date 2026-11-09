@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCombat, afterHeroAction, heroAction } from '../src/combat/rules.js';
+import { createCombat, heroAction } from '../src/combat/rules.js';
 import { combatScene } from '../src/scenes/combat.js';
 import { createInitialState } from '../src/state.js';
 import { assertEggFree } from './helpers/eggGuard.mjs';
@@ -12,71 +12,79 @@ function ally(id, name, role, o = {}) {
   return { id, name, role, hp: 20, maxHp: 20, atk: 5, def: 3, spd: 4, level: 3, xp: 0, statuses: [], ...o };
 }
 
-test('afterHeroAction emits a ::round:: marker for each round', () => {
+test('heroAction emits a ::round:: marker as the first line of a valid action', () => {
+  // Use defend so the hero deals no damage; no companion so enemy survives indefinitely
   const c = createCombat({ enemyId: 'storm_rat' });
   const h = hero();
-  const tamsin = ally('tamsin', 'Tamsin', 'scout');
-  const party = [h, tamsin];
+  const party = [h]; // hero alone — no companion to deal unintended damage
 
-  // Round 1
-  const r1 = afterHeroAction(c, h, fixed(0.99), party);
-  const roundMarkers1 = r1.filter(l => l.startsWith('::round::'));
-  assert.equal(roundMarkers1.length, 1, 'one round marker per afterHeroAction call');
-  assert.equal(roundMarkers1[0], '::round::Round 1');
+  // Round 1 — use defend
+  const r1 = heroAction(c, h, { type: 'defend' }, fixed(0.99), party);
+  assert.equal(r1.ok, true);
+  assert.equal(r1.lines[0], '::round::Round 1', 'round marker is the first line');
+  assert.ok(r1.lines[1].includes('raises a guard'), 'hero action follows round marker');
 
-  // Round 2 — enemy still alive
-  const r2 = afterHeroAction(c, h, fixed(0.99), party);
-  const roundMarkers2 = r2.filter(l => l.startsWith('::round::'));
-  assert.equal(roundMarkers2.length, 1);
-  assert.equal(roundMarkers2[0], '::round::Round 2');
+  // Round 2
+  const r2 = heroAction(c, h, { type: 'defend' }, fixed(0.99), party);
+  assert.equal(r2.lines[0], '::round::Round 2');
 
   // Round 3
-  const r3 = afterHeroAction(c, h, fixed(0.99), party);
-  const roundMarkers3 = r3.filter(l => l.startsWith('::round::'));
-  assert.equal(roundMarkers3.length, 1);
-  assert.equal(roundMarkers3[0], '::round::Round 3');
+  const r3 = heroAction(c, h, { type: 'defend' }, fixed(0.99), party);
+  assert.equal(r3.lines[0], '::round::Round 3');
 });
 
-test('round marker appears before companion and enemy lines', () => {
-  const c = createCombat({ enemyId: 'storm_rat' });
-  const h = hero();
+test('round marker appears before companion and enemy lines in heroAction output', () => {
+  // storm_bear has 34 HP, 5 DEF — durable for multiple rounds with a companion
+  const c = createCombat({ enemyId: 'storm_bear' });
+  const h = hero({ mp: 50 });
   const tamsin = ally('tamsin', 'Tamsin', 'scout');
   const party = [h, tamsin];
 
-  const lines = afterHeroAction(c, h, fixed(0.99), party);
-  assert.ok(lines.length >= 3, 'at least round marker + companion + enemy lines');
-
-  const roundIdx = lines.findIndex(l => l.startsWith('::round::'));
-  assert.ok(roundIdx >= 0, 'round marker present');
-  assert.equal(roundIdx, 0, 'round marker is the first line');
-
-  // Companion line should come after round marker
-  const companionIdx = lines.findIndex(l => l.includes('Tamsin'));
-  assert.ok(companionIdx > roundIdx, 'companion acts after round marker');
-});
-
-test('round marker emitted even when battle is over (checkVictory set c.over before afterHeroAction)', () => {
-  const c = createCombat({ enemyId: 'storm_rat' });
-  const h = hero();
-  c.over = 'victory';
-
-  const lines = afterHeroAction(c, h, fixed(0.99), [h]);
-  assert.equal(lines.length, 1, 'only the round marker when battle is over');
-  assert.equal(lines[0], '::round::Round 1');
-});
-
-test('full heroAction includes round marker in its lines', () => {
-  const c = createCombat({ enemyId: 'storm_rat' });
-  const h = hero();
-  const tamsin = ally('tamsin', 'Tamsin', 'scout');
-  const party = [h, tamsin];
-
-  const result = heroAction(c, h, { type: 'attack' }, fixed(0.99), party);
+  const result = heroAction(c, h, { type: 'defend' }, fixed(0.99), party);
   assert.equal(result.ok, true);
 
-  const roundMarkers = result.lines.filter(l => l.startsWith('::round::'));
-  assert.equal(roundMarkers.length, 1, 'heroAction result includes one round marker');
-  assert.match(roundMarkers[0], /^::round::Round \d+$/);
+  const roundIdx = result.lines.findIndex(l => l.startsWith('::round::'));
+  assert.equal(roundIdx, 0, 'round marker is the first line (idx 0)');
+
+  // Companion and enemy lines come after round marker + hero action
+  assert.ok(result.lines.length >= 3, 'at least round marker + hero action + companion/enemy lines');
+});
+
+test('failed actions do NOT emit a round marker or increment rounds', () => {
+  const c = createCombat({ enemyId: 'storm_rat' });
+
+  // Unknown action type
+  const r1 = heroAction(c, hero(), { type: 'gobbledygook' }, fixed(0.99));
+  assert.equal(r1.ok, false);
+  const markers1 = r1.lines.filter(l => l.startsWith('::round::'));
+  assert.equal(markers1.length, 0, 'unknown action: no round marker');
+
+  // Defend with no MP for a skill — defend always works, test unknown action instead
+  // Skill with no MP
+  const h = hero({ mp: 0, skills: [{ id: 'rekindle', name: 'Rekindle', kind: 'revive', mp: 15, share: 0.4 }] });
+  const r2 = heroAction(c, h, { type: 'skill', skillId: 'rekindle' }, fixed(0.99), [h, ally('tamsin', 'Tamsin', 'scout')]);
+  assert.equal(r2.ok, false);
+  const markers2 = r2.lines.filter(l => l.startsWith('::round::'));
+  assert.equal(markers2.length, 0, 'no MP: no round marker');
+
+  // After these failed actions, first valid action should still be Round 1
+  const h2 = hero();
+  const r3 = heroAction(c, h2, { type: 'attack' }, fixed(0.99));
+  assert.equal(r3.ok, true);
+  assert.equal(r3.lines[0], '::round::Round 1', 'first valid action starts Round 1 even after failures');
+});
+
+test('round marker emitted for lethal blow turn (before checkVictory)', () => {
+  const c = createCombat({ enemyId: 'storm_rat' });
+  c.enemy.hp = 1; // almost dead
+  const h = hero();
+
+  const result = heroAction(c, h, { type: 'attack' }, fixed(0.99));
+  assert.equal(result.ok, true);
+  assert.equal(c.over, 'victory', 'battle won');
+
+  // Round marker should still be present for the final round
+  assert.equal(result.lines[0], '::round::Round 1', 'round marker appears even on the lethal blow turn');
 });
 
 test('round marker is rendered as a styled span, not plain text', () => {
@@ -102,8 +110,6 @@ test('round marker is rendered as a styled span, not plain text', () => {
 });
 
 test('round markers survive escapeHTML — special chars in round text are escaped', () => {
-  // The round marker text "Round N" has no special chars, but verify the
-  // escapeHTML path doesn't break the ::round:: prefix detection
   const state = createInitialState();
   state.combat = createCombat({ enemyId: 'storm_rat' });
   const h = hero();
@@ -130,7 +136,6 @@ test('multiple rounds in chronicle are all styled', () => {
   const markers = (html.match(/combat-log__round-marker/g) || []);
   assert.ok(markers.length >= 4, 'round markers appear in both live log and chronicle');
 
-  // Round markers appear in the chronicle too
   assert.ok(html.includes('Round 1'));
   assert.ok(html.includes('Round 2'));
   assertEggFree(html, 'multi-round chronicle');
@@ -157,12 +162,12 @@ test('banter and round markers coexist correctly — banter takes priority', () 
   assertEggFree(html, 'banter and round coexistence');
 });
 
-test('no round markers appear when afterHeroAction is not called (no rounds elapsed)', () => {
+test('no round markers appear when log has no ::round:: entries', () => {
   const state = createInitialState();
   state.combat = createCombat({ enemyId: 'storm_rat' });
   state.party = [hero()];
 
-  // Just initial messages, no afterHeroAction called
+  // Just initial messages, no heroAction called
   state.combat.log.push('A Storm Rat approaches!');
   const html = combatScene.render({ state });
 
