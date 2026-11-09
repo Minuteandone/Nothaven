@@ -923,8 +923,59 @@ export function formatExpeditionLog(lines, limit = 6) {
 }
 
 /**
- * Pure read-only point-of-interest checklist for a zone (NPCs, fixed encounters,
- * interactables/caches, and outbound exits with coordinates and live status).
+ * Pure read-only summary of the expedition log and movement progress (steps taken,
+ * charted regions, visible recent entries, and collapsed consecutive repeats),
+ * without mutating gameState.
+ */
+export function getExpeditionLogSummary(gameState = null, limit = 6) {
+  const mapLike = Array.isArray(gameState)
+    ? { log: gameState }
+    : (gameState?.map && typeof gameState.map === "object" ? gameState.map : (gameState || {}));
+  const maxEntries = Number.isInteger(limit) && limit > 0 ? limit : 6;
+  const rawLines = Array.isArray(mapLike.log)
+    ? mapLike.log.filter((line) => typeof line === "string" && line.length > 0)
+    : [];
+  const entries = [];
+  for (let i = rawLines.length - 1; i >= 0; i -= 1) {
+    const text = rawLines[i];
+    const last = entries[entries.length - 1];
+    if (last && last.text === text) {
+      last.count += 1;
+    } else {
+      if (entries.length >= maxEntries) break;
+      entries.push({ text, count: 1 });
+    }
+  }
+  const visibleEntries = entries.map((entry) => (entry.count > 1 ? `${entry.text} (×${entry.count})` : entry.text));
+  const collapsedRepeats = entries.reduce((sum, entry) => sum + Math.max(0, entry.count - 1), 0);
+  const steps = Math.max(0, Number.parseInt(mapLike.steps, 10) || 0);
+  const visitedMap = mapLike.visitedZones && typeof mapLike.visitedZones === "object" ? mapLike.visitedZones : {};
+  const activeZoneId = typeof mapLike.zoneId === "string" && ZONES[mapLike.zoneId]
+    ? mapLike.zoneId
+    : (typeof gameState?.location === "string" && ZONES[gameState.location] ? gameState.location : "greyhaven");
+  const zonesVisited = ZONE_ORDER.filter((id) => Boolean(visitedMap[id] || id === activeZoneId)).length;
+  const zonesTotal = ZONE_ORDER.length;
+
+  const logClause = visibleEntries.length > 0
+    ? `Showing ${visibleEntries.length} recent ${visibleEntries.length === 1 ? "entry" : "entries"}${collapsedRepeats > 0 ? ` (${collapsedRepeats} ${collapsedRepeats === 1 ? "repeat" : "repeats"} collapsed)` : ""}`
+    : "Log: No entries recorded yet";
+  const summary = `Steps taken: ${steps} · Regions visited: ${zonesVisited}/${zonesTotal} · ${logClause}`;
+
+  return {
+    steps,
+    zonesVisited,
+    zonesTotal,
+    rawCount: rawLines.length,
+    visibleCount: visibleEntries.length,
+    collapsedRepeats,
+    entries: visibleEntries,
+    summary,
+  };
+}
+
+/**
+ * Pure read-only inspection of a map tile and its four cardinal neighbors,
+ * masking locked encounters and unscouted threats without mutating gameState.
  */
 export function getTileInspection(gameState, x = null, y = null, zoneOrId = null) {
   const mapLike = gameState?.map || gameState || {};
@@ -1284,6 +1335,10 @@ export function getNpcBriefing(gameState, npcOrId, zoneOrId = null) {
   };
 }
 
+/**
+ * Pure read-only point-of-interest checklist for a zone (NPCs, fixed encounters,
+ * interactables/caches, and outbound exits with coordinates and live status).
+ */
 export function getZoneChecklist(gameState, zoneOrId = null) {
   const resolvedZone =
     typeof zoneOrId === 'string'

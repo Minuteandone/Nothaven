@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneContactsSummary, getZoneStationsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getExpeditionLogSummary, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneContactsSummary, getZoneStationsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -358,7 +358,8 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
   const fastTravelBriefing = routes
     ? getFastTravelBriefing({ ...(state || {}), map: mapState, visitedZones }, zone)
     : null;
-  const logLines = formatExpeditionLog(mapState.log, 6);
+  const logSummary = getExpeditionLogSummary(state ? { ...state, map: mapState } : { map: mapState }, 6);
+  const logLines = logSummary.entries;
 
   return `<div class="game-shell explore-screen">
     <div class="explore-heading-row">
@@ -447,6 +448,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
     </div>
     <section class="panel expedition-log" aria-labelledby="expedition-log-title">
       <h2 id="expedition-log-title">Expedition log</h2>
+      <p class="quiet-note expedition-log__summary">${escapeHTML(logSummary.summary)}</p>
       <div class="log" aria-live="polite" aria-atomic="false">
         ${logLines.length ? logLines.map(line => `<p>${escapeHTML(line)}</p>`).join('') : '<p>The road ahead is quiet. Choose a direction to begin.</p>'}
       </div>
