@@ -3,7 +3,9 @@
 // with probability `chance`; `tags` drive skill bonuses (e.g. 'construct').
 export const ENEMIES = {
   storm_rat: {
-    id: 'storm_rat', name: 'Storm Rat', hp: 12, atk: 4, def: 1, spd: 4, xp: 5, gold: 3,
+    id: 'storm_rat', name: 'Storm Rat',
+    intent: 'Quick and scrappy, its gnawing bites cause bleeding.',
+    hp: 12, atk: 4, def: 1, spd: 4, xp: 5, gold: 3,
     intro: 'A Storm Rat scuttles out of a flooded drain, fur bristling with static!',
     ability: { name: 'Gnaw', chance: 0.2, mult: 1, status: 'bleeding', turns: 2 },
     loot: [
@@ -12,7 +14,9 @@ export const ENEMIES = {
     ],
   },
   ridge_bandit: {
-    id: 'ridge_bandit', name: 'Ridge Bandit', hp: 20, atk: 6, def: 2, spd: 5, xp: 10, gold: 9,
+    id: 'ridge_bandit', name: 'Ridge Bandit',
+    intent: 'Cunning knife-work that can open bleeding wounds.',
+    hp: 20, atk: 6, def: 2, spd: 5, xp: 10, gold: 9,
     intro: 'A Ridge Bandit steps from behind a toppled signpost, knife drawn.',
     ability: { name: 'Dirty Cut', chance: 0.25, mult: 1.2, status: 'bleeding', turns: 3 },
     loot: [
@@ -22,7 +26,9 @@ export const ENEMIES = {
     ],
   },
   gale_hound: {
-    id: 'gale_hound', name: 'Gale Hound', hp: 18, atk: 7, def: 1, spd: 8, xp: 12, gold: 4,
+    id: 'gale_hound', name: 'Gale Hound',
+    intent: 'Lightning-fast lunges that are hard to outrun.',
+    hp: 18, atk: 7, def: 1, spd: 8, xp: 12, gold: 4,
     element: 'lightning',
     intro: 'A lean Gale Hound lopes down the slope, howling with the wind.',
     ability: { name: 'Lunging Bite', chance: 0.3, mult: 1.4 },
@@ -32,7 +38,9 @@ export const ENEMIES = {
     ],
   },
   rust_sentinel: {
-    id: 'rust_sentinel', name: 'Rust Sentinel', hp: 34, atk: 8, def: 5, spd: 3, xp: 25, gold: 15,
+    id: 'rust_sentinel', name: 'Rust Sentinel',
+    intent: 'Slow but heavily armored, its arc discharge shocks.',
+    hp: 34, atk: 8, def: 5, spd: 3, xp: 25, gold: 15,
     element: 'earth', tags: ['construct'],
     intro: 'Gears grind as a Rust Sentinel lurches upright among the observatory ruins.',
     ability: { name: 'Arc Discharge', chance: 0.3, mult: 1.1, status: 'shocked', turns: 2 },
@@ -44,7 +52,9 @@ export const ENEMIES = {
     ],
   },
   tide_wraith: {
-    id: 'tide_wraith', name: 'Tide Wraith', hp: 50, atk: 10, def: 4, spd: 6, xp: 50, gold: 30,
+    id: 'tide_wraith', name: 'Tide Wraith',
+    intent: 'Gathers tidal force into crushing Breaker Surges that shock the body.',
+    hp: 50, atk: 10, def: 4, spd: 6, xp: 50, gold: 30,
     element: 'water',
     boss: true,
     windup: { name: 'Breaker Surge', chance: 0.15, mult: 1.6 },
@@ -58,7 +68,9 @@ export const ENEMIES = {
     ],
   },
   reef_crawler: {
-    id: 'reef_crawler', name: 'Reef Crawler', hp: 26, atk: 8, def: 4, spd: 4, xp: 18, gold: 10,
+    id: 'reef_crawler', name: 'Reef Crawler',
+    intent: 'Armored and tenacious, its pincers draw blood.',
+    hp: 26, atk: 8, def: 4, spd: 4, xp: 18, gold: 10,
     element: 'water',
     intro: 'A barnacled Reef Crawler drags itself over the drowned pier, pincers snapping.',
     ability: { name: 'Pincer Grip', chance: 0.3, mult: 1.2, status: 'bleeding', turns: 2 },
@@ -68,7 +80,9 @@ export const ENEMIES = {
     ],
   },
   squall_revenant: {
-    id: 'squall_revenant', name: 'Squall Revenant', hp: 32, atk: 9, def: 3, spd: 7, xp: 24, gold: 14,
+    id: 'squall_revenant', name: 'Squall Revenant',
+    intent: 'Spectral rain lashes with shocking force.',
+    hp: 32, atk: 9, def: 3, spd: 7, xp: 24, gold: 14,
     element: 'water',
     intro: 'Rain gathers into the outline of a drowned harbor guard, lantern still lit.',
     ability: { name: 'Lashing Rain', chance: 0.3, mult: 1.1, status: 'shocked', turns: 2 },
@@ -78,7 +92,9 @@ export const ENEMIES = {
     ],
   },
   frost_wolf: {
-    id: 'frost_wolf', name: 'Frost Wolf', hp: 24, atk: 9, def: 2, spd: 9, xp: 18, gold: 6,
+    id: 'frost_wolf', name: 'Frost Wolf',
+    intent: 'Swift and savage, rending fangs cause deep bleeding.',
+    hp: 24, atk: 9, def: 2, spd: 9, xp: 18, gold: 6,
     element: 'ice',
     intro: 'A Frost Wolf pads out of the sleet, breath steaming in the thin mountain air.',
     ability: { name: 'Rending Fangs', chance: 0.3, mult: 1.3, status: 'bleeding', turns: 2 },
@@ -88,7 +104,9 @@ export const ENEMIES = {
     ],
   },
   rockslide_golem: {
-    id: 'rockslide_golem', name: 'Rockslide Golem', hp: 44, atk: 10, def: 6, spd: 2, xp: 32, gold: 18,
+    id: 'rockslide_golem', name: 'Rockslide Golem',
+    intent: 'Plodding but devastating, its Landslide hits hard.',
+    hp: 44, atk: 10, def: 6, spd: 2, xp: 32, gold: 18,
     element: 'earth', tags: ['construct'],
     intro: 'Boulders lock together around a ruined signal engine and rise as a Rockslide Golem!',
     ability: { name: 'Landslide', chance: 0.25, mult: 1.5 },
@@ -98,7 +116,9 @@ export const ENEMIES = {
     ],
   },
   briar_boar: {
-    id: 'briar_boar', name: 'Briar Boar', hp: 22, atk: 7, def: 2, spd: 4, xp: 12, gold: 6,
+    id: 'briar_boar', name: 'Briar Boar',
+    intent: 'Aggressive thorn-covered charges with brutal force.',
+    hp: 22, atk: 7, def: 2, spd: 4, xp: 12, gold: 6,
     intro: 'A Briar Boar crashes out of the gorse, tusks hung with torn thorns.',
     ability: { name: 'Thorn Gore', chance: 0.3, mult: 1.4 },
     loot: [
@@ -107,7 +127,9 @@ export const ENEMIES = {
     ],
   },
   lens_wisp: {
-    id: 'lens_wisp', name: 'Lens Wisp', hp: 16, atk: 7, def: 1, spd: 7, xp: 13, gold: 8,
+    id: 'lens_wisp', name: 'Lens Wisp',
+    intent: 'Flickering and evasive, its Prism Glare shocks.',
+    hp: 16, atk: 7, def: 1, spd: 7, xp: 13, gold: 8,
     element: 'fire',
     intro: 'Starlight trapped in a broken lens drifts loose as a flickering Lens Wisp.',
     ability: { name: 'Prism Glare', chance: 0.3, mult: 1, status: 'shocked', turns: 2 },
@@ -117,7 +139,9 @@ export const ENEMIES = {
     ],
   },
   wrack_eel: {
-    id: 'wrack_eel', name: 'Wrack Eel', hp: 24, atk: 8, def: 3, spd: 6, xp: 17, gold: 9,
+    id: 'wrack_eel', name: 'Wrack Eel',
+    intent: 'Coiling strikes that can leave bleeding wounds.',
+    hp: 24, atk: 8, def: 3, spd: 6, xp: 17, gold: 9,
     element: 'water',
     intro: 'A Wrack Eel uncoils from a tangle of storm-torn kelp along the tideline.',
     ability: { name: 'Coiling Bite', chance: 0.3, mult: 1.2, status: 'bleeding', turns: 2 },
@@ -127,7 +151,9 @@ export const ENEMIES = {
     ],
   },
   rime_wight: {
-    id: 'rime_wight', name: 'Rime Wight', hp: 28, atk: 9, def: 3, spd: 5, xp: 20, gold: 11,
+    id: 'rime_wight', name: 'Rime Wight',
+    intent: 'Frozen sentry whose numbing frost shocks victims.',
+    hp: 28, atk: 9, def: 3, spd: 5, xp: 20, gold: 11,
     element: 'ice',
     intro: 'Frost gathers into the hollow outline of a lost sentry, still keeping its post.',
     ability: { name: 'Numbing Frost', chance: 0.3, mult: 1.1, status: 'shocked', turns: 2 },
@@ -138,7 +164,9 @@ export const ENEMIES = {
   },
   old_tusk: {
     windup: { name: 'Tusk Charge', chance: 0.15, mult: 1.7 },
-    id: 'old_tusk', name: 'Old Tusk', hp: 130, atk: 15, def: 6, spd: 5, xp: 85, gold: 55,
+    id: 'old_tusk', name: 'Old Tusk',
+    intent: "Scarred king of the ridge, razor tusks that open deep bleeding wounds.",
+    hp: 130, atk: 15, def: 6, spd: 5, xp: 85, gold: 55,
     element: 'earth',
     boss: true,
     drill: false,
@@ -154,7 +182,9 @@ export const ENEMIES = {
   },
   gloomfin: {
     windup: { name: 'Riptide Lunge', chance: 0.15, mult: 1.7 },
-    id: 'gloomfin', name: 'Gloomfin', hp: 150, atk: 16, def: 6, spd: 7, xp: 95, gold: 60,
+    id: 'gloomfin', name: 'Gloomfin',
+    intent: "Lurks in dark water, unleashing Riptide shocks.",
+    hp: 150, atk: 16, def: 6, spd: 7, xp: 95, gold: 60,
     element: 'water',
     boss: true,
     drill: false,
@@ -170,7 +200,9 @@ export const ENEMIES = {
   },
   lenswarden: {
     windup: { name: 'Focused Glare', chance: 0.15, mult: 1.7 },
-    id: 'lenswarden', name: 'The Lenswarden', hp: 170, atk: 16, def: 9, spd: 6, xp: 110, gold: 70,
+    id: 'lenswarden', name: 'The Lenswarden',
+    intent: "Blinding light that can shock — beams focused fury through ancient lenses.",
+    hp: 170, atk: 16, def: 9, spd: 6, xp: 110, gold: 70,
     element: 'fire',
     tags: ['construct'],
     boss: true,
@@ -187,7 +219,9 @@ export const ENEMIES = {
   },
   frostmane: {
     windup: { name: 'Avalanche Pounce', chance: 0.15, mult: 1.7 },
-    id: 'frostmane', name: 'Frostmane', hp: 160, atk: 17, def: 7, spd: 8, xp: 105, gold: 65,
+    id: 'frostmane', name: 'Frostmane',
+    intent: "White-maned pack leader, rime-coated fangs rend deep.",
+    hp: 160, atk: 17, def: 7, spd: 8, xp: 105, gold: 65,
     element: 'ice',
     boss: true,
     drill: false,
@@ -202,7 +236,9 @@ export const ENEMIES = {
     ],
   },
   cinderclaw: {
-    id: 'cinderclaw', name: 'Cinderclaw', hp: 440, atk: 29, def: 10, spd: 6, xp: 260, gold: 140,
+    id: 'cinderclaw', name: 'Cinderclaw',
+    intent: 'Ember-scaled predator, claws sear with fiery bleeding.',
+    hp: 440, atk: 29, def: 10, spd: 6, xp: 260, gold: 140,
     element: 'fire',
     boss: true,
     drill: false,
@@ -219,7 +255,9 @@ export const ENEMIES = {
     ],
   },
   thunderhoof: {
-    id: 'thunderhoof', name: 'Thunderhoof', hp: 1300, atk: 46, def: 13, spd: 9, xp: 400, gold: 240,
+    id: 'thunderhoof', name: 'Thunderhoof',
+    intent: 'Storm-charged stampede, hooves crash with shocking lightning.',
+    hp: 1300, atk: 46, def: 13, spd: 9, xp: 400, gold: 240,
     element: 'lightning',
     boss: true,
     drill: false,
@@ -237,7 +275,9 @@ export const ENEMIES = {
     ],
   },
   glacierward_colossus: {
-    id: 'glacierward_colossus', name: 'Glacierward Colossus', hp: 1500, atk: 48, def: 16, spd: 6, xp: 440, gold: 260,
+    id: 'glacierward_colossus', name: 'Glacierward Colossus',
+    intent: 'Towering ice construct, pulverizes with glacial might that leaves bleeding wounds.',
+    hp: 1500, atk: 48, def: 16, spd: 6, xp: 440, gold: 260,
     element: 'ice',
     tags: ['construct'],
     boss: true,
@@ -256,7 +296,9 @@ export const ENEMIES = {
     ],
   },
   pass_warlord: {
-    id: 'pass_warlord', name: 'Highwatch Warlord', hp: 96, atk: 13, def: 6, spd: 5, xp: 70, gold: 45,
+    id: 'pass_warlord', name: 'Highwatch Warlord',
+    intent: 'Battle-hardened raider leader, strikes with cruel precision that draws bleeding gashes.',
+    hp: 96, atk: 13, def: 6, spd: 5, xp: 70, gold: 45,
     boss: true,
     intro: 'Atop the frozen switchbacks, the Highwatch Warlord levels a notched halberd and bars the pass!',
     defeat: 'The Warlord drives his halberd into the snow and kneels. "Highwatch is yours to guard now," he rasps, and fades into the sleet.',
@@ -270,7 +312,9 @@ export const ENEMIES = {
     ],
   },
   drowned_harbormaster: {
-    id: 'drowned_harbormaster', name: 'Drowned Harbormaster', hp: 88, atk: 12, def: 5, spd: 6, xp: 64, gold: 40,
+    id: 'drowned_harbormaster', name: 'Drowned Harbormaster',
+    intent: 'Waterlogged sentinel, drowned fury shocks and overwhelms.',
+    hp: 88, atk: 12, def: 5, spd: 6, xp: 64, gold: 40,
     element: 'water',
     boss: true,
     intro: 'Chains rattle under the pier as the Drowned Harbormaster rises, lantern blazing with storm-light!',
@@ -285,7 +329,9 @@ export const ENEMIES = {
     ],
   },
   dust_marauder: {
-    id: 'dust_marauder', name: 'Dust Marauder', hp: 64, atk: 18, def: 5, spd: 7, xp: 30, gold: 18,
+    id: 'dust_marauder', name: 'Dust Marauder',
+    intent: 'Sand-scoured raider, strikes fast from the dunes leaving bleeding cuts.',
+    hp: 64, atk: 18, def: 5, spd: 7, xp: 30, gold: 18,
     element: 'earth',
     ability: { name: 'Sandblind Slash', chance: 0.3, mult: 1.25, status: 'bleeding', turns: 3 },
     loot: [
@@ -294,7 +340,9 @@ export const ENEMIES = {
     ],
   },
   relay_drone: {
-    id: 'relay_drone', name: 'Relay Drone', hp: 72, atk: 17, def: 7, spd: 6, xp: 34, gold: 20,
+    id: 'relay_drone', name: 'Relay Drone',
+    intent: 'Makeshift automaton, firing salvaged bolts of shocking lightning.',
+    hp: 72, atk: 17, def: 7, spd: 6, xp: 34, gold: 20,
     element: 'earth',
     tags: ['construct'],
     ability: { name: 'Static Pulse', chance: 0.3, mult: 1.1, status: 'shocked', turns: 2 },
@@ -304,7 +352,9 @@ export const ENEMIES = {
     ],
   },
   relay_warden: {
-    id: 'relay_warden', name: 'Relay Warden', hp: 220, atk: 22, def: 7, spd: 5, xp: 95, gold: 60,
+    id: 'relay_warden', name: 'Relay Warden',
+    intent: 'Guardian of the relay, its charged strikes shock and disable.',
+    hp: 220, atk: 22, def: 7, spd: 5, xp: 95, gold: 60,
     element: 'earth',
     tags: ['construct'], boss: true,
     intro: 'The relay station shudders awake. A towering brass Warden unfolds from its cradle, coils humming with stolen storm-charge!',
@@ -319,7 +369,9 @@ export const ENEMIES = {
     ],
   },
   ashen_raider: {
-    id: 'ashen_raider', name: 'Ashen Raider', hp: 120, atk: 24, def: 7, spd: 7, xp: 48, gold: 30,
+    id: 'ashen_raider', name: 'Ashen Raider',
+    intent: 'Smoke-scarred marauder, blades singed with fiery malice that opens bleeding wounds.',
+    hp: 120, atk: 24, def: 7, spd: 7, xp: 48, gold: 30,
     element: 'fire',
     ability: { name: 'Cinder Blade', chance: 0.3, mult: 1.25, status: 'bleeding', turns: 3 },
     loot: [
@@ -328,7 +380,9 @@ export const ENEMIES = {
     ],
   },
   spire_sentry: {
-    id: 'spire_sentry', name: 'Spire Sentry', hp: 140, atk: 23, def: 10, spd: 4, xp: 52, gold: 28,
+    id: 'spire_sentry', name: 'Spire Sentry',
+    intent: 'Highwatch automaton, scanning beams shock intruders.',
+    hp: 140, atk: 23, def: 10, spd: 4, xp: 52, gold: 28,
     element: 'earth',
     tags: ['construct'],
     ability: { name: 'Chain Lightning', chance: 0.3, mult: 1.15, status: 'shocked', turns: 2 },
@@ -338,7 +392,9 @@ export const ENEMIES = {
     ],
   },
   stormcrown_tyrant: {
-    id: 'stormcrown_tyrant', name: 'Stormcrown Tyrant', hp: 460, atk: 27, def: 8, spd: 6, xp: 160, gold: 120,
+    id: 'stormcrown_tyrant', name: 'Stormcrown Tyrant',
+    intent: 'Lightning-crowned warlord, every strike a shocking thunderclap.',
+    hp: 460, atk: 27, def: 8, spd: 6, xp: 160, gold: 120,
     element: 'lightning',
     boss: true,
     intro: 'Atop the spire, a figure in a crown of living lightning turns from the gathering clouds. "So the little beacon-keepers finally climbed this high."',
@@ -353,7 +409,9 @@ export const ENEMIES = {
     ],
   },
   tempest_shade: {
-    id: 'tempest_shade', name: 'Tempest Shade', hp: 170, atk: 31, def: 8, spd: 9, xp: 70, gold: 35,
+    id: 'tempest_shade', name: 'Tempest Shade',
+    intent: 'Storm-wrought phantom, ghostly claws shock the living.',
+    hp: 170, atk: 31, def: 8, spd: 9, xp: 70, gold: 35,
     element: 'lightning',
     intro: 'A shape of rain and blue static drifts out of the clouds, humming with stolen lightning.',
     ability: { name: 'Static Lash', chance: 0.3, mult: 1.3, status: 'shocked', turns: 2 },
@@ -363,7 +421,9 @@ export const ENEMIES = {
     ],
   },
   thunderhead_colossus: {
-    id: 'thunderhead_colossus', name: 'Thunderhead Colossus', hp: 190, atk: 30, def: 12, spd: 3, xp: 75, gold: 40,
+    id: 'thunderhead_colossus', name: 'Thunderhead Colossus',
+    intent: 'Living storm, each blow a thunderbolt made flesh.',
+    hp: 190, atk: 30, def: 12, spd: 3, xp: 75, gold: 40,
     element: 'lightning',
     tags: ['construct'],
     intro: 'Storm-iron plates grind together as a towering weather engine lumbers into the path.',
@@ -374,7 +434,8 @@ export const ENEMIES = {
     ],
   },
   storm_heart: {
-    id: 'storm_heart', name: 'The Storm’s Heart', hp: 680, atk: 34, def: 10, spd: 7, xp: 240, gold: 180,
+    id: 'storm_heart', name: 'The Storm’s Heart',
+    intent: "The beacon's raging core, pure elemental fury that shocks all it touches.", hp: 680, atk: 34, def: 10, spd: 7, xp: 240, gold: 180,
     element: 'lightning',
     boss: true,
     intro: 'Beyond the summit, the eye of the storm opens: a slow-turning core of wind and lightning that has fed the tempest for generations.',
@@ -389,7 +450,9 @@ export const ENEMIES = {
     ],
   },
   last_squall: {
-    id: 'last_squall', name: 'The Last Squall', hp: 1500, atk: 44, def: 13, spd: 8, xp: 420, gold: 320,
+    id: 'last_squall', name: 'The Last Squall',
+    intent: 'Final breath of the storm, desperate and devastating with shocking force.',
+    hp: 1500, atk: 44, def: 13, spd: 8, xp: 420, gold: 320,
     element: 'water',
     boss: true,
     intro: 'One squall refuses to scatter. Wind and lightning gather into a towering shape above the northern causeway, howling for a final contest.',

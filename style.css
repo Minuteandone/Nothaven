@@ -1531,6 +1531,15 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 }
 .incoming-damage-label { font-weight: 600; }
 
+/* Enemy intent preview in opposition panel */
+.intent-preview {
+  margin: 0.25em 0 0;
+  font-size: 0.8em;
+  color: var(--muted);
+  text-align: center;
+}
+.intent-preview__label { font-weight: 600; }
+
 
 .drills__summary { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; margin: .4rem 0 .6rem; }
 
