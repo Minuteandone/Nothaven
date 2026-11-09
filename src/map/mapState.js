@@ -680,10 +680,6 @@ export function getExpeditionProgressSummary(gameState = null) {
 }
 
 /**
- * Pure read-only route briefing for a destination zone.
- * Masks weather and objective counts on locked or unvisited regions.
- */
-/**
  * Pure read-only summary of all charted fast-travel destinations available from
  * the active zone, including secured counts, remaining threats/caches across
  * charted routes, and whether a safe haven is reachable.
@@ -793,6 +789,10 @@ export function getFastTravelBriefing(gameState = null, currentZoneOrId = null) 
   };
 }
 
+/**
+ * Pure read-only route briefing for a destination zone.
+ * Masks weather and objective counts on locked or unvisited regions.
+ */
 export function getRouteBriefing(gameState, toZoneId) {
   if (typeof toZoneId !== 'string' || !Object.prototype.hasOwnProperty.call(ZONES, toZoneId)) {
     return null;
@@ -1966,10 +1966,47 @@ export function getZoneThreatIntel(gameState, zoneOrId = null) {
     weight: typeof entry.weight === 'number' && entry.weight > 0 ? entry.weight : 1,
     preview: getEncounterPreview(entry.enemyId, gameState),
   }));
+  const dangerLevel = resolvedZone.dangerLevel ?? 0;
+  const fixedActiveCount = fixedEncounters.filter((e) => !e.cleared && !e.locked).length;
+  const fixedClearedCount = fixedEncounters.filter((e) => e.cleared).length;
+  const fixedLockedCount = fixedEncounters.filter((e) => e.locked).length;
+  const fixedTotalCount = fixedEncounters.length;
+  const roamingCount = roamingEncounters.length;
+  const roamingScoutedCount = roamingEncounters.filter((r) => Boolean(r.preview?.known)).length;
+  const encounterChance = getEffectiveRandomEncounterChance(gameState, resolvedZone);
+  const encounterPercent = Math.round(encounterChance * 100);
+
+  let summary;
+  if (fixedTotalCount === 0 && roamingCount === 0) {
+    summary = 'Safe haven · No fixed threats or roaming hostiles';
+  } else {
+    const parts = [`Danger ${dangerLevel}`];
+    if (fixedTotalCount > 0) {
+      parts.push(
+        `Fixed threats: ${fixedActiveCount} active, ${fixedClearedCount} cleared${fixedLockedCount > 0 ? `, ${fixedLockedCount} locked` : ''}`,
+      );
+    }
+    if (roamingCount > 0) {
+      parts.push(`Roaming: ${roamingScoutedCount}/${roamingCount} scouted (${encounterPercent}% ambush)`);
+    }
+    summary = parts.join(' · ');
+  }
+
   return {
     zoneId: resolvedZone.id,
+    zoneName: resolvedZone.name,
+    dangerLevel,
+    fixedActiveCount,
+    fixedClearedCount,
+    fixedLockedCount,
+    fixedTotalCount,
+    roamingCount,
+    roamingScoutedCount,
+    encounterChance,
+    encounterPercent,
     fixedEncounters,
     roamingEncounters,
+    summary,
   };
 }
 
