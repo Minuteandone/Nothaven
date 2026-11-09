@@ -47,6 +47,12 @@ test('progress counts real records and caps at the target', () => {
   assert.equal(featProgressText(s, 'commissions'), 'Progress: 1 of 4.');
   assert.equal(featProgressText(s, 'yard'), `Progress: 1 of ${DRILL_FOES.length}.`);
   assert.equal(featProgressText(s, 'bounties'), `Progress: 2 of ${BOUNTIES.length}.`);
+  assert.equal(featProgressText(s, 'fitted'), 'Progress: 0 of 6.');
+  s.party[0].temper = { weapon: 2, armor: 1 };
+  s.reserve = { ...(s.reserve || {}), ghost: { id: 'ghost', temper: { weapon: 3, armor: 2 } } };
+  assert.equal(featProgressText(s, 'fitted'), 'Progress: 5 of 6.');
+  s.reserve.ghost.temper = { weapon: 9, armor: 'x' };
+  assert.equal(featProgressText(s, 'fitted'), 'Progress: 3 of 6.');
   for (const id of Object.keys(FEAT_PROGRESS)) { const t = featProgressText(s, id); if (t) assertEggFree(t, id); }
 });
 

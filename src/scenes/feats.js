@@ -97,6 +97,9 @@ export const FEAT_PROGRESS = Object.freeze({
   trials: s => [seen(s, FIELD_TRIALS), FIELD_TRIALS.length],
   veteran: s => [num(heroOf(s)?.level), 10],
   legend: s => [num(heroOf(s)?.level), 20],
+  fitted: s => [[...(Array.isArray(s?.party) ? s.party : []), ...(s?.reserve && typeof s.reserve === 'object' ? Object.values(s.reserve) : [])]
+    .reduce((best, m) => Math.max(best, FITTING_SLOTS.reduce((t, slot) => t + Math.min(num(fittingLevel(m, slot)), MAX_FITTING), 0)), 0),
+    FITTING_SLOTS.length * MAX_FITTING],
   bounties: s => { const done = bountyState(s).completed; return [BOUNTIES.filter(b => (done[b.id] || 0) >= 1).length, BOUNTIES.length]; },
 });
 
