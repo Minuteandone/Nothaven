@@ -7,7 +7,7 @@ import { effectiveStats } from '../items/equipment.js';
 import { escapeHTML, partyStatus, resourceChip, sceneHeader, uiButton } from '../ui/components.js';
 import { getTownOutlook } from '../story/outlook.js';
 import { createStoryUI } from '../story/view.js';
-import { bountyIdleText, bountySummaryText } from '../core/bounties.js';
+import { bountyIdleText, bountySummaryText, townBoardRankText } from '../core/bounties.js';
 import { townFeatsText } from './feats.js';
 
 const storyUI = createStoryUI(() => 'greyhaven');
@@ -21,6 +21,7 @@ export const townScene = {
     const message = game.message || 'Wind howls through the half-shuttered streets.';
     const bounty = game.scenes?.bounties ? bountySummaryText(s) : null;
     const boardIdle = game.scenes?.bounties && !bounty ? bountyIdleText(s) : null;
+    const boardRank = game.scenes?.bounties ? townBoardRankText(s) : null;
     const featsLine = game.scenes?.feats ? townFeatsText(s) : null;
     return `<main class="game-shell town-screen">
       ${sceneHeader({ eyebrow: 'Beacon Ward', title: 'Greyhaven', subtitle: 'A frontier town holding fast beneath a restless sky.', iconName: 'beacon' })}
@@ -29,6 +30,7 @@ export const townScene = {
       ${renderPinnedQuest(s, { journalAction: 'questJournal', hasJournal: Boolean(game.scenes?.quests) })}
       ${bounty ? `<p class="town-bounty-summary" role="status">${escapeHTML(bounty)}</p>` : ''}
       ${boardIdle ? `<p class="town-bounty-idle">${escapeHTML(boardIdle)}</p>` : ''}
+      ${boardRank ? `<p class="town-bounty-rank">${escapeHTML(boardRank)}</p>` : ''}
       ${featsLine ? `<p class="town-feats">${escapeHTML(featsLine)}</p>` : ''}
       <div class="town-grid">
         <article class="panel story-panel">
