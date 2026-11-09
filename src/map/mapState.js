@@ -2179,7 +2179,13 @@ export function getZoneCompassHint(gameState, zoneOrId = null) {
   const routePausesNearThreat = Boolean(safeRoute?.pausesNearThreat);
   const routeEncounterPercent = Number.isInteger(safeRoute?.encounterPercent) ? safeRoute.encounterPercent : 0;
   const routeReachable = Boolean(safeRoute?.reachable);
-  const routeSummary = routeSteps !== null && routeSteps > 0 ? (safeRoute?.summary || null) : null;
+  const routeStepPart = routeSteps !== null && routeSteps > 0
+    ? `Safe route: ${routeSteps} ${routeSteps === 1 ? "step" : "steps"}${
+        routePausesNearThreat ? ` (pauses at step ${routeEffectiveSteps} near ${safeRoute.cautionThreatName})` : ""
+      }`
+    : null;
+  const routeAmbushPart = routeStepPart && routeEncounterPercent > 0 ? ` · Step ambush: ${routeEncounterPercent}%` : "";
+  const routeSummary = routeStepPart ? `${routeStepPart}${routeAmbushPart}` : null;
 
   let targetSummary = target.label;
   if (target.kind === 'encounter') {

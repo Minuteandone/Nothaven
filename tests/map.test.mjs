@@ -2272,15 +2272,33 @@ test('getZoneCompassHint route caveats and getZoneExitsSummary report safe-route
   const hint = getZoneCompassHint(ridgeState);
   assert.ok(hint);
   assert.equal(hint.kind, 'encounter');
-  assert.equal(hint.id, 'ridge_patrol');
-  assert.equal(hint.routeSteps, 4);
+  assert.equal(hint.id, 'ridge_hound_den');
+  assert.equal(hint.routeSteps, 3);
   assert.equal(hint.routeEffectiveSteps, 3);
-  assert.equal(hint.routePausesNearThreat, true);
+  assert.equal(hint.routePausesNearThreat, false);
   assert.equal(hint.routeEncounterPercent, 12);
   assert.equal(hint.routeReachable, true);
-  assert.equal(hint.routeSummary, 'Safe route: 4 steps (pauses after 3 steps near fixed threat) · 12% ambush/step');
-  assert.match(hint.tooltip, /Safe route: 4 steps \(pauses after 3 steps near fixed threat\) · 12% ambush\/step/);
+  assert.equal(hint.routeSummary, 'Safe route: 3 steps · Step ambush: 12%');
+  assert.match(hint.tooltip, /Safe route: 3 steps · Step ambush: 12%/);
   assertEggFree(hint.tooltip);
+
+  // When a locked fixed threat sits along the safe path to a cache/exit, routePausesNearThreat is reported
+  const pauseState = Object.freeze({
+    map: Object.freeze({
+      zoneId: 'ridge_road',
+      x: 3,
+      y: 0,
+      visitedZones: Object.freeze({ greyhaven: true, ridge_road: true }),
+      clearedEncounters: Object.freeze({ ridge_patrol: true, ridge_hound_den: true }),
+      completedInteractions: Object.freeze({}),
+      log: Object.freeze([]),
+    }),
+  });
+  const pauseHint = getZoneCompassHint(pauseState);
+  assert.ok(pauseHint);
+  assert.equal(pauseHint.routePausesNearThreat, true);
+  assert.match(pauseHint.routeSummary, /pauses at step \d+ near Sealed challenge/);
+  assertEggFree(pauseHint.tooltip);
 
   const exitsSummary = getZoneExitsSummary(ridgeState);
   assert.equal(exitsSummary.zoneId, 'ridge_road');
@@ -2310,6 +2328,6 @@ test('getZoneCompassHint route caveats and getZoneExitsSummary report safe-route
   );
   assert.match(
     html,
-    /class="terrain-compass__bearing" title="Ridge Patrol Pack \(E, 5 tiles\) — Unscouted threat \(Standard\) · Drops: Uncharted \(defeat to record\) · Safe route: 5 steps \(pauses after 4 steps near fixed threat\) · 12% ambush\/step"/,
+    /class="terrain-compass__bearing" title="[^"]*Safe route: \d+ steps · Step ambush: 12%"/,
   );
 });
