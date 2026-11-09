@@ -26,7 +26,8 @@ function rowHTML(r, anyActive, state = {}) {
     ${!r.mastered && r.items.length && r.claimed > 0 ? `<p class="bounty__mastery-progress">Mastery progress: ${escapeHTML(`${Math.min(r.claimed, MASTERY_CLAIMS)} of ${MASTERY_CLAIMS}`)} claims.</p>` : ''}
     ${r.roams.length ? `<p class="bounty__roams">Roams: ${escapeHTML(r.roams.join(', '))}.</p>` : ''}
     ${foeStats ? `<p class="bounty__foe-stats">${escapeHTML(foeStats)}</p>` : ''}
-    ${foeElement ? `<p class="bounty__foe-element">${escapeHTML(foeElement)}</p>` : ''}` : ''}
+    ${foeElement ? `<p class="bounty__foe-element">${escapeHTML(foeElement)}</p>` : ''}
+    ${huntTotalText(r) ? `<p class="bounty__hunt-total">${escapeHTML(huntTotalText(r))}</p>` : ''}` : ''}
     ${r.unlocked ? `<p class="bounty__marks">Earns ${escapeHTML(String(markValue(r.id)))} Board ${markValue(r.id) === 1 ? 'Mark' : 'Marks'} per claim.</p>` : ''}
     <p class="bounty__status">${escapeHTML(status)}</p>
     ${button}
@@ -62,6 +63,14 @@ export function huntHealth(r) {
   const foe = Object.prototype.hasOwnProperty.call(ENEMIES, r.enemyId) ? ENEMIES[r.enemyId] : null;
   const hp = Number(foe?.hp), count = Number(r.count);
   return Number.isFinite(hp) && Number.isFinite(count) ? hp * count : Number.MAX_SAFE_INTEGER;
+}
+
+/** Notice line naming the figure the Easiest hunt sort uses; empty when the target or count is unknown. */
+export function huntTotalText(r) {
+  const total = huntHealth(r);
+  if (total === Number.MAX_SAFE_INTEGER) return '';
+  const count = Number(r.count);
+  return `Hunt total: ${total} base HP across ${count} ${count === 1 ? 'foe' : 'foes'}.`;
 }
 
 export function sortBountyRows(rows, sort) {
