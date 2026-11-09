@@ -10,10 +10,10 @@ const ROLE_LABELS = {
 };
 
 const TECHNIQUE_LINES = {
-  keeper: 'Uses <strong>Mend</strong> to heal a wounded ally and <strong>Spark</strong> for a Lightning attack against constructs.',
-  guardian: 'Uses <strong>Shield Bash</strong> to strike enemies and stun non-boss foes.',
-  signaler: 'Uses <strong>Signal Flare</strong> for a piercing Fire attack.',
-  scout: 'Uses <strong>Aimed Shot</strong> for a high-accuracy physical strike.',
+  keeper: 'Uses <strong>Mend</strong> to heal the most-wounded ally below half HP and <strong>Spark</strong> for a Lightning strike (favours constructs).',
+  guardian: 'Uses <strong>Shield Bash</strong> (25% chance) to strike and stun non-boss foes.',
+  signaler: 'Uses <strong>Signal Flare</strong> for a piercing Fire attack that ignores armour.',
+  scout: 'Uses <strong>Aimed Shot</strong> (30% chance) for 140% physical damage.'
 };
 
 const PORTRAIT_DETAILS = {
