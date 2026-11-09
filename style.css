@@ -1617,4 +1617,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .guide-toc__title { margin: 0 0 .5rem; font-size: 1rem; }
 .guide-toc__list { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin: 0; padding: 0; list-style: none; }
 .guide-toc__link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); overflow-wrap: anywhere; }
-.guide-section { scroll-margin-top: 1rem; }
+/* Clear the sticky .audio-dock (min-height 58px plus narrow-screen padding) when jumping from Contents. */
+.guide-section { scroll-margin-top: calc(58px + 1.5rem); }

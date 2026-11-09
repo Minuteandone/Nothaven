@@ -38,3 +38,14 @@ test('guide render puts a contents nav before the sections, and every link targe
   assert.ok(html.includes('<h2>Skill roadmap</h2>'));
   assertEggFree(html, 'guide render');
 });
+
+test('guide sections clear the sticky audio dock when jumped to', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const css = await readFile(new URL('../style.css', import.meta.url), 'utf8');
+  const dock = css.match(/\.audio-dock__inner \{[^}]*min-height: (\d+)px/);
+  assert.ok(dock, 'dock min-height found');
+  const rule = css.match(/\.guide-section \{ scroll-margin-top: calc\((\d+)px \+ ([\d.]+)rem\); \}/);
+  assert.ok(rule, 'guide-section scroll margin found');
+  assert.ok(Number(rule[1]) >= Number(dock[1]), 'offset covers the dock height');
+  assert.ok(Number(rule[2]) >= 1, 'plus breathing room');
+});
