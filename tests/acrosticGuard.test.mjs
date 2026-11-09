@@ -11,6 +11,7 @@ import { FEATS } from '../src/scenes/feats.js';
 import { TRADES } from '../src/items/trade.js';
 import { BOUNTIES, BOUNTY_RANKS, EXCHANGE_OFFERS } from '../src/core/bounties.js';
 import { POSTGAME_DEEDS } from '../src/scenes/ending.js';
+import { REWARD_CHOICE_POOLS } from '../src/items/rewardChoice.js';
 import { ELEMENTS } from '../src/combat/elements.js';
 
 // Hidden words can be spelled by the first letters of a text field read in game order.
@@ -66,6 +67,7 @@ const CATALOGUES = {
   bounties: () => BOUNTIES,
   bountyRanks: () => BOUNTY_RANKS,
   exchangeOffers: () => EXCHANGE_OFFERS,
+  'reward pools': () => Object.entries(REWARD_CHOICE_POOLS).map(([encounterId, options]) => ({ encounterId, bundles: options.map((option) => option.itemId).join(' ') })),
   elements: () => Object.entries(ELEMENTS).map(([k, v]) => ({ elementId: k, element: v })),
 };
 
