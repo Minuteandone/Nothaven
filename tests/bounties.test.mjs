@@ -504,11 +504,11 @@ test('the Journey Journal shows a board record once a contract has been claimed'
   assert.equal(bountyRecordText(s), null);
   assert.ok(!questJournalScene.render(game).includes('quest-bounty-record'));
   s.bounties = { active: null, progress: 0, completed: { ridge_rats: 1 } };
-  assert.equal(bountyRecordText(s), 'Board record: 1 claim · Notice Runner · 0 of 18 contracts mastered.');
+  assert.equal(bountyRecordText(s), 'Board record: 1 claim · Notice Runner · 0 of 18 contracts mastered · 1 Board Mark earned.');
   s.bounties.completed = { ridge_rats: 3, pier_clearance: 4, wolf_trail: 2, junk: 'x', no_such: 9 };
-  assert.equal(bountyRecordText(s), 'Board record: 9 claims · Board Regular · 2 of 18 contracts mastered.');
+  assert.equal(bountyRecordText(s), 'Board record: 9 claims · Board Regular · 2 of 18 contracts mastered · 15 Board Marks earned.');
   const html = questJournalScene.render(game);
-  assert.match(html, /<p class="quest-bounty-record">Board record: 9 claims · Board Regular · 2 of 18 contracts mastered\.<\/p>/);
+  assert.match(html, /<p class="quest-bounty-record">Board record: 9 claims · Board Regular · 2 of 18 contracts mastered · 15 Board Marks earned\.<\/p>/);
   assert.equal((html.match(/quest-bounty-record/g) || []).length, 1);
   assertEggFree(html, 'journal board record');
 });

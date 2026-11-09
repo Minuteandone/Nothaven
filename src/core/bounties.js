@@ -133,7 +133,11 @@ export function bountyRecordText(state) {
   const total = totalBountiesClaimed(state);
   if (total < 1) return null;
   const { rank } = bountyRank(state);
-  return `Board record: ${total} ${total === 1 ? 'claim' : 'claims'} · ${rank.title} · ${masteredCount(state)} of ${BOUNTIES.length} contracts mastered.`;
+  return `Board record: ${total} ${total === 1 ? 'claim' : 'claims'} · ${rank.title} · ${masteredCount(state)} of ${BOUNTIES.length} contracts mastered · ${marksEarnedText(boardMarks(state).earned)}.`;
+}
+
+function marksEarnedText(n) {
+  return `${n} Board ${n === 1 ? 'Mark' : 'Marks'} earned`;
 }
 
 export function bountyRankText(state) {
