@@ -546,6 +546,7 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
 export function afterHeroAction(c, hero, rng = Math.random, party = [hero]) {
   const lines = [];
   battleStats(c).rounds += 1;
+  lines.push(`::round::Round ${battleStats(c).rounds}`);
   if (c.over) return lines;
   for (const m of party || []) {
     if (m === hero || !m || m.hp <= 0 || c.over) continue;
