@@ -135,7 +135,7 @@ export function battleSummary(c) {
 }
 
 /** Tick statuses on the hero at the start of the hero's turn. Returns log lines. */
-export function tickHeroStatuses(c, hero) {
+export function tickHeroStatuses(c, hero, party = [hero]) {
   const lines = [];
   if (hasStatus(hero, 'bleeding')) {
     const d = 2;
@@ -158,7 +158,7 @@ export function tickHeroStatuses(c, hero) {
   } else {
     const hs = heroStats(hero);
     if (hero.hp < hs.maxHp * 0.25) {
-      const lhBanter = combatBanter(c, 'lowHealth', { party: [hero], hero });
+      const lhBanter = combatBanter(c, 'lowHealth', { party, hero });
       if (lhBanter) lines.push(lhBanter);
     }
   }
@@ -188,7 +188,7 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   // Telegraphed heavy blow: a boss with a `windup` spends one turn gathering,
   // then strikes the hero next turn. Defend or a ward halves it; a stun breaks it.
   // rng is only consumed for enemies that define `windup`, keeping seeded runs stable.
-  if (c.windup && e.windup) return releaseWindup(c, hero, rng, lines);
+  if (c.windup && e.windup) return releaseWindup(c, hero, rng, lines, party);
   if (e.windup && rng() < (e.windup.chance ?? 0)) {
     c.windup = { name: e.windup.name };
     lines.push(`${e.name} begins gathering ${e.windup.name}! Brace yourself: Defend or a ward will blunt the blow.`);
@@ -271,7 +271,7 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
   return lines;
 }
 
-function releaseWindup(c, hero, rng, lines) {
+function releaseWindup(c, hero, rng, lines, party = [hero]) {
   const e = c.enemy;
   const w = e.windup;
   c.windup = null;
@@ -284,7 +284,7 @@ function releaseWindup(c, hero, rng, lines) {
   chargeFromHit(c, d, hs.maxHp);
   lines.push(`${e.name} unleashes ${w.name}! ${hero.name} takes ${d}${warded ? ', braced against the worst of it' : ''}.`);
   if (hero.hp > 0 && isBigHit(lost, hero, hs.maxHp)) {
-    const bh = combatBanter(c, 'bigHit', { party: [hero], hero });
+    const bh = combatBanter(c, 'bigHit', { party: party || [hero], hero });
     if (bh) lines.push(bh);
   }
   c.defending = false;
@@ -559,7 +559,7 @@ export function afterHeroAction(c, hero, rng = Math.random, party = [hero]) {
   }
   if (c.over) { c.turn += 1; return lines; }
   lines.push(...enemyTurn(c, hero, rng, party));
-  if (!c.over) lines.push(...tickHeroStatuses(c, hero));
+  if (!c.over) lines.push(...tickHeroStatuses(c, hero, party));
   if (!c.over) lines.push(...tickAllyStatuses(c, party, hero));
   c.turn += 1;
   return lines;

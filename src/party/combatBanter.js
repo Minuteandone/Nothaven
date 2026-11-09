@@ -87,15 +87,15 @@ const LINES = Object.freeze({
 
 /** @param {object} c combat object */
 export function banterFired(c, key) {
-  if (!c._banterFired) c._banterFired = new Set();
-  if (c._banterFired.has(key)) return true;
-  c._banterFired.add(key);
+  if (!c._banterFired) c._banterFired = {};
+  if (c._banterFired[key]) return true;
+  c._banterFired[key] = true;
   return false;
 }
 
 /** Pick a conscious companion that is NOT the subject (e.g. when an ally falls,
  *  we want a different companion to speak). Returns null if none available. */
-function pickSpeaker(party, excludeId) {
+export function pickSpeaker(party, excludeId) {
   const candidates = (party || []).filter(
     (m) => m && m.hp > 0 && m.role && m.id !== excludeId
   );
@@ -187,8 +187,8 @@ export function companionKillCheck(c, lastActionLines) {
   for (const line of lastActionLines) {
     for (const name of companionNames) {
       if (line.includes(`${name} `) && (
-        line.includes('strikes for') || line.includes('casts Spark') ||
-        line.includes('lands a') || line.includes('hurls a') ||
+        line.includes('strikes for') || line.includes('strikes the') || line.includes('casts Spark') ||
+        line.includes('lands a') || line.includes('lands the') || line.includes('hurls a') ||
         line.includes('looses')
       )) {
         return name;
