@@ -8,7 +8,7 @@ import { recordDrillWin, recordGauntlet, validGauntlet } from './drills.js';
 // returnScene with {message, combatResult, encounterId}; defeat wakes the party in
 // Greyhaven (half max HP, lose half gold) via recoverFromDefeat.
 import {
-  createCombat, heroAction, afterHeroAction, enemyTurn, heroStats, victoryRewards, battleSummary,
+  createCombat, heroAction, afterHeroAction, beginRound, enemyTurn, heroStats, victoryRewards, battleSummary,
 } from '../combat/rules.js';
 import { rollLoot } from '../items/loot.js';
 import { ZONES } from '../map/zones.js';
@@ -235,7 +235,7 @@ export const combatScene = {
       if (cure && timers) delete timers[cure];
       game.combatMenu = 'main';
       delete game.combatItemTarget;
-      commit(game, [`${target.name}: ${res.message}`, ...afterHeroAction(c, hero, rng(game), game.state.party)]);
+      commit(game, [beginRound(c), `${target.name}: ${res.message}`, ...afterHeroAction(c, hero, rng(game), game.state.party)]);
     },
     finish(game) {
       if (game.state.combat && !game.state.combat.over) return; // never abandon an active fight

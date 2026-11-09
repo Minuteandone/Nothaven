@@ -645,6 +645,8 @@ em.enraged {
 .combat-log p:last-child { border-bottom: 0; color: var(--text); }
 /* Companion combat banter — italic, muted tone */
 .combat-banter { font-style: italic; color: #9aabbe; }
+
+.combat-log__round-marker { display: block; text-align: center; font-weight: 700; font-size: .72rem; color: var(--accent); letter-spacing: 0.04em; padding: .25rem 0; margin: .15rem 0; border: 0; }
 @media (max-width: 850px) {
   .combat .combatants { grid-template-columns: 1fr; }
   .combat .unit.enemy { height: auto; }
