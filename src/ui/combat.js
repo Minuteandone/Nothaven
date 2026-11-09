@@ -45,7 +45,10 @@ export function abilityDetail(ability) {
 
 /** Renders a log line, replacing ::elem:X:: markers with element chips. */
 function renderLogLine(line) {
-  return escapeHTML(line).replace(/::elem:(fire|ice|lightning|water|earth)::/g, (_m, el) => `${elementChip(el)} `);
+  const banter = line.startsWith('::banter::');
+  const text = banter ? line.slice('::banter::'.length) : line;
+  const html = escapeHTML(text).replace(/::elem:(fire|ice|lightning|water|earth)::/g, (_m, el) => `${elementChip(el)} `);
+  return banter ? `<em class="combat-banter">${html}</em>` : html;
 }
 
 /** Readable names and short hints for combat statuses, shown on unit cards. */

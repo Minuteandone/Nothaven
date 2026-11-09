@@ -628,6 +628,8 @@ em.enraged {
 .combat-log { max-height: 310px; padding-left: .8rem; border-left: 2px solid var(--line); }
 .combat-log p { position: relative; margin: 0; padding: .5rem .25rem; border-bottom: 1px solid rgba(52, 70, 90, .35); font-size: .79rem; line-height: 1.5; }
 .combat-log p:last-child { border-bottom: 0; color: var(--text); }
+/* Companion combat banter — italic, muted tone */
+.combat-banter { font-style: italic; color: #9aabbe; }
 @media (max-width: 850px) {
   .combat .combatants { grid-template-columns: 1fr; }
   .combat .unit.enemy { height: auto; }
