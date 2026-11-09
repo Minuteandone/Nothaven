@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneStationsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -204,11 +204,14 @@ function terrainCompass(zone, mapState, characterShortcuts, state = null) {
   const bearingLine = compassHint
     ? `<p class="terrain-compass__bearing"${bearingTitle ? ` title="${escapeHTML(bearingTitle)}"` : ''}>Compass bearing: <strong>${escapeHTML(compassHint.label)}</strong> (${escapeHTML(compassHint.bearing)}, ${compassHint.distance} ${compassHint.distance === 1 ? 'tile' : 'tiles'})</p>`
     : '';
+  const routeLine = compassHint?.routeSummary
+    ? `<p class="quiet-note terrain-compass__route">${escapeHTML(compassHint.routeSummary)}</p>`
+    : '';
   const adjacentLine = inspection?.adjacentLandmarks?.length
     ? `<p class="terrain-compass__adjacent">Adjacent landmarks: ${inspection.adjacentLandmarks.map(a => `<strong>${escapeHTML(a.dir)}:</strong> ${escapeHTML(a.label)}`).join(' · ')}</p>`
     : '';
   return `<section class="terrain-compass" aria-labelledby="terrain-compass-title">
-    <div class="terrain-compass__heading"><h3 id="terrain-compass-title">Terrain compass</h3><p>Standing on <strong>${escapeHTML(current.name)}</strong> at ${escapeHTML(`${x}, ${y}`)}.</p>${bearingLine}${adjacentLine}</div>
+    <div class="terrain-compass__heading"><h3 id="terrain-compass-title">Terrain compass</h3><p>Standing on <strong>${escapeHTML(current.name)}</strong> at ${escapeHTML(`${x}, ${y}`)}.</p>${bearingLine}${routeLine}${adjacentLine}</div>
     <ul aria-label="Adjacent terrain and passability">${items}</ul>
   </section>`;
 }
@@ -288,14 +291,17 @@ function zoneChecklistPanel(state, zone, mapState) {
   }
   const totalPois = rows.length;
   const threatIntel = getZoneThreatIntel(effectiveState, zone);
+  const stationsSummary = getZoneStationsSummary(effectiveState, zone);
   const exitsSummary = getZoneExitsSummary(effectiveState, zone);
   const summaryLine = checklist.summary ? `<p class="zone-checklist__summary">${escapeHTML(checklist.summary)}</p>` : '';
   const threatLine = threatIntel?.summary ? `<p class="zone-checklist__threats">${escapeHTML(threatIntel.summary)}</p>` : '';
+  const stationsLine = stationsSummary?.summary ? `<p class="zone-checklist__stations">${escapeHTML(stationsSummary.summary)}</p>` : '';
   const routesLine = exitsSummary?.summary ? `<p class="zone-checklist__routes">${escapeHTML(exitsSummary.summary)}</p>` : '';
   return `<details class="shortcut-guide zone-checklist"><summary>Zone field checklist (${totalPois} ${totalPois === 1 ? 'landmark' : 'landmarks'})</summary>
     <ul class="zone-checklist__list" aria-label="Zone landmarks and coordinates">${rows.join('')}</ul>
     ${summaryLine}
     ${threatLine}
+    ${stationsLine}
     ${routesLine}
   </details>`;
 }
