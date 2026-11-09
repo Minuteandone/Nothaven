@@ -1895,6 +1895,7 @@ test('getFieldConsumablePreview and getPartyFieldReadiness compute non-mutating 
   assert.equal(getFieldConsumablePreview(state, 'unknown_item', 0), null);
   assert.equal(getFieldConsumablePreview(state, 'storm_glass', 0), null);
   assert.equal(getFieldConsumablePreview(state, 'bandage', 9), null);
+  assert.equal(getFieldConsumablePreview(state, 'bandage', -1), null);
 
   // Wound Wren + apply bleeding, and lower Bram MP + apply shocked
   state.party[0].hp = 18;
@@ -1935,6 +1936,8 @@ test('getFieldConsumablePreview and getPartyFieldReadiness compute non-mutating 
 
   // Verify exploration UI attaches the live restoration preview to useFieldItem buttons
   const html = exploreScene.render({ state });
+  assert.ok(html.includes('field-pack__readiness'));
+  assert.ok(html.includes('Party readiness: 82% HP (53/65) · 67% MP (12/18) · Statuses: bleeding, shocked · Rest or supplies advised'));
   assert.match(
     html,
     /data-action="useFieldItem" data-arg="bandage" title="Brine-washed linen strips\. Stops bleeding and covers the ugliest wounds\. — On Wren now: \+12 HP \(18\/30\), cures bleeding"/,

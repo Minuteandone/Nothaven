@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFieldConsumablePreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFieldConsumablePreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getPartyFieldReadiness, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -50,8 +50,10 @@ function fieldPack(inventory, party = []) {
     }
   }
 
+  const readiness = getPartyFieldReadiness({ inventory, party });
   return `<section class="field-pack" aria-labelledby="field-pack-title">
     <h3 id="field-pack-title">${icon('bag')}Field Pack:</h3>
+    <p class="quiet-note field-pack__readiness">${escapeHTML(readiness.summary)}</p>
     ${stacks.length
       ? `<ul class="field-pack__items">${summaries.join('')}</ul>${consumables.length ? `<div class="field-pack__actions">${consumables.join('')}</div>` : ''}${crafts.length ? `<div class="field-pack__actions"><strong class="field-pack__label">Craft Ready:</strong>${crafts.join('')}</div>` : ''}`
       : '<p class="quiet-note">No supplies packed. Visit Hesta in Greyhaven to prepare.</p>'}

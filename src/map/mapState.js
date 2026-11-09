@@ -251,8 +251,8 @@ export function getFieldConsumablePreview(gameState, itemId, targetIndex = 0) {
   const item = getItem(itemId);
   if (!item || item.type !== TYPES.CONSUMABLE) return null;
 
-  const idx = Number.isInteger(targetIndex) && targetIndex >= 0 ? targetIndex : 0;
-  const target = gameState?.party?.[idx];
+  const idx = Number.isInteger(targetIndex) ? targetIndex : 0;
+  const target = idx >= 0 ? gameState?.party?.[idx] : null;
   if (!target || typeof target !== 'object') return null;
 
   const eff = effectiveStats(target);
