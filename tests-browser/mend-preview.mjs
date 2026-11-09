@@ -129,6 +129,10 @@ try {
       assert.equal(await page.locator('.combat-outcome .battle-rewards').count(), 1);
       assert.equal(await page.locator('.combat-outcome .battle-rewards').textContent(), '+10 XP · +9 gold');
       await click('finish');
+      if ((await state()).scene === 'rewardChoice') {
+        assert.match(await page.locator('main').innerText(), /Victory spoils/);
+        await click('skip');
+      }
       const finished = await state();
       assert.equal(finished.scene, 'explore'); assert.equal(finished.combat, null);
       assert.equal(finished.gold, victory.gold); assert.equal(finished.party[0].xp, victory.party[0].xp);

@@ -8,6 +8,8 @@ import { installDrills, DRILL_FOES, gauntletQueue } from '../src/scenes/drills.j
 import { featStatus, FIELD_TRIALS } from '../src/scenes/feats.js';
 import { effectiveStats } from '../src/items/equipment.js';
 import { installBag } from '../src/scenes/bag.js';
+import { installRewardChoice } from '../src/scenes/rewardChoice.js';
+import { rewardChoicePool } from '../src/items/rewardChoice.js';
 import { getJournal } from '../src/story/index.js';
 import { installBestiary } from '../src/scenes/bestiary.js';
 import { getItem } from '../src/items/items.js';
@@ -50,6 +52,7 @@ function harness(t) {
   installProgression(game);
   installShop(game);
   installBag(game);
+  installRewardChoice(game);
   installDrills(game);
   installCompanions(game);
   t.after(installBestiary(game));
@@ -63,6 +66,14 @@ function act(game, name, arg) {
   assert.equal(typeof action, 'function', `${game.state.scene} supports ${name}`);
   action(game, { dataset: { arg } });
   game.render();
+}
+
+// Pooled real victories route Finish through the one-time spoils scene;
+// leaving the spoils returns to the scene the battle was fought in and
+// grants nothing (drill battles never pool and return directly).
+function finishCombat(game) {
+  act(game, 'finish');
+  if (game.state.scene === 'rewardChoice') act(game, 'skip');
 }
 
 const directions = [[1, 0, 'moveEast'], [-1, 0, 'moveWest'], [0, 1, 'moveSouth'], [0, -1, 'moveNorth']];
@@ -115,7 +126,7 @@ function winEncounter(game, id) {
   assert.equal(game.state.combat.over, 'victory', `win ${id} with legitimately earned stats and recruited allies`);
   assert.equal(game.state.gold, before + reward);
   assert.equal(game.state.bestiary[species], priorCount + 1, 'actual victory records the species exactly once');
-  act(game, 'finish');
+  finishCombat(game);
   assert.equal(game.state.scene, 'explore');
   assert.equal(game.state.combat, null);
   assert.equal(game.state.bestiary[species], priorCount + 1, 'finishing combat cannot count the same defeat twice');
@@ -286,7 +297,7 @@ function oldTuskJourney(game) {
   assert.deepEqual(game.state.bestiary, expectedBook);
   for (const key of protectedKeys) assert.deepEqual(game.state[key], before[key], `${key} is untouched by Old Tusk`);
   assert.equal(featStatus(game.state).find(f => f.id === 'tusk').done, true);
-  act(game, 'finish');
+  finishCombat(game);
   assert.equal(game.state.scene, 'explore');
   assert.equal(game.state.combat, null);
   assert.equal(game.state.map.activeEncounterId, null);
@@ -361,7 +372,7 @@ function gloomfinJourney(game) {
   assert.deepEqual(game.state.bestiary, expectedBook);
   for (const key of protectedKeys) assert.deepEqual(game.state[key], before[key], `${key} is untouched by Gloomfin`);
   assert.equal(featStatus(game.state).find(f => f.id === 'gloomfin').done, true);
-  act(game, 'finish');
+  finishCombat(game);
   assert.equal(game.state.scene, 'explore');
   assert.equal(game.state.combat, null);
   assert.equal(game.state.map.activeEncounterId, null);
@@ -439,7 +450,7 @@ function frostmaneJourney(game) {
   assert.deepEqual(game.state.bestiary, expectedBook);
   for (const key of protectedKeys) assert.deepEqual(game.state[key], before[key], `${key} is untouched by Frostmane`);
   assert.equal(featStatus(game.state).find(f => f.id === 'frostmane').done, true);
-  act(game, 'finish');
+  finishCombat(game);
   assert.equal(game.state.scene, 'explore');
   assert.equal(game.state.combat, null);
   assert.equal(game.state.map.activeEncounterId, null);
@@ -521,7 +532,7 @@ function lenswardenJourney(game) {
   for (const key of protectedKeys) assert.deepEqual(game.state[key], before[key], `${key} is untouched by Lenswarden`);
   assert.equal(featStatus(game.state).find(f => f.id === 'lenswarden').done, true);
   assert.equal(featStatus(game.state).find(f => f.id === 'trials').done, true);
-  act(game, 'finish');
+  finishCombat(game);
   assert.equal(game.state.scene, 'explore');
   assert.equal(game.state.combat, null);
   assert.equal(game.state.map.activeEncounterId, null);
@@ -697,7 +708,7 @@ function cinderclawJourney(game) {
   for (const key of protectedKeys) assert.deepEqual(game.state[key], before[key]);
   assert.equal(featStatus(game.state).find(f => f.id === 'trials').done, trialWarden);
   assert.equal(featStatus(game.state).find(f => f.id === 'cinderclaw').done, true);
-  act(game, 'finish');
+  finishCombat(game);
   assert.equal(game.state.scene, 'explore');
   assert.equal(game.state.combat, null);
   assert.equal(game.state.map.activeEncounterId, null);
@@ -821,7 +832,7 @@ function spireJourney(game, choice, early) {
     assert.equal(game.state.combat.over, 'victory');
     assert.equal(game.state.gold, before + reward, 'quota never auto-pays');
     assert.equal(game.state.bestiary[species], priorCount + 1);
-    act(game, 'finish');
+    finishCombat(game);
     assert.equal(game.state.bestiary[species], priorCount + 1, 'finish does not double-count');
   };
   for (const contract of [
@@ -1076,7 +1087,7 @@ function heartJourney(game, early, first) {
     assert.equal(game.state.combat.over, 'victory');
     assert.equal(game.state.gold, before + loot, 'Sweep never pays automatically');
     assert.equal(game.state.story.expedition.active.progress, n);
-    act(game, 'finish');
+    finishCombat(game);
     assert.equal(game.state.bestiary.tempest_shade, defeated + 1);
     checkpoint(game, 'complete');
   }
@@ -1244,7 +1255,7 @@ function thunderhoofJourney(game) {
       assert.deepEqual(victories, [{ enemyId: 'thunderhoof', encounterId: 'ridge_thunderhoof' }]);
     };
     assertRewards();
-    act(game, 'finish');
+    finishCombat(game);
     assert.equal(game.state.scene, 'explore');
     assert.equal(game.state.combat, null);
     assert.equal(game.state.map.activeEncounterId, null);
@@ -1350,7 +1361,7 @@ function glacierwardJourney(game) {
       assert.deepEqual(victories, [{ enemyId: 'glacierward_colossus', encounterId: 'highwatch_glacierward' }]);
     };
     assertRewards();
-    act(game, 'finish');
+    finishCombat(game);
     assert.equal(game.state.scene, 'explore');
     assert.equal(game.state.combat, null);
     assert.equal(game.state.map.activeEncounterId, null);
@@ -1494,7 +1505,7 @@ function supplyLinesJourney(game, first) {
       assert.deepEqual(game.state.map.clearedEncounters, before.map.clearedEncounters);
       assert.deepEqual(game.state.map.completedInteractions, before.map.completedInteractions);
     };
-    assertRewards(); act(game, 'finish'); assert.equal(game.state.combat, null);
+    assertRewards(); finishCombat(game); assert.equal(game.state.combat, null);
     assert.equal(game.state.map.activeEncounterId, null); assertRewards();
     checkpoint(game, 'complete'); assertRewards(); staleControls();
   };
@@ -1567,7 +1578,7 @@ function signalLineJourney(game, reverse) {
       targets[route.enemy] = 1;
       const active = { id, progress: index + 1, targets: { ...targets } };
       assert.deepEqual(game.state.story.expedition.active, active);
-      act(game, 'finish'); assert.equal(game.state.combat, null);
+      finishCombat(game); assert.equal(game.state.combat, null);
       assert.deepEqual(game.state.story.expedition.active, active);
       checkpoint(game, 'complete');
       const before = structuredClone(game.state); act(game, 'storyExpedition', 'claim');
@@ -1619,7 +1630,7 @@ function drillJourney(game) {
     assert.deepEqual(protectedState(), before, 'a drill win cannot change campaign progress or give spoils');
     game.state.party.forEach((member, index) => assert.equal(member.xp, beforeXp[index] + xp));
     const rewardedXp = game.state.party.map(member => member.xp);
-    act(game, 'finish');
+    finishCombat(game);
     assert.equal(game.state.scene, 'drills');
     assert.equal(game.state.combat, null);
     assert.deepEqual(protectedState(), before);
@@ -1643,7 +1654,7 @@ function drillJourney(game) {
   assert.equal(game.state.party[0].hp, 0);
   assert.equal(game.state.party[0].xp, beforeXp);
   assert.deepEqual(protectedState(), beforeLoss);
-  act(game, 'finish');
+  finishCombat(game);
   assert.equal(game.state.scene, 'drills');
   assert.equal(game.state.combat, null);
   assert.deepEqual(protectedState(), beforeLoss, 'lost drill costs no gold and does not relocate the map');
@@ -1717,7 +1728,7 @@ function gauntletJourney(game) {
     for (const [i, member] of partyAfterCleanup.entries()) {
       member.statuses = []; if (i > 0 && member.hp <= 0) member.hp = 1;
     }
-    act(game, 'finish');
+    finishCombat(game);
     assert.deepEqual(game.state.party, partyAfterCleanup, 'HP/MP/XP carry over; only ordinary status cleanup and fallen-ally revival apply');
     assert.deepEqual(game.state.drillRecords, expectedRecords, 'Finish cannot duplicate the drill record');
     if (index < queue.length - 1) {
@@ -1756,12 +1767,12 @@ function gauntletJourney(game) {
   expectedRecords[queue[0]] = { wins: prior.wins + 1, best: Math.min(prior.best, first.stats.rounds) };
   assert.deepEqual(game.state.drillRecords, expectedRecords);
   const rewardedXp = game.state.party[0].xp;
-  act(game, 'finish'); assert.equal(game.state.combat.gauntlet.index, 1);
+  finishCombat(game); assert.equal(game.state.combat.gauntlet.index, 1);
   for (let turn = 0; !game.state.combat.over && turn < 250; turn++) act(game, 'defend');
   assert.equal(game.state.combat.over, 'defeat'); assert.equal(game.state.party[0].hp, 0);
   assert.deepEqual(protectedState(), beforeLoss);
   assert.deepEqual(game.state.drillRecords, expectedRecords, 'a loss cannot create a win record');
-  act(game, 'finish');
+  finishCombat(game);
   assert.equal(game.state.scene, 'drills'); assert.equal(game.state.combat, null);
   assert.deepEqual(game.state.drillGauntlet, { runs: 2, best: queue.length }, 'a shorter run cannot replace the best');
   const hero = game.state.party[0], stats = effectiveStats(hero);
@@ -1823,7 +1834,7 @@ function wandererJourney(game) {
     assert.deepEqual(game.state.map.completedInteractions, inspected);
     assert.equal(roadwise(), routes.every(({ id: species }) => (expectedBook[species] || 0) > 0));
     const rewardedGold = game.state.gold, rewardedXp = game.state.party.map(member => member.xp);
-    act(game, 'finish');
+    finishCombat(game);
     assert.equal(game.state.scene, 'explore'); assert.equal(game.state.combat, null);
     assert.equal(game.state.map.activeEncounterId, null);
     assert.deepEqual(game.state.map.clearedEncounters, cleared);
@@ -1880,7 +1891,7 @@ function squallJourney(game) {
       for (let turn = 0; !game.state.combat.over && turn < 100; turn++) act(game, 'attack');
       assert.equal(game.state.combat.over, 'victory');
       assert.equal(game.state.story.expedition.active.progress, kill);
-      act(game, 'finish');
+      finishCombat(game);
     }
     walkExit(game, 'greyhaven');
     const gold = game.state.gold;
@@ -1920,7 +1931,7 @@ function squallJourney(game) {
   }
   game.state.party.forEach((member, index) => assert.equal(member.xp, beforeXp[index] + 420));
   const rewardedInventory = structuredClone(game.state.inventory);
-  act(game, 'finish');
+  finishCombat(game);
   assert.deepEqual(game.state.inventory, rewardedInventory, 'Finish does not duplicate loot');
   assert.equal(game.state.gold, beforeFight + 320, 'Finish does not duplicate gold');
   assert.equal(game.state.map.clearedEncounters.eye_last_squall, true);
@@ -2075,3 +2086,38 @@ for (const ending of ['protect_town', 'share_signal']) {
     }
   }
 }
+
+test('victory spoils: pooled Finish offers one bundle, claiming it is one-time and reload-safe', t => {
+  const game = harness(t);
+  walkExit(game, 'ridge_road');
+  const encounter = ZONES.ridge_road.encounters.find(e => e.encounterId === 'ridge_patrol');
+  walkTo(game, encounter.x, encounter.y);
+  assert.equal(game.state.scene, 'combat');
+  for (let turn = 0; !game.state.combat.over && turn < 100; turn++) act(game, 'attack');
+  assert.equal(game.state.combat.over, 'victory');
+  act(game, 'finish');
+  assert.equal(game.state.scene, 'rewardChoice', 'a pooled victory routes Finish through the spoils pick');
+  assert.match(game.root.innerHTML, /Victory spoils/);
+  assert.match(game.root.innerHTML, /Take Linen Bandage ×2/);
+  assert.match(game.root.innerHTML, /Take Scrap Metal ×2/);
+  assert.match(game.root.innerHTML, /Take Storm Tonic/);
+  assert.equal(game.state.combat, null);
+  const had = id => game.state.inventory.find(item => item.id === id)?.qty || 0;
+  const bandages = had('linen_bandage'), scrap = had('scrap_metal'), tonics = had('storm_tonic');
+  const gold = game.state.gold, xp = game.state.party[0].xp;
+  act(game, 'choose', '1');
+  assert.equal(game.state.scene, 'explore', 'claiming returns to the scene the battle was fought in');
+  assert.match(game.root.innerHTML, /Claimed 2× Scrap Metal from the spoils\./);
+  assert.equal(had('scrap_metal'), scrap + 2, 'claim grants exactly the chosen bundle');
+  assert.equal(had('linen_bandage'), bandages, 'unclaimed bundles are not granted');
+  assert.equal(had('storm_tonic'), tonics, 'unclaimed bundles are not granted');
+  assert.equal(game.state.gold, gold, 'spoils claim never touches gold');
+  assert.equal(game.state.party[0].xp, xp, 'spoils claim never touches XP');
+  assert.equal(game.state.flags.reward_choice_ridge_patrol, true);
+  assert.equal(rewardChoicePool(game.state, 'ridge_patrol'), null, 'the pick is one-time per save');
+  assert.equal(game.state.map.clearedEncounters.ridge_patrol, true, 'the spoils detour still records the encounter victory');
+  assert.equal(game.state.map.activeEncounterId, null);
+  checkpoint(game, 'briefing');
+  assert.equal(game.state.flags.reward_choice_ridge_patrol, true, 'the claimed pick survives a save/reload');
+  assert.equal(rewardChoicePool(game.state, 'ridge_patrol'), null, 'a reloaded save cannot be farmed for spoils');
+});
