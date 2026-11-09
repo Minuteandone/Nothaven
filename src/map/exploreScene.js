@@ -67,6 +67,7 @@ function handleActionResult(game, result) {
 
 export const exploreScene = {
   onEnter(game, data = {}) {
+    game.expeditionLogExpanded = false;
     const mapState = ensureMapState(game.state);
     if (data?.zoneId && ZONES[data.zoneId] && data.zoneId !== mapState.zoneId) {
       const res = travelToZone(game.state, data.zoneId, data.spawnKey || 'default');
@@ -103,10 +104,15 @@ export const exploreScene = {
       hasQuestJournal: Boolean(game.scenes?.quests),
       hasCharacter: Boolean(game.scenes?.character),
       hasFeats: Boolean(game.scenes?.feats),
+      expeditionLogExpanded: game.expeditionLogExpanded === true,
     })}`;
   },
 
   actions: {
+    toggleExpeditionLog(game) {
+      if (game.state?.scene !== 'explore' || game.state?.combat) return;
+      game.expeditionLogExpanded = game.expeditionLogExpanded !== true;
+    },
     unpinObjective(game, el) { if (game.state.scene === 'explore' && !game.state.combat) unpinQuest(game.state, el?.dataset?.arg); },
     openArchive(game) { if (game.state.scene === 'explore' && game.scenes?.archive && !game.state.combat) game.setScene('archive', { returnScene: 'explore' }); },
     ...storyUI.actions,
