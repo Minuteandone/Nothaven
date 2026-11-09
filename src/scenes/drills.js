@@ -87,6 +87,7 @@ export function drillsSummaryText(state) {
 
 // Next-target hint: names the first unlocked drill not yet won, or once every
 // unlocked drill is won, the one with the slowest best (most rounds).
+// Records without a valid best time are skipped for that comparison.
 // Returns null when no drill is unlocked.
 export function drillsNextText(state) {
   const open = drillEntries(state).filter((r) => r.unlocked);
@@ -96,7 +97,9 @@ export function drillsNextText(state) {
     const more = fresh.length - 1;
     return `Next drill to try: ${fresh[0].name}${more ? ` (and ${more} more not yet won)` : ''}.`;
   }
-  const slow = open.reduce((a, r) => (r.record.best > a.record.best ? r : a), open[0]);
+  const timed = open.filter((r) => r.record.best > 0);
+  if (!timed.length) return 'Every unlocked drill won. Win any drill again to record a best time.';
+  const slow = timed.reduce((a, r) => (r.record.best > a.record.best ? r : a), timed[0]);
   return `Every unlocked drill won. Slowest best: ${slow.name} in ${slow.record.best} ${slow.record.best === 1 ? 'round' : 'rounds'} — try to beat it.`;
 }
 

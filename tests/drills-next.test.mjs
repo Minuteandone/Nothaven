@@ -31,6 +31,16 @@ test('drillsNextText names the slowest best once all unlocked drills are won', (
   assertEggFree(t, 'drills next');
 });
 
+test('drillsNextText skips missing or invalid best times', () => {
+  for (const best of [undefined, 0, -1, 'bad']) {
+    assert.equal(drillsNextText(st([a], { [a]: { wins: 1, best } })), 'Every unlocked drill won. Win any drill again to record a best time.');
+  }
+  assert.equal(drillsNextText(st([a, b], { [a]: { wins: 1, best: 'bad' }, [b]: { wins: 2, best: 5 } })),
+    `Every unlocked drill won. Slowest best: ${ENEMIES[b].name} in 5 rounds — try to beat it.`);
+  assert.equal(drillsNextText(st([a, b], { [a]: { wins: 1, best: 6 }, [b]: { wins: 2 } })),
+    `Every unlocked drill won. Slowest best: ${ENEMIES[a].name} in 6 rounds — try to beat it.`);
+});
+
 test('drills scene renders the hint only when a drill is unlocked', () => {
   const none = drillsScene.render({ state: st([]) });
   assert.ok(!none.includes('drills__next'));
