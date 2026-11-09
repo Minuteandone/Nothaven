@@ -219,7 +219,7 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
       addStatus(target, e.ability.status, e.ability.turns || 3, allyTimers(c, target));
       lines.push(e.ability.status === 'bleeding' ? `${target.name} is bleeding!` : `${target.name} is shocked!`);
       const csEvent = e.ability.status === 'bleeding' ? 'heroBleeding' : 'heroShocked';
-      const csBanter = combatBanter(c, csEvent, { party, hero });
+      const csBanter = combatBanter(c, csEvent, { party, hero, excludeId: target.id });
       if (csBanter) lines.push(csBanter);
     }
     c.defending = false;
@@ -247,7 +247,7 @@ export function enemyTurn(c, hero, rng = Math.random, party = [hero]) {
       }
       const statusEvent = ab.status === 'bleeding' ? 'heroBleeding' : 'heroShocked';
       if (hero.hp > 0) {
-        const sbanter = combatBanter(c, statusEvent, { party, hero });
+        const sbanter = combatBanter(c, statusEvent, { party, hero, excludeId: target.id });
         if (sbanter) lines.push(sbanter);
       }
     }
