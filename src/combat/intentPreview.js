@@ -10,27 +10,3 @@ export function enemyIntentPreview(combat) {
   if (!e || e.hp <= 0 || combat.over) return null;
   return e.intent || null;
 }
-
-/**
- * Returns a richer intent preview that also notes enrage and windup state.
- */
-export function richIntentPreview(combat) {
-  const e = combat?.enemy;
-  if (!e || e.hp <= 0 || combat.over) return null;
-
-  const parts = [];
-  if (e.intent) parts.push(e.intent);
-
-  // If enraged, note the heightened threat
-  if (combat.enraged) {
-    parts.push('Now enraged — hitting harder and using abilities more often.');
-  }
-
-  // If gathering a windup, warn the player
-  if (combat.windup) {
-    const name = combat.windup?.name || e.windup?.name || 'a heavy blow';
-    parts.push(`Gathering ${name} — strikes next turn unless stunned.`);
-  }
-
-  return parts.length ? parts.join(' ') : null;
-}

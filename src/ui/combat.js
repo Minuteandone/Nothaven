@@ -365,7 +365,7 @@ export function incomingDamageHint(combat, hero) {
 export function intentPreview(combat) {
   const intent = enemyIntentPreview(combat);
   if (!intent) return '';
-  return `<p class="intent-preview" role="status"><span class="intent-preview__label">Intent:</span> ${escapeHTML(intent)}</p>`;
+  return `<p class="intent-preview"><span class="intent-preview__label">Fighting style:</span> ${escapeHTML(intent)}</p>`;
 }
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;

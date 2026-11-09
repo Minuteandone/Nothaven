@@ -53,7 +53,7 @@ export const ENEMIES = {
   },
   tide_wraith: {
     id: 'tide_wraith', name: 'Tide Wraith',
-    intent: 'Gathers tidal force into crushing Breaker Surges.',
+    intent: 'Gathers tidal force into crushing Breaker Surges that shock the body.',
     hp: 50, atk: 10, def: 4, spd: 6, xp: 50, gold: 30,
     element: 'water',
     boss: true,
@@ -165,7 +165,7 @@ export const ENEMIES = {
   old_tusk: {
     windup: { name: 'Tusk Charge', chance: 0.15, mult: 1.7 },
     id: 'old_tusk', name: 'Old Tusk',
-    intent: "Scarred king of the ridge, charges with bramble and fury.",
+    intent: "Scarred king of the ridge, razor tusks that open deep bleeding wounds.",
     hp: 130, atk: 15, def: 6, spd: 5, xp: 85, gold: 55,
     element: 'earth',
     boss: true,
@@ -201,7 +201,7 @@ export const ENEMIES = {
   lenswarden: {
     windup: { name: 'Focused Glare', chance: 0.15, mult: 1.7 },
     id: 'lenswarden', name: 'The Lenswarden',
-    intent: "Ancient optician guardian, beams focused light and fury.",
+    intent: "Blinding light that can shock — beams focused fury through ancient lenses.",
     hp: 170, atk: 16, def: 9, spd: 6, xp: 110, gold: 70,
     element: 'fire',
     tags: ['construct'],
@@ -256,7 +256,7 @@ export const ENEMIES = {
   },
   thunderhoof: {
     id: 'thunderhoof', name: 'Thunderhoof',
-    intent: 'Storm-charged stampede, hooves crash with lightning.',
+    intent: 'Storm-charged stampede, hooves crash with shocking lightning.',
     hp: 1300, atk: 46, def: 13, spd: 9, xp: 400, gold: 240,
     element: 'lightning',
     boss: true,
@@ -276,7 +276,7 @@ export const ENEMIES = {
   },
   glacierward_colossus: {
     id: 'glacierward_colossus', name: 'Glacierward Colossus',
-    intent: 'Towering ice construct, pulverizes with glacial might.',
+    intent: 'Towering ice construct, pulverizes with glacial might that leaves bleeding wounds.',
     hp: 1500, atk: 48, def: 16, spd: 6, xp: 440, gold: 260,
     element: 'ice',
     tags: ['construct'],
@@ -297,7 +297,7 @@ export const ENEMIES = {
   },
   pass_warlord: {
     id: 'pass_warlord', name: 'Highwatch Warlord',
-    intent: 'Battle-hardened raider leader, strikes with cruel precision.',
+    intent: 'Battle-hardened raider leader, strikes with cruel precision that draws bleeding gashes.',
     hp: 96, atk: 13, def: 6, spd: 5, xp: 70, gold: 45,
     boss: true,
     intro: 'Atop the frozen switchbacks, the Highwatch Warlord levels a notched halberd and bars the pass!',
@@ -330,7 +330,7 @@ export const ENEMIES = {
   },
   dust_marauder: {
     id: 'dust_marauder', name: 'Dust Marauder',
-    intent: 'Sand-scoured raider, strikes fast from the dunes.',
+    intent: 'Sand-scoured raider, strikes fast from the dunes leaving bleeding cuts.',
     hp: 64, atk: 18, def: 5, spd: 7, xp: 30, gold: 18,
     element: 'earth',
     ability: { name: 'Sandblind Slash', chance: 0.3, mult: 1.25, status: 'bleeding', turns: 3 },
@@ -341,7 +341,7 @@ export const ENEMIES = {
   },
   relay_drone: {
     id: 'relay_drone', name: 'Relay Drone',
-    intent: 'Makeshift automaton, firing salvaged bolts of lightning.',
+    intent: 'Makeshift automaton, firing salvaged bolts of shocking lightning.',
     hp: 72, atk: 17, def: 7, spd: 6, xp: 34, gold: 20,
     element: 'earth',
     tags: ['construct'],
@@ -370,7 +370,7 @@ export const ENEMIES = {
   },
   ashen_raider: {
     id: 'ashen_raider', name: 'Ashen Raider',
-    intent: 'Smoke-scarred marauder, blades singed with fiery malice.',
+    intent: 'Smoke-scarred marauder, blades singed with fiery malice that opens bleeding wounds.',
     hp: 120, atk: 24, def: 7, spd: 7, xp: 48, gold: 30,
     element: 'fire',
     ability: { name: 'Cinder Blade', chance: 0.3, mult: 1.25, status: 'bleeding', turns: 3 },
@@ -393,7 +393,7 @@ export const ENEMIES = {
   },
   stormcrown_tyrant: {
     id: 'stormcrown_tyrant', name: 'Stormcrown Tyrant',
-    intent: 'Lightning-crowned warlord, every strike a thunderclap.',
+    intent: 'Lightning-crowned warlord, every strike a shocking thunderclap.',
     hp: 460, atk: 27, def: 8, spd: 6, xp: 160, gold: 120,
     element: 'lightning',
     boss: true,
@@ -435,7 +435,7 @@ export const ENEMIES = {
   },
   storm_heart: {
     id: 'storm_heart', name: 'The Storm’s Heart',
-    intent: "The beacon's raging core, pure elemental fury unleashed.", hp: 680, atk: 34, def: 10, spd: 7, xp: 240, gold: 180,
+    intent: "The beacon's raging core, pure elemental fury that shocks all it touches.", hp: 680, atk: 34, def: 10, spd: 7, xp: 240, gold: 180,
     element: 'lightning',
     boss: true,
     intro: 'Beyond the summit, the eye of the storm opens: a slow-turning core of wind and lightning that has fed the tempest for generations.',
@@ -451,7 +451,7 @@ export const ENEMIES = {
   },
   last_squall: {
     id: 'last_squall', name: 'The Last Squall',
-    intent: 'Final breath of the storm, desperate and devastating.',
+    intent: 'Final breath of the storm, desperate and devastating with shocking force.',
     hp: 1500, atk: 44, def: 13, spd: 8, xp: 420, gold: 320,
     element: 'water',
     boss: true,
