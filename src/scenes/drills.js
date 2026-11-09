@@ -117,6 +117,20 @@ export function journalYardText(state) {
   return `Training yard: ${parts.join(' · ')}.`;
 }
 
+// Yard Gauntlet target line toward the Unbroken Run feat. Null while the
+// gauntlet is still locked (the progress note covers that case).
+export function gauntletTargetText(state) {
+  const unlocked = gauntletQueue(state).length;
+  if (unlocked < GAUNTLET_MIN) return null;
+  const total = DRILL_FOES.length;
+  const grec = gauntletRecord(state);
+  if (grec.best >= total) return `Unbroken Run earned: all ${total} yard bosses beaten in one run.`;
+  if (unlocked < total) return `Unbroken Run needs all ${total} yard bosses in one run; ${unlocked} of ${total} are unlocked so far.`;
+  if (!grec.runs) return `Unbroken Run target: beat all ${total} foes in one run.`;
+  const more = total - grec.best;
+  return `Unbroken Run target: beat all ${total} foes in one run (${more} more than your best).`;
+}
+
 export function gauntletRecordText(grec) {
   if (!grec || !grec.runs) return 'No gauntlet attempted yet.';
   return `Best run: ${grec.best} ${grec.best === 1 ? 'foe' : 'foes'} beaten · ${grec.runs} ${grec.runs === 1 ? 'attempt' : 'attempts'}`;
@@ -137,10 +151,12 @@ export const drillsScene = {
         ${r.unlocked ? uiButton({ action: 'startDrill', arg: r.id, label: 'Begin drill', iconName: 'sword', variant: 'ghost' }) : ''}
       </li>`).join('');
     const queue = gauntletQueue(game.state), grec = gauntletRecord(game.state);
+    const target = gauntletTargetText(game.state);
     const gauntlet = `<section class="panel drills__gauntlet" aria-label="Yard Gauntlet">
         <h2>Yard Gauntlet</h2>
         <p>Face every drill you have unlocked, one after another. Wounds and spent MP carry over between bouts, and each win still grants its drill experience.</p>
         <p class="drill__record">${escapeHTML(gauntletRecordText(grec))}</p>
+        ${target ? `<p class="drills__gauntlet-target">${escapeHTML(target)}</p>` : ''}
         ${queue.length >= GAUNTLET_MIN ? uiButton({ action: 'startGauntlet', label: `Begin gauntlet (${queue.length} foes)`, iconName: 'sword', variant: 'ghost' }) : `<p class="drills__gauntlet-progress">${escapeHTML(`Unlock ${GAUNTLET_MIN} drills to open the gauntlet (${queue.length} of ${GAUNTLET_MIN} unlocked so far).`)}</p>`}
       </section>`;
     const nextHint = drillsNextText(game.state);
