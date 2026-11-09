@@ -242,6 +242,142 @@ export function getZoneWeatherBriefing(gameState, zoneOrId = null) {
  * Pure read-only summary of repeatable field services (inn, shop, muster)
  * across charted zones, plus live inn rest cost and active network status.
  */
+/**
+ * Pure read-only preview of what using a field consumable on a specific party member
+ * will immediately restore or cure, without mutating state.
+ */
+export function getFieldConsumablePreview(gameState, itemId, targetIndex = 0) {
+  if (typeof itemId !== 'string' || !isKnownItem(itemId)) return null;
+  const item = getItem(itemId);
+  if (!item || item.type !== TYPES.CONSUMABLE) return null;
+
+  const idx = Number.isInteger(targetIndex) ? targetIndex : 0;
+  const target = idx >= 0 ? gameState?.party?.[idx] : null;
+  if (!target || typeof target !== 'object') return null;
+
+  const eff = effectiveStats(target);
+  const maxHp = Math.max(0, Number(eff.maxHp ?? target.maxHp ?? target.hp) || 0);
+  const hp = Math.max(0, Math.min(maxHp || Infinity, Number(target.hp) || 0));
+  const maxMp = Math.max(0, Number(eff.maxMp ?? target.maxMp ?? target.mp) || 0);
+  const mp = Math.max(0, Math.min(maxMp || Infinity, Number(target.mp) || 0));
+  const statuses = Array.isArray(target.statuses)
+    ? target.statuses.filter((s) => typeof s === 'string' && s.length > 0)
+    : [];
+
+  const use = item.use || {};
+  const hpGain = use.hp ? Math.max(0, Math.min(maxHp, hp + use.hp) - hp) : 0;
+  const mpGain = use.mp ? Math.max(0, Math.min(maxMp, mp + use.mp) - mp) : 0;
+  const curedStatus = use.cure && statuses.includes(use.cure) ? use.cure : null;
+  const wouldHaveEffect = hpGain > 0 || mpGain > 0 || Boolean(curedStatus);
+
+  const effectParts = [];
+  if (hpGain > 0) effectParts.push(`+${hpGain} HP (${hp}/${maxHp})`);
+  if (mpGain > 0) effectParts.push(`+${mpGain} MP (${mp}/${maxMp})`);
+  if (curedStatus) effectParts.push(`cures ${curedStatus}`);
+
+  const effectSummary = effectParts.length > 0 ? effectParts.join(', ') : 'No immediate effect';
+  const targetName = target.name || (idx === 0 ? 'Wren' : `Ally ${idx}`);
+  const baseDescription = item.description || item.name;
+  const summary = wouldHaveEffect
+    ? `${baseDescription} — On ${targetName} now: ${effectSummary}`
+    : baseDescription;
+
+  return {
+    itemId: item.id,
+    itemName: item.name,
+    description: baseDescription,
+    targetIndex: idx,
+    targetName,
+    hp,
+    maxHp,
+    mp,
+    maxMp,
+    hpGain,
+    mpGain,
+    curedStatus,
+    wouldHaveEffect,
+    effectSummary,
+    summary,
+  };
+}
+
+/**
+ * Pure read-only summary of party HP, MP, and active status conditions in the field,
+ * respecting equipment bonuses via effectiveStats.
+ */
+export function getPartyFieldReadiness(gameState = null) {
+  const rawParty = Array.isArray(gameState?.party) ? gameState.party.filter(Boolean) : [];
+  let totalHp = 0;
+  let totalMaxHp = 0;
+  let totalMp = 0;
+  let totalMaxMp = 0;
+  let woundedCount = 0;
+  let lowMpCount = 0;
+  const statusSet = new Set();
+
+  const members = rawParty.map((member, idx) => {
+    const eff = effectiveStats(member);
+    const maxHp = Math.max(0, Number(eff.maxHp ?? member.maxHp ?? member.hp) || 0);
+    const hp = Math.max(0, Math.min(maxHp || Infinity, Number(member.hp) || 0));
+    const maxMp = Math.max(0, Number(eff.maxMp ?? member.maxMp ?? member.mp) || 0);
+    const mp = Math.max(0, Math.min(maxMp || Infinity, Number(member.mp) || 0));
+    const statuses = Array.isArray(member.statuses)
+      ? member.statuses.filter((s) => typeof s === 'string' && s.length > 0)
+      : [];
+    for (const s of statuses) statusSet.add(s);
+
+    const wounded = maxHp > 0 && hp < maxHp;
+    const lowMp = maxMp > 0 && mp < maxMp;
+    if (wounded) woundedCount += 1;
+    if (lowMp) lowMpCount += 1;
+    totalHp += hp;
+    totalMaxHp += maxHp;
+    totalMp += mp;
+    totalMaxMp += maxMp;
+
+    return {
+      id: member.id || `member_${idx}`,
+      name: member.name || (idx === 0 ? 'Wren' : `Ally ${idx}`),
+      hp,
+      maxHp,
+      mp,
+      maxMp,
+      statuses,
+      wounded,
+      lowMp,
+    };
+  });
+
+  const hpPercent = totalMaxHp > 0 ? Math.round((totalHp / totalMaxHp) * 100) : 100;
+  const mpPercent = totalMaxMp > 0 ? Math.round((totalMp / totalMaxMp) * 100) : 100;
+  const activeStatuses = Array.from(statusSet);
+  const needsAttention = woundedCount > 0 || lowMpCount > 0 || activeStatuses.length > 0;
+  const parts = [
+    `Party readiness: ${hpPercent}% HP (${totalHp}/${totalMaxHp})`,
+    `${mpPercent}% MP (${totalMp}/${totalMaxMp})`,
+  ];
+  if (activeStatuses.length > 0) {
+    parts.push(`Statuses: ${activeStatuses.join(', ')}`);
+  }
+  parts.push(needsAttention ? 'Rest or supplies advised' : 'Ready');
+
+  return {
+    memberCount: members.length,
+    totalHp,
+    totalMaxHp,
+    hpPercent,
+    totalMp,
+    totalMaxMp,
+    mpPercent,
+    woundedCount,
+    lowMpCount,
+    activeStatuses,
+    needsAttention,
+    members,
+    summary: parts.join(' · '),
+  };
+}
+
 export function getFieldServicesSummary(gameState = null) {
   const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
   const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
