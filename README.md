@@ -267,7 +267,7 @@ that exact rank, whole live-state and quick-save stability, and native Back.
 They also verify Contracts mastered stays at 0 of 18 until claim three, then
 reads 1 of 18 after claims three and four; this is not an all-contract mastery run.
 
-Native Board order, Highest pay, and Fewest claims controls are checked on the
+Native Board order, Highest pay, Fewest claims, and Easiest hunt controls are checked on the
 fresh locked board, each earned region, the reopened full board, and after real
 claims two through four. Explicit expected orders cover tied and non-tied claim
 counts, higher-paying Bandit before Rat, locked rows last, active-outside-region
