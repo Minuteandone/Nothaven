@@ -875,6 +875,9 @@ em.enraged {
   .companion-card__heading h3 { font-size: 1.4rem; }
 }
 
+/* Companion technique line on muster cards */
+.companion-technique { margin: 0.4rem 0; font-size: 0.72rem; line-height: 1.5; color: var(--muted); }
+.companion-technique strong { color: var(--text); font-weight: 650; }
 /* Companion mastery line on muster cards */
 .companion-mastery { margin: 0.4rem 0; font-size: 0.9rem; opacity: 0.85; }
 .companion-mastery--done { opacity: 1; border-left: 3px solid currentColor; padding-left: 0.5rem; }
