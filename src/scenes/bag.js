@@ -9,8 +9,9 @@ import { useConsumable } from '../items/consumables.js';
 import { recipesUsingItem, listRecipes, recipeInputsMet, recipeSummary, craft as craftRecipe } from '../items/crafting.js';
 import { countItem } from '../items/inventory.js';
 import { craftInField } from '../map/mapState.js';
-import { sellValueOf, shopsStocking, isScarceItem } from '../items/shop.js';
+import { sellValueOf, shopsStocking, isScarceItem, getShop } from '../items/shop.js';
 import { FITTING_SLOTS, MAX_FITTING, fittingLevel, fittingEffectText } from '../items/forge.js';
+import { TRADES, TRADE_LOCATIONS } from '../items/trade.js';
 import { recipeBookEntries, filterRecipeEntries } from './recipes.js';
 
 const esc = (v) =>
@@ -120,11 +121,43 @@ function craftHint(itemId) {
   return 'Used in: ' + names.join(' · ') + (rest > 0 ? ` (+${rest} more)` : '');
 }
 
-function bagRow(item, stack, member) {
+const tradeLocationNames = () => TRADE_LOCATIONS.map((id) => getShop(id)?.name || id).join(' · ');
+
+/** Pure: "where does this come from" lines for a pack row's Details drawer. */
+export function bagDetailsLines(itemId) {
+  if (!isKnownItem(itemId)) return [];
+  const item = getItem(itemId);
+  const lines = [];
+  const shops = shopsStocking(itemId);
+  if (shops.length) lines.push(`Buy at: ${shops.join(' · ')} — ${item.price || 0}g each`);
+  const at = tradeLocationNames();
+  for (const trade of TRADES) {
+    if (trade.receive?.id === itemId) {
+      const give = (trade.give || []).map((g) => `${isKnownItem(g.id) ? getItem(g.id).name : g.id} ×${g.qty}`).join(' + ');
+      lines.push(`Trade for it: ${trade.name} (${give}) at ${at}`);
+    }
+    if ((trade.give || []).some((g) => g.id === itemId)) {
+      const recv = trade.receive;
+      const got = recv && isKnownItem(recv.id) ? `${getItem(recv.id).name} ×${recv.qty}` : '';
+      lines.push(`Trades away: ${trade.name}${got ? ` (for ${got})` : ''} at ${at}`);
+    }
+  }
+  if (isScarceItem(itemId)) lines.push('Rare drop — shops never stock it.');
+  if (!lines.length) {
+    lines.push(item.type === TYPES.KEY
+      ? 'Story item — gained through the journey, not sold.'
+      : 'Not sold in shops — comes from foes, caches, rewards or crafting.');
+  }
+  return lines;
+}
+
+function bagRow(item, stack, member, detailsId = '') {
   const sum = statSummary(item.stats);
+  const open = detailsId === item.id;
+  const detailBtn = `<button data-action="bagDetails" data-arg="${esc(item.id)}">${open ? 'Hide details' : 'Details'}</button>`;
   let controls = '';
   if (item.type === TYPES.CONSUMABLE) {
-    controls = `<button data-action="use" data-arg="${esc(item.id)}">Use</button>`;
+    controls = detailBtn + `<button data-action="use" data-arg="${esc(item.id)}">Use</button>`;
   } else if (item.type === TYPES.EQUIPMENT && canEquip(item.id)) {
     const equippedHere = member?.equipment?.[item.slot] === item.id;
     let delta = '';
@@ -134,10 +167,14 @@ function bagRow(item, stack, member) {
       delta = statDeltaSummary(curItem, item);
     }
     controls =
+      detailBtn +
       `<button data-action="equip" data-arg="${esc(item.id)}">Equip</button>` +
       (delta ? ` <small>${esc(delta)}</small>` : '') +
       (equippedHere ? ` <button data-action="unequip" data-arg="${esc(item.slot)}">Unequip ${SLOT_LABELS[item.slot] || esc(item.slot)}</button>` : '');
+  } else {
+    controls = detailBtn;
   }
+  const detailLines = open ? bagDetailsLines(item.id) : [];
   return (
     `<li class="bag-row">` +
     `<span class="bag-name">${esc(item.name)} ×${stack.qty}</span>` +
@@ -147,6 +184,7 @@ function bagRow(item, stack, member) {
     (item.type !== TYPES.KEY && sellValueOf(item) > 0
       ? ` <span class="bag-worth">Sell value: ${sellValueOf(item) * stack.qty}g</span>` : '') +
     (controls ? `<span class="bag-controls">${controls}</span>` : '') +
+    (detailLines.length ? `<div class="bag-details">${detailLines.map((line) => `<p>${esc(line)}</p>`).join('')}</div>` : '') +
     `</li>`
   );
 }
@@ -196,6 +234,7 @@ export const bagScene = {
     game.bagMemberIndex = 0;
     game.bagMessage = data.message ?? '';
     game.bagQuery = '';
+    game.bagDetailsId = '';
   },
 
   render(game) {
@@ -235,6 +274,7 @@ export const bagScene = {
       `</div>`;
 
     const query = bagQueryText(game.bagQuery);
+    const detailsId = typeof game.bagDetailsId === 'string' ? game.bagDetailsId : '';
     const allStacks = (s.inventory || []).filter((st) => isKnownItem(st.id));
     const visibleStacks = filterStacksByQuery(allStacks, query);
     const searchControl = `<div class="bag-search">` +
@@ -250,7 +290,7 @@ export const bagScene = {
         (st) => isKnownItem(st.id) && getItem(st.id).type === type,
       ), sortMode), query);
       if (!stacks.length) return '';
-      const rows = stacks.map((st) => bagRow(getItem(st.id), st, member)).join('');
+      const rows = stacks.map((st) => bagRow(getItem(st.id), st, member, detailsId)).join('');
       return `<section class="bag-group" aria-label="${TYPE_TITLES[type]}"><h3>${TYPE_TITLES[type]}</h3><ul class="bag-list">${rows}</ul></section>`;
     }).join('');
     const sectionsHtml = sections || (allStacks.length
@@ -293,6 +333,12 @@ export const bagScene = {
     bagSearchClear(game) {
       if (!canFilterBag(game)) return;
       game.bagQuery = '';
+    },
+
+    bagDetails(game, el) {
+      const id = el?.dataset?.arg;
+      if (!id || !isKnownItem(id)) return;
+      game.bagDetailsId = game.bagDetailsId === id ? '' : id;
     },
 
     use(game, el) {
