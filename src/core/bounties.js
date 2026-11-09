@@ -300,6 +300,8 @@ export const EXCHANGE_OFFERS = Object.freeze([
   Object.freeze({ id: 'broth', itemId: 'spiced_broth', qty: 1, cost: 4 }),
   Object.freeze({ id: 'glass', itemId: 'storm_glass', qty: 1, cost: 5 }),
   Object.freeze({ id: 'brass', itemId: 'relay_brass', qty: 1, cost: 7 }),
+  Object.freeze({ id: 'sunscar', itemId: 'sunscar_glass', qty: 1, cost: 8 }),
+  Object.freeze({ id: 'iron', itemId: 'thunder_iron', qty: 1, cost: 9 }),
 ]);
 export const getExchangeOffer = (id) => EXCHANGE_OFFERS.find((o) => o.id === id) || null;
 export function exchangeOfferText(o) {
