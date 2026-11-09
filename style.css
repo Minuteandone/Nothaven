@@ -1547,3 +1547,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .exchange__offer { min-width: 0; }
 .exchange__offer .action-button { width: 100%; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 .bounty__marks { margin: .25rem 0; color: var(--muted); font-size: .85rem; }
+
+.exchange__perk { color: var(--accent); font-size: .85rem; }
