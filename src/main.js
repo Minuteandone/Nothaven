@@ -8,6 +8,7 @@ import { installProgression } from './core/progression.js';
 import { installMap } from './map/index.js';
 import { installShop } from './scenes/shop.js';
 import { installBag } from './scenes/bag.js';
+import { installRewardChoice } from './scenes/rewardChoice.js';
 import { installCompanions } from './scenes/muster.js';
 import { installBestiary } from './scenes/bestiary.js';
 import { installRecipeBook } from './scenes/recipes.js';
@@ -42,6 +43,7 @@ installMap(game); // registers the 'explore' scene
 installExplorationControls(game); // exploration-scoped Survey and nearby-action shortcuts
 installShop(game); // registers the 'shop' scene (Hesta's Goods)
 installBag(game); // registers the 'bag' scene (inventory screen)
+installRewardChoice(game); // registers the 'rewardChoice' scene (post-victory spoils pick)
 installCompanions(game); // registers the 'muster' scene (recruit companions)
 installQuestJournal(game);
 installFeats(game);
