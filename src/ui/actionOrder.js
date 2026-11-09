@@ -32,7 +32,7 @@ export function combatActionOrder(combat, party) {
     const down = isDown(member);
     entries.push({
       kind: 'ally', name: actorName(member, 'Companion'),
-      state: down ? 'Down · skipped' : 'Automatic ally', down,
+      state: down ? 'Down now' : 'Automatic ally', down,
     });
   }
   const enemyDown = isDown(enemy);
@@ -63,7 +63,7 @@ export function renderActionOrder(combat, party) {
   return `<section class="panel action-order" aria-labelledby="action-order-title">
     <div class="combat-side__heading"><h2 id="action-order-title">Action order</h2><span>One round</span></div>
     <ol class="action-order__list">${items}</ol>
-    <p class="action-order__note">Companions act in formation order after each turn-spending command; downed allies are skipped. If an action ends the battle, everyone later in the order is skipped.</p>
+    <p class="action-order__note">Companions act in formation order after each turn-spending command. “Down now” allies are skipped unless revived before their formation turn. If an action ends the battle, everyone later in the order is skipped.</p>
     ${model.opening ? `<p class="action-order__opening">${escapeHTML(model.opening)}</p>` : ''}
   </section>`;
 }
