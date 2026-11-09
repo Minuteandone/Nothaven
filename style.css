@@ -145,6 +145,8 @@ p { color: var(--muted); }
 .party-member__heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .9rem; }
 .party-member__name { font-family: Georgia, "Times New Roman", serif; font-size: 1.25rem; }
 .level-badge { color: var(--accent); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+
+.party-member__role { font-size: .68rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin: 0 0 .25rem; }
 .meter { margin: .55rem 0; }
 .meter__labels { display: flex; justify-content: space-between; margin-bottom: .3rem; color: var(--muted); font-size: .69rem; font-weight: 650; letter-spacing: .05em; }
 .meter__labels span:last-child { color: var(--text); font-variant-numeric: tabular-nums; }
