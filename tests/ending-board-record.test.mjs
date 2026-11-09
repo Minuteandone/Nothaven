@@ -17,7 +17,7 @@ test('ending lists the board record under Your journey after claims', () => {
   s.story.stage = 'complete'; s.story.ending = 'share_signal';
   s.bounties = { active: null, progress: {}, completed: { ridge_rats: 3, pier_clearance: 4, wolf_trail: 2 } };
   const html = render(s);
-  const line = '<li class="ending-bounty-record">Board record: 9 claims · Board Regular · 2 of 18 contracts mastered.</li>';
+  const line = '<li class="ending-bounty-record">Board record: 9 claims · Board Regular · 2 of 18 contracts mastered · 15 Board Marks earned.</li>';
   assert.ok(html.includes(line), html);
   assert.ok(html.indexOf(line) > html.indexOf('<h3>Your journey</h3>'));
   assert.ok(html.indexOf(line) < html.indexOf('<h3>Credits</h3>'));
