@@ -25,6 +25,7 @@ export {
   getZoneThreatIntel,
   getCompassBearing,
   getZoneCompassHint,
+  getNearbyActionsSummary,
   findSafePath,
   getSafePathPreview,
   stepAlongSafePath,

@@ -27,6 +27,7 @@ import {
   getPatrolBriefing,
   getCompassBearing,
   getZoneCompassHint,
+  getNearbyActionsSummary,
   findSafePath,
   getSafePathPreview,
   stepAlongSafePath,
@@ -2176,4 +2177,81 @@ test('getFieldCraftPreview summarizes recipe batch capacity and recordEncounterV
 
   const clearedLines = game.state.map.log.filter((line) => line === 'Cleared encounter: ridge_patrol.');
   assert.equal(clearedLines.length, 1);
+});
+
+test('getZoneCompassHint route/briefing tooltip and getNearbyActionsSummary summarize nearby field actions without mutating state', () => {
+  const emptyFrozen = Object.freeze({});
+  const defaultNearby = getNearbyActionsSummary(emptyFrozen);
+  assert.equal(defaultNearby.zoneId, 'greyhaven');
+  assert.equal(defaultNearby.x, 2);
+  assert.equal(defaultNearby.y, 3);
+  assert.equal(defaultNearby.totalCount, 0);
+  assert.equal(
+    defaultNearby.summary,
+    'Within reach: No immediate actions — move beside a person, cache, route, or threat.',
+  );
+  assertEggFree(defaultNearby.summary);
+
+  const maraNearbyState = Object.freeze({
+    map: Object.freeze({
+      zoneId: 'greyhaven',
+      x: 3,
+      y: 2,
+      visitedZones: Object.freeze({ greyhaven: true }),
+      clearedEncounters: Object.freeze({}),
+      completedInteractions: Object.freeze({}),
+      log: Object.freeze([]),
+    }),
+  });
+  const maraNearby = getNearbyActionsSummary(maraNearbyState);
+  assert.equal(maraNearby.talkCount, 1);
+  assert.equal(maraNearby.interactCount, 0);
+  assert.equal(maraNearby.totalCount, 1);
+  assert.equal(maraNearby.summary, 'Within reach (1): 1 contact');
+  assertEggFree(maraNearby.summary);
+
+  const ridgeState = Object.freeze({
+    map: Object.freeze({
+      zoneId: 'ridge_road',
+      x: 6,
+      y: 3,
+      visitedZones: Object.freeze({ greyhaven: true, ridge_road: true }),
+      clearedEncounters: Object.freeze({}),
+      completedInteractions: Object.freeze({}),
+      log: Object.freeze([]),
+    }),
+  });
+  const ridgeNearby = getNearbyActionsSummary(ridgeState);
+  assert.equal(ridgeNearby.encounterCount, 1);
+  assert.equal(ridgeNearby.lockedEncounterCount, 2);
+  assert.equal(ridgeNearby.patrolAvailable, true);
+  assert.equal(ridgeNearby.summary, 'Within reach (4): 1 threat, 2 sealed challenges, 1 patrol');
+  assertEggFree(ridgeNearby.summary);
+
+  const compassHint = getZoneCompassHint(ridgeState);
+  assert.ok(compassHint);
+  assert.equal(compassHint.kind, 'encounter');
+  assert.equal(compassHint.id, 'ridge_patrol');
+  assert.equal(compassHint.routeSteps, 1);
+  assert.equal(compassHint.routeReachable, true);
+  assert.match(compassHint.targetSummary, /Ridge Bandit/);
+  assert.match(compassHint.tooltip, /Safe route: 1 step/);
+  assertEggFree(compassHint.tooltip);
+
+  const game = makeMockGame();
+  installMap(game, { enableKeyboard: false });
+  game.setScene('explore', { zoneId: 'greyhaven' });
+  const html = exploreScene.render(game);
+  assert.match(
+    html,
+    /class="quiet-note nearby-panel__summary">Within reach: No immediate actions — move beside a person, cache, route, or threat\.<\/p>/,
+  );
+  assert.match(
+    html,
+    /class="terrain-compass__bearing" title="East Gate → Ridge Road \(E, 6 tiles\) — Ridge Road · Uncharted region \(Danger 1\) · Safe route: 6 steps"/,
+  );
+  assert.match(
+    html,
+    /aria-label="Wren, your position, column 3, row 4" aria-current="location" title="Wren, your position, column 3, row 4 — Cobble \/ Trail \(2, 3\) · Passable/,
+  );
 });
