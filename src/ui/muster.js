@@ -9,6 +9,13 @@ const ROLE_LABELS = {
   guardian: 'Front-line defender', signaler: 'Arcane support',
 };
 
+const TECHNIQUE_LINES = {
+  keeper: 'Uses <strong>Mend</strong> to heal a wounded ally and <strong>Spark</strong> for a Lightning attack against constructs.',
+  guardian: 'Uses <strong>Shield Bash</strong> to strike enemies and stun non-boss foes.',
+  signaler: 'Uses <strong>Signal Flare</strong> for a piercing Fire attack.',
+  scout: 'Uses <strong>Aimed Shot</strong> for a high-accuracy physical strike.',
+};
+
 const PORTRAIT_DETAILS = {
   tamsin: {
     description: 'A hooded ridge scout with a curved bow beside wind-cut peaks.',
@@ -81,6 +88,12 @@ export function masteryLine(companion, member) {
   return `<p class="companion-mastery${done ? ' companion-mastery--done' : ''}"><strong>${escapeHTML(label)}: ${escapeHTML(m.name)}</strong> — ${escapeHTML(m.note)}</p>`;
 }
 
+
+export function companionTechniqueLine(companion) {
+  const line = TECHNIQUE_LINES[companion?.role];
+  return line ? `<p class="companion-technique"><strong>Technique:</strong> ${line}</p>` : '';
+}
+
 function companionCard(game, companion) {
   const { state } = game;
   const party = Array.isArray(state?.party) ? state.party : [];
@@ -111,6 +124,7 @@ function companionCard(game, companion) {
     <div class="companion-card__body">
       <div class="companion-card__heading"><div><p class="eyebrow">${escapeHTML(ROLE_LABELS[companion.role] || companion.role)}</p><h3>${escapeHTML(companion.name)}</h3><p class="companion-title">${escapeHTML(companion.title)}</p></div><span class="companion-level">Lv ${member ? stat(member.level || 1) : 1}</span></div>
       <p class="companion-blurb">${escapeHTML(companion.blurb)}</p>
+      ${companionTechniqueLine(companion)}
       ${masteryLine(companion, member)}
       ${member ? `<div class="companion-vitals">${meter({ label: `HP for ${companion.name}`, value: member.hp, max: stats.maxHp, tone: 'hp' })}${meter({ label: `MP for ${companion.name}`, value: member.mp, max: stats.maxMp, tone: 'mp' })}</div>` : `<p class="companion-base">Base vitality <strong>${stat(stats.maxHp)} HP</strong> · <strong>${stat(stats.maxMp)} MP</strong></p>`}
       ${statGrid(stats)}
