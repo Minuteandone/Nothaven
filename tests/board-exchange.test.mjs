@@ -44,10 +44,13 @@ test('claiming a contract announces its marks and keeps spent marks', () => {
 
 test('the exchange offers fixed supplies of real items with rising costs', () => {
   assert.ok(Object.isFrozen(EXCHANGE_OFFERS));
-  assert.deepEqual(EXCHANGE_OFFERS.map((o) => o.cost), [2, 3, 4, 5, 7]);
+  assert.deepEqual(EXCHANGE_OFFERS.map((o) => o.cost), [2, 3, 4, 5, 7, 8, 9]);
   for (const o of EXCHANGE_OFFERS) { assert.ok(getItem(o.itemId), o.itemId); assert.ok(Object.isFrozen(o)); }
   assert.equal(exchangeOfferText(EXCHANGE_OFFERS[0]), '2× Field Dressing for 2 marks');
   assert.equal(exchangeOfferText(EXCHANGE_OFFERS[4]), '1× Relay Brass for 7 marks');
+  assert.equal(exchangeOfferText(EXCHANGE_OFFERS[5]), '1× Sunscar Glass for 8 marks');
+  assert.equal(exchangeOfferText(EXCHANGE_OFFERS[6]), '1× Thunder Iron for 9 marks');
+  assert.equal(new Set(EXCHANGE_OFFERS.map((o) => o.id)).size, EXCHANGE_OFFERS.length);
 });
 
 test('exchanging spends marks atomically and refuses when short', () => {
@@ -78,8 +81,8 @@ test('the board renders the exchange and its action is scene-guarded', () => {
   assert.match(html, /<h2 class="exchange__title">Board Exchange<\/h2>/);
   assert.match(html, /<p class="exchange__marks">Board Marks: 3 available \(3 earned, 0 spent\)\.<\/p>/);
   assert.match(html, /<p class="bounty__marks">Earns 1 Board Mark per claim\.<\/p>/);
-  assert.equal((html.match(/data-action="exchangeMarks"/g) || []).length, 5);
-  assert.equal((html.match(/data-action="exchangeMarks" data-arg="[a-z]+" disabled/g) || []).length, 3);
+  assert.equal((html.match(/data-action="exchangeMarks"/g) || []).length, 7);
+  assert.equal((html.match(/data-action="exchangeMarks" data-arg="[a-z]+" disabled/g) || []).length, 5);
   assertEggFree(html, 'board exchange');
   s.scene = 'town';
   bountiesScene.actions.exchangeMarks(game, { dataset: { arg: 'dressings' } });
@@ -90,11 +93,25 @@ test('the board renders the exchange and its action is scene-guarded', () => {
   assert.match(game.bountyMessage, /^Exchanged 2 Board Marks for 2× Field Dressing\. 1 left\.$/);
 });
 
-const EXCHANGE_DOC = 'Every claim also earns Board Marks — 1 for the first six postings, 2 for the next six and 3 for the last six — which the Board Exchange beneath the contracts trades for supplies: two Field Dressings, a Highland Flask, a Spiced Broth, Storm Glass or Relay Brass.';
+const EXCHANGE_DOC = 'Every claim also earns Board Marks — 1 for the first six postings, 2 for the next six and 3 for the last six — which the Board Exchange beneath the contracts trades for supplies: two Field Dressings, a Highland Flask, a Spiced Broth, Storm Glass, Relay Brass, Sunscar Glass or Thunder Iron.';
 test('the guide and player guide document the Board Exchange once each', () => {
   const md = readFileSync(new URL('../docs/PLAYER_GUIDE.md', import.meta.url), 'utf8');
   assert.equal(md.split(EXCHANGE_DOC).length, 2);
   assert.ok(guideScene.render({ state: {} }).includes(escapeHTML(EXCHANGE_DOC)));
   for (const o of EXCHANGE_OFFERS) assert.ok(EXCHANGE_DOC.includes(getItem(o.itemId).name));
   assertEggFree(EXCHANGE_DOC, 'exchange docs');
+});
+
+test('late offers trade the scarcest materials for the most marks', () => {
+  const s = fresh();
+  s.bounties = { active: null, progress: 0, completed: { colossus_thunder: 6 }, spent: 0 };
+  const iron = qty(s, 'thunder_iron'); const sun = qty(s, 'sunscar_glass');
+  let r = exchangeMarks(s, 'iron');
+  assert.equal(r.ok, true);
+  assert.equal(r.message, 'Exchanged 9 Board Marks for 1× Thunder Iron. 9 left.');
+  r = exchangeMarks(s, 'sunscar');
+  assert.equal(r.message, 'Exchanged 8 Board Marks for 1× Sunscar Glass. 1 left.');
+  assert.equal(qty(s, 'thunder_iron'), iron + 1);
+  assert.equal(qty(s, 'sunscar_glass'), sun + 1);
+  assert.equal(exchangeMarks(s, 'iron').message, 'You need 9 Board Marks for that; you have 1.');
 });
