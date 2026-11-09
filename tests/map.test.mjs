@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { assertEggFree } from './helpers/eggGuard.mjs';
+import { compassRouteLine } from '../src/ui/exploration.js';
 import { createInitialState } from '../src/state.js';
 import { installStory } from '../src/story/integration.js';
 import {
@@ -2250,12 +2251,25 @@ test('getZoneCompassHint route/briefing tooltip and getNearbyActionsSummary summ
   );
   assert.match(
     html,
-    /class="terrain-compass__bearing" title="East Gate → Ridge Road \(E, 6 tiles\) — Ridge Road · Uncharted region \(Danger 1\) · Safe route: 6 steps"/,
+    /class="terrain-compass__bearing" title="East Gate → Ridge Road \(E, 6 tiles\) — Ridge Road · Uncharted region \(Danger 1\)"/,
   );
+  assert.match(html, /<p class="quiet-note terrain-compass__route">Safe route: 6 steps<\/p>/);
   assert.match(
     html,
     /aria-label="Wren, your position, column 3, row 4" aria-current="location" title="Wren, your position, column 3, row 4 — Cobble \/ Trail \(2, 3\) · Passable/,
   );
+});
+
+
+test('compassRouteLine makes route caveats visible, escaped text and omits empty details', () => {
+  assert.equal(compassRouteLine(null), '');
+  assert.equal(compassRouteLine(''), '');
+  assert.equal(compassRouteLine(42), '');
+  assert.equal(
+    compassRouteLine('Safe route <img src=x> & "pause"'),
+    '<p class="quiet-note terrain-compass__route">Safe route &lt;img src=x&gt; &amp; &quot;pause&quot;</p>',
+  );
+  assertEggFree(compassRouteLine('Safe route: 3 steps'));
 });
 
 test('getZoneCompassHint route caveats and getZoneExitsSummary report safe-route pause/ambush caveats and outbound route summaries without mutating state', () => {
@@ -2329,8 +2343,17 @@ test('getZoneCompassHint route caveats and getZoneExitsSummary report safe-route
   );
   assert.match(
     html,
-    /class="terrain-compass__bearing" title="[^"]*Safe route: \d+ steps · Step ambush: 12%"/,
+    /class="terrain-compass__bearing" title="[^"]*Cliffside Gale Hound[^"]*"/,
   );
+  assert.match(html, /<p class="quiet-note terrain-compass__route">Safe route: 3 steps · Step ambush: 12%<\/p>/);
+  assert.doesNotMatch(html, /class="terrain-compass__bearing" title="[^"]*Safe route:/);
+
+  game.state.map = { ...pauseState.map };
+  const pauseBefore = JSON.stringify(game.state);
+  const pauseHtml = exploreScene.render(game);
+  assert.equal(JSON.stringify(game.state), pauseBefore, 'route rendering must not mutate game state');
+  assert.ok(pauseHtml.includes(`<p class="quiet-note terrain-compass__route">${pauseHint.routeSummary}</p>`));
+  assert.doesNotMatch(pauseHtml, /class="terrain-compass__bearing" title="[^"]*Safe route:/);
 });
 
 

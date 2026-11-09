@@ -170,6 +170,12 @@ function movementButton(action, label, key, arrow, className, characterShortcuts
   </button>`;
 }
 
+export function compassRouteLine(routeSummary) {
+  return typeof routeSummary === 'string' && routeSummary
+    ? `<p class="quiet-note terrain-compass__route">${escapeHTML(routeSummary)}</p>`
+    : '';
+}
+
 function terrainCompass(zone, mapState, characterShortcuts, state = null) {
   const x = Number(mapState?.x);
   const y = Number(mapState?.y);
@@ -200,13 +206,15 @@ function terrainCompass(zone, mapState, characterShortcuts, state = null) {
     </li>`;
   }).join('');
   const compassHint = getZoneCompassHint(effectiveState, zone);
-  const bearingTitle = compassHint ? (compassHint.tooltip || compassHint.summary) : '';
+  const bearingTitle = compassHint
+    ? (compassHint.targetSummary && compassHint.targetSummary !== compassHint.label
+      ? `${compassHint.summary} — ${compassHint.targetSummary}`
+      : compassHint.summary)
+    : '';
   const bearingLine = compassHint
     ? `<p class="terrain-compass__bearing"${bearingTitle ? ` title="${escapeHTML(bearingTitle)}"` : ''}>Compass bearing: <strong>${escapeHTML(compassHint.label)}</strong> (${escapeHTML(compassHint.bearing)}, ${compassHint.distance} ${compassHint.distance === 1 ? 'tile' : 'tiles'})</p>`
     : '';
-  const routeLine = compassHint?.routeSummary
-    ? `<p class="quiet-note terrain-compass__route">${escapeHTML(compassHint.routeSummary)}</p>`
-    : '';
+  const routeLine = compassRouteLine(compassHint?.routeSummary);
   const adjacentLine = inspection?.adjacentLandmarks?.length
     ? `<p class="terrain-compass__adjacent">Adjacent landmarks: ${inspection.adjacentLandmarks.map(a => `<strong>${escapeHTML(a.dir)}:</strong> ${escapeHTML(a.label)}`).join(' · ')}</p>`
     : '';
