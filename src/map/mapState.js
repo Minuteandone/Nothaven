@@ -683,6 +683,116 @@ export function getExpeditionProgressSummary(gameState = null) {
  * Pure read-only route briefing for a destination zone.
  * Masks weather and objective counts on locked or unvisited regions.
  */
+/**
+ * Pure read-only summary of all charted fast-travel destinations available from
+ * the active zone, including secured counts, remaining threats/caches across
+ * charted routes, and whether a safe haven is reachable.
+ */
+export function getFastTravelBriefing(gameState = null, currentZoneOrId = null) {
+  const explicitId = typeof currentZoneOrId === 'string'
+    ? currentZoneOrId
+    : (currentZoneOrId && typeof currentZoneOrId === 'object' ? currentZoneOrId.id : null);
+  const rawZoneId = explicitId || gameState?.map?.zoneId || gameState?.location || 'greyhaven';
+  const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
+
+  const visitedMap = {};
+  const rawVisited = gameState?.map?.visitedZones;
+  if (Array.isArray(rawVisited)) {
+    for (const id of rawVisited) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  } else if (rawVisited && typeof rawVisited === 'object') {
+    for (const [id, flag] of Object.entries(rawVisited)) {
+      if (flag && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  if (Array.isArray(gameState?.visitedZones)) {
+    for (const id of gameState.visitedZones) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  visitedMap[currentZoneId] = true;
+
+  const normalizedState = {
+    ...(gameState && typeof gameState === 'object' ? gameState : {}),
+    map: {
+      ...(gameState?.map && typeof gameState.map === 'object' ? gameState.map : {}),
+      zoneId: currentZoneId,
+      visitedZones: visitedMap,
+    },
+  };
+
+  let securedCount = 0;
+  let activeZoneCount = 0;
+  let remainingEncounters = 0;
+  let remainingCaches = 0;
+  let safeHavenAvailable = false;
+
+  const destinations = ZONE_ORDER
+    .filter((zoneId) => zoneId !== currentZoneId && visitedMap[zoneId] === true)
+    .map((zoneId) => {
+      const briefing = getRouteBriefing(normalizedState, zoneId);
+      const zone = ZONES[zoneId];
+      const remEncounters = Math.max(0, briefing.encountersTotal - briefing.encountersCleared);
+      const remCaches = Math.max(0, briefing.cachesTotal - briefing.cachesOpened);
+      const remObjectives = remEncounters + remCaches;
+      const secured = briefing.percent === 100 && remObjectives === 0;
+      const safeHaven = (zone?.dangerLevel ?? 0) === 0 && briefing.encountersTotal === 0 && briefing.cachesTotal === 0;
+      if (secured) securedCount += 1;
+      if (remObjectives > 0) activeZoneCount += 1;
+      remainingEncounters += remEncounters;
+      remainingCaches += remCaches;
+      if (safeHaven && briefing.unlocked) safeHavenAvailable = true;
+      return {
+        ...briefing,
+        remainingEncounters: remEncounters,
+        remainingCaches: remCaches,
+        remainingObjectives: remObjectives,
+        secured,
+        safeHaven,
+      };
+    });
+
+  const destinationCount = destinations.length;
+  let summary;
+  if (destinationCount === 0) {
+    summary = 'No charted fast-travel routes available yet';
+  } else {
+    const parts = [
+      `${destinationCount} charted ${destinationCount === 1 ? 'route' : 'routes'} (${securedCount}/${destinationCount} secured)`,
+    ];
+    if (remainingEncounters > 0 || remainingCaches > 0) {
+      parts.push(
+        `${remainingEncounters} ${remainingEncounters === 1 ? 'threat' : 'threats'}, ${remainingCaches} ${remainingCaches === 1 ? 'cache' : 'caches'} remaining`
+      );
+    } else {
+      parts.push('All charted routes fully secured');
+    }
+    if (safeHavenAvailable) {
+      parts.push('Safe haven reachable');
+    }
+    summary = parts.join(' · ');
+  }
+
+  return {
+    currentZoneId,
+    destinationCount,
+    securedCount,
+    activeZoneCount,
+    remainingEncounters,
+    remainingCaches,
+    safeHavenAvailable,
+    destinations,
+    summary,
+  };
+}
+
 export function getRouteBriefing(gameState, toZoneId) {
   if (typeof toZoneId !== 'string' || !Object.prototype.hasOwnProperty.call(ZONES, toZoneId)) {
     return null;

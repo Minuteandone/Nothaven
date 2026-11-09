@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getPartyFieldReadiness, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -326,6 +326,9 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
       });
     })
     .join('');
+  const fastTravelBriefing = routes
+    ? getFastTravelBriefing({ ...(state || {}), map: mapState, visitedZones }, zone)
+    : null;
   const logLines = formatExpeditionLog(mapState.log, 6);
 
   return `<div class="game-shell explore-screen">
@@ -398,7 +401,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           ${nearbyRoutePreviews}
           ${nearbyPatrolPreviews}
           ${fieldPack(state.inventory, state.party)}
-          ${routes ? `<div class="visited-routes"><h3>${icon('map')}Visited Routes:</h3><div>${routes}</div></div>` : ''}
+          ${routes ? `<div class="visited-routes"><h3>${icon('map')}Visited Routes:</h3>${fastTravelBriefing?.summary ? `<p class="quiet-note visited-routes__summary">${escapeHTML(fastTravelBriefing.summary)}</p>` : ''}<div>${routes}</div></div>` : ''}
           <div class="explore-utilities">
             ${hasCharacter ? uiButton({ action: 'openCharacter', label: 'Character Sheet', iconName: 'journal', variant: 'ghost' }) : ''}
             ${uiButton({ action: 'openBag', label: 'Open Bag', iconName: 'bag', variant: 'ghost' })}
