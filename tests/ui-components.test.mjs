@@ -76,6 +76,37 @@ test('partyStatus shows XP progress toward next level', () => {
   assert.match(html, /· to Level 2/);
 });
 
+test('partyStatus renders role badge for companions', () => {
+  // Keeper companion
+  let html = partyStatus([{ name: 'Iven', role: 'keeper', level: 5, hp: 40, maxHp: 40, mp: 8, maxMp: 8, xp: 100 }]);
+  assert.match(html, /class="party-member__role"/);
+  assert.match(html, /Keeper/);
+
+  // Guardian companion
+  html = partyStatus([{ name: 'Bram', role: 'guardian', level: 4, hp: 60, maxHp: 60, mp: 3, maxMp: 3, xp: 80 }]);
+  assert.match(html, /Guardian/);
+
+  // Signaler companion
+  html = partyStatus([{ name: 'Sela', role: 'signaler', level: 3, hp: 35, maxHp: 35, mp: 9, maxMp: 9, xp: 60 }]);
+  assert.match(html, /Signaler/);
+
+  // Scout companion
+  html = partyStatus([{ name: 'Tamsin', role: 'scout', level: 6, hp: 45, maxHp: 45, mp: 4, maxMp: 4, xp: 120 }]);
+  assert.match(html, /Scout/);
+});
+
+test('partyStatus does not render role badge for hero (no role)', () => {
+  const html = partyStatus([{ name: 'Wren', level: 3, hp: 25, maxHp: 25, mp: 6, maxMp: 6, xp: 50 }]);
+  assert.doesNotMatch(html, /class="party-member__role"/);
+  assert.doesNotMatch(html, /Keeper|Guardian|Signaler|Scout/);
+});
+
+test('partyStatus role badge handles unknown/missing role gracefully', () => {
+  const html = partyStatus([{ name: 'Traveller', role: 'bard', level: 1, hp: 20, maxHp: 20, mp: 5, maxMp: 5, xp: 0 }]);
+  assert.doesNotMatch(html, /class="party-member__role"/);
+  // bard is not in ROLE_DISPLAY, so no badge rendered
+});
+
 test('party headings escape', () => {
   assert.match(sceneHeader({ title: '<Greyhaven>', eyebrow: 'Ward' }), /&lt;Greyhaven&gt;/);
 });
