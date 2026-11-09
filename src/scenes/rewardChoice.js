@@ -16,6 +16,19 @@ function returnTarget(game) {
   return game.scenes?.[wanted] ? wanted : 'town';
 }
 
+// Snapshot the routing data, clear the stored spoils fields, then leave. Fields
+// are cleared so a stale callback after navigation finds no pending encounter.
+function leaveSpoils(game, route) {
+  const target = returnTarget(game);
+  const data = { message: route.message, encounterId: route.encounterId, combatResult: route.combatResult };
+  delete game.rewardChoiceEncounterId;
+  delete game.rewardChoiceReturn;
+  delete game.rewardChoiceMessage;
+  delete game.rewardChoiceCombatResult;
+  delete game.rewardChoiceNote;
+  game.setScene(target, data);
+}
+
 const rewardChoiceScene = {
   onEnter(game, data) {
     game.rewardChoiceEncounterId = typeof data?.encounterId === 'string' ? data.encounterId : null;
@@ -52,16 +65,22 @@ const rewardChoiceScene = {
 
   actions: {
     choose(game, el) {
-      const res = claimRewardChoice(game.state, game.rewardChoiceEncounterId, el?.dataset?.arg);
+      // Guard against stale callbacks: only honor actions while this scene is active.
+      if (game.state?.scene !== 'rewardChoice') return;
+      const encounterId = game.rewardChoiceEncounterId;
+      const combatResult = game.rewardChoiceCombatResult;
+      const res = claimRewardChoice(game.state, encounterId, el?.dataset?.arg);
       if (!res.ok) {
         game.rewardChoiceNote = res.message;
         return;
       }
-      game.setScene(returnTarget(game), { message: res.message, encounterId: game.rewardChoiceEncounterId, combatResult: game.rewardChoiceCombatResult });
+      leaveSpoils(game, { message: res.message, encounterId, combatResult });
     },
 
     skip(game) {
-      game.setScene(returnTarget(game), { message: game.rewardChoiceMessage || 'You continue on your way.', encounterId: game.rewardChoiceEncounterId, combatResult: game.rewardChoiceCombatResult });
+      // Guard against stale callbacks: only honor actions while this scene is active.
+      if (game.state?.scene !== 'rewardChoice') return;
+      leaveSpoils(game, { message: game.rewardChoiceMessage || 'You continue on your way.', encounterId: game.rewardChoiceEncounterId, combatResult: game.rewardChoiceCombatResult });
     },
   },
 };
