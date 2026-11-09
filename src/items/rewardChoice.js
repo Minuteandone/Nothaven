@@ -34,11 +34,24 @@ export function rewardChoiceFlag(encounterId) {
  * Returns defensive copies so callers cannot mutate the catalog.
  */
 export function rewardChoicePool(state, encounterId) {
-  if (typeof encounterId !== 'string' || !REWARD_CHOICE_POOLS[encounterId]) return null;
+  if (typeof encounterId !== 'string'
+    || !Object.prototype.hasOwnProperty.call(REWARD_CHOICE_POOLS, encounterId)) return null;
   const claimed = state?.flags?.[rewardChoiceFlag(encounterId)] === true;
   if (claimed) return null;
   const options = REWARD_CHOICE_POOLS[encounterId].map((option) => ({ ...option }));
   return { id: encounterId, options };
+}
+
+/**
+ * Accept only unambiguous bundle indexes: a finite integer number, or a
+ * digits-only string (what the DOM's data-arg provides). Anything else —
+ * null, '', booleans, arrays, floats, ' 0 ' — is rejected rather than
+ * coerced toward 0.
+ */
+function parseOptionIndex(raw) {
+  if (typeof raw === 'number') return Number.isInteger(raw) ? raw : NaN;
+  if (typeof raw === 'string' && /^[0-9]+$/.test(raw)) return Number(raw);
+  return NaN;
 }
 
 /**
@@ -49,7 +62,7 @@ export function rewardChoicePool(state, encounterId) {
 export function claimRewardChoice(state, encounterId, optionIndex) {
   const pool = rewardChoicePool(state, encounterId);
   if (!pool) return { ok: false, message: 'That spoils choice is no longer available.' };
-  const index = Number(optionIndex);
+  const index = parseOptionIndex(optionIndex);
   if (!Number.isInteger(index) || index < 0 || index >= pool.options.length) {
     return { ok: false, message: 'Choose one of the offered bundles.' };
   }
