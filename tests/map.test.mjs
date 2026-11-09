@@ -28,6 +28,7 @@ import {
   getCompassBearing,
   getZoneCompassHint,
   getNearbyActionsSummary,
+  getZoneExitsSummary,
   findSafePath,
   getSafePathPreview,
   stepAlongSafePath,
@@ -2253,5 +2254,62 @@ test('getZoneCompassHint route/briefing tooltip and getNearbyActionsSummary summ
   assert.match(
     html,
     /aria-label="Wren, your position, column 3, row 4" aria-current="location" title="Wren, your position, column 3, row 4 — Cobble \/ Trail \(2, 3\) · Passable/,
+  );
+});
+
+test('getZoneCompassHint route caveats and getZoneExitsSummary report safe-route pause/ambush caveats and outbound route summaries without mutating state', () => {
+  const ridgeState = Object.freeze({
+    map: Object.freeze({
+      zoneId: 'ridge_road',
+      x: 1,
+      y: 3,
+      visitedZones: Object.freeze({ greyhaven: true, ridge_road: true }),
+      clearedEncounters: Object.freeze({}),
+      completedInteractions: Object.freeze({}),
+      log: Object.freeze([]),
+    }),
+  });
+  const hint = getZoneCompassHint(ridgeState);
+  assert.ok(hint);
+  assert.equal(hint.kind, 'encounter');
+  assert.equal(hint.id, 'ridge_patrol');
+  assert.equal(hint.routeSteps, 4);
+  assert.equal(hint.routeEffectiveSteps, 3);
+  assert.equal(hint.routePausesNearThreat, true);
+  assert.equal(hint.routeEncounterPercent, 12);
+  assert.equal(hint.routeReachable, true);
+  assert.equal(hint.routeSummary, 'Safe route: 4 steps (pauses after 3 steps near fixed threat) · 12% ambush/step');
+  assert.match(hint.tooltip, /Safe route: 4 steps \(pauses after 3 steps near fixed threat\) · 12% ambush\/step/);
+  assertEggFree(hint.tooltip);
+
+  const exitsSummary = getZoneExitsSummary(ridgeState);
+  assert.equal(exitsSummary.zoneId, 'ridge_road');
+  assert.equal(exitsSummary.zoneName, 'Ridge Road');
+  assert.equal(exitsSummary.totalExits, 3);
+  assert.equal(exitsSummary.unlockedCount, 3);
+  assert.equal(exitsSummary.chartedCount, 1);
+  assert.equal(exitsSummary.unchartedCount, 2);
+  assert.equal(exitsSummary.lockedCount, 0);
+  assert.ok(exitsSummary.nearestExit);
+  assert.equal(exitsSummary.nearestExit.toZone, 'greyhaven');
+  assert.equal(exitsSummary.nearestExit.distance, 1);
+  assert.equal(exitsSummary.nearestExit.bearing, 'W');
+  assert.equal(
+    exitsSummary.summary,
+    'Outbound routes (3): 1 charted, 2 uncharted · Nearest: West Trail → Greyhaven (W, 1 tile)',
+  );
+  assertEggFree(exitsSummary.summary);
+
+  const game = makeMockGame();
+  installMap(game, { enableKeyboard: false });
+  game.setScene('explore', { zoneId: 'ridge_road' });
+  const html = exploreScene.render(game);
+  assert.match(
+    html,
+    /class="zone-checklist__routes">Outbound routes \(3\): 1 charted, 2 uncharted · Nearest: West Trail → Greyhaven \(Here\)<\/p>/,
+  );
+  assert.match(
+    html,
+    /class="terrain-compass__bearing" title="Ridge Patrol Pack \(E, 5 tiles\) — Unscouted threat \(Standard\) · Drops: Uncharted \(defeat to record\) · Safe route: 5 steps \(pauses after 4 steps near fixed threat\) · 12% ambush\/step"/,
   );
 });
