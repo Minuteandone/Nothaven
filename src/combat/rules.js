@@ -121,16 +121,29 @@ function noteTaken(c, d) {
   st.taken = (st.taken || 0) + Math.max(0, Math.floor(Number(d) || 0));
 }
 
+function noteCompanionDamage(c, companionId, d, preHitHp) {
+  if (!companionId || d <= 0) return;
+  // Cap at remaining HP before the hit — overkill on a nearly-dead foe should only count actual HP removed
+  const actual = Math.min(Math.floor(Number(d) || 0), Math.max(0, Math.floor(Number(preHitHp) || 0)));
+  if (actual <= 0) return;
+  const st = battleStats(c);
+  if (!st.companionDamage) st.companionDamage = Object.create(null);
+  const key = String(companionId);
+  st.companionDamage[key] = (Object.prototype.hasOwnProperty.call(st.companionDamage, key) ? st.companionDamage[key] : 0) + actual;
+}
+
 /** Rounds fought, damage dealt to the foe, damage the party took, and Bursts fired. */
 export function battleSummary(c) {
   const st = c?.stats || {};
   const e = c?.enemy || {};
   const max = Number.isFinite(e.maxHp) ? e.maxHp : (e.hp || 0);
+  const companionDamage = st.companionDamage ? Object.assign(Object.create(null), st.companionDamage) : Object.create(null);
   return {
     rounds: st.rounds || 0,
     dealt: Math.max(0, max - (e.hp || 0)),
     taken: st.taken || 0,
     bursts: st.bursts || 0,
+    companionDamage,
   };
 }
 
@@ -618,14 +631,18 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
       const sparkBase = SKILLS.spark.power + (m.level || 1) * 2 + randInt(rng, 0, 2);
       const sparkMult = elementMultiplier('lightning', e.element);
       const d = Math.max(1, Math.floor(sparkBase * sparkMult * 1.5));
+      const preSpark = e.hp;
       e.hp = Math.max(0, e.hp - d);
+      noteCompanionDamage(c, m.id, d, preSpark);
       lines.push(`::elem:lightning::${m.name} casts Spark for ${d}!`);
       return lines;
     }
   }
   if (m.role === 'guardian' && rng() < (master ? 0.35 : 0.25)) {
     const d = physicalDamage(ms.atk, e.def, rng, master ? { mult: 1.3 } : undefined);
+    const preBash = e.hp;
     e.hp = Math.max(0, e.hp - d);
+    noteCompanionDamage(c, m.id, d, preBash);
     lines.push(`${m.name} lands a ${master ? COMPANION_MASTERY.guardian.name : 'Shield Bash'} for ${d}!`);
     if (e.hp > 0 && !e.boss && !hasStatus(e, 'stunned')) {
       addStatus(e, 'stunned', 1, c.enemyTimers);
@@ -638,18 +655,24 @@ export function companionTurn(c, m, party = [m], rng = Math.random) {
     const base = 5 + (m.level || 1) * 2 + randInt(rng, 0, 2);
     const flareMult = elementMultiplier("fire", e.element);
     const d = Math.max(1, Math.floor((master ? base * 1.5 : base) * flareMult));
+    const preFlare = e.hp;
     e.hp = Math.max(0, e.hp - d);
+    noteCompanionDamage(c, m.id, d, preFlare);
     lines.push(`::elem:fire::${m.name} hurls a ${master ? COMPANION_MASTERY.signaler.name : 'Signal Flare'} for ${d}!`);
     return lines;
   }
   if (m.role === 'scout' && rng() < (master ? 0.4 : 0.3)) {
     const d = physicalDamage(ms.atk, e.def, rng, { mult: master ? 1.7 : 1.4 });
+    const preShot = e.hp;
     e.hp = Math.max(0, e.hp - d);
+    noteCompanionDamage(c, m.id, d, preShot);
     lines.push(`${m.name} looses ${master ? 'a ' + COMPANION_MASTERY.scout.name : 'an Aimed Shot'} for ${d}!`);
     return lines;
   }
   const d = physicalDamage(ms.atk, e.def, rng);
+  const preStrike = e.hp;
   e.hp = Math.max(0, e.hp - d);
+  noteCompanionDamage(c, m.id, d, preStrike);
   lines.push(`${m.name} strikes for ${d}.`);
   return lines;
 }
