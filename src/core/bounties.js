@@ -154,11 +154,12 @@ export function bountyState(state) {
   const src = raw.completed && typeof raw.completed === 'object' && !Array.isArray(raw.completed) ? raw.completed : {};
   for (const b of BOUNTIES) if (count(src[b.id])) completed[b.id] = count(src[b.id]);
   const progress = active ? Math.min(count(raw.progress), getBounty(active).count) : 0;
-  return { active, progress, completed };
+  const spent = Math.min(count(raw.spent), earnedMarks(completed));
+  return { active, progress, completed, spent };
 }
 
 function writeState(state, view) {
-  state.bounties = { active: view.active, progress: view.progress, completed: { ...view.completed } };
+  state.bounties = { active: view.active, progress: view.progress, completed: { ...view.completed }, spent: count(view.spent) };
   return state.bounties;
 }
 
@@ -267,10 +268,59 @@ export function claimBounty(state, lookup = getBounty) {
   state.inventory = granted.inv;
   state.gold = (Number.isFinite(state.gold) ? state.gold : 0) + gold;
   const completed = { ...v.completed, [b.id]: (v.completed[b.id] || 0) + 1 };
-  writeState(state, { active: null, progress: 0, completed });
+  writeState(state, { active: null, progress: 0, completed, spent: v.spent });
   const after = bountyRank(state).rank;
   const promoted = after.id !== before.id ? ` Board rank raised to ${after.title}.` : '';
   const mastery = mastered ? ` Mastery bonus: +1 ${firstItemName(b)}.` : '';
   const newly = !mastered && completed[b.id] === MASTERY_CLAIMS ? ` “${b.title}” is now mastered: future claims pay one extra of its first item.` : '';
-  return { ok: true, message: `Claimed “${b.title}”: ${bountyRewardText({ ...b, items }, gold)}.${urgent}${mastery}${newly}${promoted}` };
+  const marks = markValue(b.id);
+  const markLine = ` +${marks} Board ${marks === 1 ? 'Mark' : 'Marks'}.`;
+  return { ok: true, message: `Claimed “${b.title}”: ${bountyRewardText({ ...b, items }, gold)}.${markLine}${urgent}${mastery}${newly}${promoted}` };
+}
+
+// Board Exchange: every claim also earns Board Marks, spent on supplies at the board.
+// Marks are derived from claim counts, so only the amount spent is stored.
+/** Marks one claim of a contract earns: 1 for the first six postings, 2 for the next six, 3 for the rest. */
+export function markValue(id) {
+  const i = BOUNTIES.findIndex((b) => b.id === id);
+  return i < 0 ? 0 : i < 6 ? 1 : i < 12 ? 2 : 3;
+}
+function earnedMarks(completed) {
+  return Object.entries(completed).reduce((sum, [id, n]) => sum + markValue(id) * n, 0);
+}
+/** {earned, spent, available} Board Marks for this save. */
+export function boardMarks(state) {
+  const v = bountyState(state);
+  const earned = earnedMarks(v.completed);
+  return { earned, spent: v.spent, available: earned - v.spent };
+}
+export const EXCHANGE_OFFERS = Object.freeze([
+  Object.freeze({ id: 'dressings', itemId: 'field_dressing', qty: 2, cost: 2 }),
+  Object.freeze({ id: 'flask', itemId: 'highland_flask', qty: 1, cost: 3 }),
+  Object.freeze({ id: 'broth', itemId: 'spiced_broth', qty: 1, cost: 4 }),
+  Object.freeze({ id: 'glass', itemId: 'storm_glass', qty: 1, cost: 5 }),
+  Object.freeze({ id: 'brass', itemId: 'relay_brass', qty: 1, cost: 7 }),
+]);
+export const getExchangeOffer = (id) => EXCHANGE_OFFERS.find((o) => o.id === id) || null;
+export function exchangeOfferText(o) {
+  return `${o.qty}× ${getItem(o.itemId)?.name || o.itemId} for ${o.cost} ${o.cost === 1 ? 'mark' : 'marks'}`;
+}
+/** "Board Marks: N available (E earned, S spent)." */
+export function boardMarksText(state) {
+  const m = boardMarks(state);
+  return `Board Marks: ${m.available} available (${m.earned} earned, ${m.spent} spent).`;
+}
+/** Trade marks for an offer. Writes nothing unless the whole exchange succeeds. */
+export function exchangeMarks(state, offerId) {
+  const o = getExchangeOffer(offerId);
+  if (!o) return { ok: false, message: 'The clerk does not stock that.' };
+  const m = boardMarks(state);
+  if (m.available < o.cost) return { ok: false, message: `You need ${o.cost} Board Marks for that; you have ${m.available}.` };
+  const inv = Array.isArray(state.inventory) ? state.inventory : [];
+  const granted = grantRewards(inv, [{ id: o.itemId, qty: o.qty }]);
+  if (!granted || !granted.ok) return { ok: false, message: 'Your pack cannot hold that right now.' };
+  const v = bountyState(state);
+  state.inventory = granted.inv;
+  writeState(state, { ...v, spent: v.spent + o.cost });
+  return { ok: true, message: `Exchanged ${o.cost} Board Marks for ${o.qty}× ${getItem(o.itemId)?.name || o.itemId}. ${m.available - o.cost} left.` };
 }
