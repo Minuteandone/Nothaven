@@ -481,3 +481,26 @@ Screenshots and traces are in ignored `browser-artifacts/bag-details/` and
 Default unit tests, browser smoke, CI jobs, and production code are unchanged.
 These are targeted Chromium regressions, not all-item native coverage, actual
 screen-reader testing, full visual review, or gameplay/balance evidence.
+
+### Expedition history browser regression (optional)
+
+```sh
+npm ci
+npx playwright install chromium
+npm run test:browser:expedition-log
+```
+
+This opt-in Chromium runner starts a fresh journey in Greyhaven at 320, 375,
+and 768px. Eight normal steps and eight Surveys, one additional repeated
+Survey, and native Save create eleven raw log entries: ten grouped entries,
+six recent and four older. No state, save, item, coordinate, or log injection
+and no RNG override is used.
+
+At native Display 115% and 130%, it checks literal summary and toggle labels,
+independently grouped entries, click/Enter toggling, retained focus,
+`aria-expanded`/`aria-controls`, a unique controlled log, horizontal glyph
+bounds and a 44px control. Whole journey state and raw quicksave remain
+unchanged through display/toggle operations; Town → Explore resets the
+transient expansion. The scrollable history need not all fit vertically.
+Screenshots and traces go to `browser-artifacts/expedition-log/`. This is not
+actual screen-reader, cross-browser, or combat-balance validation.
