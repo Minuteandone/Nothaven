@@ -1406,6 +1406,8 @@ html[data-contrast="high"] .comparison-card { border-color: #fff; background: #0
 /* Bag details drawer: per-row sourcing note, mid-file so tail sections stay conflict-free. */
 .bag-details { margin: .4rem 0 0; padding: .45rem .75rem; border-inline-start: 2px solid var(--line); background: var(--panel-strong); border-radius: 6px; }
 .bag-details p { margin: .15rem 0; color: var(--muted); font-size: 0.9em; overflow-wrap: anywhere; }
+/* Consumable effect line: same muted small text as the details drawer. */
+.bag-use { color: var(--muted); font-size: 0.9em; overflow-wrap: anywhere; min-width: 0; max-width: 100%; }
 
 /* Separate manual checkpoints wrap without hiding text at large display scales. */
 .archive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; }

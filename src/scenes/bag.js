@@ -3,7 +3,7 @@
 // scene's rules: every rendered string is escaped, every mutation goes
 // through the pure helpers, and results are written back to state.
 
-import { getItem, isKnownItem, canEquip, TYPES, SLOTS } from '../items/items.js';
+import { getItem, isKnownItem, canEquip, TYPES, SLOTS, useEffectLine } from '../items/items.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
 import { useConsumable } from '../items/consumables.js';
 import { recipesUsingItem, listRecipes, recipeInputsMet, recipeSummary, craft as craftRecipe } from '../items/crafting.js';
@@ -159,6 +159,7 @@ export function bagDetailsLines(itemId) {
 
 function bagRow(item, stack, member, detailsId = '') {
   const sum = statSummary(item.stats);
+  const useLine = useEffectLine(item);
   const open = detailsId === item.id;
   const detailBtn = `<button data-action="bagDetails" data-arg="${esc(item.id)}" aria-expanded="${open ? 'true' : 'false'}">${open ? 'Hide details' : 'Details'}</button>`;
   let controls = '';
@@ -185,6 +186,7 @@ function bagRow(item, stack, member, detailsId = '') {
     `<li class="bag-row">` +
     `<span class="bag-name">${esc(item.name)} ×${stack.qty}</span>` +
     (item.description ? ` <span class="bag-desc">${esc(item.description)}</span>` : '') +
+    (useLine ? ` <span class="bag-use">${esc(useLine)}</span>` : '') +
     (sum ? ` <span class="bag-stats">${esc(sum)}</span>` : '') +
     (craftHint(item.id) ? ` <span class="bag-craft">${esc(craftHint(item.id))}</span>` : '') +
     (item.type !== TYPES.KEY && sellValueOf(item) > 0
