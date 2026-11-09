@@ -1,7 +1,7 @@
 import { TILE_TYPES, ZONE_CONDITIONS, ZONES, ZONE_ORDER } from './zones.js';
 import { grantRewards } from '../items/inventory.js';
 import { useConsumable } from '../items/consumables.js';
-import { craft, listRecipes, recipeInputsMet } from '../items/crafting.js';
+import { craft, getRecipe, listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
 import { effectiveStats } from '../items/equipment.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { ENEMIES } from '../data/enemies.js';
@@ -297,6 +297,70 @@ export function getFieldConsumablePreview(gameState, itemId, targetIndex = 0) {
     curedStatus,
     wouldHaveEffect,
     effectSummary,
+    summary,
+  };
+}
+
+/**
+ * Pure read-only preview of a crafting recipe against the party's current inventory,
+ * reporting batch capacity, missing inputs, and current owned output count without mutating state.
+ */
+export function getFieldCraftPreview(gameState, recipeId) {
+  if (typeof recipeId !== 'string') return null;
+  const recipe = getRecipe(recipeId);
+  if (!recipe) return null;
+
+  const stacks = Array.isArray(gameState?.inventory)
+    ? gameState.inventory.filter((s) => s && Number.isFinite(Number(s.qty)) && Number(s.qty) > 0)
+    : [];
+  const countItem = (id) =>
+    stacks
+      .filter((s) => s.id === id)
+      .reduce((sum, s) => sum + Math.max(0, Math.floor(Number(s.qty) || 0)), 0);
+
+  const inputs = (recipe.inputs || []).map(({ id, qty }) => {
+    const have = countItem(id);
+    const name = isKnownItem(id) ? getItem(id).name : id;
+    return {
+      id,
+      name,
+      qty,
+      have,
+      missing: Math.max(0, qty - have),
+    };
+  });
+  const missing = inputs.filter((inp) => inp.missing > 0);
+  const craftable = missing.length === 0;
+  const maxBatches = craftable && inputs.length > 0
+    ? Math.min(...inputs.map((inp) => Math.floor(inp.have / inp.qty)))
+    : 0;
+
+  const primaryOut = recipe.outputs?.[0] || null;
+  const outputId = primaryOut?.id || null;
+  const outputItem = outputId && isKnownItem(outputId) ? getItem(outputId) : null;
+  const outputName = outputItem?.name || outputId || recipe.name;
+  const outputType = outputItem?.type || null;
+  const outputOwned = outputId ? countItem(outputId) : 0;
+  const formula = recipeSummary(recipe);
+
+  const statusText = craftable
+    ? `Craftable ×${maxBatches}`
+    : `Missing: ${missing.map((m) => `${m.missing} ${m.name}`).join(', ')}`;
+  const summary = `${formula} · ${statusText} · In pack: ${outputOwned}`;
+
+  return {
+    recipeId: recipe.id,
+    name: recipe.name,
+    description: recipe.description || '',
+    formula,
+    craftable,
+    maxBatches,
+    outputId,
+    outputName,
+    outputType,
+    outputOwned,
+    inputs,
+    missing,
     summary,
   };
 }
@@ -1827,12 +1891,15 @@ export function recordEncounterVictory(gameState, encounterId, enemyId = null) {
   const resolvedId = encounterId || mapState.activeEncounterId || enemyId;
   if (!resolvedId) return { state: gameState, events: [], log: [] };
 
+  const alreadyCleared = Boolean(mapState.clearedEncounters[resolvedId]);
   mapState.clearedEncounters[resolvedId] = true;
   mapState.activeEncounterId = null;
   const msg = `Cleared encounter: ${resolvedId}.`;
-  appendLog(mapState, msg);
+  if (!alreadyCleared) {
+    appendLog(mapState, msg);
+  }
   const event = { type: 'victory', encounterId: resolvedId, enemyId };
-  return { state: gameState, events: [event], log: [msg] };
+  return { state: gameState, events: [event], log: alreadyCleared ? [] : [msg] };
 }
 
 export function getClearedEncounters(gameState) {
