@@ -60,6 +60,21 @@ export const GUIDE_SECTIONS = Object.freeze([
   ] }),
 ]);
 
+const ROADMAP_TITLE = 'Skill roadmap';
+
+/** Stable anchor id for a guide section title, e.g. 'Party and growth' -> 'guide-party-and-growth'. */
+export function guideSectionId(title) {
+  const slug = String(title ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return `guide-${slug || 'section'}`;
+}
+
+/** Contents entries for every guide section plus the skill roadmap: [{ id, title, count }]. */
+export function guideContents() {
+  const rows = GUIDE_SECTIONS.map((s) => ({ id: guideSectionId(s.title), title: s.title, count: s.lines.length }));
+  rows.push({ id: guideSectionId(ROADMAP_TITLE), title: ROADMAP_TITLE, count: skillRoadmap().length });
+  return rows;
+}
+
 /** Skill unlock rows ordered by level: [{ level, name }]. */
 export function skillRoadmap() {
   return Object.entries(SKILL_UNLOCKS)
@@ -73,11 +88,13 @@ export const guideScene = {
     game.guideReturn = data && typeof data.returnScene === 'string' ? data.returnScene : 'title';
   },
   render() {
-    const sections = GUIDE_SECTIONS.map((s) => `<section class="guide-section"><h2>${escapeHTML(s.title)}</h2><ul>${s.lines.map((l) => `<li>${escapeHTML(l)}</li>`).join('')}</ul></section>`).join('');
+    const sections = GUIDE_SECTIONS.map((s) => `<section class="guide-section" id="${escapeHTML(guideSectionId(s.title))}"><h2>${escapeHTML(s.title)}</h2><ul>${s.lines.map((l) => `<li>${escapeHTML(l)}</li>`).join('')}</ul></section>`).join('');
+    const contents = guideContents().map((c) => `<li><a class="guide-toc__link" href="#${escapeHTML(c.id)}">${escapeHTML(`${c.title} (${c.count})`)}</a></li>`).join('');
     const roadmap = skillRoadmap().map((r) => `<li>${escapeHTML(`Level ${r.level}: ${r.name}`)}</li>`).join('');
     return `<main class="game-shell guide">
       ${sceneHeader({ eyebrow: 'How to play', title: 'Wardens’ Field Guide', subtitle: 'Everything a new keeper of the beacon should know before setting out.', iconName: 'journal' })}
-      <div class="panel">${sections}<section class="guide-section"><h2>Skill roadmap</h2><ul class="guide-skills">${roadmap}</ul></section></div>
+      <nav class="panel guide-toc" aria-label="Guide contents"><h2 class="guide-toc__title">Contents</h2><ul class="guide-toc__list">${contents}</ul></nav>
+      <div class="panel">${sections}<section class="guide-section" id="${escapeHTML(guideSectionId(ROADMAP_TITLE))}"><h2>${escapeHTML(ROADMAP_TITLE)}</h2><ul class="guide-skills">${roadmap}</ul></section></div>
       <div class="title-actions">${uiButton({ action: 'closeGuide', label: 'Back', iconName: 'compass', variant: 'primary' })}</div>
     </main>`;
   },
