@@ -191,6 +191,7 @@ export function installGuidance(game, options = {}) {
     scene.actions = {
       ...(originalActions || {}),
       dismissGuidance(_game, element) {
+        if (game.state?.scene !== sceneName) return;
         const topic = element?.dataset?.arg;
         if (visibleTopic(sceneName) !== topic) return;
         preferences = normalizeGuidancePreferences({
@@ -220,6 +221,7 @@ export function installGuidance(game, options = {}) {
     guide.actions = {
       ...(originalActions || {}),
       replayGuidance() {
+        if (game.state?.scene !== 'guide') return;
         preferences = normalizeGuidancePreferences(null);
         saveGuidancePreferences(storage, preferences);
         replayMessage = 'Quick tips will appear again as you play.';
