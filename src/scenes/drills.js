@@ -3,6 +3,7 @@
 // bestiary changes — and a lost drill costs nothing but pride.
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { ENEMIES } from '../data/enemies.js';
+import { elementLabel, elementMatchups } from '../combat/elements.js';
 
 export const DRILL_FOES = Object.freeze(Object.keys(ENEMIES).filter((id) => ENEMIES[id]?.boss === true && ENEMIES[id]?.drill !== false));
 
@@ -141,13 +142,27 @@ function recordText(rec) {
   return `Won ${rec.wins} ${rec.wins === 1 ? 'time' : 'times'} · best ${rec.best} ${rec.best === 1 ? 'round' : 'rounds'}`;
 }
 
+// One line per unlocked drill naming the foe's element and which skill
+// elements hit it harder or are resisted, so the party can plan before a bout.
+export function drillElementText(id) {
+  const el = Object.prototype.hasOwnProperty.call(ENEMIES, id) ? ENEMIES[id]?.element : null;
+  const label = elementLabel(el);
+  if (!label) return 'No element: every skill hits it at normal strength.';
+  const { strong, resist } = elementMatchups(el);
+  if (!strong.length && !resist.length) return `Element: ${label}. Every skill hits it at normal strength.`;
+  const parts = [];
+  if (strong.length) parts.push(`${strong.map(elementLabel).join(' and ')} skills hit it harder`);
+  if (resist.length) parts.push(`${resist.map(elementLabel).join(' and ')} skills are resisted`);
+  return `Element: ${label}. ${parts.join('; ')}.`;
+}
+
 export const drillsScene = {
   onEnter(game, data = {}) {
     game.drillsMessage = typeof data.message === 'string' ? data.message : '';
   },
   render(game) {
     const rows = drillEntries(game.state).map((r) => `<li class="drill${r.unlocked ? '' : ' drill--locked'}">
-        <div><h2>${escapeHTML(r.name)}</h2><p>${escapeHTML(r.unlocked ? `+${r.xp} XP per drill` : 'Defeat this foe in the field first.')}</p>${r.unlocked ? `<p class="drill__record">${escapeHTML(recordText(r.record))}</p>` : ''}</div>
+        <div><h2>${escapeHTML(r.name)}</h2><p>${escapeHTML(r.unlocked ? `+${r.xp} XP per drill` : 'Defeat this foe in the field first.')}</p>${r.unlocked ? `<p class="drill__record">${escapeHTML(recordText(r.record))}</p><p class="drill__element">${escapeHTML(drillElementText(r.id))}</p>` : ''}</div>
         ${r.unlocked ? uiButton({ action: 'startDrill', arg: r.id, label: 'Begin drill', iconName: 'sword', variant: 'ghost' }) : ''}
       </li>`).join('');
     const queue = gauntletQueue(game.state), grec = gauntletRecord(game.state);
