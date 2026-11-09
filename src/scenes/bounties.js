@@ -51,6 +51,13 @@ export function filterBountyRows(rows, region) {
 }
 
 /** Sort orders for the board; locked notices always stay last, in posting order, so nothing about them leaks. */
+/** "Notices posted: N of M." — how many contracts the board has opened. */
+export function bountyPostedText(rows) {
+  const list = Array.isArray(rows) ? rows : [];
+  const posted = list.filter((r) => r && r.unlocked).length;
+  return `Notices posted: ${posted} of ${list.length}.`;
+}
+
 export const BOUNTY_SORTS = Object.freeze([
   Object.freeze({ id: 'board', label: 'Board order' }),
   Object.freeze({ id: 'pay', label: 'Highest pay' }),
@@ -133,6 +140,7 @@ export const bountiesScene = {
         ${msg}
         <p class="bounties__intro">Take one contract at a time, then defeat its foe in the wilds — roaming ambushes and patrols both count, sparring drills do not. Claim the reward here; every contract can be taken again, and each claim counts toward a board rank that raises contract gold.</p>
         <p class="bounties__total">Contracts claimed: ${escapeHTML(String(total))}</p>
+        <p class="bounties__posted">${escapeHTML(bountyPostedText(rows))}</p>
         <p class="bounties__rank">${escapeHTML(bountyRankText(game.state))}</p>
         <p class="bounties__urgent">${escapeHTML(urgentBountyText(game.state))}</p>
         <p class="bounties__mastery">${escapeHTML(masteryText(game.state))}</p>
