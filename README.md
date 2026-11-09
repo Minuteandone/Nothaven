@@ -431,3 +431,26 @@ RNG 0.5 fails at the strict boundary and gives one normal enemy reply; 0.49 then
 escapes without another reply. Finish returns to the uncleared encounter with
 one recorded escape and no rewards or quick-save write. This is not coverage
 of bosses, other speed gaps, screen readers, save/reload, or balance.
+
+
+## Optional Guide navigation browser regression
+
+After the same `npm ci` and Playwright Chromium installation described above,
+run `npm run test:browser:guide`. This opt-in suite leaves the default unit tests,
+existing browser smoke, and CI jobs unchanged. Fresh Chromium contexts at
+320, 375, and 768px wide by 800px high check the Guide at 115% and 130% text size.
+
+Literal expectations cover all seven Contents anchors and seven Back to contents
+links, their labels and destinations, 44px minimum link heights, visible-text
+containment, and document width. Every clicked section heading and returned
+Contents heading must fit the viewport and clear the measured sticky audio dock.
+A native Tab/Enter roundtrip reaches the Skill roadmap, then uses the next Tab
+stop and Enter to return to Contents. Whole journey state and raw quick-save
+bytes stay unchanged during navigation and text-size changes; Title, reopen,
+and New journey transitions are also checked.
+
+Screenshots and traces are retained under ignored `browser-artifacts/guide/`,
+including failure screenshots when possible. For example, open a trace with
+`npx playwright show-trace browser-artifacts/guide/320.zip`. No progress, saves,
+items, or randomness are injected. This is not actual screen-reader testing,
+cross-browser coverage, a full visual review, or a gameplay/balance evaluation.
