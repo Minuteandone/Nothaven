@@ -30,6 +30,7 @@ import {
   getZoneCompassHint,
   getNearbyActionsSummary,
   getZoneExitsSummary,
+  getZoneContactsSummary,
   getZoneStationsSummary,
   findSafePath,
   getSafePathPreview,
@@ -2409,4 +2410,46 @@ test("getZoneStationsSummary and visible .terrain-compass__route summarize stati
   const html = exploreScene.render(game);
   assert.match(html, /class="quiet-note terrain-compass__route">Safe route: 3 steps · Step ambush: 12%<\/p>/);
   assert.match(html, /class="zone-checklist__stations">Field stations \(2\): 2 available · Nearest: /);
+});
+
+test('getZoneContactsSummary reports zone NPC contacts, in-range count, and nearest contact without mutating state', () => {
+  const greyhavenState = Object.freeze({
+    map: Object.freeze({
+      zoneId: 'greyhaven',
+      x: 2,
+      y: 2,
+    }),
+  });
+  const ghContacts = getZoneContactsSummary(greyhavenState, 'greyhaven');
+  assert.equal(ghContacts.zoneId, 'greyhaven');
+  assert.equal(ghContacts.contactCount, 3);
+  assert.equal(ghContacts.adjacentCount, 1);
+  assert.equal(ghContacts.nearestContact?.id, 'mara');
+  assert.equal(ghContacts.nearestContact?.distance, 1);
+  assert.equal(ghContacts.nearestContact?.bearing, 'E');
+  assert.equal(
+    ghContacts.summary,
+    "Field contacts (3): Warden Mara (Town Warden), Iven (Apprentice Keeper), Tamsin (Route Scout) · 1 in range · Nearest: Warden Mara (E, 1 tile)"
+  );
+  assertEggFree(ghContacts.summary);
+
+  const beaconContacts = getZoneContactsSummary(greyhavenState, 'beacon_tower');
+  assert.equal(beaconContacts.zoneId, 'beacon_tower');
+  assert.equal(beaconContacts.contactCount, 0);
+  assert.equal(beaconContacts.adjacentCount, 0);
+  assert.equal(beaconContacts.nearestContact, null);
+  assert.equal(beaconContacts.summary, 'Field contacts: None');
+  assertEggFree(beaconContacts.summary);
+
+  const game = makeMockGame();
+  installMap(game, { enableKeyboard: false });
+  game.setScene('explore', { zoneId: 'greyhaven' });
+  const before = JSON.stringify(game.state);
+  const html = exploreScene.render(game);
+  assert.equal(JSON.stringify(game.state), before, 'exploreScene.render must not mutate state');
+  assert.ok(
+    html.includes(`<p class="zone-checklist__contacts">${"Field contacts (3): Warden Mara (Town Warden), Iven (Apprentice Keeper), Tamsin (Route Scout) · Nearest: Warden Mara (NE, 2 tiles)"}</p>`),
+    'expected .zone-checklist__contacts line in exploreScene.render output'
+  );
+  assertEggFree(html);
 });

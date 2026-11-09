@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneStationsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneContactsSummary, getZoneStationsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -298,16 +298,19 @@ function zoneChecklistPanel(state, zone, mapState) {
     rows.push(`<li title="${escapeHTML(ex.summary || ex.label)}" data-poi-kind="exit" data-poi-id="${escapeHTML(ex.toZone)}" data-poi-status="${routeStatus}"><strong>${escapeHTML(ex.label)}</strong> · ${routeStatus} · (${escapeHTML(String(ex.x))}, ${escapeHTML(String(ex.y))}) · ${escapeHTML(formatChecklistDistance(ex))}</li>`);
   }
   const totalPois = rows.length;
+  const contactsSummary = getZoneContactsSummary(effectiveState, zone);
   const threatIntel = getZoneThreatIntel(effectiveState, zone);
   const stationsSummary = getZoneStationsSummary(effectiveState, zone);
   const exitsSummary = getZoneExitsSummary(effectiveState, zone);
   const summaryLine = checklist.summary ? `<p class="zone-checklist__summary">${escapeHTML(checklist.summary)}</p>` : '';
+  const contactsLine = contactsSummary?.summary ? `<p class="zone-checklist__contacts">${escapeHTML(contactsSummary.summary)}</p>` : '';
   const threatLine = threatIntel?.summary ? `<p class="zone-checklist__threats">${escapeHTML(threatIntel.summary)}</p>` : '';
   const stationsLine = stationsSummary?.summary ? `<p class="zone-checklist__stations">${escapeHTML(stationsSummary.summary)}</p>` : '';
   const routesLine = exitsSummary?.summary ? `<p class="zone-checklist__routes">${escapeHTML(exitsSummary.summary)}</p>` : '';
   return `<details class="shortcut-guide zone-checklist"><summary>Zone field checklist (${totalPois} ${totalPois === 1 ? 'landmark' : 'landmarks'})</summary>
     <ul class="zone-checklist__list" aria-label="Zone landmarks and coordinates">${rows.join('')}</ul>
     ${summaryLine}
+    ${contactsLine}
     ${threatLine}
     ${stationsLine}
     ${routesLine}
