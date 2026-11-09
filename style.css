@@ -1614,3 +1614,7 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .feat__progress { margin: 0.25rem 0 0; color: var(--muted); font-size: .85rem; }
 .feats__closest { color: var(--muted); font-size: .9rem; margin: 0 0 .5rem; overflow-wrap: anywhere; }
 .drills__gauntlet-target { color: var(--muted); font-size: .9rem; margin: .25rem 0 .5rem; overflow-wrap: anywhere; }
+.guide-toc__title { margin: 0 0 .5rem; font-size: 1rem; }
+.guide-toc__list { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin: 0; padding: 0; list-style: none; }
+.guide-toc__link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); overflow-wrap: anywhere; }
+.guide-section { scroll-margin-top: 1rem; }
