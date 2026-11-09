@@ -1,5 +1,5 @@
 // "Watch House Muster Board": recruit or dismiss companions in Greyhaven.
-import { recruitCompanion, dismissCompanion, isUnlocked } from '../party/companions.js';
+import { recruitCompanion, dismissCompanion, moveActiveCompanion, isUnlocked } from '../party/companions.js';
 import { renderMuster } from '../ui/muster.js';
 
 export const musterScene = {
@@ -14,6 +14,14 @@ export const musterScene = {
   actions: {
     recruit(game, el) { game.musterMessage = recruitCompanion(game.state, el?.dataset?.arg).message; },
     dismiss(game, el) { game.musterMessage = dismissCompanion(game.state, el?.dataset?.arg).message; },
+    moveCompanionEarlier(game, el) {
+      if (game.state?.scene !== 'muster') return;
+      game.musterMessage = moveActiveCompanion(game.state, el?.dataset?.arg, 'earlier').message;
+    },
+    moveCompanionLater(game, el) {
+      if (game.state?.scene !== 'muster') return;
+      game.musterMessage = moveActiveCompanion(game.state, el?.dataset?.arg, 'later').message;
+    },
     talk(game, el) {
       const id = el?.dataset?.arg;
       game.musterTalk = isUnlocked(game.state, id) ? id : null;

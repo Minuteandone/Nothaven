@@ -1,5 +1,5 @@
 import { COMPANION_MASTERY, COMPANION_MASTERY_LEVEL, hasMastery } from '../combat/rules.js';
-import { COMPANIONS, MAX_PARTY, isUnlocked, inParty } from '../party/companions.js';
+import { COMPANIONS, MAX_PARTY, isUnlocked, inParty, isCompanionId } from '../party/companions.js';
 import { effectiveStats } from '../items/equipment.js';
 import { companionRemark } from '../party/remarks.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
@@ -55,14 +55,20 @@ function statGrid(stats) {
   ].map(([label, value]) => `<div><dt>${label}</dt><dd>${stat(value)}</dd></div>`).join('')}</dl>`;
 }
 
-function activeMember(member, index) {
+function activeMember(member, index, party) {
   const stats = effectiveStats(member);
   const isHero = index === 0;
+  const companionIndexes = party.flatMap((entry, i) => i > 0 && isCompanionId(entry?.id) ? [i] : []);
+  const formationIndex = companionIndexes.indexOf(index);
+  const controls = companionIndexes.length >= 2 && formationIndex >= 0
+    ? `<div class="formation-controls">${uiButton({ action: 'moveCompanionEarlier', arg: member.id, label: `Move ${member.name || COMPANIONS[member.id].name} earlier`, variant: 'ghost', disabled: formationIndex === 0, className: 'formation-action' })}${uiButton({ action: 'moveCompanionLater', arg: member.id, label: `Move ${member.name || COMPANIONS[member.id].name} later`, variant: 'ghost', disabled: formationIndex === companionIndexes.length - 1, className: 'formation-action' })}</div>`
+    : '';
   return `<li class="active-member${isHero ? ' active-member--leader' : ''}">
     <div class="active-member__top"><span class="active-member__sigil">${icon(isHero ? 'beacon' : 'shield')}</span><div><h3>${escapeHTML(member.name || `Traveller ${index + 1}`)}</h3><p>${escapeHTML(isHero ? ROLE_LABELS.hero : ROLE_LABELS[member.role] || 'Expedition ally')} · Level ${stat(member.level || 1)}</p></div></div>
     ${meter({ label: `HP for ${member.name || `member ${index + 1}`}`, value: member.hp, max: stats.maxHp, tone: 'hp' })}
     ${meter({ label: `MP for ${member.name || `member ${index + 1}`}`, value: member.mp, max: stats.maxMp, tone: 'mp' })}
     ${statGrid(stats)}
+    ${controls}
   </li>`;
 }
 
@@ -119,11 +125,13 @@ export function renderMuster(game) {
   const party = (Array.isArray(state.party) ? state.party : []).filter(Boolean);
   const emptySlots = Math.max(0, MAX_PARTY - party.length);
   const unlockedCount = Object.values(COMPANIONS).filter(c => isUnlocked(state, c.id)).length;
+  const formationCount = party.slice(1).filter(member => isCompanionId(member?.id)).length;
   return `<main class="game-shell muster muster-screen">
     ${sceneHeader({ eyebrow: 'Greyhaven Watch House', title: 'Muster Board', subtitle: 'Gather a balanced expedition party. Companions act on their own in battle and keep their progress when resting at the watch house.', iconName: 'shield' })}
     <section class="panel active-roster" aria-labelledby="active-roster-title">
       <div class="muster-section-heading"><div><p class="eyebrow">Expedition formation</p><h2 id="active-roster-title">Active party</h2></div><span class="party-capacity" aria-label="${party.length} of ${MAX_PARTY} party slots filled"><strong>${party.length}</strong><span>/ ${MAX_PARTY}</span><small>slots filled</small></span></div>
       <ol class="active-roster__list">${party.map(activeMember).join('')}${Array.from({ length: emptySlots }, () => `<li class="active-member active-member--empty">${icon('compass')}<div><h3>Open slot</h3><p>Invite an available companion below.</p></div></li>`).join('')}</ol>
+      ${formationCount >= 2 ? '<p class="formation-guidance">Companions act in roster order after Wren. If one ends the battle, later allies do not act. Changing the Muster formation spends no turn.</p>' : ''}
       <p class="roster-guidance">${icon('heart')}<span>${party.length >= MAX_PARTY ? 'Your expedition is at full strength. You can exchange allies without losing their progress.' : `Wren always leads. Choose up to ${MAX_PARTY - 1} companions for a party of three.`}</span></p>
     </section>
     ${game.musterMessage ? `<p class="message muster-message" role="status">${escapeHTML(game.musterMessage)}</p>` : ''}
