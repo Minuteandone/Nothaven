@@ -8,7 +8,7 @@ import { createInitialState } from '../src/state.js';
 import { BOUNTIES, bountyRows } from '../src/core/bounties.js';
 import { assertEggFree } from './helpers/eggGuard.mjs';
 
-const SENTENCE = 'Sort buttons list the posted notices in board order, by highest pay, by fewest claims, or by easiest hunt (the least total health across all the foes a contract asks for); unposted notices always stay at the bottom.';
+const SENTENCE = 'Sort buttons list the posted notices in board order, by highest pay, by fewest claims, or by easiest hunt (the least total base health across all the foes a contract asks for, shown on each posted notice as a line such as “Hunt total: 48 base HP across 4 foes.”); unposted notices always stay at the bottom.';
 
 test('huntHealth multiplies the target count by its base HP; unknown foes sort last', () => {
   assert.equal(huntHealth(BOUNTIES[0]), 48);
