@@ -2312,6 +2312,114 @@ export function getZoneExitsSummary(gameState = null, zoneOrId = null) {
  * Pure read-only summary of nearby field actions available at the player's current position,
  * without mutating gameState.
  */
+/**
+ * Pure read-only summary of field stations, caches, and contacts in a zone,
+ * including available/guarded/completed/service counts and the nearest active station,
+ * without mutating gameState.
+ */
+export function getZoneStationsSummary(gameState = null, zoneOrId = null) {
+  const rawMap = gameState?.map && typeof gameState.map === "object" ? gameState.map : {};
+  const resolvedZone =
+    typeof zoneOrId === "string"
+      ? getZone(zoneOrId)
+      : zoneOrId && typeof zoneOrId === "object"
+        ? zoneOrId
+        : getZone(rawMap.zoneId || gameState?.location || "greyhaven");
+  const spawn = resolvedZone.spawns?.default || { x: 0, y: 0 };
+  const px = Number.isInteger(Number(rawMap.x)) ? Number(rawMap.x) : spawn.x;
+  const py = Number.isInteger(Number(rawMap.y)) ? Number(rawMap.y) : spawn.y;
+  const effectiveState = {
+    ...(gameState || {}),
+    map: {
+      ...rawMap,
+      zoneId: resolvedZone.id,
+      x: px,
+      y: py,
+      completedInteractions: rawMap.completedInteractions && typeof rawMap.completedInteractions === "object"
+        ? rawMap.completedInteractions
+        : {},
+      clearedEncounters: rawMap.clearedEncounters && typeof rawMap.clearedEncounters === "object"
+        ? rawMap.clearedEncounters
+        : {},
+    },
+  };
+
+  const stations = (Array.isArray(resolvedZone.interactables) ? resolvedZone.interactables : [])
+    .filter((inter) => inter && typeof inter.name === "string")
+    .map((inter) => {
+      const id = inter.interactionId || inter.id;
+      const briefing = getInteractableBriefing(effectiveState, inter, resolvedZone);
+      const nav = getCompassBearing(px, py, inter.x, inter.y);
+      const once = Boolean(inter.once);
+      const status = briefing?.status || (once ? "Available" : "Service");
+      return {
+        id,
+        name: inter.name,
+        kind: inter.kind || "object",
+        once,
+        x: inter.x,
+        y: inter.y,
+        bearing: nav.bearing,
+        directionLabel: nav.directionLabel,
+        distance: nav.distance,
+        completed: Boolean(briefing?.completed),
+        guardianCleared: briefing ? Boolean(briefing.guardianCleared) : true,
+        guardianName: briefing?.guardianName || null,
+        status,
+        summary: briefing?.summary || inter.name,
+      };
+    })
+    .sort((a, b) => a.distance - b.distance);
+
+  const totalStations = stations.length;
+  const availableCount = stations.filter((s) => s.status === "Available").length;
+  const guardedCount = stations.filter((s) => s.status === "Guarded").length;
+  const completedCount = stations.filter((s) => s.status === "Completed").length;
+  const serviceCount = stations.filter((s) => s.status === "Service").length;
+  const contactCount = Array.isArray(resolvedZone.npcs) ? resolvedZone.npcs.length : 0;
+
+  const nearestStation =
+    stations.find((s) => s.status === "Available") ||
+    stations.find((s) => s.status === "Service") ||
+    stations.find((s) => s.status === "Guarded") ||
+    stations[0] ||
+    null;
+
+  let summary = "Field stations: None";
+  if (totalStations > 0 || contactCount > 0) {
+    const statusParts = [];
+    if (availableCount > 0) statusParts.push(`${availableCount} available`);
+    if (guardedCount > 0) statusParts.push(`${guardedCount} guarded`);
+    if (completedCount > 0) statusParts.push(`${completedCount} completed`);
+    if (serviceCount > 0) statusParts.push(`${serviceCount} ${serviceCount === 1 ? "service" : "services"}`);
+    const stationsText = totalStations > 0
+      ? `Field stations (${totalStations}): ${statusParts.join(", ")}`
+      : "Field stations (0): None";
+    const contactPart = contactCount > 0 ? ` · Contacts: ${contactCount}` : "";
+    const nearestDistText = nearestStation
+      ? (nearestStation.distance === 0
+          ? "Here"
+          : `${nearestStation.bearing}, ${nearestStation.distance} ${nearestStation.distance === 1 ? "tile" : "tiles"}`)
+      : "";
+    const nearestPart = nearestStation ? ` · Nearest: ${nearestStation.name} (${nearestDistText})` : "";
+    summary = `${stationsText}${contactPart}${nearestPart}`;
+  }
+
+  return {
+    zoneId: resolvedZone.id,
+    zoneName: resolvedZone.name,
+    totalStations,
+    availableCount,
+    guardedCount,
+    completedCount,
+    serviceCount,
+    contactCount,
+    nearestStation,
+    stations,
+    summary,
+  };
+}
+
 export function getNearbyActionsSummary(gameState = null) {
   const rawMap = gameState?.map && typeof gameState.map === 'object' ? gameState.map : {};
   const zone = getZone(rawMap.zoneId || gameState?.location || 'greyhaven');

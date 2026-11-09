@@ -27,6 +27,7 @@ export {
   getZoneCompassHint,
   getNearbyActionsSummary,
   getZoneExitsSummary,
+  getZoneStationsSummary,
   findSafePath,
   getSafePathPreview,
   stepAlongSafePath,

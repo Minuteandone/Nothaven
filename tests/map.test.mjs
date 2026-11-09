@@ -29,6 +29,7 @@ import {
   getZoneCompassHint,
   getNearbyActionsSummary,
   getZoneExitsSummary,
+  getZoneStationsSummary,
   findSafePath,
   getSafePathPreview,
   stepAlongSafePath,
@@ -2330,4 +2331,59 @@ test('getZoneCompassHint route caveats and getZoneExitsSummary report safe-route
     html,
     /class="terrain-compass__bearing" title="[^"]*Safe route: \d+ steps · Step ambush: 12%"/,
   );
+});
+
+
+test("getZoneStationsSummary and visible .terrain-compass__route summarize stations, caches, contacts, and safe-route caveats", () => {
+  const greyState = Object.freeze({
+    map: Object.freeze({
+      zoneId: "greyhaven",
+      x: 2,
+      y: 3,
+      visitedZones: Object.freeze({ greyhaven: true }),
+      clearedEncounters: Object.freeze({}),
+      completedInteractions: Object.freeze({}),
+      log: Object.freeze([]),
+    }),
+  });
+  const greyStations = getZoneStationsSummary(greyState);
+  assert.equal(greyStations.zoneId, "greyhaven");
+  assert.equal(greyStations.zoneName, "Greyhaven");
+  assert.equal(greyStations.totalStations, 4);
+  assert.equal(greyStations.serviceCount, 4);
+  assert.equal(greyStations.availableCount, 0);
+  assert.equal(greyStations.guardedCount, 0);
+  assert.equal(greyStations.completedCount, 0);
+  assert.equal(greyStations.contactCount, 3);
+  assert.ok(greyStations.nearestStation);
+  assert.match(greyStations.summary, /^Field stations \(4\): 4 services · Contacts: 3 · Nearest: /);
+  assertEggFree(greyStations.summary);
+
+  const ridgeState = Object.freeze({
+    map: Object.freeze({
+      zoneId: "ridge_road",
+      x: 1,
+      y: 3,
+      visitedZones: Object.freeze({ greyhaven: true, ridge_road: true }),
+      clearedEncounters: Object.freeze({}),
+      completedInteractions: Object.freeze({ dispatch_ridge: true }),
+      log: Object.freeze([]),
+    }),
+  });
+  const ridgeStations = getZoneStationsSummary(ridgeState);
+  assert.equal(ridgeStations.zoneId, "ridge_road");
+  assert.equal(ridgeStations.totalStations, 2);
+  assert.equal(ridgeStations.availableCount, 1);
+  assert.equal(ridgeStations.completedCount, 1);
+  assert.equal(ridgeStations.contactCount, 0);
+  assert.equal(ridgeStations.nearestStation.id, "ridge_supply_cache");
+  assert.match(ridgeStations.summary, /^Field stations \(2\): 1 available, 1 completed · Nearest: Wayfarer Supply Crate/);
+  assertEggFree(ridgeStations.summary);
+
+  const game = makeMockGame();
+  installMap(game, { enableKeyboard: false });
+  game.setScene("explore", { zoneId: "ridge_road" });
+  const html = exploreScene.render(game);
+  assert.match(html, /class="quiet-note terrain-compass__route">Safe route: 3 steps · Step ambush: 12%<\/p>/);
+  assert.match(html, /class="zone-checklist__stations">Field stations \(2\): 2 available · Nearest: /);
 });
