@@ -4,7 +4,7 @@
 // are escaped; all state mutations go through the pure helpers.
 
 import { GREYHAVEN_SHOP, getShop, shopCatalog, buyItem, buyUpTo, sellItem, isScarceItem, shopsStocking } from '../items/shop.js';
-import { getItem, isKnownItem, canEquip } from '../items/items.js';
+import { getItem, isKnownItem, canEquip, useEffectLine } from '../items/items.js';
 import { countItem } from '../items/inventory.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
 import { listRecipes, recipeInputsMet, recipeSummary, craft, recipesUsingItem } from '../items/crafting.js';
@@ -105,12 +105,14 @@ export const shopScene = {
             craftLine = `<br><small>Used in: ${esc(names.join(' · '))}${rest > 0 ? ` (+${rest} more)` : ''}</small>`;
           }
         }
+        const effectLine = useEffectLine(isKnownItem(it.id) ? getItem(it.id) : null);
+        const useLine = effectLine ? `<br><small>${esc(effectLine)}</small>` : '';
         const bagCount = countItem(s.inventory, it.id);
         const bagHint = bagCount > 0 ? `<small class="bag-owned">in bag ${bagCount}</small>` : '';
         return `<tr>
           <td><strong>${esc(it.name)}</strong><br>
             <small>${esc(it.description)}</small><br>
-            <small>${esc(typeLabel(it.type))}${stats ? ' · ' + esc(statSummary(stats)) : ''}</small>${craftLine}${cmpLine}</td>
+            <small>${esc(typeLabel(it.type))}${stats ? ' · ' + esc(statSummary(stats)) : ''}</small>${useLine}${craftLine}${cmpLine}</td>
           <td style="white-space:nowrap;">${it.price}g${bagHint}</td>
           <td>
             <button data-action="buy" data-arg="${esc(it.id)}"${buyQty > 1 ? ` aria-label="Buy ${buyQty} ${esc(it.name)}"` : ''} ${gold < it.price ? 'disabled' : ''}>${buyQty > 1 ? `Buy ×${buyQty}` : 'Buy'}</button>
