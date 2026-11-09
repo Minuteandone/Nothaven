@@ -2103,13 +2103,13 @@ test('victory spoils: pooled Finish offers one bundle, claiming it is one-time a
   assert.match(game.root.innerHTML, /Take Storm Tonic/);
   assert.equal(game.state.combat, null);
   const had = id => game.state.inventory.find(item => item.id === id)?.qty || 0;
-  const bandages = had('linen_bandage'), scrap = had('scrap_metal'), tonics = had('storm_tonic');
+  const bandages = had('bandage'), scrap = had('scrap_metal'), tonics = had('storm_tonic');
   const gold = game.state.gold, xp = game.state.party[0].xp;
   act(game, 'choose', '1');
   assert.equal(game.state.scene, 'explore', 'claiming returns to the scene the battle was fought in');
   assert.match(game.root.innerHTML, /Claimed 2× Scrap Metal from the spoils\./);
   assert.equal(had('scrap_metal'), scrap + 2, 'claim grants exactly the chosen bundle');
-  assert.equal(had('linen_bandage'), bandages, 'unclaimed bundles are not granted');
+  assert.equal(had('bandage'), bandages, 'unclaimed bundles are not granted');
   assert.equal(had('storm_tonic'), tonics, 'unclaimed bundles are not granted');
   assert.equal(game.state.gold, gold, 'spoils claim never touches gold');
   assert.equal(game.state.party[0].xp, xp, 'spoils claim never touches XP');

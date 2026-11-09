@@ -561,7 +561,7 @@ try {
       // ridge_patrol carries a one-time spoils pool: Finish routes to the
       // pick, and leaving them continues to explore without granting anything.
       assert.equal((await state()).scene, 'rewardChoice', 'pooled ridge_patrol victory offers the one-time spoils pick');
-      assert.match(await page.locator('main').innerText(), /Victory spoils/);
+      assert.match(await page.locator('#app').innerText(), /Victory spoils/);
       assert.deepEqual(await page.locator('.reward-option').allTextContents(),
         ['Take Linen Bandage ×2', 'Take Scrap Metal ×2', 'Take Storm Tonic']);
       assert.equal(await page.locator('[data-action="skip"]').count(), 1);

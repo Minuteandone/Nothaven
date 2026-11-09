@@ -130,7 +130,7 @@ try {
       assert.equal(await page.locator('.combat-outcome .battle-rewards').textContent(), '+10 XP · +9 gold');
       await click('finish');
       if ((await state()).scene === 'rewardChoice') {
-        assert.match(await page.locator('main').innerText(), /Victory spoils/);
+        assert.match(await page.locator('#app').innerText(), /Victory spoils/);
         await click('skip');
       }
       const finished = await state();
