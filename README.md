@@ -454,3 +454,30 @@ including failure screenshots when possible. For example, open a trace with
 `npx playwright show-trace browser-artifacts/guide/320.zip`. No progress, saves,
 items, or randomness are injected. This is not actual screen-reader testing,
 cross-browser coverage, a full visual review, or a gameplay/balance evaluation.
+
+## Optional Bag Details browser regression
+
+After `npm ci` and installing Playwright Chromium as above, run
+`npm run test:browser:bag-details`. Fresh Chromium contexts at 320, 375, and
+768px by 800px buy one Bandage and one Ration through the shop (20 → 4 gold),
+then inspect their literal sourcing text at 115% and 130% text size. Native
+clicks and Enter check drawer swapping, focus retention, `aria-expanded`,
+closing and reopening the Bag, 44px Details controls, text Range containment,
+and document width. Whole journey state and raw quick-save bytes stay unchanged
+by presentation operations. This short journey injects no state, saves, items,
+or randomness.
+
+The separate `npm run test:browser:bounties` also inspects the two Field Dressings
+actually purchased with two of four earned Board Marks, after Save/Reload. It
+checks literal shop and Board Exchange sourcing, Enter/focus/expanded state,
+115/130% containment and reset behavior while preserving the whole earned state
+and saved bytes. First Bag entry explicitly checks the existing empty hero
+equipment initialization; subsequent presentation operations preserve that
+whole state. All previous bounty assertions remain. This covers ordinary
+Exchange pricing, not an earned Warden discount or all seven offers.
+
+Screenshots and traces are in ignored `browser-artifacts/bag-details/` and
+`browser-artifacts/bounties/`, including failure screenshots when possible.
+Default unit tests, browser smoke, CI jobs, and production code are unchanged.
+These are targeted Chromium regressions, not all-item native coverage, actual
+screen-reader testing, full visual review, or gameplay/balance evidence.
