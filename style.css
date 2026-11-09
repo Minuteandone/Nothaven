@@ -1547,3 +1547,26 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .exchange__offer { min-width: 0; }
 .exchange__offer .action-button { width: 100%; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 .bounty__marks { margin: .25rem 0; color: var(--muted); font-size: .85rem; }
+
+/* Contextual quick briefings stay in document flow and never obscure game controls. */
+.guidance-card, .guidance-replay {
+  min-width: 0;
+  max-width: 100%;
+  border-left: 4px solid var(--accent);
+  overflow-wrap: anywhere;
+}
+.guidance-card h2, .guidance-replay h2 { margin-bottom: .65rem; }
+.guidance-card__actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+.guidance-card__actions button, .guidance-replay button {
+  min-width: 0;
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.guidance-card__skills { margin: 1rem 0; padding-left: 1.4rem; }
+.guidance-card__skills li { margin-bottom: .75rem; padding-left: .2rem; }
+.guidance-card__skills strong { color: var(--accent-bright); }
+.guidance-card__skills span { color: var(--muted); }
+.guidance-card .quiet-note { margin: .75rem 0 0; }
+.guidance-replay__status { margin: .75rem 0 0; color: var(--good); }

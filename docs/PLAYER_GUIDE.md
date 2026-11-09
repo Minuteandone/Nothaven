@@ -2,6 +2,10 @@
 
 [Play in your browser](https://stormhaven-rpg.pages.dev) · [Project README](../README.md)
 
+## Quick briefings
+
+First-time quick briefings appear in the title, town, exploration and combat screens, and a level-up briefing names any skills Wren actually unlocks. They stay inline until you dismiss them, never spend a turn, and store only dismissal preferences on this device. To show them again, open **How to play** on the title screen and choose **Replay quick tips**.
+
 ## Starting without spoilers
 
 - Choose **New journey**, speak to Warden Mara in Greyhaven, and read the quest journal below the main panels. You can also speak to Iven and Tamsin for context.
