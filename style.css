@@ -1592,3 +1592,4 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .exchange__afford { margin: 0.25rem 0 0.75rem; color: var(--muted); overflow-wrap: anywhere; }
 .town-feats { margin: 0.25rem 0 0.75rem; color: var(--muted); overflow-wrap: anywhere; }
 .town-bounty-rank { margin: 0.25rem 0 0.75rem; color: var(--muted); overflow-wrap: anywhere; }
+.quest-feats, .quest-yard { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }

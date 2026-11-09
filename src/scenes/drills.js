@@ -103,6 +103,20 @@ export function drillsNextText(state) {
   return `Every unlocked drill won. Slowest best: ${slow.name} in ${slow.record.best} ${slow.record.best === 1 ? 'round' : 'rounds'} — try to beat it.`;
 }
 
+// Journey Journal line: lifetime drill victories, distinct foes bested and the
+// best Yard Gauntlet run. Null until a drill is won or a gauntlet attempted.
+export function journalYardText(state) {
+  const entries = drillEntries(state);
+  const wins = entries.reduce((sum, r) => sum + r.record.wins, 0);
+  const bested = entries.filter((r) => r.record.wins > 0).length;
+  const grec = gauntletRecord(state);
+  if (!wins && !grec.runs) return null;
+  const parts = [];
+  if (wins) parts.push(`${wins} drill ${wins === 1 ? 'victory' : 'victories'} over ${bested} ${bested === 1 ? 'foe' : 'foes'}`);
+  if (grec.runs) parts.push(`Yard Gauntlet best: ${grec.best} ${grec.best === 1 ? 'foe' : 'foes'} beaten`);
+  return `Training yard: ${parts.join(' · ')}.`;
+}
+
 export function gauntletRecordText(grec) {
   if (!grec || !grec.runs) return 'No gauntlet attempted yet.';
   return `Best run: ${grec.best} ${grec.best === 1 ? 'foe' : 'foes'} beaten · ${grec.runs} ${grec.runs === 1 ? 'attempt' : 'attempts'}`;
