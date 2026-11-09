@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getRouteBriefing, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -98,6 +98,9 @@ function mapGrid(zone, mapState, state = null) {
           const briefing = getRouteBriefing(state ? { ...state, map: mapState } : { map: mapState }, entityInfo.entity.toZone);
           cellTitle = briefing?.summary ? `${label} — ${briefing.summary}` : label;
         }
+      } else if (!isPlayer) {
+        const pathPreview = getSafePathPreview(state ? { ...state, map: mapState } : { map: mapState }, x, y, zone);
+        cellTitle = pathPreview?.summary || label;
       }
 
       if (isPlayer) {
@@ -337,11 +340,15 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
         <p class="zone-description">${escapeHTML(zone.description)}</p>
         ${(() => {
           const vantage = getZoneVantage(state, zone);
+          const weatherBriefing = getZoneWeatherBriefing(state, zone);
           const prog = vantage.progress;
           const objSummary = prog.totalObjectives > 0
             ? `Threats cleared ${prog.encountersCleared}/${prog.encountersTotal} · Caches ${prog.cachesOpened}/${prog.cachesTotal}`
             : 'Safe haven';
-          return `<p class="zone-recon-summary" title="${escapeHTML(vantage.summary || vantage.landmark)}"><strong>${escapeHTML(vantage.condition.name)}</strong> · ${escapeHTML(vantage.landmark)} (${escapeHTML(String(vantage.elevation))}m) · ${escapeHTML(objSummary)}${vantage.fieldNote ? ` — ${escapeHTML(vantage.fieldNote)}` : ''}</p>`;
+          const reconTitle = weatherBriefing?.modifiers?.length
+            ? `${vantage.summary || vantage.landmark} · ${weatherBriefing.modifiers.join(', ')}`
+            : (vantage.summary || vantage.landmark);
+          return `<p class="zone-recon-summary" title="${escapeHTML(reconTitle)}"><strong>${escapeHTML(vantage.condition.name)}</strong> · ${escapeHTML(vantage.landmark)} (${escapeHTML(String(vantage.elevation))}m) · ${escapeHTML(objSummary)}${vantage.fieldNote ? ` — ${escapeHTML(vantage.fieldNote)}` : ''}</p>`;
         })()}
         ${zoneVista(zone)}
         ${mapGrid(zone, mapState, state)}
