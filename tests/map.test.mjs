@@ -23,6 +23,7 @@ import {
   getFastTravelBriefing,
   getRouteBriefing,
   formatExpeditionLog,
+  getExpeditionLogSummary,
   getTileInspection,
   getZoneChecklist,
   getPatrolBriefing,
@@ -2452,4 +2453,59 @@ test('getZoneContactsSummary reports zone NPC contacts, in-range count, and near
     'expected .zone-checklist__contacts line in exploreScene.render output'
   );
   assertEggFree(html);
+});
+
+test("getExpeditionLogSummary reports steps taken, visited regions, visible entries, and collapsed repeats without mutating state", () => {
+  const emptySummary = getExpeditionLogSummary({
+    map: {
+      zoneId: "greyhaven",
+      steps: 0,
+      visitedZones: { greyhaven: true },
+      log: [],
+    },
+  });
+  assert.equal(emptySummary.steps, 0);
+  assert.equal(emptySummary.zonesVisited, 1);
+  assert.equal(emptySummary.zonesTotal, 9);
+  assert.equal(emptySummary.visibleCount, 0);
+  assert.equal(emptySummary.collapsedRepeats, 0);
+  assert.equal(emptySummary.summary, "Steps taken: 0 · Regions visited: 1/9 · Log: No entries recorded yet");
+  assertEggFree(emptySummary.summary, "empty expedition log summary");
+
+  const state = createInitialState();
+  ensureMapState(state);
+  state.map.steps = 14;
+  state.map.visitedZones = { greyhaven: true, ridge_road: true, saltmere_coast: true };
+  state.map.log = [
+    "Entered Greyhaven: Watch Harbour.",
+    "Moved to Cobblestone Road (3, 2).",
+    "Moved to Cobblestone Road (3, 2).",
+    "Moved to Cobblestone Road (3, 2).",
+    "Game saved.",
+  ];
+  const snapshot = JSON.stringify(state);
+  const logSummary = getExpeditionLogSummary(state, 6);
+  assert.equal(logSummary.steps, 14);
+  assert.equal(logSummary.zonesVisited, 3);
+  assert.equal(logSummary.zonesTotal, 9);
+  assert.equal(logSummary.rawCount, 5);
+  assert.equal(logSummary.visibleCount, 3);
+  assert.equal(logSummary.collapsedRepeats, 2);
+  assert.deepEqual(logSummary.entries, [
+    "Game saved.",
+    "Moved to Cobblestone Road (3, 2). (×3)",
+    "Entered Greyhaven: Watch Harbour.",
+  ]);
+  assert.equal(
+    logSummary.summary,
+    "Steps taken: 14 · Regions visited: 3/9 · Showing 3 recent entries (2 repeats collapsed)",
+  );
+  assertEggFree(logSummary.summary, "populated expedition log summary");
+
+  const html = exploreScene.render({ state, scenes: {} });
+  assert.match(
+    html,
+    /<p class="quiet-note expedition-log__summary">Steps taken: 14 · Regions visited: 3\/9 · Showing 3 recent entries \(2 repeats collapsed\)<\/p>/,
+  );
+  assert.equal(JSON.stringify(state), snapshot);
 });

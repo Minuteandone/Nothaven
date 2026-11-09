@@ -187,11 +187,12 @@ try {
       const checkSort = async (label, boardTitles, claimTitles, locked) => {
         const before = await state(), raw = await quick();
         const region = await page.locator('[data-action="filterBounties"][aria-pressed="true"]').getAttribute('data-arg').catch(() => null);
-        assert.deepEqual(await page.locator('[data-action="sortBounties"]').evaluateAll(ns => ns.map(n => n.dataset.arg)), ['board', 'pay', 'claims']);
+        assert.deepEqual(await page.locator('[data-action="sortBounties"]').evaluateAll(ns => ns.map(n => n.dataset.arg)), ['board', 'pay', 'claims', 'easiest']);
+        // Rat (4 × 12 HP) is an easier hunt than Bandit (3 × 20 HP), so easiest matches board order here.
         // Only Rat and Bandit are genuinely discovered: Bandit's pay exceeds Rat's,
         // while unclaimed Bandit precedes Rat by fewest claims after a real payout.
         const payTitles = [...boardTitles].reverse();
-        for (const [sort, titles] of [['pay', payTitles], ['claims', claimTitles], ['board', boardTitles]]) {
+        for (const [sort, titles] of [['pay', payTitles], ['claims', claimTitles], ['easiest', boardTitles], ['board', boardTitles]]) {
           await click('sortBounties', sort);
           assert.deepEqual(await page.locator('.bounty__title').allTextContents(), [...titles, ...Array(locked).fill('Unposted contract')]);
           assert.equal(await page.locator('.bounty--locked').count(), locked);

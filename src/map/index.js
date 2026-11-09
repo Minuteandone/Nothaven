@@ -16,6 +16,7 @@ export {
   getFastTravelBriefing,
   getRouteBriefing,
   formatExpeditionLog,
+  getExpeditionLogSummary,
   getTileInspection,
   getInteractableBriefing,
   getNpcBriefing,

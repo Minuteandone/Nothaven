@@ -438,14 +438,14 @@ test('the board shows mastered badges only on posted mastered contracts and coun
 
 test('sort buttons reorder posted notices while locked notices stay last and unnamed', async () => {
   const { BOUNTY_SORTS, sortBountyRows } = await import('../src/scenes/bounties.js');
-  assert.deepEqual(BOUNTY_SORTS.map((o) => o.id), ['board', 'pay', 'claims']);
+  assert.deepEqual(BOUNTY_SORTS.map((o) => o.id), ['board', 'pay', 'claims', 'easiest']);
   const s = fresh(); s.bestiary = { storm_rat: 1, reef_crawler: 1, frost_wolf: 1 }; s.scene = 'bounties'; s.combat = null;
   s.bounties = { active: null, progress: 0, completed: { ridge_rats: 4, pier_clearance: 1 } };
   const game = { state: s, setScene() {} };
   bountiesScene.onEnter(game);
   assert.equal(game.bountySort, 'board');
   let html = bountiesScene.render(game);
-  assert.equal((html.match(/data-action="sortBounties"/g) || []).length, 3);
+  assert.equal((html.match(/data-action="sortBounties"/g) || []).length, 4);
   assert.match(html, /aria-pressed="true">Board order</);
   const titles = (h) => [...h.matchAll(/<h2 class="bounty__title">([^<]*)<\/h2>/g)].map((m) => m[1]);
   assert.deepEqual(titles(html).slice(0, 3), ['Ridge Road Rat Cull', 'Pier Clearance', 'Wolves on the Pass']);

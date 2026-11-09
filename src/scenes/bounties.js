@@ -1,6 +1,7 @@
 // Greyhaven bounty board scene: accept, track, abandon and claim hunt contracts.
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { drillElementText, drillStatsText } from './drills.js';
+import { ENEMIES } from '../data/enemies.js';
 import { EXCHANGE_OFFERS, boardMarks, boardMarksText, exchangeCost, exchangeMarks, exchangeOfferText, exchangePerkText, exchangeOwnedText, exchangeAffordText, markValue, MASTERY_CLAIMS, abandonBounty, acceptBounty, getBounty, bountyRankText, urgentBountyText, masteryText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
 
 function rowHTML(r, anyActive, state = {}) {
@@ -53,7 +54,15 @@ export const BOUNTY_SORTS = Object.freeze([
   Object.freeze({ id: 'board', label: 'Board order' }),
   Object.freeze({ id: 'pay', label: 'Highest pay' }),
   Object.freeze({ id: 'claims', label: 'Fewest claims' }),
+  Object.freeze({ id: 'easiest', label: 'Easiest hunt' }),
 ]);
+
+/** Total health across every foe a contract asks for (count × the target's base HP); unknown foes sort last. */
+export function huntHealth(r) {
+  const foe = Object.prototype.hasOwnProperty.call(ENEMIES, r.enemyId) ? ENEMIES[r.enemyId] : null;
+  const hp = Number(foe?.hp), count = Number(r.count);
+  return Number.isFinite(hp) && Number.isFinite(count) ? hp * count : Number.MAX_SAFE_INTEGER;
+}
 
 export function sortBountyRows(rows, sort) {
   const order = new Map(rows.map((r, i) => [r, i]));
@@ -62,6 +71,7 @@ export function sortBountyRows(rows, sort) {
   const byBoard = (a, b) => order.get(a) - order.get(b);
   const cmp = sort === 'pay' ? (a, b) => (b.pay - a.pay) || byBoard(a, b)
     : sort === 'claims' ? (a, b) => (a.claimed - b.claimed) || byBoard(a, b)
+    : sort === 'easiest' ? (a, b) => (huntHealth(a) - huntHealth(b)) || byBoard(a, b)
     : byBoard;
   return [...open.sort(cmp), ...locked];
 }
