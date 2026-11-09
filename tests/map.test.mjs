@@ -2324,7 +2324,7 @@ test('getZoneCompassHint route caveats and getZoneExitsSummary report safe-route
   const html = exploreScene.render(game);
   assert.match(
     html,
-    /class="zone-checklist__routes">Outbound routes \(3\): 1 charted, 2 uncharted · Nearest: West Trail → Greyhaven \(Here\)<\/p>/,
+    /class="zone-checklist__routes">Outbound routes \(3\): 1 charted, 2 uncharted · Nearest: West Trail → Greyhaven \(W, 1 tile\)<\/p>/,
   );
   assert.match(
     html,
