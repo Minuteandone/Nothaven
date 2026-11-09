@@ -32,10 +32,14 @@ const STOCK = [
 
 test('bagDetailsLines lists stocking shops with the buy price', () => {
   assert.deepEqual(bagDetailsLines('bandage'), ["Buy at: Hesta's Goods — 10g each"]);
-  assert.deepEqual(bagDetailsLines('relay_brass'), ['Buy at: Relay Outpost Stores — 30g each']);
+  assert.deepEqual(bagDetailsLines('relay_brass'), [
+    'Buy at: Relay Outpost Stores — 30g each',
+    'Board Exchange: 1× for 7 Board Marks (1 less as Warden of the Board)',
+  ]);
   assert.deepEqual(bagDetailsLines('storm_glass'), [
     "Buy at: Storm's Eye Post — 25g each",
     'Trade for it: Scrap for storm glass (Scrap Metal ×4) at Saltmere Trading Post · Relay Outpost Stores',
+    'Board Exchange: 1× for 5 Board Marks (1 less as Warden of the Board)',
   ]);
 });
 
@@ -65,7 +69,7 @@ test('render shows Details buttons and no drawer before anything is opened', () 
   const game = fakeGame(STOCK);
   bagScene.onEnter(game, {});
   const html = bagScene.render(game);
-  assert.match(html, /<button data-action="bagDetails" data-arg="storm_glass">Details<\/button>/);
+  assert.match(html, /<button data-action="bagDetails" data-arg="storm_glass" aria-expanded="false">Details<\/button>/);
   assert.doesNotMatch(html, /Hide details/, 'nothing is open on a fresh bag visit');
   assert.doesNotMatch(html, /class="bag-details"/, 'no drawer is rendered while closed');
   assertEggFree(html, 'bag details idle');
@@ -78,11 +82,11 @@ test('choosing Details opens one drawer with escaped sourcing lines and a Hide d
   assert.equal(game.bagDetailsId, 'storm_glass');
   const html = bagScene.render(game);
   assert.equal(html.split('class="bag-details"').length - 1, 1, 'exactly one drawer is open');
-  assert.match(html, /<button data-action="bagDetails" data-arg="storm_glass">Hide details<\/button>/);
+  assert.match(html, /<button data-action="bagDetails" data-arg="storm_glass" aria-expanded="true">Hide details<\/button>/);
   const drawer = html.split('class="bag-details"')[1].split('</div>')[0];
   assert.match(drawer, /<p>Buy at: Storm&#39;s Eye Post — 25g each<\/p>/);
   assert.match(drawer, /<p>Trade for it: Scrap for storm glass \(Scrap Metal ×4\) at Saltmere Trading Post · Relay Outpost Stores<\/p>/);
-  assert.match(html, /<button data-action="bagDetails" data-arg="bandage">Details<\/button>/, 'other rows stay closed');
+  assert.match(html, /<button data-action="bagDetails" data-arg="bandage" aria-expanded="false">Details<\/button>/, 'other rows stay closed');
   assertEggFree(html, 'bag details open');
 });
 
