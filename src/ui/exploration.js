@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getFieldConsumablePreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getPartyFieldReadiness, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -25,31 +25,35 @@ function fieldPack(inventory, party = []) {
     summaries.push(`<li title="${escapeHTML(item.description || item.name)}"><span>${escapeHTML(item.name)} ×${Math.max(0, Number(stack.qty) || 0)}</span></li>`);
     if (item.type === TYPES.CONSUMABLE) {
       const itemTitle = item.description || item.name;
+      const heroPreview = getFieldConsumablePreview({ inventory, party }, item.id, 0);
       consumables.push(uiButton({
         action: 'useFieldItem',
         arg: item.id,
         label: `Use ${item.name} (${stack.qty})`,
         iconName: 'heart',
         variant: 'ghost',
-        title: itemTitle,
+        title: heroPreview?.summary || itemTitle,
       }));
       companions.forEach((ally, idx) => {
         if (!ally) return;
         const targetIdx = idx + 1;
+        const allyPreview = getFieldConsumablePreview({ inventory, party }, item.id, targetIdx);
         consumables.push(uiButton({
           action: 'useFieldItem',
           arg: `${item.id}:${targetIdx}`,
           label: `Use ${item.name} → ${ally.name || `Ally ${targetIdx}`}`,
           iconName: 'heart',
           variant: 'ghost',
-          title: itemTitle,
+          title: allyPreview?.summary || itemTitle,
         }));
       });
     }
   }
 
+  const readiness = getPartyFieldReadiness({ inventory, party });
   return `<section class="field-pack" aria-labelledby="field-pack-title">
     <h3 id="field-pack-title">${icon('bag')}Field Pack:</h3>
+    <p class="quiet-note field-pack__readiness">${escapeHTML(readiness.summary)}</p>
     ${stacks.length
       ? `<ul class="field-pack__items">${summaries.join('')}</ul>${consumables.length ? `<div class="field-pack__actions">${consumables.join('')}</div>` : ''}${crafts.length ? `<div class="field-pack__actions"><strong class="field-pack__label">Craft Ready:</strong>${crafts.join('')}</div>` : ''}`
       : '<p class="quiet-note">No supplies packed. Visit Hesta in Greyhaven to prepare.</p>'}

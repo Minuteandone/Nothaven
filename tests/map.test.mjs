@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { assertEggFree } from './helpers/eggGuard.mjs';
 import { createInitialState } from '../src/state.js';
 import { installStory } from '../src/story/integration.js';
 import {
@@ -10,7 +11,9 @@ import {
   getZoneProgress,
   getZoneVantage,
   getZoneWeatherBriefing,
+  getFieldConsumablePreview,
   getFieldServicesSummary,
+  getPartyFieldReadiness,
   getInteractableBriefing,
   getNpcBriefing,
   getFrontierAtlas,
@@ -1841,4 +1844,109 @@ test('getSafePathPreview computes step counts, caution pauses, spoiler-safe lock
   // Verify mapGrid attaches getSafePathPreview summary to empty terrain cells
   const html = exploreScene.render(game);
   assert.match(html, /title="Windswept Scrub \(4, 3\) · Safe route: 1 step · Step ambush: 12%" data-x="4" data-y="3"/);
+});
+
+test('getFieldConsumablePreview and getPartyFieldReadiness compute non-mutating field restoration previews and party readiness', () => {
+  const state = createInitialState();
+  ensureMapState(state);
+  state.inventory = [
+    { id: 'bandage', qty: 2 },
+    { id: 'storm_tonic', qty: 1 },
+    { id: 'storm_glass', qty: 1 },
+  ];
+  state.party.push({
+    id: 'bram',
+    name: 'Bram',
+    hp: 35,
+    maxHp: 35,
+    mp: 8,
+    maxMp: 8,
+    atk: 8,
+    def: 5,
+    spd: 4,
+    level: 1,
+    xp: 0,
+    statuses: [],
+  });
+
+  // Full HP/MP party: readiness is 100% Ready and consumable preview has wouldHaveEffect=false
+  const fullSnap = JSON.stringify(state);
+  const fullReadiness = getPartyFieldReadiness(state);
+  assert.equal(JSON.stringify(state), fullSnap, 'getPartyFieldReadiness must not mutate state');
+  assert.equal(fullReadiness.memberCount, 2);
+  assert.equal(fullReadiness.hpPercent, 100);
+  assert.equal(fullReadiness.mpPercent, 100);
+  assert.equal(fullReadiness.woundedCount, 0);
+  assert.equal(fullReadiness.lowMpCount, 0);
+  assert.deepEqual(fullReadiness.activeStatuses, []);
+  assert.equal(fullReadiness.needsAttention, false);
+  assert.equal(fullReadiness.summary, 'Party readiness: 100% HP (65/65) · 100% MP (18/18) · Ready');
+
+  const fullBandagePreview = getFieldConsumablePreview(state, 'bandage', 0);
+  assert.equal(fullBandagePreview.wouldHaveEffect, false);
+  assert.equal(fullBandagePreview.hpGain, 0);
+  assert.equal(fullBandagePreview.curedStatus, null);
+  assert.equal(
+    fullBandagePreview.summary,
+    'Brine-washed linen strips. Stops bleeding and covers the ugliest wounds.',
+  );
+
+  // Unknown or non-consumable items or out-of-range targets return null
+  assert.equal(getFieldConsumablePreview(state, 'unknown_item', 0), null);
+  assert.equal(getFieldConsumablePreview(state, 'storm_glass', 0), null);
+  assert.equal(getFieldConsumablePreview(state, 'bandage', 9), null);
+  assert.equal(getFieldConsumablePreview(state, 'bandage', -1), null);
+
+  // Wound Wren + apply bleeding, and lower Bram MP + apply shocked
+  state.party[0].hp = 18;
+  state.party[0].statuses = ['bleeding'];
+  state.party[1].mp = 2;
+  state.party[1].statuses = ['shocked'];
+
+  const woundedSnap = JSON.stringify(state);
+  const woundedReadiness = getPartyFieldReadiness(state);
+  assert.equal(JSON.stringify(state), woundedSnap);
+  assert.equal(woundedReadiness.woundedCount, 1);
+  assert.equal(woundedReadiness.lowMpCount, 1);
+  assert.deepEqual(woundedReadiness.activeStatuses, ['bleeding', 'shocked']);
+  assert.equal(woundedReadiness.needsAttention, true);
+  assert.equal(
+    woundedReadiness.summary,
+    'Party readiness: 82% HP (53/65) · 67% MP (12/18) · Statuses: bleeding, shocked · Rest or supplies advised',
+  );
+
+  const wrenBandage = getFieldConsumablePreview(state, 'bandage', 0);
+  assert.equal(JSON.stringify(state), woundedSnap, 'getFieldConsumablePreview must not mutate state');
+  assert.equal(wrenBandage.wouldHaveEffect, true);
+  assert.equal(wrenBandage.hpGain, 12);
+  assert.equal(wrenBandage.curedStatus, 'bleeding');
+  assert.equal(
+    wrenBandage.summary,
+    'Brine-washed linen strips. Stops bleeding and covers the ugliest wounds. — On Wren now: +12 HP (18/30), cures bleeding',
+  );
+
+  const bramTonic = getFieldConsumablePreview(state, 'storm_tonic', 1);
+  assert.equal(bramTonic.wouldHaveEffect, true);
+  assert.equal(bramTonic.mpGain, 6);
+  assert.equal(bramTonic.curedStatus, 'shocked');
+  assert.equal(
+    bramTonic.summary,
+    'A sparking draught distilled from storm-charged salts. Restores focus. — On Bram now: +6 MP (2/8), cures shocked',
+  );
+
+  // Verify exploration UI attaches the live restoration preview to useFieldItem buttons
+  const html = exploreScene.render({ state });
+  assert.ok(html.includes('field-pack__readiness'));
+  assert.ok(html.includes('Party readiness: 82% HP (53/65) · 67% MP (12/18) · Statuses: bleeding, shocked · Rest or supplies advised'));
+  assert.match(
+    html,
+    /data-action="useFieldItem" data-arg="bandage" title="Brine-washed linen strips\. Stops bleeding and covers the ugliest wounds\. — On Wren now: \+12 HP \(18\/30\), cures bleeding"/,
+  );
+  assert.match(
+    html,
+    /data-action="useFieldItem" data-arg="storm_tonic:1" title="A sparking draught distilled from storm-charged salts\. Restores focus\. — On Bram now: \+6 MP \(2\/8\), cures shocked"/,
+  );
+  assertEggFree(woundedReadiness.summary);
+  assertEggFree(wrenBandage.summary);
+  assertEggFree(bramTonic.summary);
 });
