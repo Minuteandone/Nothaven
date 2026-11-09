@@ -101,10 +101,15 @@ test('partyStatus does not render role badge for hero (no role)', () => {
   assert.doesNotMatch(html, /Keeper|Guardian|Signaler|Scout/);
 });
 
-test('partyStatus role badge handles unknown/missing role gracefully', () => {
-  const html = partyStatus([{ name: 'Traveller', role: 'bard', level: 1, hp: 20, maxHp: 20, mp: 5, maxMp: 5, xp: 0 }]);
-  assert.doesNotMatch(html, /class="party-member__role"/);
-  // bard is not in ROLE_DISPLAY, so no badge rendered
+test('partyStatus role badge ignores unknown, inherited, and non-string roles', () => {
+  const roles = [
+    'bard', 'constructor', 'toString', '__proto__',
+    { toString: () => 'keeper' }, 1, Symbol('keeper'),
+  ];
+  for (const role of roles) {
+    const html = partyStatus([{ name: 'Traveller', role, level: 1, hp: 20, maxHp: 20, mp: 5, maxMp: 5, xp: 0 }]);
+    assert.doesNotMatch(html, /class="party-member__role"/, `role ${String(role)} should not render a badge`);
+  }
 });
 
 test('party headings escape', () => {
