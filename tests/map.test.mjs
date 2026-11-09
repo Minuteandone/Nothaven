@@ -9,6 +9,7 @@ import {
   getZoneCondition,
   getZoneProgress,
   getZoneVantage,
+  getZoneWeatherBriefing,
   getFieldServicesSummary,
   getInteractableBriefing,
   getNpcBriefing,
@@ -21,6 +22,7 @@ import {
   getCompassBearing,
   getZoneCompassHint,
   findSafePath,
+  getSafePathPreview,
   stepAlongSafePath,
   getEncounterPreview,
   getZoneThreatIntel,
@@ -1721,4 +1723,122 @@ test('locked encounters mask names and previews in getAvailableActions and mapGr
   assert.equal(unlockedTusk.enemyId, 'old_tusk');
   assert.match(unlockedTusk.label, /Engage Old Tusk/);
   assert.ok(unlockedTusk.preview?.summary);
+});
+
+
+test('getZoneWeatherBriefing reports active weather, encounter rates, and field modifiers without mutating gameState', () => {
+  const state = createInitialState();
+  ensureMapState(state);
+  const snap = JSON.stringify(state);
+
+  const greyhavenWeather = getZoneWeatherBriefing(state, 'greyhaven');
+  assert.equal(greyhavenWeather.zoneId, 'greyhaven');
+  assert.equal(greyhavenWeather.condition.id, 'sheltered');
+  assert.equal(greyhavenWeather.baseEncounterPercent, 0);
+  assert.equal(greyhavenWeather.effectiveEncounterPercent, 0);
+  assert.deepEqual(greyhavenWeather.modifiers, []);
+  assert.match(greyhavenWeather.summary, /Lantern Shelter: .* · Danger 0 · No roaming ambushes · Modifiers: Standard frontier conditions/);
+  assert.equal(JSON.stringify(state), snap, 'getZoneWeatherBriefing must not mutate gameState');
+
+  const spireBefore = getZoneWeatherBriefing(state, 'stormcrown_spire');
+  assert.equal(spireBefore.condition.id, 'tempest');
+  assert.equal(spireBefore.baseEncounterPercent, 14);
+  assert.equal(spireBefore.effectiveEncounterPercent, 14);
+
+  state.story = {
+    ...state.story,
+    stage: 'complete',
+    ending: 'share_signal',
+    flags: {
+      ...(state.story?.flags || {}),
+      beacon_lit: true,
+      relay_choice: 'route_network',
+      victory_storm_heart: true,
+    },
+  };
+
+  const spireAfter = getZoneWeatherBriefing(state, 'stormcrown_spire');
+  assert.equal(spireAfter.condition.id, 'clear');
+  assert.equal(spireAfter.stormCalmed, true);
+  assert.equal(spireAfter.routeNetworkActive, true);
+  assert.equal(spireAfter.baseEncounterPercent, 14);
+  assert.equal(spireAfter.effectiveEncounterPercent, 4);
+  assert.deepEqual(spireAfter.modifiers, [
+    'Storm calmed (-50% step ambush)',
+    'Signal Relay route network (-50% step ambush)',
+  ]);
+  assert.match(spireAfter.summary, /Broken Skies: .* · Danger 4 · Step ambush: 4% \(base 14%\) · Modifiers: Storm calmed \(-50% step ambush\), Signal Relay route network \(-50% step ambush\)/);
+
+  const beaconAfter = getZoneWeatherBriefing(state, 'beacon_tower');
+  assert.equal(beaconAfter.condition.id, 'sheltered');
+  assert.equal(beaconAfter.beaconLit, true);
+  assert.ok(beaconAfter.modifiers.includes('Beacon lit (Lantern Shelter)'));
+});
+
+test('getSafePathPreview computes step counts, caution pauses, spoiler-safe locked encounter masking, and mapGrid terrain tooltips', () => {
+  const game = makeMockGame();
+  const state = game.state;
+  ensureMapState(state);
+  state.map.zoneId = 'greyhaven';
+  state.map.x = 2;
+  state.map.y = 3;
+  const snap = JSON.stringify(state);
+
+  assert.equal(getSafePathPreview(state, -1, 0), null);
+  assert.equal(getSafePathPreview(state, 99, 0), null);
+
+  const herePreview = getSafePathPreview(state, 2, 3);
+  assert.equal(herePreview.status, 'Current position');
+  assert.equal(herePreview.steps, 0);
+  assert.equal(herePreview.reachable, true);
+  assert.equal(herePreview.summary, 'Cobble / Trail (2, 3) · Current position');
+
+  const wallPreview = getSafePathPreview(state, 0, 0);
+  assert.equal(wallPreview.status, 'Blocked terrain');
+  assert.equal(wallPreview.walkable, false);
+  assert.equal(wallPreview.reachable, false);
+  assert.equal(wallPreview.summary, 'Stone Wall / Cliff (0, 0) · Blocked terrain');
+
+  const stepPreview = getSafePathPreview(state, 4, 3);
+  assert.equal(stepPreview.status, 'Safe route');
+  assert.equal(stepPreview.reachable, true);
+  assert.equal(stepPreview.steps, 2);
+  assert.equal(stepPreview.effectiveSteps, 2);
+  assert.equal(stepPreview.pausesNearThreat, false);
+  assert.equal(stepPreview.summary, 'Cobble / Trail (4, 3) · Safe route: 2 steps');
+  assert.equal(JSON.stringify(state), snap, 'getSafePathPreview must not mutate gameState');
+
+  // In Ridge Road at (1, 3), path to (3, 1) pauses at step 2 ((2, 2)) adjacent to Cliffside Gale Hound at (2, 1)
+  travelToZone(state, 'ridge_road', 'from_greyhaven');
+  state.map.x = 1;
+  state.map.y = 3;
+  const ridgePausePreview = getSafePathPreview(state, 3, 1);
+  assert.equal(ridgePausePreview.reachable, true);
+  assert.equal(ridgePausePreview.steps, 4);
+  assert.equal(ridgePausePreview.effectiveSteps, 2);
+  assert.equal(ridgePausePreview.pausesNearThreat, true);
+  assert.equal(ridgePausePreview.cautionThreatName, 'Cliffside Gale Hound');
+  assert.equal(
+    ridgePausePreview.summary,
+    'Cobble / Trail (3, 1) · Safe route: 4 steps (pauses at step 2 near Cliffside Gale Hound) · Step ambush: 12%'
+  );
+
+  // Locked encounter Old Tusk at (6, 2) is masked as 'Sealed challenge' if a path pauses near it, and locked as destination
+  state.map.clearedEncounters.ridge_patrol = true;
+  state.map.x = 5;
+  state.map.y = 3;
+  const lockedDestPreview = getSafePathPreview(state, 6, 2);
+  assert.equal(lockedDestPreview.reachable, false);
+  assert.equal(lockedDestPreview.status, 'Locked destination');
+  assert.doesNotMatch(lockedDestPreview.summary, /Old Tusk|Thunderhoof/i);
+
+  const pauseNearLocked = getSafePathPreview(state, 7, 3);
+  assert.equal(pauseNearLocked.reachable, true);
+  assert.equal(pauseNearLocked.pausesNearThreat, true);
+  assert.equal(pauseNearLocked.cautionThreatName, 'Sealed challenge');
+  assert.doesNotMatch(pauseNearLocked.summary, /Old Tusk|Thunderhoof/i);
+
+  // Verify mapGrid attaches getSafePathPreview summary to empty terrain cells
+  const html = exploreScene.render(game);
+  assert.match(html, /title="Windswept Scrub \(4, 3\) · Safe route: 1 step · Step ambush: 12%" data-x="4" data-y="3"/);
 });
