@@ -789,6 +789,9 @@ em.enraged {
 .active-member__top p { margin: 0; font-size: .7rem; line-height: 1.4; }
 .active-member .meter { margin: .45rem 0; }
 .active-member .meter__labels { font-size: .62rem; }
+.formation-controls { display: flex; flex-wrap: wrap; gap: .5rem; min-width: 0; margin-top: .75rem; }
+.formation-controls .action-button { flex: 1 1 8rem; min-width: 0; min-height: 44px; padding: .55rem .65rem; overflow-wrap: anywhere; white-space: normal; font-size: .7rem; }
+.formation-guidance { max-width: 70ch; margin: 1rem 0 0; overflow-wrap: anywhere; color: var(--muted); font-size: .77rem; line-height: 1.55; }
 .companion-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .45rem; margin: .8rem 0 0; }
 .companion-stats > div { display: flex; align-items: baseline; justify-content: space-between; gap: .4rem; padding: .35rem .45rem; border: 1px solid rgba(133, 157, 178, .14); border-radius: 5px; background: rgba(7, 15, 25, .24); }
 .companion-stats dt { color: var(--muted); font-size: .59rem; font-weight: 700; letter-spacing: .07em; }
@@ -1585,4 +1588,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .guidance-replay__status { margin: .75rem 0 0; color: var(--good); }
 .exchange__owned { color: var(--muted); font-size: .8rem; margin: .2rem 0 0; }
 .town-bounty-idle { margin: 0.25rem 0 0.75rem; color: var(--muted); overflow-wrap: anywhere; }
+.drills__next { margin: 0.25rem 0 0.75rem; color: var(--muted); overflow-wrap: anywhere; }
 .exchange__afford { margin: 0.25rem 0 0.75rem; color: var(--muted); overflow-wrap: anywhere; }

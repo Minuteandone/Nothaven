@@ -90,6 +90,30 @@ export function recruitCompanion(state, id) {
   return { ok: true, message: `${c.name} joins the party.` };
 }
 
+/** Move an active companion one place earlier or later, leaving Wren fixed. */
+export function moveActiveCompanion(state, id, direction) {
+  if (!isCompanionId(id)) return { ok: false, message: 'No companion by that name is available.' };
+  const name = COMPANIONS[id].name;
+  if (direction !== 'earlier' && direction !== 'later') {
+    return { ok: false, message: 'Choose earlier or later in the formation.' };
+  }
+  if (!Array.isArray(state?.party)) return { ok: false, message: 'The active formation is unavailable.' };
+  const index = state.party.findIndex((member, i) => i > 0 && member?.id === id);
+  if (index < 0) return { ok: false, message: `${name} is not in the active formation.` };
+  const target = direction === 'earlier' ? index - 1 : index + 1;
+  if (target <= 0 || target >= state.party.length) {
+    return { ok: false, message: `${name} is already ${direction === 'earlier' ? 'first' : 'last'} among the companions.` };
+  }
+  const member = state.party[index];
+  const adjacent = state.party[target];
+  if (!isCompanionId(adjacent?.id) || adjacent.id === id) {
+    return { ok: false, message: 'Companions can only swap with another active companion.' };
+  }
+  state.party[index] = adjacent;
+  state.party[target] = member;
+  return { ok: true, message: `${name} moves ${direction} in the formation.` };
+}
+
 /** Send a companion back to Greyhaven; their stats are kept in reserve. */
 export function dismissCompanion(state, id) {
   if (!isCompanionId(id)) return { ok: false, message: 'No one by that name is in your party.' };

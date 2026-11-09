@@ -85,6 +85,24 @@ export function drillsSummaryText(state) {
   return `Drills unlocked: ${unlocked} of ${entries.length} · Foes bested in drills: ${bested} · Drill victories: ${wins}`;
 }
 
+// Next-target hint: names the first unlocked drill not yet won, or once every
+// unlocked drill is won, the one with the slowest best (most rounds).
+// Records without a valid best time are skipped for that comparison.
+// Returns null when no drill is unlocked.
+export function drillsNextText(state) {
+  const open = drillEntries(state).filter((r) => r.unlocked);
+  if (!open.length) return null;
+  const fresh = open.filter((r) => !r.record.wins);
+  if (fresh.length) {
+    const more = fresh.length - 1;
+    return `Next drill to try: ${fresh[0].name}${more ? ` (and ${more} more not yet won)` : ''}.`;
+  }
+  const timed = open.filter((r) => r.record.best > 0);
+  if (!timed.length) return 'Every unlocked drill won. Win any drill again to record a best time.';
+  const slow = timed.reduce((a, r) => (r.record.best > a.record.best ? r : a), timed[0]);
+  return `Every unlocked drill won. Slowest best: ${slow.name} in ${slow.record.best} ${slow.record.best === 1 ? 'round' : 'rounds'} — try to beat it.`;
+}
+
 export function gauntletRecordText(grec) {
   if (!grec || !grec.runs) return 'No gauntlet attempted yet.';
   return `Best run: ${grec.best} ${grec.best === 1 ? 'foe' : 'foes'} beaten · ${grec.runs} ${grec.runs === 1 ? 'attempt' : 'attempts'}`;
@@ -111,6 +129,7 @@ export const drillsScene = {
         <p class="drill__record">${escapeHTML(gauntletRecordText(grec))}</p>
         ${queue.length >= GAUNTLET_MIN ? uiButton({ action: 'startGauntlet', label: `Begin gauntlet (${queue.length} foes)`, iconName: 'sword', variant: 'ghost' }) : `<p class="drills__gauntlet-progress">${escapeHTML(`Unlock ${GAUNTLET_MIN} drills to open the gauntlet (${queue.length} of ${GAUNTLET_MIN} unlocked so far).`)}</p>`}
       </section>`;
+    const nextHint = drillsNextText(game.state);
     const msg = game.drillsMessage ? `<p class="drills__message" role="status">${escapeHTML(game.drillsMessage)}</p>` : '';
     return `<main class="game-shell drills">
       ${sceneHeader({ eyebrow: 'Watch House yard', title: 'Sparring Drills', subtitle: 'Practice against foes you have already beaten.', iconName: 'beacon' })}
@@ -118,6 +137,7 @@ export const drillsScene = {
         ${msg}
         <p class="drills__intro">Warden Mara restages battles you have already won, with straw targets and signal flags standing in for the real foe. Drills grant half the usual experience and nothing else — no gold, no spoils — and a lost drill costs nothing but pride.</p>
         <p class="drills__summary">${escapeHTML(drillsSummaryText(game.state))}</p>
+        ${nextHint ? `<p class="drills__next">${escapeHTML(nextHint)}</p>` : ''}
         <ul class="drills__list">${rows}</ul>
       </section>
       ${gauntlet}
