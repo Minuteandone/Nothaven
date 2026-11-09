@@ -80,6 +80,40 @@ export const FEATS = Object.freeze([
     check: s => { const done = bountyState(s).completed; return BOUNTIES.every(b => (done[b.id] || 0) >= 1); } }),
 ]);
 
+const bestiaryOf = s => (s?.bestiary && typeof s.bestiary === 'object' ? s.bestiary : {});
+const seen = (s, ids) => ids.filter(id => Number(bestiaryOf(s)[id]) > 0).length;
+const num = v => (Number.isFinite(Number(v)) ? Math.max(0, Math.floor(Number(v))) : 0);
+
+// Countable feats: [have, need] for a "Progress: a of b." hint on feats not yet earned.
+export const FEAT_PROGRESS = Object.freeze({
+  steady_road: s => [num(ledgerOf(s).bestStreak), 15],
+  yard: s => [DRILL_FOES.filter(id => drillRecord(s, id).wins >= 1).length, DRILL_FOES.length],
+  gauntlet: s => [num(gauntletRecord(s).best), DRILL_FOES.length],
+  muster: s => [Array.isArray(s?.party) ? s.party.length : 0, MAX_PARTY],
+  commissions: s => [COMMISSION_IDS.filter(id => flagsOf(s)[`commission_${id}_reward`] === true).length, COMMISSION_IDS.length],
+  expeditions: s => [num(s?.story?.expedition?.completed), 3],
+  catalogue: s => [Object.values(bestiaryOf(s)).filter(n => Number(n) > 0).length, 10],
+  wanderers: s => [seen(s, WANDERERS), WANDERERS.length],
+  trials: s => [seen(s, FIELD_TRIALS), FIELD_TRIALS.length],
+  veteran: s => [num(heroOf(s)?.level), 10],
+  legend: s => [num(heroOf(s)?.level), 20],
+  fitted: s => [[...(Array.isArray(s?.party) ? s.party : []), ...(s?.reserve && typeof s.reserve === 'object' ? Object.values(s.reserve) : [])]
+    .reduce((best, m) => Math.max(best, FITTING_SLOTS.reduce((t, slot) => t + Math.min(num(fittingLevel(m, slot)), MAX_FITTING), 0)), 0),
+    FITTING_SLOTS.length * MAX_FITTING],
+  bounties: s => { const done = bountyState(s).completed; return [BOUNTIES.filter(b => (done[b.id] || 0) >= 1).length, BOUNTIES.length]; },
+});
+
+// "Progress: a of b." for a countable feat (have capped at need); null for other or malformed feats.
+export function featProgressText(state, id) {
+  const fn = Object.prototype.hasOwnProperty.call(FEAT_PROGRESS, id) ? FEAT_PROGRESS[id] : null;
+  if (!fn) return null;
+  let pair;
+  try { pair = fn(state); } catch { return null; }
+  const need = num(pair?.[1]);
+  if (need <= 0) return null;
+  return `Progress: ${Math.min(num(pair?.[0]), need)} of ${need}.`;
+}
+
 export function featStatus(state) {
   return FEATS.map(feat => {
     let done = false;
@@ -145,7 +179,7 @@ export const featsScene = {
     const filters = FEAT_FILTERS.map(id => `<button type="button" class="action-button action-button--ghost" data-action="filterFeats" data-arg="${id}" aria-pressed="${id === filter}">${escapeHTML(`${FEAT_FILTER_LABELS[id]} (${filterFeatRows(rows, id).length})`)}</button>`).join('');
     const items = shown.map(r => `<li class="feat${r.done ? ' feat--done' : ''}">
         <span class="feat__mark" aria-hidden="true">${r.done ? '✦' : '·'}</span>
-        <div><h2>${escapeHTML(r.title)}</h2><p>${escapeHTML(r.detail)}</p></div>
+        <div><h2>${escapeHTML(r.title)}</h2><p>${escapeHTML(r.detail)}</p>${!r.done && featProgressText(game.state, r.id) ? `<p class="feat__progress">${escapeHTML(featProgressText(game.state, r.id))}</p>` : ''}</div>
         <span class="feat__status">${r.done ? 'Earned' : 'Not yet'}</span>
       </li>`).join('');
     return `<main class="game-shell feats">
