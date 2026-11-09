@@ -391,8 +391,67 @@ try {
         assert.deepEqual((await state()).bounties, paidExchange.bounties);
         assert.deepEqual((await state()).inventory, paidExchange.inventory);
         await exchangeView('reloaded', paidHint, 2, 4, 2, ['dressings'], 2);
+        // Inspect the two actually purchased Dressings, not a granted inventory fixture.
+        const reloadedBoard = await state(), reloadedQuick = await quick();
+        assert.equal(Object.hasOwn(reloadedBoard.party[0], 'equipment'), false);
+        const initializedBoard = structuredClone(reloadedBoard);
+        initializedBoard.party[0].equipment = { weapon: null, armor: null, trinket: null };
+        await click('closeBounties'); await click('bag');
+        const earnedBag = await state(), earnedQuick = await quick();
+        const expectedBag = structuredClone(initializedBoard); expectedBag.scene = 'bag';
+        assert.deepEqual(earnedBag, expectedBag, 'first Bag entry only changes scene and initializes empty hero equipment');
+        assert.equal(earnedQuick, reloadedQuick, 'Bag entry does not rewrite the quick save');
+        assert.equal(earnedBag.inventory.find(i => i.id === 'field_dressing')?.qty, 2);
+        assert.deepEqual(earnedBag.bounties, paidExchange.bounties);
+        const bagUnchanged = async () => {
+          assert.deepEqual(await state(), earnedBag, 'Details and Display preserve the whole earned Bag state');
+          assert.equal(await quick(), earnedQuick, 'Details never rewrite the earned quick save');
+        };
+        const dressingDetails = async open => {
+          assert.equal(await control('bagDetails', 'field_dressing').getAttribute('aria-expanded'), String(open));
+          assert.deepEqual(await page.evaluate(() => ({ action: document.activeElement?.dataset.action, arg: document.activeElement?.dataset.arg })),
+            { action: 'bagDetails', arg: 'field_dressing' });
+          assert.equal(await page.locator('.bag-details').count(), open ? 1 : 0);
+          assert.deepEqual(await page.locator('.bag-details p').allTextContents(), open ? [
+            "Buy at: Hesta's Goods · Saltmere Trading Post · Relay Outpost Stores — 16g each",
+            'Board Exchange: 2× for 2 Board Marks (1 less as Warden of the Board)',
+          ] : []);
+          await bagUnchanged();
+        };
+        for (const scale of ['115', '130']) {
+          await page.locator('[aria-controls="display-settings"]').click(); await bagUnchanged();
+          await page.locator('[data-display-scale]').selectOption(scale); await bagUnchanged();
+          await page.locator('[data-display-done]').click(); await bagUnchanged();
+          await click('bagDetails', 'field_dressing'); await dressingDetails(true);
+          await page.keyboard.press('Enter'); await dressingDetails(false);
+          await page.keyboard.press('Enter'); await dressingDetails(true);
+          await page.locator('.bag-details').scrollIntoViewIfNeeded();
+          await page.mouse.move(0, 0); await page.waitForTimeout(250);
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);
+          const paragraphs = await page.locator('.bag-details p').evaluateAll(ns => ns.map(n => {
+            const box = n.closest('.bag-details').getBoundingClientRect(), range = document.createRange();
+            range.selectNodeContents(n);
+            return box.left >= 0 && box.right <= innerWidth + 1 && [...range.getClientRects()].every(r =>
+              r.left >= box.left - 1 && r.right <= box.right + 1 && r.top >= box.top - 1 && r.bottom <= box.bottom + 1);
+          }));
+          assert.equal(paragraphs.length, 2); assert.ok(paragraphs.every(Boolean), 'both literal sourcing paragraphs fit the drawer');
+          const detailsButtons = await page.locator('[data-action="bagDetails"]').evaluateAll(ns => ns.map(n => {
+            const r = n.getBoundingClientRect(); return r.height >= 44 && r.left >= 0 && r.right <= innerWidth + 1;
+          }));
+          assert.ok(detailsButtons.length && detailsButtons.every(Boolean), 'earned Details controls fit and meet 44px');
+          await bagUnchanged();
+          await page.screenshot({ path: path.join(artifacts, `${id}-earned-details-${scale}.png`), fullPage: true });
+          await page.screenshot({ path: path.join(artifacts, `${id}-earned-details-${scale}-viewport.png`) });
+          await click('bagDetails', 'field_dressing'); await dressingDetails(false);
+        }
+        await click('leave'); await click('bag'); await bagUnchanged();
+        assert.equal(await page.locator('.bag-details').count(), 0);
+        assert.ok((await page.locator('[data-action="bagDetails"]').evaluateAll(ns => ns.map(n => n.getAttribute('aria-expanded')))).every(v => v === 'false'));
+        await click('leave'); await click('bounties');
+        assert.deepEqual(await state(), initializedBoard, 'returning from Bag preserves the entire Board state including initialized empty equipment');
+        assert.equal(await quick(), earnedQuick);
         assert.deepEqual(errors, []);
-        console.log(`PASS ${id}: earned native sorting/locked-last/non-tied claims/reset and mastery Record 0→1; earned regional filters/active-outside count/reset; Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33 plus a mastery Scrap Metal, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained; Exchange 4 earned marks, 2 spent, +2 Dressings and whole Save/Reload, literal hints and 115/130% geometry; errors []`);
+        console.log(`PASS ${id}: earned native sorting/locked-last/non-tied claims/reset and mastery Record 0→1; earned regional filters/active-outside count/reset; Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33 plus a mastery Scrap Metal, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained; Exchange 4 earned marks, 2 spent, +2 Dressings and whole Save/Reload, literal hints and 115/130% geometry; earned Dressing Details literal shop/Exchange sources, Enter/focus/expanded/reset/whole-state checks; errors []`);
       } catch (error) {
         await page.screenshot({ path: path.join(artifacts, `${id}-failure.png`), fullPage: true }).catch(() => {});
         console.error(`FAIL ${id}; browser errors: ${JSON.stringify(errors)}`);
