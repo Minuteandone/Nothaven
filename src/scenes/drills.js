@@ -4,6 +4,7 @@
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { ENEMIES } from '../data/enemies.js';
 import { elementLabel, elementMatchups } from '../combat/elements.js';
+import { DIFFICULTIES, getDifficulty, scaleEnemy } from '../combat/difficulty.js';
 
 export const DRILL_FOES = Object.freeze(Object.keys(ENEMIES).filter((id) => ENEMIES[id]?.boss === true && ENEMIES[id]?.drill !== false));
 
@@ -156,13 +157,23 @@ export function drillElementText(id) {
   return `Element: ${label}. ${parts.join('; ')}.`;
 }
 
+// One line per unlocked drill with the foe's stats at the current difficulty,
+// matching what the restaged bout will actually field.
+export function drillStatsText(state, id) {
+  if (!Object.prototype.hasOwnProperty.call(ENEMIES, id) || !ENEMIES[id]) return '';
+  const diff = getDifficulty(state);
+  const e = scaleEnemy({ ...ENEMIES[id] }, diff);
+  const n = (v) => (Number.isFinite(Number(v)) ? Math.round(Number(v)) : 0);
+  return `Foe at ${DIFFICULTIES[diff].label}: ${n(e.hp)} HP · ${n(e.atk)} attack · ${n(e.def)} defense · ${n(e.spd)} speed.`;
+}
+
 export const drillsScene = {
   onEnter(game, data = {}) {
     game.drillsMessage = typeof data.message === 'string' ? data.message : '';
   },
   render(game) {
     const rows = drillEntries(game.state).map((r) => `<li class="drill${r.unlocked ? '' : ' drill--locked'}">
-        <div><h2>${escapeHTML(r.name)}</h2><p>${escapeHTML(r.unlocked ? `+${r.xp} XP per drill` : 'Defeat this foe in the field first.')}</p>${r.unlocked ? `<p class="drill__record">${escapeHTML(recordText(r.record))}</p><p class="drill__element">${escapeHTML(drillElementText(r.id))}</p>` : ''}</div>
+        <div><h2>${escapeHTML(r.name)}</h2><p>${escapeHTML(r.unlocked ? `+${r.xp} XP per drill` : 'Defeat this foe in the field first.')}</p>${r.unlocked ? `<p class="drill__record">${escapeHTML(recordText(r.record))}</p><p class="drill__element">${escapeHTML(drillElementText(r.id))}</p><p class="drill__stats">${escapeHTML(drillStatsText(game.state, r.id))}</p>` : ''}</div>
         ${r.unlocked ? uiButton({ action: 'startDrill', arg: r.id, label: 'Begin drill', iconName: 'sword', variant: 'ghost' }) : ''}
       </li>`).join('');
     const queue = gauntletQueue(game.state), grec = gauntletRecord(game.state);
