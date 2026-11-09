@@ -53,7 +53,7 @@ export function partyStatus(party) {
     const level = Math.max(0, finiteNumber(member?.level, 1));
     return `<article class="party-member">
       <div class="party-member__heading"><span class="party-member__name">${name}</span><span class="level-badge">Level ${level}</span></div>
-      ${member?.role && ROLE_DISPLAY[member.role] ? `<p class="party-member__role">${escapeHTML(ROLE_DISPLAY[member.role])}</p>` : ''}
+      ${typeof member?.role === 'string' && Object.prototype.hasOwnProperty.call(ROLE_DISPLAY, member.role) ? `<p class="party-member__role">${escapeHTML(ROLE_DISPLAY[member.role])}</p>` : ''}
       ${meter({ label: 'HP', value: member?.hp, max: member?.maxHp, tone: 'hp' })}
       ${meter({ label: 'MP', value: member?.mp, max: member?.maxMp, tone: 'mp' })}
       <div class="xp-line"><span>Experience</span><strong>${(() => { const xp = Math.max(0, finiteNumber(member?.xp)); if (level >= MAX_LEVEL) return `${xp} XP (Max level)`; const floor = xpForLevel(level); const ceiling = xpForLevel(level + 1); const earned = Math.max(0, xp - floor); const needed = ceiling - floor; return `${earned} / ${needed} XP`; })()}</strong>${level >= MAX_LEVEL ? "" : ` · to Level ${level + 1}`}</div>
