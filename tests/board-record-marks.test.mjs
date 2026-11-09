@@ -13,6 +13,6 @@ test('board record counts Board Marks earned, unaffected by marks spent at the E
   s.bounties.spent = 5;
   assert.deepEqual(boardMarks(s), { earned: 7, spent: 5, available: 2 });
   const line = bountyRecordText(s);
-  assert.equal(line, 'Board record: 3 claims · Notice Runner · 0 of 18 contracts mastered · 7 Board Marks earned.');
+  assert.equal(line, 'Board record: 3 claims · Contract Hand · 0 of 18 contracts mastered · 7 Board Marks earned.');
   assertEggFree(line, 'board record marks');
 });
