@@ -1635,3 +1635,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .bounty__foe-stats,
 .bounty__foe-element,
 .bounty__hunt-total { margin: .15rem 0 0; font-size: .8rem; color: var(--muted); }
+
+.bounties__posted { margin: .25rem 0; color: var(--muted); }
