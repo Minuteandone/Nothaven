@@ -337,13 +337,26 @@ const marksWord = (n) => `${n} Board ${n === 1 ? 'Mark' : 'Marks'}`;
 export function exchangeOfferText(o, cost = o.cost) {
   return `${o.qty}× ${getItem(o.itemId)?.name || o.itemId} for ${cost} ${cost === 1 ? 'mark' : 'marks'}`;
 }
-/** One line on the Warden discount: earned, or how far away. */
+/** "In pack: N." — how many of an offer's item the pack already holds. */
 export function exchangeOwnedText(state, o) {
   const inv = Array.isArray(state?.inventory) ? state.inventory : [];
   const id = o?.itemId;
   let n = 0;
   for (const e of inv) if (e && e.id === id && Number.isFinite(e.qty) && e.qty > 0) n += Math.floor(e.qty);
   return `In pack: ${n}.`;
+}
+
+/** How many offers the available marks cover, and how far off the cheapest one out of reach is. */
+export function exchangeAffordText(state) {
+  const { available } = boardMarks(state);
+  const have = Number.isFinite(available) && available > 0 ? available : 0;
+  const costs = EXCHANGE_OFFERS.map((o) => ({ o, cost: exchangeCost(state, o) }));
+  const n = costs.filter((c) => c.cost <= have).length;
+  const total = EXCHANGE_OFFERS.length;
+  if (n === total) return `You can afford every offer (${total} of ${total}).`;
+  const next = costs.filter((c) => c.cost > have).sort((a, b) => a.cost - b.cost)[0];
+  const short = next.cost - have;
+  return `You can afford ${n} of ${total} offers. Cheapest out of reach: ${getItem(next.o.itemId)?.name || next.o.itemId} at ${next.cost} ${next.cost === 1 ? 'mark' : 'marks'} (${short} more needed).`;
 }
 
 export function exchangePerkText(state) {

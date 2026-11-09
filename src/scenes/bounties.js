@@ -1,6 +1,6 @@
 // Greyhaven bounty board scene: accept, track, abandon and claim hunt contracts.
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
-import { EXCHANGE_OFFERS, boardMarks, boardMarksText, exchangeCost, exchangeMarks, exchangeOfferText, exchangePerkText, exchangeOwnedText, markValue, MASTERY_CLAIMS, abandonBounty, acceptBounty, bountyRankText, urgentBountyText, masteryText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
+import { EXCHANGE_OFFERS, boardMarks, boardMarksText, exchangeCost, exchangeMarks, exchangeOfferText, exchangePerkText, exchangeOwnedText, exchangeAffordText, markValue, MASTERY_CLAIMS, abandonBounty, acceptBounty, bountyRankText, urgentBountyText, masteryText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
 
 function rowHTML(r, anyActive) {
   const status = !r.unlocked ? 'Defeat this foe once to open the contract.'
@@ -72,6 +72,7 @@ export function exchangeHTML(state) {
         <p class="exchange__marks">${escapeHTML(boardMarksText(state))}</p>
         <p class="exchange__note">Each claim earns Board Marks: 1 for the first six postings, 2 for the next six and 3 for the last six.</p>
         <p class="exchange__perk">${escapeHTML(exchangePerkText(state))}</p>
+        <p class="exchange__afford">${escapeHTML(exchangeAffordText(state))}</p>
         <ul class="exchange__offers">${EXCHANGE_OFFERS.map(offer).join('')}</ul>
       </section>`;
 }
