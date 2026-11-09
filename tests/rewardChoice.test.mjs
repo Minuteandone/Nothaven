@@ -129,6 +129,7 @@ test('rewardChoice scene: choose claims, sets the flag and returns to the field'
   scene.onEnter(game, { encounterId: 'ridge_old_tusk', returnScene: 'explore', message: 'You return victorious.' });
   scene.actions.choose(game, { dataset: { arg: '0' } });
   assert.equal(game.lastScene.name, 'explore');
+  assert.equal(game.lastScene.data.combatResult, 'victory');
   assert.equal(countItem(game.state.inventory, 'rations'), 3);
   assert.equal(game.state.flags[rewardChoiceFlag('ridge_old_tusk')], true);
   assert.match(game.lastScene.data.message, /Trail Rations/);
@@ -152,6 +153,7 @@ test('rewardChoice scene: skipping leaves the offer unclaimed', () => {
   scene.onEnter(game, { encounterId: 'ridge_old_tusk', returnScene: 'explore', message: 'You return victorious.' });
   scene.actions.skip(game, {});
   assert.equal(game.lastScene.name, 'explore');
+  assert.equal(game.lastScene.data.combatResult, 'victory');
   assert.equal(game.state.flags[rewardChoiceFlag('ridge_old_tusk')], undefined);
   assert.equal(countItem(game.state.inventory, 'rations'), 0);
 });
@@ -172,7 +174,27 @@ test('combat finish: a pool victory routes through the spoils offer exactly once
   assert.equal(game.emits.filter((e) => e.type === 'combat:victory').length, 0);
   game.scenes.rewardChoice.actions.choose(game, { dataset: { arg: '1' } });
   assert.equal(game.lastScene.name, 'explore');
+  assert.equal(game.lastScene.data.combatResult, 'victory');
+  assert.equal(game.lastScene.data.encounterId, 'ridge_thunderhoof');
   assert.equal(countItem(game.state.inventory, 'thunder_iron'), 2);
+});
+
+test('combat finish: skipping the spoils offer still records the victory on return', () => {
+  const game = fakeGame();
+  installRewardChoice(game);
+  game.registerScene('explore', { name: 'explore' });
+  game.state.combat = {
+    over: 'victory', encounterId: 'highwatch_glacierward', returnScene: 'explore',
+    enemy: { id: 'glacierward_colossus' }, log: [], rewards: { xp: 440, gold: 260, items: [] },
+  };
+  combatScene.actions.finish(game, {});
+  assert.equal(game.lastScene.name, 'rewardChoice');
+  game.scenes.rewardChoice.actions.skip(game, {});
+  assert.equal(game.lastScene.name, 'explore');
+  assert.equal(game.lastScene.data.combatResult, 'victory');
+  assert.equal(game.lastScene.data.encounterId, 'highwatch_glacierward');
+  assert.equal(game.state.flags[rewardChoiceFlag('highwatch_glacierward')], undefined);
+  assert.equal(countItem(game.state.inventory, 'spiced_broth'), 0);
 });
 
 test('combat finish: fled, defeat and drill victories never open the spoils offer', () => {

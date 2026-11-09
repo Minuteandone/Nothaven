@@ -288,7 +288,7 @@ export const combatScene = {
       if (real && over === 'victory' && game.scenes?.rewardChoice) {
         const pending = rewardChoicePool(game.state, encounterId);
         if (pending) {
-          game.setScene('rewardChoice', { encounterId, returnScene: target, message });
+          game.setScene('rewardChoice', { encounterId, returnScene: target, message, combatResult: over });
           return;
         }
       }

@@ -21,6 +21,7 @@ const rewardChoiceScene = {
     game.rewardChoiceEncounterId = typeof data?.encounterId === 'string' ? data.encounterId : null;
     game.rewardChoiceReturn = typeof data?.returnScene === 'string' ? data.returnScene : 'town';
     game.rewardChoiceMessage = typeof data?.message === 'string' ? data.message : '';
+    game.rewardChoiceCombatResult = typeof data?.combatResult === 'string' ? data.combatResult : 'victory';
     delete game.rewardChoiceNote;
   },
 
@@ -56,11 +57,11 @@ const rewardChoiceScene = {
         game.rewardChoiceNote = res.message;
         return;
       }
-      game.setScene(returnTarget(game), { message: res.message, encounterId: game.rewardChoiceEncounterId });
+      game.setScene(returnTarget(game), { message: res.message, encounterId: game.rewardChoiceEncounterId, combatResult: game.rewardChoiceCombatResult });
     },
 
     skip(game) {
-      game.setScene(returnTarget(game), { message: game.rewardChoiceMessage || 'You continue on your way.', encounterId: game.rewardChoiceEncounterId });
+      game.setScene(returnTarget(game), { message: game.rewardChoiceMessage || 'You continue on your way.', encounterId: game.rewardChoiceEncounterId, combatResult: game.rewardChoiceCombatResult });
     },
   },
 };
