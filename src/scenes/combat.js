@@ -235,7 +235,7 @@ export const combatScene = {
       if (cure && timers) delete timers[cure];
       game.combatMenu = 'main';
       delete game.combatItemTarget;
-      commit(game, [`${target.name}: ${res.message}`, beginRound(c), ...afterHeroAction(c, hero, rng(game), game.state.party)]);
+      commit(game, [beginRound(c), `${target.name}: ${res.message}`, ...afterHeroAction(c, hero, rng(game), game.state.party)]);
     },
     finish(game) {
       if (game.state.combat && !game.state.combat.over) return; // never abandon an active fight

@@ -216,3 +216,26 @@ test('no round markers appear when log has no ::round:: entries', () => {
   assert.equal((html.match(/combat-log__round-marker/g) || []).length, 0, 'no round markers without rounds');
   assertEggFree(html, 'no-round-marker panel');
 });
+
+test('item-turn round marker is the first non-intro log entry after item use', () => {
+  const state = createInitialState();
+  state.inventory = [{ id: 'healing_herb', qty: 1 }];
+  state.party[0].hp = 5;
+  state.combat = createCombat({ enemyId: 'storm_rat' });
+  const g = {
+    state,
+    combatRng: fixed(0.5),
+    bus: { emit() {}, on() {}, off() {} },
+    scenes: { combat: combatScene },
+    combatMenu: 'main',
+  };
+  // Call item action — beginRound(c) is prepended at index 0 of its commit array
+  combatScene.actions.item(g, { dataset: { arg: 'healing_herb' } });
+
+  const log = state.combat.log;
+  assert.ok(log.length >= 2, 'log has entries after item use');
+  // log[0] is the encounter intro from createCombat; round marker comes right after
+  assert.ok(log[0].includes('scuttles'), 'first entry is encounter intro');
+  assert.equal(log[1], '::round::Round 1', 'round marker immediately follows the intro');
+  assertEggFree(log.join(' '), 'item-turn round marker');
+});
