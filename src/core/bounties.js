@@ -140,6 +140,11 @@ function marksEarnedText(n) {
   return `${n} Board ${n === 1 ? 'Mark' : 'Marks'} earned`;
 }
 
+/** Town-square rank line: null before the first claim. */
+export function townBoardRankText(state) {
+  return totalBountiesClaimed(state) > 0 ? bountyRankText(state) : null;
+}
+
 export function bountyRankText(state) {
   const { rank, next, toNext } = bountyRank(state);
   const pct = (r) => `+${Math.round(r.bonus * 100)}% gold`;
