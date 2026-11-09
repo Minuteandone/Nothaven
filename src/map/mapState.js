@@ -239,10 +239,6 @@ export function getZoneWeatherBriefing(gameState, zoneOrId = null) {
 }
 
 /**
- * Pure read-only summary of repeatable field services (inn, shop, muster)
- * across charted zones, plus live inn rest cost and active network status.
- */
-/**
  * Pure read-only preview of what using a field consumable on a specific party member
  * will immediately restore or cure, without mutating state.
  */
@@ -442,6 +438,10 @@ export function getPartyFieldReadiness(gameState = null) {
   };
 }
 
+/**
+ * Pure read-only summary of repeatable field services (inn, shop, muster)
+ * across charted zones, plus live inn rest cost and active network status.
+ */
 export function getFieldServicesSummary(gameState = null) {
   const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
   const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
@@ -2309,10 +2309,6 @@ export function getZoneExitsSummary(gameState = null, zoneOrId = null) {
 }
 
 /**
- * Pure read-only summary of nearby field actions available at the player's current position,
- * without mutating gameState.
- */
-/**
  * Pure read-only summary of field stations, caches, and contacts in a zone,
  * including available/guarded/completed/service counts and the nearest active station,
  * without mutating gameState.
@@ -2420,6 +2416,86 @@ export function getZoneStationsSummary(gameState = null, zoneOrId = null) {
   };
 }
 
+/**
+ * Pure read-only summary of NPC contacts in a zone, including role labels,
+ * immediate conversation range count, and nearest contact bearing/distance,
+ * without mutating gameState.
+ */
+export function getZoneContactsSummary(gameState = null, zoneOrId = null) {
+  const rawMap = gameState?.map && typeof gameState.map === 'object' ? gameState.map : {};
+  const resolvedZone =
+    typeof zoneOrId === 'string'
+      ? getZone(zoneOrId)
+      : zoneOrId && typeof zoneOrId === 'object'
+        ? zoneOrId
+        : getZone(rawMap.zoneId || gameState?.location || 'greyhaven');
+  const isCurrentZone = (rawMap.zoneId || gameState?.location || 'greyhaven') === resolvedZone.id;
+  const spawn = resolvedZone.spawns?.default || { x: 0, y: 0 };
+  const px = isCurrentZone && Number.isInteger(Number(rawMap.x)) ? Number(rawMap.x) : spawn.x;
+  const py = isCurrentZone && Number.isInteger(Number(rawMap.y)) ? Number(rawMap.y) : spawn.y;
+  const effectiveState = {
+    ...(gameState || {}),
+    map: {
+      ...rawMap,
+      zoneId: resolvedZone.id,
+      x: px,
+      y: py,
+    },
+  };
+
+  const contacts = (Array.isArray(resolvedZone.npcs) ? resolvedZone.npcs : [])
+    .filter((npc) => npc && typeof npc.name === 'string')
+    .map((npc) => {
+      const briefing = getNpcBriefing(effectiveState, npc, resolvedZone);
+      const nav = getCompassBearing(px, py, npc.x, npc.y);
+      return {
+        id: npc.id,
+        name: npc.name,
+        role: npc.role || '',
+        x: npc.x,
+        y: npc.y,
+        bearing: nav.bearing,
+        directionLabel: nav.directionLabel,
+        distance: nav.distance,
+        adjacent: nav.distance <= 1,
+        line: briefing?.line || npc.defaultLine || '',
+        defaultLine: npc.defaultLine || '',
+        summary: briefing?.summary || npc.name,
+      };
+    })
+    .sort((a, b) => a.distance - b.distance);
+
+  const contactCount = contacts.length;
+  const adjacentCount = contacts.filter((c) => c.adjacent).length;
+  const nearestContact = contacts[0] || null;
+
+  let summary = 'Field contacts: None';
+  if (contactCount > 0) {
+    const rosterText = contacts
+      .map((c) => (c.role ? `${c.name} (${c.role})` : c.name))
+      .join(', ');
+    const adjacentPart = adjacentCount > 0 ? ` · ${adjacentCount} in range` : '';
+    const nearestDistText = nearestContact.distance === 0
+      ? 'Here'
+      : `${nearestContact.bearing}, ${nearestContact.distance} ${nearestContact.distance === 1 ? 'tile' : 'tiles'}`;
+    summary = `Field contacts (${contactCount}): ${rosterText}${adjacentPart} · Nearest: ${nearestContact.name} (${nearestDistText})`;
+  }
+
+  return {
+    zoneId: resolvedZone.id,
+    zoneName: resolvedZone.name,
+    contactCount,
+    adjacentCount,
+    nearestContact,
+    contacts,
+    summary,
+  };
+}
+
+/**
+ * Pure read-only summary of nearby field actions available at the player's current position,
+ * without mutating gameState.
+ */
 export function getNearbyActionsSummary(gameState = null) {
   const rawMap = gameState?.map && typeof gameState.map === 'object' ? gameState.map : {};
   const zone = getZone(rawMap.zoneId || gameState?.location || 'greyhaven');
