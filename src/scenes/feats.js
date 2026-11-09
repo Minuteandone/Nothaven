@@ -104,14 +104,32 @@ export const FEAT_PROGRESS = Object.freeze({
 });
 
 // "Progress: a of b." for a countable feat (have capped at need); null for other or malformed feats.
-export function featProgressText(state, id) {
+function featProgressPair(state, id) {
   const fn = Object.prototype.hasOwnProperty.call(FEAT_PROGRESS, id) ? FEAT_PROGRESS[id] : null;
   if (!fn) return null;
   let pair;
   try { pair = fn(state); } catch { return null; }
   const need = num(pair?.[1]);
   if (need <= 0) return null;
-  return `Progress: ${Math.min(num(pair?.[0]), need)} of ${need}.`;
+  return [Math.min(num(pair?.[0]), need), need];
+}
+
+export function featProgressText(state, id) {
+  const pair = featProgressPair(state, id);
+  return pair ? `Progress: ${pair[0]} of ${pair[1]}.` : null;
+}
+
+// Unearned countable feat with the highest share of its target already reached (list order breaks ties); null if none has started.
+export function closestFeatText(state, rows = featStatus(state)) {
+  let best = null;
+  for (const r of rows) {
+    if (r.done) continue;
+    const pair = featProgressPair(state, r.id);
+    if (!pair || pair[0] <= 0 || pair[0] >= pair[1]) continue;
+    const share = pair[0] / pair[1];
+    if (!best || share > best.share) best = { title: r.title, have: pair[0], need: pair[1], share };
+  }
+  return best ? `Closest to earning: ${best.title} (${best.have} of ${best.need}).` : null;
 }
 
 export function featStatus(state) {
@@ -168,6 +186,7 @@ export const featsScene = {
     const rows = featStatus(game.state);
     const earned = rows.filter(r => r.done).length;
     const nextFeat = nextFeatText(game.state);
+    const closest = closestFeatText(game.state, rows);
     const ledger = ledgerOf(game.state);
     const record = SERVICE_ROWS.map(r => `<div><dt>${escapeHTML(r.label)}</dt><dd>${escapeHTML(String(ledger[r.key]))}</dd></div>`).join('');
     const bountyRecord = `<div><dt>Bounties claimed</dt><dd>${escapeHTML(String(totalBountiesClaimed(game.state)))}</dd></div>`;
@@ -187,6 +206,7 @@ export const featsScene = {
       <section class="panel" aria-label="Feats earned">
         <p class="feats__count">${escapeHTML(`${earned} of ${rows.length} feats earned`)}</p>
         ${nextFeat ? `<p class="feats__next">${escapeHTML(nextFeat)}</p>` : ''}
+        ${closest ? `<p class="feats__closest">${escapeHTML(closest)}</p>` : ''}
         <div class="feats__filters" role="group" aria-label="Show feats">${filters}</div>
         ${shown.length ? `<ul class="feats__list">${items}</ul>` : `<p class="feats__empty">${escapeHTML(FEAT_FILTER_EMPTY[filter] || '')}</p>`}
       </section>
