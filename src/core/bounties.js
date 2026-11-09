@@ -177,6 +177,24 @@ export function bountySummaryText(state) {
     : `Bounty contract: “${b.title}” — ${view.progress}/${b.count} defeated.`;
 }
 
+/**
+ * Town-square line shown when no contract is active: names the urgent notice
+ * (or says it is unposted) and any Board Marks waiting to be spent. Null until
+ * the board has at least one posted contract, or while a contract is active.
+ */
+export function bountyIdleText(state) {
+  if (getBounty(bountyState(state).active)) return null;
+  if (!BOUNTIES.some((b) => bountyUnlocked(state, b.id))) return null;
+  const urgent = getBounty(urgentBountyId(state));
+  const pct = `+${Math.round(URGENT_BONUS * 100)}% gold`;
+  const notice = bountyUnlocked(state, urgent.id)
+    ? `“${urgent.title}” is urgent (${pct}).`
+    : `The urgent notice is still unposted.`;
+  const available = boardMarks(state).available;
+  const marks = available > 0 ? ` ${marksWord(available)} to spend at the Exchange.` : '';
+  return `Bounty board: no contract taken. ${notice}${marks}`;
+}
+
 // Exploration-screen line: the active contract plus whether its foe roams the
 // zone being explored. `zone` is a ZONES entry (or null); kept pure for tests.
 export function bountyFieldText(state, zone) {
