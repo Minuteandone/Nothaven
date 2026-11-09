@@ -320,6 +320,14 @@ export function exchangeOfferText(o, cost = o.cost) {
   return `${o.qty}× ${getItem(o.itemId)?.name || o.itemId} for ${cost} ${cost === 1 ? 'mark' : 'marks'}`;
 }
 /** One line on the Warden discount: earned, or how far away. */
+export function exchangeOwnedText(state, o) {
+  const inv = Array.isArray(state?.inventory) ? state.inventory : [];
+  const id = o?.itemId;
+  let n = 0;
+  for (const e of inv) if (e && e.id === id && Number.isFinite(e.qty) && e.qty > 0) n += Math.floor(e.qty);
+  return `In pack: ${n}.`;
+}
+
 export function exchangePerkText(state) {
   const { rank, total } = bountyRank(state);
   if (rank.id === 'warden') return `Warden of the Board: every offer costs ${WARDEN_EXCHANGE_DISCOUNT} mark less.`;
