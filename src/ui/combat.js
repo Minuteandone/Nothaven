@@ -5,6 +5,7 @@ import { heroStats, knownSkills, lockedSkills } from '../combat/rules.js';
 import { elementLabel, elementClass, elementEffectivenessText, elementMatchups, elementMultiplier } from '../combat/elements.js';
 import { damagePreview, incomingDamagePreview } from '../combat/damagePreview.js';
 import { skillRestorationPreview } from '../combat/restorationPreview.js';
+import { enemyIntentPreview } from '../combat/intentPreview.js';
 
 import { getItem, TYPES } from '../items/items.js';
 import { useConsumable } from '../items/consumables.js';
@@ -319,6 +320,7 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main', ite
           ${unitCard(combat.enemy, { enemy: true, enraged: Boolean(combat.enraged) })}
           ${windupCue(combat)}
           ${incomingDamageHint(combat, hero)}
+          ${intentPreview(combat)}
         </section>
       </div>
     </section>
@@ -357,6 +359,13 @@ export function incomingDamageHint(combat, hero) {
   const caveat = 'Estimate using current defenses, not a next-turn prediction.' +
     (windupName ? '' : ' Abilities and other targets differ.');
   return `<p class="incoming-damage-hint"><span class="incoming-damage-label">${escapeHTML(label)}:</span> ${escapeHTML(range)}${escapeHTML(note)} · ${escapeHTML(caveat)}</p>`;
+}
+
+/** Enemy intent hint shown in the opposition panel. */
+export function intentPreview(combat) {
+  const intent = enemyIntentPreview(combat);
+  if (!intent) return '';
+  return `<p class="intent-preview" role="status"><span class="intent-preview__label">Intent:</span> ${escapeHTML(intent)}</p>`;
 }
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
