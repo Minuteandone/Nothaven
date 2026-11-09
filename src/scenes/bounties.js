@@ -1,6 +1,6 @@
 // Greyhaven bounty board scene: accept, track, abandon and claim hunt contracts.
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
-import { MASTERY_CLAIMS, abandonBounty, acceptBounty, bountyRankText, urgentBountyText, masteryText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
+import { EXCHANGE_OFFERS, boardMarks, boardMarksText, exchangeMarks, exchangeOfferText, markValue, MASTERY_CLAIMS, abandonBounty, acceptBounty, bountyRankText, urgentBountyText, masteryText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
 
 function rowHTML(r, anyActive) {
   const status = !r.unlocked ? 'Defeat this foe once to open the contract.'
@@ -20,6 +20,7 @@ function rowHTML(r, anyActive) {
     ${r.mastered && r.items.length ? `<p class="bounty__mastered">Mastered — +1 ${escapeHTML(r.rewardName || '')} per claim.</p>` : ''}
     ${!r.mastered && r.items.length && r.claimed > 0 ? `<p class="bounty__mastery-progress">Mastery progress: ${escapeHTML(`${Math.min(r.claimed, MASTERY_CLAIMS)} of ${MASTERY_CLAIMS}`)} claims.</p>` : ''}
     ${r.roams.length ? `<p class="bounty__roams">Roams: ${escapeHTML(r.roams.join(', '))}.</p>` : ''}` : ''}
+    ${r.unlocked ? `<p class="bounty__marks">Earns ${escapeHTML(String(markValue(r.id)))} Board ${markValue(r.id) === 1 ? 'Mark' : 'Marks'} per claim.</p>` : ''}
     <p class="bounty__status">${escapeHTML(status)}</p>
     ${button}
   </li>`;
@@ -57,6 +58,18 @@ export function sortBountyRows(rows, sort) {
     : sort === 'claims' ? (a, b) => (a.claimed - b.claimed) || byBoard(a, b)
     : byBoard;
   return [...open.sort(cmp), ...locked];
+}
+
+/** Board Exchange panel: spend marks earned from claims on supplies. */
+export function exchangeHTML(state) {
+  const { available } = boardMarks(state);
+  const offer = (o) => `<li class="exchange__offer">${uiButton({ action: 'exchangeMarks', arg: o.id, label: `Exchange: ${exchangeOfferText(o)}`, iconName: 'coin', variant: 'ghost', disabled: available < o.cost })}</li>`;
+  return `<section class="panel bounties__exchange" aria-label="Board Exchange">
+        <h2 class="exchange__title">Board Exchange</h2>
+        <p class="exchange__marks">${escapeHTML(boardMarksText(state))}</p>
+        <p class="exchange__note">Each claim earns Board Marks: 1 for the first six postings, 2 for the next six and 3 for the last six.</p>
+        <ul class="exchange__offers">${EXCHANGE_OFFERS.map(offer).join('')}</ul>
+      </section>`;
 }
 
 function sortHTML(sort) {
@@ -98,6 +111,7 @@ export const bountiesScene = {
         ${filterNote}
         <ul class="bounties__list">${shown.map((r) => rowHTML(r, anyActive)).join('')}</ul>
       </section>
+      ${exchangeHTML(game.state)}
       <div class="title-actions">${uiButton({ action: 'closeBounties', label: 'Back to Greyhaven', iconName: 'compass', variant: 'primary' })}</div>
     </main>`;
   },
@@ -113,6 +127,10 @@ export const bountiesScene = {
     claimBounty(game) {
       if (game.state.scene !== 'bounties' || game.state.combat) return;
       game.bountyMessage = claimBounty(game.state).message;
+    },
+    exchangeMarks(game, el) {
+      if (game.state.scene !== 'bounties' || game.state.combat) return;
+      game.bountyMessage = exchangeMarks(game.state, el?.dataset?.arg).message;
     },
     filterBounties(game, el) {
       if (game.state.scene !== 'bounties' || game.state.combat) return;

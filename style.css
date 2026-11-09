@@ -1537,3 +1537,13 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 
 /* Drills: Yard Gauntlet unlock progress */
 .drills__gauntlet-progress { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
+
+/* Board Exchange (bounty board) */
+.bounties__exchange { margin-top: 1rem; }
+.exchange__title { margin: 0 0 .25rem; font-size: 1.1rem; }
+.exchange__marks { font-weight: 600; color: var(--accent); }
+.exchange__note { color: var(--muted); font-size: .9rem; }
+.exchange__offers { list-style: none; padding: 0; margin: .5rem 0 0; display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.exchange__offer { min-width: 0; }
+.exchange__offer .action-button { width: 100%; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.bounty__marks { margin: .25rem 0; color: var(--muted); font-size: .85rem; }

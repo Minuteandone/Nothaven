@@ -9,7 +9,7 @@ import { SHOPS } from '../src/items/shop.js';
 import { SKILLS } from '../src/combat/rules.js';
 import { FEATS } from '../src/scenes/feats.js';
 import { TRADES } from '../src/items/trade.js';
-import { BOUNTIES, BOUNTY_RANKS } from '../src/core/bounties.js';
+import { BOUNTIES, BOUNTY_RANKS, EXCHANGE_OFFERS } from '../src/core/bounties.js';
 import { POSTGAME_DEEDS } from '../src/scenes/ending.js';
 import { ELEMENTS } from '../src/combat/elements.js';
 
@@ -65,6 +65,7 @@ const CATALOGUES = {
   'postgame deeds': () => POSTGAME_DEEDS,
   bounties: () => BOUNTIES,
   bountyRanks: () => BOUNTY_RANKS,
+  exchangeOffers: () => EXCHANGE_OFFERS,
   elements: () => Object.entries(ELEMENTS).map(([k, v]) => ({ elementId: k, element: v })),
 };
 
