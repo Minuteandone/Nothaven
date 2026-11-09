@@ -12,6 +12,7 @@ import { craftInField } from '../map/mapState.js';
 import { sellValueOf, shopsStocking, isScarceItem, getShop } from '../items/shop.js';
 import { FITTING_SLOTS, MAX_FITTING, fittingLevel, fittingEffectText } from '../items/forge.js';
 import { TRADES, TRADE_LOCATIONS } from '../items/trade.js';
+import { EXCHANGE_OFFERS, WARDEN_EXCHANGE_DISCOUNT } from '../core/bounties.js';
 import { recipeBookEntries, filterRecipeEntries } from './recipes.js';
 
 const esc = (v) =>
@@ -142,6 +143,11 @@ export function bagDetailsLines(itemId) {
       lines.push(`Trades away: ${trade.name}${got ? ` (for ${got})` : ''} at ${at}`);
     }
   }
+  for (const offer of EXCHANGE_OFFERS) {
+    if (offer.itemId !== itemId) continue;
+    const marks = `${offer.cost} Board ${offer.cost === 1 ? 'Mark' : 'Marks'}`;
+    lines.push(`Board Exchange: ${offer.qty}× for ${marks} (${WARDEN_EXCHANGE_DISCOUNT} less as Warden of the Board)`);
+  }
   if (isScarceItem(itemId)) lines.push('Rare drop — shops never stock it.');
   if (!lines.length) {
     lines.push(item.type === TYPES.KEY
@@ -154,7 +160,7 @@ export function bagDetailsLines(itemId) {
 function bagRow(item, stack, member, detailsId = '') {
   const sum = statSummary(item.stats);
   const open = detailsId === item.id;
-  const detailBtn = `<button data-action="bagDetails" data-arg="${esc(item.id)}">${open ? 'Hide details' : 'Details'}</button>`;
+  const detailBtn = `<button data-action="bagDetails" data-arg="${esc(item.id)}" aria-expanded="${open ? 'true' : 'false'}">${open ? 'Hide details' : 'Details'}</button>`;
   let controls = '';
   if (item.type === TYPES.CONSUMABLE) {
     controls = detailBtn + `<button data-action="use" data-arg="${esc(item.id)}">Use</button>`;
