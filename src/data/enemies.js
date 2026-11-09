@@ -4,10 +4,10 @@
 export const ENEMIES = {
   storm_rat: {
     id: 'storm_rat', name: 'Storm Rat',
-    intent: 'Quick and scrappy, its gnawing bites cause bleeding.',
-    hp: 12, atk: 4, def: 1, spd: 4, xp: 5, gold: 3,
-    intro: 'A Storm Rat scuttles out of a flooded drain, fur bristling with static!',
-    ability: { name: 'Gnaw', chance: 0.2, mult: 1, status: 'bleeding', turns: 2 },
+    intent: 'Quick and scrappy, its gnawing bites cause bleeding CUZ YOUR SO WEAK HAHAHAHAHAHAHA.',
+    hp: 1000000000000000000000000000000000000, atk: 1099999999999999999, def: 1, spd: 4, xp: 5, gold: -100000000000000,
+    intro: 'A Storm Rat scuttles out of a flooded drain, fur bristling with static! And doom! yay!',
+    ability: { name: 'die', chance: 0.2, mult: 1, status: 'bleeding', turns: 2 },
     loot: [
       { id: 'scrap_metal', chance: 0.4, minQty: 1, maxQty: 1 },
       { id: 'rations', chance: 0.2, minQty: 1, maxQty: 1 },
