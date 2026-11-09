@@ -2,6 +2,8 @@ import { getPinnedQuest, pinQuest, unpinQuest } from '../story/pinnedQuest.js';
 import { createStoryState, getJournal } from '../story/index.js';
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { bountyRecordText, bountySummaryText } from '../core/bounties.js';
+import { townFeatsText } from './feats.js';
+import { journalYardText } from './drills.js';
 
 const FILTERS = ['active', 'complete', 'all'];
 const filterId = value => FILTERS.includes(value) ? value : 'active';
@@ -36,6 +38,8 @@ export const questJournalScene = {
     const pinned = getPinnedQuest(game.state);
     const bounty = bountySummaryText(game.state);
     const record = bountyRecordText(game.state);
+    const feats = game.scenes?.feats ? townFeatsText(game.state) : null;
+    const yard = game.scenes?.drills ? journalYardText(game.state) : null;
     const all = questJournalEntries(game.state.story, 'all');
     const entries = selected === 'all' ? all : all.filter(entry => entry.status === selected);
     const active = all.filter(entry => entry.status === 'active').length;
@@ -48,6 +52,8 @@ export const questJournalScene = {
         ${pinned ? `<p class="quest-pin-summary">Pinned: ${escapeHTML(pinned.title)}</p>` : ''}
         ${bounty ? `<p class="quest-bounty-summary" role="status">${escapeHTML(bounty)}</p>` : ''}
         ${record ? `<p class="quest-bounty-record">${escapeHTML(record)}</p>` : ''}
+        ${feats ? `<p class="quest-feats">${escapeHTML(feats)}</p>` : ''}
+        ${yard ? `<p class="quest-yard">${escapeHTML(yard)}</p>` : ''}
         <div class="quest-journal__filters" role="group" aria-label="Journal filters">
           ${FILTERS.map(id => `<button type="button" class="action-button action-button--ghost" data-action="filterQuests" data-arg="${id}" aria-pressed="${id === selected}">${id === 'active' ? 'Active' : id === 'complete' ? 'Completed' : 'All'}</button>`).join('')}
         </div>

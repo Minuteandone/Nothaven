@@ -240,7 +240,7 @@ The **Wardens' feats** panel lists milestones of your journey. Alongside the cha
 - **Well Fitted** — have the Greyhaven forge bring both the weapon and armour fittings of one party member to +3.
 - **Every Notice Answered** — claim every contract on the Greyhaven bounty board at least once.
 
-Use the **All**, **Earned** and **Not yet** buttons above the list to show only the feats you want; the earned count stays the same and the choice resets each time you open the panel. Below the earned count, a short line names the next feat you have not yet earned, in list order. Each filter button shows how many feats it would list. Once you have earned a feat, the town square also shows your feat count and the title of the next feat still to earn.
+Use the **All**, **Earned** and **Not yet** buttons above the list to show only the feats you want; the earned count stays the same and the choice resets each time you open the panel. Below the earned count, a short line names the next feat you have not yet earned, in list order. Each filter button shows how many feats it would list. Once you have earned a feat, the town square also shows your feat count and the title of the next feat still to earn. The Journey Journal repeats that feat line and, once you have won a drill or attempted the Yard Gauntlet, adds a training yard line with your drill victories, the foes you have bested in drills and your best gauntlet run.
 
 Below the feats, the **Service record** tallies your real battles: battles won, bosses overcome, times carried home, safe withdrawals, wins after a defeat, and your current and longest winning runs. Sparring Drills and the Yard Gauntlet are practice and are not counted.
 
