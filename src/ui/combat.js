@@ -5,6 +5,7 @@ import { heroStats, knownSkills, lockedSkills } from '../combat/rules.js';
 import { elementLabel, elementClass, elementEffectivenessText, elementMatchups, elementMultiplier } from '../combat/elements.js';
 import { damagePreview, incomingDamagePreview } from '../combat/damagePreview.js';
 import { skillRestorationPreview } from '../combat/restorationPreview.js';
+import { renderActionOrder } from './actionOrder.js';
 import { enemyIntentPreview } from '../combat/intentPreview.js';
 
 import { getItem, TYPES } from '../items/items.js';
@@ -324,6 +325,7 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main', ite
         </section>
       </div>
     </section>
+    ${renderActionOrder(combat, party)}
     <div class="combat-dashboard">
       <section class="panel command-panel" aria-labelledby="command-title">
         <p class="eyebrow">Command phase</p><h2 id="command-title">${commandTitle}</h2>
