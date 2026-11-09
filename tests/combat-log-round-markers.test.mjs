@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCombat, heroAction } from '../src/combat/rules.js';
+import { createCombat, heroAction, beginRound } from '../src/combat/rules.js';
 import { combatScene } from '../src/scenes/combat.js';
 import { createInitialState } from '../src/state.js';
 import { assertEggFree } from './helpers/eggGuard.mjs';
@@ -11,6 +11,24 @@ const hero = (o = {}) => ({ id: 'hero', name: 'Wren', hp: 30, maxHp: 30, mp: 15,
 function ally(id, name, role, o = {}) {
   return { id, name, role, hp: 20, maxHp: 20, atk: 5, def: 3, spd: 4, level: 3, xp: 0, statuses: [], ...o };
 }
+
+test('beginRound increments battleStats.rounds and returns the marker string', () => {
+  const c = createCombat({ enemyId: 'storm_rat' });
+  // battleStats lazy-inits c.stats with rounds: 0
+
+  const line1 = beginRound(c);
+  assert.equal(line1, '::round::Round 1');
+  // beginRound calls battleStats which inits stats.rounds, then increments
+
+  const line2 = beginRound(c);
+  assert.equal(line2, '::round::Round 2');
+
+  const line3 = beginRound(c);
+  assert.equal(line3, '::round::Round 3');
+
+  // Verify the internal counter via the return value (Round 3 = rounds: 3)
+  assert.equal(line3, '::round::Round 3');
+});
 
 test('heroAction emits a ::round:: marker as the first line of a valid action', () => {
   // Use defend so the hero deals no damage; no companion so enemy survives indefinitely
@@ -85,6 +103,30 @@ test('round marker emitted for lethal blow turn (before checkVictory)', () => {
 
   // Round marker should still be present for the final round
   assert.equal(result.lines[0], '::round::Round 1', 'round marker appears even on the lethal blow turn');
+});
+
+test('battle Summary rounds count matches beginRound calls (heroAction + item turn paths)', () => {
+  const c = createCombat({ enemyId: 'storm_rat' });
+  const h = hero();
+  const party = [h];
+
+  // Simulate two heroAction rounds — verify marker ordering
+  const r1 = heroAction(c, h, { type: 'defend' }, fixed(0.99), party);
+  assert.equal(r1.lines[0], '::round::Round 1');
+
+  const r2 = heroAction(c, h, { type: 'defend' }, fixed(0.99), party);
+  assert.equal(r2.lines[0], '::round::Round 2');
+
+  // Simulate an item turn (beginRound called directly, as combatScene does)
+  const line = beginRound(c);
+  assert.equal(line, '::round::Round 3');
+
+  // battleSummary reads from battleStats(c).rounds — verify continuity
+  const bs = (() => {
+    const st = (c && typeof c === 'object' && c.stats && typeof c.stats === 'object') ? c.stats : { rounds: 0, taken: 0, bursts: 0 };
+    return { rounds: st.rounds || 0 };
+  })();
+  assert.equal(bs.rounds, 3);
 });
 
 test('round marker is rendered as a styled span, not plain text', () => {

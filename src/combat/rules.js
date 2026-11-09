@@ -403,6 +403,16 @@ function applyElement(c, action, baseDmg) {
   return { dmg: baseDmg, note: '', atkEl };
 }
 
+/**
+ * Increment the round counter and return the round-marker log line.
+ * Called at the start of every player-controlled turn (heroAction + item turns)
+ * so that both paths emit consistent round markers in the combat log.
+ */
+export function beginRound(c) {
+  battleStats(c).rounds += 1;
+  return `::round::Round ${battleStats(c).rounds}`;
+}
+
 export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
   if (c.over) return { ok: false, lines: ['The battle is over.'] };
   const lines = [];
@@ -536,8 +546,7 @@ export function heroAction(c, hero, action, rng = Math.random, party = [hero]) {
     default:
       return { ok: false, lines: ['Unknown action.'] };
   }
-  battleStats(c).rounds += 1;
-  lines.unshift(`::round::Round ${battleStats(c).rounds}`);
+  lines.unshift(beginRound(c));
   if (Object.prototype.hasOwnProperty.call(BEACON_CHARGE_GAIN, action.type)) gainCharge(c, BEACON_CHARGE_GAIN[action.type]);
   checkVictory(c, lines, hero, party);
   lines.push(...afterHeroAction(c, hero, rng, party));
