@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createCombat, afterHeroAction } from '../src/combat/rules.js';
+import { createCombat, afterHeroAction, heroAction } from '../src/combat/rules.js';
 import { combatScene } from '../src/scenes/combat.js';
 import { createInitialState } from '../src/state.js';
 import { combatActionOrder, renderActionOrder } from '../src/ui/actionOrder.js';
@@ -77,10 +77,31 @@ test('null and repeated-leader entries are skipped like the real companion loop;
   const combat = createCombat({ enemyId: 'storm_rat' });
   const model = combatActionOrder(combat, [leader, null, leader, down, living]);
   assert.deepEqual(names(model), ['Wren', 'Tamsin', 'Iven', 'Storm Rat']);
-  assert.equal(model.entries[1].state, 'Down · skipped');
+  assert.equal(model.entries[1].state, 'Down now');
   assert.equal(model.entries[1].down, true);
   assert.equal(model.entries[2].state, 'Automatic ally');
-  assert.match(renderActionOrder(combat, [leader, down, living]), /action-order__actor--down/);
+  const html = renderActionOrder(combat, [leader, down, living]);
+  assert.match(html, /action-order__actor--down/);
+  assert.ok(html.includes('“Down now” allies are skipped unless revived before their formation turn.'));
+  down.hp = 12;
+  assert.equal(combatActionOrder(combat, [leader, down, living]).entries[1].state, 'Automatic ally');
+});
+
+test('real Rekindle changes Down now before the revived ally acts in formation order', () => {
+  const leader = hero({ level: 15, mp: 12, maxMp: 12 });
+  const down = ally('tamsin', 'Tamsin', 'scout', { hp: 0, statuses: ['bleeding'] });
+  const combat = createCombat({ enemyId: 'storm_rat' });
+  const party = [leader, down];
+  assert.equal(combatActionOrder(combat, party).entries[1].state, 'Down now');
+  const result = heroAction(combat, leader, { type: 'skill', skillId: 'rekindle' }, () => 0.99, party);
+  assert.equal(result.ok, true);
+  assert.ok(down.hp > 0);
+  assert.deepEqual(down.statuses, []);
+  const reviveIndex = result.lines.findIndex(line => /^Tamsin rises with [1-9]\d* HP\.$/.test(line));
+  const strikeIndex = result.lines.findIndex(line => /^Tamsin strikes for \d+\.$/.test(line));
+  assert.ok(reviveIndex >= 0, 'Rekindle records the restored HP before later damage');
+  assert.ok(strikeIndex > reviveIndex, 'revived ally acts later in the same round');
+  assert.equal(combatActionOrder(combat, party).entries[1].state, 'Automatic ally');
 });
 
 test('stunned and defeated opposition states are explicit, with defeat taking precedence', () => {
@@ -164,7 +185,7 @@ test('real engine skips a downed displayed ally and consumes a displayed enemy s
   const living = ally('iven', 'Iven', 'keeper');
   const party = [leader, down, living];
   const before = combatActionOrder(combat, party);
-  assert.equal(before.entries[1].state, 'Down · skipped');
+  assert.equal(before.entries[1].state, 'Down now');
   assert.equal(before.entries.at(-1).state, 'Stunned · reply skipped');
   const hp = leader.hp;
   const lines = afterHeroAction(combat, leader, () => 0.5, party);
@@ -223,7 +244,7 @@ test('malformed models fail closed and hostile names are escaped everywhere incl
 });
 
 test('both guides describe the panel and its opening and skipped-actor rules', () => {
-  const sentence = 'The Action order panel shows this sequence, marks downed allies or a stunned enemy as skipped, and explains a faster foe’s single opening turn before your first command.';
+  const sentence = 'The Action order panel shows this sequence, labels downed allies “Down now” (they are skipped unless revived before their formation turn), marks a stunned enemy’s skipped reply, and explains a faster foe’s single opening turn before your first command.';
   const md = readFileSync(new URL('../docs/PLAYER_GUIDE.md', import.meta.url), 'utf8');
   assert.equal(md.split(sentence).length - 1, 1);
   assert.ok(guideScene.render({ state: {} }).includes(sentence));
