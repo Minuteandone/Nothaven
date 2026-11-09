@@ -2116,12 +2116,27 @@ export function getZoneCompassHint(gameState, zoneOrId = null) {
 
   const encounters = (resolvedZone.encounters || [])
     .filter((enc) => !cleared[enc.encounterId || enc.id] && !encounterLockReason(mapState, enc, gameState))
-    .map((enc) => ({ kind: 'encounter', id: enc.encounterId || enc.id, label: enc.name, x: enc.x, y: enc.y }))
+    .map((enc) => ({
+      kind: 'encounter',
+      id: enc.encounterId || enc.id,
+      enemyId: enc.enemyId,
+      label: enc.name,
+      x: enc.x,
+      y: enc.y,
+      entity: enc,
+    }))
     .sort(byDistance);
 
   const interactables = (resolvedZone.interactables || [])
     .filter((inter) => inter.once && !completed[inter.interactionId || inter.id])
-    .map((inter) => ({ kind: 'interactable', id: inter.interactionId || inter.id, label: inter.name, x: inter.x, y: inter.y }))
+    .map((inter) => ({
+      kind: 'interactable',
+      id: inter.interactionId || inter.id,
+      label: inter.name,
+      x: inter.x,
+      y: inter.y,
+      entity: inter,
+    }))
     .sort(byDistance);
 
   const unlockedExits = (resolvedZone.exits || [])
@@ -2133,6 +2148,7 @@ export function getZoneCompassHint(gameState, zoneOrId = null) {
       x: ex.x,
       y: ex.y,
       unvisited: !visited[ex.toZone],
+      entity: ex,
     }));
   const unvisitedExits = unlockedExits.filter((ex) => ex.unvisited).sort(byDistance);
   const fallbackExits = unlockedExits.sort(byDistance);
@@ -2145,6 +2161,38 @@ export function getZoneCompassHint(gameState, zoneOrId = null) {
     ? `${target.label} (here)`
     : `${target.label} (${nav.bearing}, ${nav.distance} ${nav.distance === 1 ? 'tile' : 'tiles'})`;
 
+  const effectiveState = {
+    ...(gameState || {}),
+    map: {
+      ...mapState,
+      zoneId: resolvedZone.id,
+      x: px,
+      y: py,
+      visitedZones: visited,
+      clearedEncounters: cleared,
+      completedInteractions: completed,
+    },
+  };
+  const safeRoute = getSafePathPreview(effectiveState, target.x, target.y, resolvedZone);
+  const routeSteps = Number.isInteger(safeRoute?.steps) ? safeRoute.steps : null;
+  const routeReachable = Boolean(safeRoute?.reachable);
+
+  let targetSummary = target.label;
+  if (target.kind === 'encounter') {
+    targetSummary = getEncounterPreview(target.enemyId, effectiveState)?.summary || target.label;
+  } else if (target.kind === 'interactable') {
+    targetSummary = getInteractableBriefing(effectiveState, target.entity, resolvedZone)?.summary || target.label;
+  } else if (target.kind === 'exit') {
+    targetSummary = getRouteBriefing(effectiveState, target.id)?.summary || target.label;
+  }
+
+  const routeSuffix = routeSteps !== null && routeSteps > 0
+    ? ` · Safe route: ${routeSteps} ${routeSteps === 1 ? 'step' : 'steps'}`
+    : '';
+  const tooltip = targetSummary && targetSummary !== target.label
+    ? `${summary} — ${targetSummary}${routeSuffix}`
+    : `${summary}${routeSuffix}`;
+
   return {
     kind: target.kind,
     id: target.id,
@@ -2154,6 +2202,75 @@ export function getZoneCompassHint(gameState, zoneOrId = null) {
     bearing: nav.bearing,
     directionLabel: nav.directionLabel,
     distance: nav.distance,
+    routeSteps,
+    routeReachable,
+    targetSummary,
+    summary,
+    tooltip,
+  };
+}
+
+/**
+ * Pure read-only summary of nearby field actions available at the player's current position,
+ * without mutating gameState.
+ */
+export function getNearbyActionsSummary(gameState = null) {
+  const rawMap = gameState?.map && typeof gameState.map === 'object' ? gameState.map : {};
+  const zone = getZone(rawMap.zoneId || gameState?.location || 'greyhaven');
+  const spawn = zone.spawns?.default || { x: 0, y: 0 };
+  const x = Number.isInteger(Number(rawMap.x)) ? Number(rawMap.x) : spawn.x;
+  const y = Number.isInteger(Number(rawMap.y)) ? Number(rawMap.y) : spawn.y;
+  const effectiveState = {
+    ...(gameState || {}),
+    map: {
+      ...rawMap,
+      zoneId: zone.id,
+      x,
+      y,
+      visitedZones: { ...(rawMap.visitedZones || {}), [zone.id]: true },
+      clearedEncounters: { ...(rawMap.clearedEncounters || {}) },
+      completedInteractions: { ...(rawMap.completedInteractions || {}) },
+      log: Array.isArray(rawMap.log) ? [...rawMap.log] : [],
+    },
+  };
+  const actions = getAvailableActions(effectiveState);
+  const talkCount = actions.filter((a) => a.kind === 'talk').length;
+  const encounterCount = actions.filter((a) => a.kind === 'encounter' && !a.locked).length;
+  const lockedEncounterCount = actions.filter((a) => a.kind === 'encounter' && a.locked).length;
+  const interactCount = actions.filter((a) => a.kind === 'interact').length;
+  const exitCount = actions.filter((a) => a.kind === 'exit').length;
+  const patrolAvailable = actions.some((a) => a.kind === 'patrol');
+  const totalCount = actions.length;
+  const labels = actions.map((a) => a.label);
+
+  let summary;
+  if (totalCount === 0) {
+    summary = 'Within reach: No immediate actions — move beside a person, cache, route, or threat.';
+  } else {
+    const parts = [];
+    if (talkCount > 0) parts.push(`${talkCount} ${talkCount === 1 ? 'contact' : 'contacts'}`);
+    if (encounterCount > 0) parts.push(`${encounterCount} ${encounterCount === 1 ? 'threat' : 'threats'}`);
+    if (lockedEncounterCount > 0) {
+      parts.push(`${lockedEncounterCount} ${lockedEncounterCount === 1 ? 'sealed challenge' : 'sealed challenges'}`);
+    }
+    if (interactCount > 0) parts.push(`${interactCount} ${interactCount === 1 ? 'station' : 'stations'}`);
+    if (exitCount > 0) parts.push(`${exitCount} ${exitCount === 1 ? 'route' : 'routes'}`);
+    if (patrolAvailable) parts.push('1 patrol');
+    summary = `Within reach (${totalCount}): ${parts.join(', ')}`;
+  }
+
+  return {
+    zoneId: zone.id,
+    x,
+    y,
+    totalCount,
+    talkCount,
+    encounterCount,
+    lockedEncounterCount,
+    interactCount,
+    exitCount,
+    patrolAvailable,
+    labels,
     summary,
   };
 }
