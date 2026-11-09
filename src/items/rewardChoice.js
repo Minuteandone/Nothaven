@@ -21,6 +21,24 @@ export const REWARD_CHOICE_POOLS = Object.freeze({
   stormcrown_tyrant: Object.freeze([OPTION('tempest_salve', 1), OPTION('relay_brass', 3), OPTION('storm_lantern', 1)]),
   storm_heart_core: Object.freeze([OPTION('skyward_flask', 2), OPTION('thunder_iron', 3), OPTION('tempest_salve', 1)]),
   eye_last_squall: Object.freeze([OPTION('field_dressing', 2), OPTION('storm_glass', 3), OPTION('storm_lantern', 1)]),
+  // Fixed map encounters without a spoils offer before this expansion, in zone order.
+  ridge_patrol: Object.freeze([OPTION('bandage', 2), OPTION('scrap_metal', 2), OPTION('storm_tonic', 1)]),
+  ridge_hound_den: Object.freeze([OPTION('rations', 3), OPTION('storm_glass', 2), OPTION('healing_herb', 1)]),
+  observatory_sentinel: Object.freeze([OPTION('bandage', 3), OPTION('storm_glass', 2), OPTION('tin_whistle', 1)]),
+  observatory_construct: Object.freeze([OPTION('scrap_metal', 3), OPTION('storm_tonic', 2), OPTION('healing_herb', 2)]),
+  beacon_tide_wraith: Object.freeze([OPTION('storm_glass', 2), OPTION('rations', 2), OPTION('bandage', 3)]),
+  saltmere_rescue: Object.freeze([OPTION('field_dressing', 2), OPTION('scrap_metal', 2), OPTION('hearty_chowder', 1)]),
+  saltmere_tide_wraith: Object.freeze([OPTION('storm_glass', 3), OPTION('hearty_chowder', 2), OPTION('storm_tonic', 2)]),
+  saltmere_squall_revenant: Object.freeze([OPTION('storm_glass', 2), OPTION('hearty_chowder', 2), OPTION('gale_charm', 1)]),
+  highwatch_rescue: Object.freeze([OPTION('hearty_chowder', 2), OPTION('bandage', 3), OPTION('storm_glass', 2)]),
+  highwatch_construct: Object.freeze([OPTION('scrap_metal', 4), OPTION('salvaged_wiring', 2), OPTION('spiced_broth', 1)]),
+  highwatch_warlord: Object.freeze([OPTION('salvaged_wiring', 3), OPTION('spiced_broth', 2), OPTION('storm_glass', 3)]),
+  relay_warden: Object.freeze([OPTION('relay_brass', 3), OPTION('sunscar_glass', 2), OPTION('spiced_broth', 2)]),
+  sunscar_drone_patrol: Object.freeze([OPTION('relay_brass', 2), OPTION('sunscar_glass', 2), OPTION('ember_broth', 1)]),
+  spire_sentry_post: Object.freeze([OPTION('thunder_iron', 2), OPTION('salvaged_wiring', 2), OPTION('spiced_broth', 2)]),
+  spire_raider_camp: Object.freeze([OPTION('thunder_iron', 2), OPTION('highland_flask', 2), OPTION('storm_lantern', 1)]),
+  eye_west_shade: Object.freeze([OPTION('tempest_salve', 2), OPTION('thunder_iron', 2), OPTION('storm_glass', 3)]),
+  eye_east_colossus: Object.freeze([OPTION('thunder_iron', 3), OPTION('skyward_flask', 2), OPTION('tempest_salve', 2)]),
 });
 
 /** Save flag key marking a spoils choice as already claimed for an encounter. */

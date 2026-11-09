@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createInitialState } from '../src/state.js';
+import { ZONES } from '../src/map/zones.js';
 import { getItem } from '../src/items/items.js';
 import { countItem } from '../src/items/inventory.js';
 import { REWARD_CHOICE_POOLS, rewardChoicePool, claimRewardChoice, rewardChoiceFlag } from '../src/items/rewardChoice.js';
@@ -25,9 +26,9 @@ function stackOf(inv, id) {
   return inv.find((s) => s.id === id);
 }
 
-test('reward pools: ten encounters, three known-item options each, frozen', () => {
+test('reward pools: twenty-seven encounters, three known-item options each, frozen', () => {
   const ids = Object.keys(REWARD_CHOICE_POOLS);
-  assert.equal(ids.length, 10);
+  assert.equal(ids.length, 27);
   for (const id of ids) {
     assert.ok(Object.isFrozen(REWARD_CHOICE_POOLS[id]), `pool ${id} frozen`);
     const options = REWARD_CHOICE_POOLS[id];
@@ -294,4 +295,11 @@ test('rewardChoice scene: pending fields are cleared once the offer is settled',
   assert.equal(game.rewardChoiceCombatResult, undefined);
   assert.equal(game.rewardChoiceNote, undefined);
   assert.equal(countItem(game.state.inventory, 'rations'), 3);
+});
+
+test('reward pools: every key is an encounter defined in the zone map', () => {
+  const zonesText = JSON.stringify(ZONES);
+  for (const id of Object.keys(REWARD_CHOICE_POOLS)) {
+    assert.ok(zonesText.includes('"encounterId":"' + id + '"'), 'pool ' + id + ' must be an encounter in zones');
+  }
 });

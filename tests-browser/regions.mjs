@@ -115,6 +115,10 @@ try {
         }
         assert.deepEqual(won.inventory, inventory, 'real victory loot is added exactly once');
         await click('finish');
+        if ((await state()).scene === 'rewardChoice') {
+          assert.match(await page.locator('#app').innerText(), /Victory spoils/);
+          await click('skip');
+        }
         const after = await state();
         assert.equal(after.scene, 'explore'); assert.equal(after.combat, null);
         assert.equal(after.map.activeEncounterId, null); assert.equal(after.map.clearedEncounters[encounterId], true);
