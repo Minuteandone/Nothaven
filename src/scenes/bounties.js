@@ -1,6 +1,6 @@
 // Greyhaven bounty board scene: accept, track, abandon and claim hunt contracts.
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
-import { EXCHANGE_OFFERS, boardMarks, boardMarksText, exchangeCost, exchangeMarks, exchangeOfferText, exchangePerkText, markValue, MASTERY_CLAIMS, abandonBounty, acceptBounty, bountyRankText, urgentBountyText, masteryText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
+import { EXCHANGE_OFFERS, boardMarks, boardMarksText, exchangeCost, exchangeMarks, exchangeOfferText, exchangePerkText, exchangeOwnedText, markValue, MASTERY_CLAIMS, abandonBounty, acceptBounty, bountyRankText, urgentBountyText, masteryText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
 
 function rowHTML(r, anyActive) {
   const status = !r.unlocked ? 'Defeat this foe once to open the contract.'
@@ -65,7 +65,7 @@ export function exchangeHTML(state) {
   const { available } = boardMarks(state);
   const offer = (o) => {
     const cost = exchangeCost(state, o);
-    return `<li class="exchange__offer">${uiButton({ action: 'exchangeMarks', arg: o.id, label: `Exchange: ${exchangeOfferText(o, cost)}`, iconName: 'coin', variant: 'ghost', disabled: available < cost })}</li>`;
+    return `<li class="exchange__offer">${uiButton({ action: 'exchangeMarks', arg: o.id, label: `Exchange: ${exchangeOfferText(o, cost)}`, iconName: 'coin', variant: 'ghost', disabled: available < cost })}<p class="exchange__owned">${escapeHTML(exchangeOwnedText(state, o))}</p></li>`;
   };
   return `<section class="panel bounties__exchange" aria-label="Board Exchange">
         <h2 class="exchange__title">Board Exchange</h2>
