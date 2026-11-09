@@ -193,6 +193,7 @@ test('a storage-write failure still dismisses only in memory', () => {
 test('guide replay resets only device guidance and leaves a frozen journey untouched', () => {
   const { game, scenes, controller, storage } = makeHarness();
   scenes.title.actions.dismissGuidance(game, { dataset: { arg: 'title' } });
+  game.state.scene = 'guide';
   const snapshot = structuredClone(game.state);
   deepFreeze(game.state);
   assert.match(scenes.guide.render(game), /Replay quick tips/);
@@ -206,15 +207,19 @@ test('guide replay resets only device guidance and leaves a frozen journey untou
 
 test('scene entry clears stale level-up data and replay feedback', () => {
   const { game, scenes, bus, controller } = makeHarness();
+  game.state.scene = 'guide';
   scenes.guide.actions.replayGuidance(game);
   assert.match(scenes.guide.render(game), /Quick tips will appear again/);
+  game.state.scene = 'combat';
   game.state.combat = { over: 'victory' };
   bus.emit('party:levelup', { lines: ['Wren reached level 2!'] });
   assert.ok(controller.pendingLevelUp);
   bus.emit('scene:enter', { name: 'combat' });
   assert.equal(controller.pendingLevelUp, null);
   bus.emit('party:levelup', { lines: ['Wren reached level 2!'] });
+  game.state.scene = 'guide';
   scenes.guide.actions.replayGuidance(game);
+  game.state.scene = 'town';
   bus.emit('scene:enter', { name: 'town' });
   assert.equal(controller.pendingLevelUp, null);
   assert.doesNotMatch(scenes.guide.render(game), /Quick tips will appear again/);
@@ -223,6 +228,7 @@ test('scene entry clears stale level-up data and replay feedback', () => {
 
 test('valid level-up dismissal clears its transient briefing', () => {
   const { game, scenes, bus, controller } = makeHarness();
+  game.state.scene = 'combat';
   game.state.combat = { over: 'victory' };
   bus.emit('party:levelup', { lines: ['Wren reached level 2!'] });
   scenes.combat.actions.dismissGuidance(game, { dataset: { arg: 'combat' } });
@@ -230,6 +236,34 @@ test('valid level-up dismissal clears its transient briefing', () => {
   scenes.combat.actions.dismissGuidance(game, { dataset: { arg: 'levelup' } });
   assert.equal(controller.pendingLevelUp, null);
   assert.deepEqual(controller.preferences, { dismissed: { levelup: true } });
+  controller.destroy();
+});
+
+test('cross-scene dismissal and replay never write preferences or clear level-up data', () => {
+  const { game, scenes, bus, controller, storage } = makeHarness();
+  game.state.scene = 'town';
+  scenes.title.actions.dismissGuidance(game, { dataset: { arg: 'title' } });
+  assert.deepEqual(controller.preferences, { dismissed: {} });
+  assert.equal(storage.value(GUIDANCE_STORAGE_KEY), undefined);
+
+  game.state.scene = 'title';
+  scenes.title.actions.dismissGuidance(game, { dataset: { arg: 'title' } });
+  const saved = storage.value(GUIDANCE_STORAGE_KEY);
+  game.state.scene = 'combat';
+  game.state.combat = { over: null };
+  scenes.guide.actions.replayGuidance(game);
+  assert.deepEqual(controller.preferences, { dismissed: { title: true } });
+  assert.equal(storage.value(GUIDANCE_STORAGE_KEY), saved);
+  assert.doesNotMatch(scenes.guide.render(game), /Quick tips will appear again as you play/);
+
+  game.state.combat.over = 'victory';
+  bus.emit('party:levelup', { lines: ['Wren reached level 2!'] });
+  assert.ok(controller.pendingLevelUp);
+  game.state.scene = 'town';
+  scenes.combat.actions.dismissGuidance(game, { dataset: { arg: 'levelup' } });
+  assert.deepEqual(controller.preferences, { dismissed: { title: true } });
+  assert.equal(storage.value(GUIDANCE_STORAGE_KEY), saved);
+  assert.ok(controller.pendingLevelUp);
   controller.destroy();
 });
 
