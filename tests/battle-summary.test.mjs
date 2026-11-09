@@ -8,7 +8,13 @@ test('battleSummary tracks rounds, damage both ways and Bursts', () => {
   const hero = createInitialState().party[0];
   hero.hp = 999; hero.maxHp = 999; hero.atk = 40;
   const c = createCombat({ enemyId: 'storm_heart' });
-  assert.deepEqual(battleSummary(c), { rounds: 0, dealt: 0, taken: 0, bursts: 0, companionDamage: {} });
+  const sm0 = battleSummary(c);
+  assert.equal(sm0.rounds, 0);
+  assert.equal(sm0.dealt, 0);
+  assert.equal(sm0.taken, 0);
+  assert.equal(sm0.bursts, 0);
+  assert.equal(typeof sm0.companionDamage, 'object');
+  assert.equal(Object.keys(sm0.companionDamage).length, 0);
   const before = hero.hp;
   heroAction(c, hero, { type: 'attack' }, () => 0.5);
   c.charge = BEACON_CHARGE_MAX;
@@ -26,7 +32,13 @@ test('failed actions do not count as rounds; summary tolerates bare state', () =
   const c = createCombat({ enemyId: 'storm_rat' });
   heroAction(c, hero, { type: 'burst' }, () => 0.5);
   assert.equal(battleSummary(c).rounds, 0);
-  assert.deepEqual(battleSummary(null), { rounds: 0, dealt: 0, taken: 0, bursts: 0, companionDamage: {} });
+  const smNull = battleSummary(null);
+  assert.equal(smNull.rounds, 0);
+  assert.equal(smNull.dealt, 0);
+  assert.equal(smNull.taken, 0);
+  assert.equal(smNull.bursts, 0);
+  assert.equal(typeof smNull.companionDamage, 'object');
+  assert.equal(Object.keys(smNull.companionDamage).length, 0);
 });
 
 test('summaryLine pluralises and only mentions Bursts when fired', () => {

@@ -17,7 +17,7 @@ export const GUIDE_SECTIONS = Object.freeze([
     'Every boss and field trial sometimes spends a turn gathering a heavy blow. A warning appears under the foe; Defend or a ward halves the strike that follows, and a stun or Stillpoint Strike breaks it entirely. A Break! flash over the foe confirms the blow was scattered, and Braced! appears over a hero who blunts it. When a boss is worn down far enough to turn desperate, a red Enraged! flash marks its harder-hitting second phase. Foes with such a second phase also show a tick on their HP bar and, beneath it, a line such as “Enrage threshold: 120 HP or lower.” naming exactly when that phase begins. After a victory, the outcome panel also lists the experience and gold earned and any items found, in a line such as “+10 XP · +9 gold”.',
     'After some hard-fought victories, a spoils panel offers a one-time choice between three bonus bundles; take one or leave them and continue on your way.',
     'The Beacon Charge gauge fills as Wren attacks, uses skills, defends and takes hits. When it is full, unleash a Beacon Burst: a def-ignoring blast that also clears bleeding and shock, usable even while shocked.',
-    'After each victory, the battle summary tallies the rounds fought, damage dealt, damage your party took and any Beacon Bursts fired.',
+    'After each victory, the battle summary tallies the rounds fought, total damage dealt, damage your party took, any Beacon Bursts fired and, when companions fought alongside Wren, how much damage each companion contributed.',
     'If Wren falls, the patrol carries the party back to Greyhaven at half health, minus half your gold.',
   ] }),
   Object.freeze({ title: 'Elements', lines: [
