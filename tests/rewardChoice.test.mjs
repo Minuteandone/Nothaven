@@ -15,7 +15,7 @@ function fakeGame() {
     lastScene: null,
     emits: [],
     bus: { emit(type, data) { game.emits.push({ type, data }); } },
-    setScene(name, data) { game.scenes[name]?.onEnter?.(game, data); game.lastScene = { name, data }; },
+    setScene(name, data) { game.state.scene = name; game.scenes[name]?.onEnter?.(game, data); game.lastScene = { name, data }; },
     registerScene(name, scene) { game.scenes[name] = scene; },
   };
   return game;
@@ -126,7 +126,7 @@ test('rewardChoice scene: choose claims, sets the flag and returns to the field'
   installRewardChoice(game);
   game.registerScene('explore', { name: 'explore' });
   const scene = game.scenes.rewardChoice;
-  scene.onEnter(game, { encounterId: 'ridge_old_tusk', returnScene: 'explore', message: 'You return victorious.' });
+  game.setScene('rewardChoice', { encounterId: 'ridge_old_tusk', returnScene: 'explore', message: 'You return victorious.' });
   scene.actions.choose(game, { dataset: { arg: '0' } });
   assert.equal(game.lastScene.name, 'explore');
   assert.equal(game.lastScene.data.combatResult, 'victory');
@@ -139,9 +139,9 @@ test('rewardChoice scene: a bad pick keeps the offer open with a note', () => {
   const game = fakeGame();
   installRewardChoice(game);
   const scene = game.scenes.rewardChoice;
-  scene.onEnter(game, { encounterId: 'ridge_old_tusk', returnScene: 'explore', message: 'You return victorious.' });
+  game.setScene('rewardChoice', { encounterId: 'ridge_old_tusk', returnScene: 'explore', message: 'You return victorious.' });
   scene.actions.choose(game, { dataset: { arg: '7' } });
-  assert.equal(game.lastScene, null);
+  assert.equal(game.lastScene.name, 'rewardChoice');
   assert.match(game.rewardChoiceNote, /Choose one of the offered bundles/);
 });
 
@@ -150,7 +150,7 @@ test('rewardChoice scene: skipping leaves the offer unclaimed', () => {
   installRewardChoice(game);
   game.registerScene('explore', { name: 'explore' });
   const scene = game.scenes.rewardChoice;
-  scene.onEnter(game, { encounterId: 'ridge_old_tusk', returnScene: 'explore', message: 'You return victorious.' });
+  game.setScene('rewardChoice', { encounterId: 'ridge_old_tusk', returnScene: 'explore', message: 'You return victorious.' });
   scene.actions.skip(game, {});
   assert.equal(game.lastScene.name, 'explore');
   assert.equal(game.lastScene.data.combatResult, 'victory');
@@ -236,4 +236,62 @@ test('combat finish: a claimed pool falls through to the usual return', () => {
   combatScene.actions.finish(game, {});
   assert.equal(game.lastScene.name, 'explore');
   assert.match(game.lastScene.data.message, /You return victorious\./);
+});
+
+
+test('rewardChoice helpers: prototype-key encounter ids return null, never throw', () => {
+  for (const key of ['__proto__', 'constructor', 'toString']) {
+    const state = createInitialState();
+    const before = JSON.stringify(state);
+    assert.equal(rewardChoicePool(state, key), null, key);
+    const res = claimRewardChoice(state, key, '0');
+    assert.equal(res.ok, false, key);
+    assert.match(res.message, /no longer available/);
+    assert.equal(JSON.stringify(state), before, `${key} mutated state`);
+  }
+});
+
+test('rewardChoice helpers: ambiguous indexes are refused, not coerced to option 0', () => {
+  for (const bad of [null, '', false, [], undefined, 1.5, ' 0 ', '+1', '0x1', NaN]) {
+    const state = createInitialState();
+    const before = JSON.stringify(state);
+    const res = claimRewardChoice(state, 'ridge_old_tusk', bad);
+    assert.equal(res.ok, false, String(bad));
+    assert.equal(JSON.stringify(state), before, `${String(bad)} mutated state`);
+  }
+  // Digits-only strings and real integers still claim normally.
+  const a = createInitialState();
+  assert.equal(claimRewardChoice(a, 'ridge_old_tusk', '2').ok, true);
+  const b = createInitialState();
+  assert.equal(claimRewardChoice(b, 'ridge_old_tusk', 2).ok, true);
+});
+
+test('rewardChoice scene: stale callbacks after leaving do nothing', () => {
+  const game = fakeGame();
+  installRewardChoice(game);
+  game.registerScene('explore', { name: 'explore' });
+  game.setScene('rewardChoice', { encounterId: 'ridge_old_tusk', returnScene: 'explore' });
+  game.scenes.rewardChoice.actions.skip(game, {});
+  assert.equal(game.state.scene, 'explore');
+  const snapshot = JSON.stringify(game.state);
+  // Stale choose / skip from the dead scene must be inert.
+  game.scenes.rewardChoice.actions.choose(game, { dataset: { arg: '0' } });
+  game.scenes.rewardChoice.actions.skip(game, {});
+  assert.equal(JSON.stringify(game.state), snapshot);
+  assert.equal(game.lastScene.name, 'explore');
+});
+
+test('rewardChoice scene: pending fields are cleared once the offer is settled', () => {
+  const game = fakeGame();
+  installRewardChoice(game);
+  game.registerScene('explore', { name: 'explore' });
+  game.setScene('rewardChoice', { encounterId: 'ridge_old_tusk', returnScene: 'explore', message: 'You return victorious.', combatResult: 'victory' });
+  game.scenes.rewardChoice.actions.choose(game, { dataset: { arg: '0' } });
+  assert.equal(game.lastScene.name, 'explore');
+  assert.equal(game.rewardChoiceEncounterId, undefined);
+  assert.equal(game.rewardChoiceReturn, undefined);
+  assert.equal(game.rewardChoiceMessage, undefined);
+  assert.equal(game.rewardChoiceCombatResult, undefined);
+  assert.equal(game.rewardChoiceNote, undefined);
+  assert.equal(countItem(game.state.inventory, 'rations'), 3);
 });
