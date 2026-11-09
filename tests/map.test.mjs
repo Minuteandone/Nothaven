@@ -1050,8 +1050,30 @@ test('getEncounterPreview and getZoneThreatIntel resolve difficulty-scaled threa
   assert.equal(getEncounterPreview('toString', state), null);
   assert.equal(getEncounterPreview('unknown_foe', state), null);
 
+  const havenIntel = getZoneThreatIntel(state, 'greyhaven');
+  assert.equal(havenIntel.zoneId, 'greyhaven');
+  assert.equal(havenIntel.zoneName, 'Greyhaven');
+  assert.equal(havenIntel.dangerLevel, 0);
+  assert.equal(havenIntel.fixedTotalCount, 0);
+  assert.equal(havenIntel.roamingCount, 0);
+  assert.equal(havenIntel.encounterPercent, 0);
+  assert.equal(havenIntel.summary, 'Safe haven · No fixed threats or roaming hostiles');
+
   const ridgeIntel = getZoneThreatIntel(state, 'ridge_road');
   assert.equal(ridgeIntel.zoneId, 'ridge_road');
+  assert.equal(ridgeIntel.zoneName, 'Ridge Road');
+  assert.equal(ridgeIntel.dangerLevel, 1);
+  assert.equal(ridgeIntel.fixedActiveCount, 2);
+  assert.equal(ridgeIntel.fixedClearedCount, 0);
+  assert.equal(ridgeIntel.fixedLockedCount, 2);
+  assert.equal(ridgeIntel.fixedTotalCount, 4);
+  assert.equal(ridgeIntel.roamingCount, 4);
+  assert.equal(ridgeIntel.roamingScoutedCount, 1);
+  assert.equal(ridgeIntel.encounterPercent, 12);
+  assert.equal(
+    ridgeIntel.summary,
+    'Danger 1 · Fixed threats: 2 active, 0 cleared, 2 locked · Roaming: 1/4 scouted (12% ambush)',
+  );
   assert.ok(ridgeIntel.fixedEncounters.some((e) => e.id === 'ridge_patrol' && e.preview.name === 'Ridge Bandit' && !e.cleared && !e.locked));
   const lockedRidgeEncounters = ridgeIntel.fixedEncounters.filter((e) => e.locked);
   assert.equal(lockedRidgeEncounters.length, 2);
@@ -1074,6 +1096,7 @@ test('getEncounterPreview and getZoneThreatIntel resolve difficulty-scaled threa
   assert.match(html, /aria-label="Threat: Ridge Patrol Pack"[^>]*title="Threat: Ridge Patrol Pack — Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage \(50%\), Scrap Metal \(50%\), Waterlogged Dispatch \(10%\)"/);
   assert.match(html, /data-action="mapEncounter" data-arg="ridge_patrol" title="Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage \(50%\), Scrap Metal \(50%\), Waterlogged Dispatch \(10%\)"/);
   assert.match(html, /<p class="nearby-threat-preview">Ridge Bandit \(Standard, 20 HP\) · Drops: Linen Bandage \(50%\), Scrap Metal \(50%\), Waterlogged Dispatch \(10%\)<\/p>/);
+  assert.match(html, /<p class="zone-checklist__threats">Danger 1 · Fixed threats: 2 active, 0 cleared, 2 locked · Roaming: 1\/4 scouted \(12% ambush\)<\/p>/);
 });
 
 test('getFrontierAtlas computes read-only Frontier Atlas overview across all 9 zones and renders .frontier-atlas in exploration UI without spoiling uncharted regions', () => {
