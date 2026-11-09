@@ -13,6 +13,7 @@ import {
 import { rollLoot } from '../items/loot.js';
 import { ZONES } from '../map/zones.js';
 import { grantRewards } from '../items/inventory.js';
+import { rewardChoicePool } from '../items/rewardChoice.js';
 import { useConsumable } from '../items/consumables.js';
 import { renderCombat } from '../ui/combat.js';
 
@@ -281,6 +282,16 @@ export const combatScene = {
       if (real && over === 'fled') game.bus.emit('combat:escape', { enemyId: c.enemy?.id });
       const message = over === 'victory' ? 'You return victorious.' : 'You slip away.';
       const target = game.scenes?.[returnScene] ? returnScene : 'town';
+      // One-time spoils pick after certain real victories. Drills, gauntlets and
+      // defeats return earlier, and combat:victory listeners have already run by
+      // the time the player presses Finish, so they still fire exactly once.
+      if (real && over === 'victory' && game.scenes?.rewardChoice) {
+        const pending = rewardChoicePool(game.state, encounterId);
+        if (pending) {
+          game.setScene('rewardChoice', { encounterId, returnScene: target, message, combatResult: over });
+          return;
+        }
+      }
       game.setScene(target, { message, combatResult: over, encounterId });
     },
   },
