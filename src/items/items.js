@@ -340,3 +340,23 @@ export function canEquip(id) {
   const item = ITEMS[id];
   return item.type === TYPES.EQUIPMENT && !!item.slot;
 }
+
+/**
+ * Pure: one-line mechanical summary of a consumable's `use` data.
+ * Returns '' for items without a use effect. Format:
+ * "Use: restores N HP · restores N MP · cures <Status>" (present parts only).
+ * @param {{use?: {hp?: number, mp?: number, cure?: string}} | null | undefined} item
+ * @returns {string}
+ */
+export function useEffectLine(item) {
+  if (!item || typeof item !== 'object') return '';
+  const use = item.use;
+  if (!use || typeof use !== 'object') return '';
+  const parts = [];
+  if (Number.isFinite(use.hp) && use.hp > 0) parts.push(`restores ${use.hp} HP`);
+  if (Number.isFinite(use.mp) && use.mp > 0) parts.push(`restores ${use.mp} MP`);
+  if (typeof use.cure === 'string' && use.cure) {
+    parts.push(`cures ${use.cure.charAt(0).toUpperCase()}${use.cure.slice(1)}`);
+  }
+  return parts.length ? `Use: ${parts.join(' · ')}` : '';
+}
