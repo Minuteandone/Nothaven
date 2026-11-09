@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { formatExpeditionLog, getEncounterPreview, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { formatExpeditionLog, getEncounterPreview, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -115,7 +115,8 @@ function mapGrid(zone, mapState, state = null) {
         symbol = '@';
         cellClass += ' map-player';
         label = `Wren, your position, column ${x + 1}, row ${y + 1}`;
-        cellTitle = label;
+        const playerInspection = getTileInspection(state ? { ...state, map: mapState } : { map: mapState }, x, y, zone);
+        cellTitle = playerInspection?.summary ? `${label} — ${playerInspection.summary}` : label;
       }
 
       cells.push(`<span class="${cellClass}" role="gridcell" aria-label="${escapeHTML(label)}"${isPlayer ? ' aria-current="location"' : ''} title="${escapeHTML(cellTitle)}" data-x="${x}" data-y="${y}"><span aria-hidden="true">${escapeHTML(symbol)}</span></span>`);
@@ -199,8 +200,9 @@ function terrainCompass(zone, mapState, characterShortcuts, state = null) {
     </li>`;
   }).join('');
   const compassHint = getZoneCompassHint(effectiveState, zone);
+  const bearingTitle = compassHint ? (compassHint.tooltip || compassHint.summary) : '';
   const bearingLine = compassHint
-    ? `<p class="terrain-compass__bearing">Compass bearing: <strong>${escapeHTML(compassHint.label)}</strong> (${escapeHTML(compassHint.bearing)}, ${compassHint.distance} ${compassHint.distance === 1 ? 'tile' : 'tiles'})</p>`
+    ? `<p class="terrain-compass__bearing"${bearingTitle ? ` title="${escapeHTML(bearingTitle)}"` : ''}>Compass bearing: <strong>${escapeHTML(compassHint.label)}</strong> (${escapeHTML(compassHint.bearing)}, ${compassHint.distance} ${compassHint.distance === 1 ? 'tile' : 'tiles'})</p>`
     : '';
   const adjacentLine = inspection?.adjacentLandmarks?.length
     ? `<p class="terrain-compass__adjacent">Adjacent landmarks: ${inspection.adjacentLandmarks.map(a => `<strong>${escapeHTML(a.dir)}:</strong> ${escapeHTML(a.label)}`).join(' · ')}</p>`
@@ -401,6 +403,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
         </section>
         <section class="panel nearby-panel" aria-labelledby="nearby-title">
           <p class="eyebrow">Within reach</p><h2 id="nearby-title">Nearby Actions:</h2>
+          <p class="quiet-note nearby-panel__summary">${escapeHTML(getNearbyActionsSummary(state ? { ...state, map: mapState } : { map: mapState }).summary)}</p>
           <div class="nearby-actions">${contextButtons || '<p class="empty-state">Move beside a person, route, cache, or threat to interact.</p>'}</div>
           ${nearbyTalkPreviews}
           ${nearbyThreatPreviews}
