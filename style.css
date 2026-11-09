@@ -1589,4 +1589,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .exchange__owned { color: var(--muted); font-size: .8rem; margin: .2rem 0 0; }
 .town-bounty-idle { margin: 0.25rem 0 0.75rem; color: var(--muted); overflow-wrap: anywhere; }
 .drills__next { margin: 0.25rem 0 0.75rem; color: var(--muted); overflow-wrap: anywhere; }
+.exchange__afford { margin: 0.25rem 0 0.75rem; color: var(--muted); overflow-wrap: anywhere; }
 .town-feats { margin: 0.25rem 0 0.75rem; color: var(--muted); overflow-wrap: anywhere; }
