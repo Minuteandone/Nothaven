@@ -1619,3 +1619,6 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .guide-toc__link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); overflow-wrap: anywhere; }
 /* Clear the sticky .audio-dock (min-height 58px plus narrow-screen padding) when jumping from Contents. */
 .guide-section { scroll-margin-top: calc(58px + 1.5rem); }
+.guide-toc { scroll-margin-top: calc(58px + 1.5rem); }
+.guide-section__back { margin: .25rem 0 0; }
+.guide-section__back-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); font-size: .85rem; }

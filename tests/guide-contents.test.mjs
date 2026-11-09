@@ -25,7 +25,7 @@ test('guideContents lists every section once, then the skill roadmap, with line 
 
 test('guide render puts a contents nav before the sections, and every link targets a real section', () => {
   const html = guideScene.render({ state: {} });
-  const nav = html.indexOf('<nav class="panel guide-toc" aria-label="Guide contents">');
+  const nav = html.indexOf('<nav class="panel guide-toc" id="guide-contents" aria-label="Guide contents">');
   assert.ok(nav >= 0, 'contents nav renders');
   assert.ok(nav < html.indexOf('<section class="guide-section"'), 'contents come before the first section');
   const hrefs = [...html.matchAll(/class="guide-toc__link" href="#([^"]+)"/g)].map((m) => m[1]);
