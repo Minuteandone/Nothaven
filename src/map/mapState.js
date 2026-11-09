@@ -554,6 +554,131 @@ export function getFrontierAtlas(gameState = null) {
   };
 }
 
+const EXPEDITION_ACT_DEFS = Object.freeze([
+  Object.freeze({
+    id: 'act_1',
+    label: 'Act I',
+    title: 'Highland Signal Line',
+    zoneIds: Object.freeze(['greyhaven', 'ridge_road', 'observatory_ruins', 'beacon_tower']),
+  }),
+  Object.freeze({
+    id: 'act_2',
+    label: 'Act II',
+    title: 'Frontier Outposts',
+    zoneIds: Object.freeze(['saltmere_coast', 'highwatch_pass', 'sunscar_relay']),
+  }),
+  Object.freeze({
+    id: 'act_3',
+    label: 'Act III',
+    title: 'Upper Tempest',
+    zoneIds: Object.freeze(['stormcrown_spire', 'storms_eye']),
+  }),
+]);
+
+/**
+ * Pure read-only regional theater (Act I–III) completion and recon summary.
+ * Never leaks unvisited region names while reporting charted & secured counts per act.
+ */
+export function getExpeditionProgressSummary(gameState = null) {
+  const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
+  const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
+  let currentActId = 'act_1';
+  let actsCompleted = 0;
+  let zonesSecured = 0;
+  let zonesTotal = 0;
+
+  const acts = EXPEDITION_ACT_DEFS.map((def) => {
+    let actVisited = 0;
+    let actSecured = 0;
+    let encountersCleared = 0;
+    let encountersTotal = 0;
+    let cachesOpened = 0;
+    let cachesTotal = 0;
+    let completedObjectives = 0;
+    let totalObjectives = 0;
+    let unlocked = false;
+    const chartedNames = [];
+
+    for (const zoneId of def.zoneIds) {
+      const zone = ZONES[zoneId];
+      if (!zone) continue;
+      const progress = getZoneProgress(gameState, zone);
+      const isCurrent = zoneId === currentZoneId;
+      const visited = Boolean(progress.visited || isCurrent);
+      const zoneUnlocked = !zoneLockReason(gameState || {}, zone);
+      if (zoneUnlocked) unlocked = true;
+      if (visited) {
+        actVisited += 1;
+        chartedNames.push(zone.name);
+      }
+      if (visited && progress.completedObjectives === progress.totalObjectives) {
+        actSecured += 1;
+      }
+      encountersCleared += progress.encountersCleared;
+      encountersTotal += progress.encountersTotal;
+      cachesOpened += progress.cachesOpened;
+      cachesTotal += progress.cachesTotal;
+      completedObjectives += progress.completedObjectives;
+      totalObjectives += progress.totalObjectives;
+    }
+
+    const actTotalZones = def.zoneIds.length;
+    const unchartedCount = Math.max(0, actTotalZones - actVisited);
+    const percent = totalObjectives > 0
+      ? Math.round((completedObjectives / totalObjectives) * 100)
+      : actVisited > 0
+        ? 100
+        : 0;
+    const complete = actVisited === actTotalZones && completedObjectives === totalObjectives;
+    const isCurrentAct = def.zoneIds.includes(currentZoneId);
+    if (isCurrentAct) currentActId = def.id;
+    if (complete) actsCompleted += 1;
+    zonesSecured += actSecured;
+    zonesTotal += actTotalZones;
+
+    const summary = actVisited === 0
+      ? `${def.label} (${def.title}): Uncharted (${actTotalZones} regions)`
+      : `${def.label} (${def.title}): ${actVisited}/${actTotalZones} regions · ${percent}% recon (${encountersCleared}/${encountersTotal} threats, ${cachesOpened}/${cachesTotal} caches)`;
+
+    return {
+      id: def.id,
+      label: def.label,
+      title: def.title,
+      zoneIds: [...def.zoneIds],
+      isCurrentAct,
+      unlocked,
+      complete,
+      zonesVisited: actVisited,
+      zonesSecured: actSecured,
+      zonesTotal: actTotalZones,
+      unchartedCount,
+      chartedNames,
+      encountersCleared,
+      encountersTotal,
+      cachesOpened,
+      cachesTotal,
+      completedObjectives,
+      totalObjectives,
+      percent,
+      summary,
+    };
+  });
+
+  const actSegments = acts.map((a) => `${a.label} ${a.percent}% (${a.zonesVisited}/${a.zonesTotal})`);
+  const summary = `Acts: ${actSegments.join(' · ')} · ${zonesSecured}/${zonesTotal} regions secured`;
+
+  return {
+    currentZoneId,
+    currentActId,
+    actsCompleted,
+    actsTotal: acts.length,
+    zonesSecured,
+    zonesTotal,
+    acts,
+    summary,
+  };
+}
+
 /**
  * Pure read-only route briefing for a destination zone.
  * Masks weather and objective counts on locked or unvisited regions.

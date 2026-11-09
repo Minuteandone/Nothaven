@@ -17,6 +17,7 @@ import {
   getInteractableBriefing,
   getNpcBriefing,
   getFrontierAtlas,
+  getExpeditionProgressSummary,
   getRouteBriefing,
   formatExpeditionLog,
   getTileInspection,
@@ -1949,4 +1950,90 @@ test('getFieldConsumablePreview and getPartyFieldReadiness compute non-mutating 
   assertEggFree(woundedReadiness.summary);
   assertEggFree(wrenBandage.summary);
   assertEggFree(bramTonic.summary);
+});
+
+test('getExpeditionProgressSummary computes spoiler-safe regional Act I-III completion and renders .frontier-atlas__acts without mutating state', () => {
+  const game = makeMockGame();
+  const state = game.state;
+  const initialSnap = JSON.stringify(state);
+
+  const initialSummary = getExpeditionProgressSummary(state);
+  assert.equal(JSON.stringify(state), initialSnap, 'getExpeditionProgressSummary must not mutate state');
+  assert.equal(initialSummary.currentZoneId, 'greyhaven');
+  assert.equal(initialSummary.currentActId, 'act_1');
+  assert.equal(initialSummary.actsCompleted, 0);
+  assert.equal(initialSummary.actsTotal, 3);
+  assert.equal(initialSummary.zonesSecured, 1);
+  assert.equal(initialSummary.zonesTotal, 9);
+  assert.equal(
+    initialSummary.summary,
+    'Acts: Act I 0% (1/4) · Act II 0% (0/3) · Act III 0% (0/2) · 1/9 regions secured',
+  );
+
+  const [act1, act2, act3] = initialSummary.acts;
+  assert.equal(act1.id, 'act_1');
+  assert.equal(act1.isCurrentAct, true);
+  assert.equal(act1.zonesVisited, 1);
+  assert.equal(act1.zonesSecured, 1);
+  assert.equal(act1.zonesTotal, 4);
+  assert.deepEqual(act1.chartedNames, ['Greyhaven']);
+  assert.equal(
+    act1.summary,
+    'Act I (Highland Signal Line): 1/4 regions · 0% recon (0/8 threats, 0/3 caches)',
+  );
+  assert.equal(act2.zonesVisited, 0);
+  assert.deepEqual(act2.chartedNames, []);
+  assert.equal(act2.summary, 'Act II (Frontier Outposts): Uncharted (3 regions)');
+  assert.equal(act3.zonesVisited, 0);
+  assert.deepEqual(act3.chartedNames, []);
+  assert.equal(act3.summary, 'Act III (Upper Tempest): Uncharted (2 regions)');
+
+  // Complete all of Act I and enter Act II (Saltmere Coast)
+  ensureMapState(state);
+  for (const zid of ['ridge_road', 'observatory_ruins', 'beacon_tower']) {
+    state.map.visitedZones[zid] = true;
+    for (const enc of ZONES[zid].encounters || []) {
+      state.map.clearedEncounters[enc.id] = true;
+    }
+    for (const inter of ZONES[zid].interactables || []) {
+      if (inter.kind === 'cache') state.map.completedInteractions[inter.id] = true;
+    }
+  }
+  travelToZone(state, 'saltmere_coast', 'from_greyhaven');
+  recordEncounterVictory(state, 'saltmere_rescue', 'tide_raider');
+  const midSnap = JSON.stringify(state);
+
+  const midSummary = getExpeditionProgressSummary(state);
+  assert.equal(JSON.stringify(state), midSnap, 'getExpeditionProgressSummary must not mutate state');
+  assert.equal(midSummary.currentZoneId, 'saltmere_coast');
+  assert.equal(midSummary.currentActId, 'act_2');
+  assert.equal(midSummary.actsCompleted, 1);
+  assert.equal(midSummary.zonesSecured, 4);
+  assert.equal(midSummary.acts[0].complete, true);
+  assert.equal(midSummary.acts[0].percent, 100);
+  assert.equal(midSummary.acts[0].zonesSecured, 4);
+  assert.equal(
+    midSummary.acts[0].summary,
+    'Act I (Highland Signal Line): 4/4 regions · 100% recon (8/8 threats, 3/3 caches)',
+  );
+  assert.equal(midSummary.acts[1].isCurrentAct, true);
+  assert.equal(midSummary.acts[1].zonesVisited, 1);
+  assert.equal(midSummary.acts[1].encountersCleared, 1);
+  assert.deepEqual(midSummary.acts[1].chartedNames, ['Saltmere Coast']);
+  assert.equal(
+    midSummary.summary,
+    'Acts: Act I 100% (4/4) · Act II 7% (1/3) · Act III 0% (0/2) · 4/9 regions secured',
+  );
+
+  // Verify exploration UI renders .frontier-atlas__acts with act breakdown tooltip and masks uncharted Act III names
+  const html = exploreScene.render(game);
+  assert.match(
+    html,
+    /<p class="frontier-atlas__acts" title="Act I \(Highland Signal Line\): 4\/4 regions · 100% recon \(8\/8 threats, 3\/3 caches\) \| Act II \(Frontier Outposts\): 1\/3 regions · 7% recon \(1\/12 threats, 0\/3 caches\) \| Act III \(Upper Tempest\): Uncharted \(2 regions\)">Acts: Act I 100% \(4\/4\) · Act II 7% \(1\/3\) · Act III 0% \(0\/2\) · 4\/9 regions secured<\/p>/,
+  );
+  assertEggFree(initialSummary.summary);
+  assertEggFree(midSummary.summary);
+  for (const act of midSummary.acts) {
+    assertEggFree(act.summary);
+  }
 });
