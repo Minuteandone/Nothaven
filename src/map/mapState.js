@@ -1052,6 +1052,152 @@ export function getFrontierContactsSummary(gameState = null) {
   };
 }
 
+/**
+ * Pure read-only summary of outbound frontier routes across all charted
+ * regions. Masks unvisited destination names so uncharted regions are never spoiled.
+ */
+export function getFrontierRoutesSummary(gameState = null) {
+  const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
+  const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
+
+  const visitedMap = {};
+  const rawVisited = gameState?.map?.visitedZones;
+  if (Array.isArray(rawVisited)) {
+    for (const id of rawVisited) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  } else if (rawVisited && typeof rawVisited === 'object') {
+    for (const [id, flag] of Object.entries(rawVisited)) {
+      if (flag && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  if (Array.isArray(gameState?.visitedZones)) {
+    for (const id of gameState.visitedZones) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  visitedMap[currentZoneId] = true;
+
+  let routeZoneCount = 0;
+  let totalRoutes = 0;
+  let chartedRouteCount = 0;
+  let unchartedRouteCount = 0;
+  let lockedRouteCount = 0;
+  let currentZoneExitCount = 0;
+  let currentZoneUnlockedCount = 0;
+  let currentZoneChartedCount = 0;
+  let currentZoneUnchartedCount = 0;
+  let currentZoneLockedCount = 0;
+  const chartedRegions = [];
+  const chartedRoutes = [];
+
+  const rawMap = gameState?.map && typeof gameState.map === 'object' ? gameState.map : {};
+  const effectiveState = {
+    ...(gameState || {}),
+    map: {
+      ...rawMap,
+      zoneId: currentZoneId,
+      visitedZones: visitedMap,
+    },
+  };
+
+  for (const zoneId of ZONE_ORDER) {
+    if (!visitedMap[zoneId]) continue;
+    const zone = ZONES[zoneId];
+    const zoneExits = getZoneExitsSummary(effectiveState, zone);
+    const exits = Array.isArray(zoneExits?.exits) ? zoneExits.exits : [];
+    const isCurrent = zoneId === currentZoneId;
+
+    const zCharted = Number(zoneExits?.chartedCount) || 0;
+    const zUncharted = Number(zoneExits?.unchartedCount) || 0;
+    const zLocked = Number(zoneExits?.lockedCount) || 0;
+    const zUnlocked = Number(zoneExits?.unlockedCount) || 0;
+
+    if (exits.length > 0) {
+      routeZoneCount += 1;
+      totalRoutes += exits.length;
+      chartedRouteCount += zCharted;
+      unchartedRouteCount += zUncharted;
+      lockedRouteCount += zLocked;
+
+      for (const ex of exits) {
+        const destVisited = Boolean(visitedMap[ex.toZone]);
+        const destZone = ZONES[ex.toZone];
+        const toZoneName = destVisited && destZone ? destZone.name : 'Uncharted Region';
+        const label = destVisited ? ex.label : `${zone.name} outbound trail`;
+        chartedRoutes.push({
+          fromZoneId: zoneId,
+          fromZoneName: zone.name,
+          toZone: ex.toZone,
+          toZoneName,
+          label,
+          x: ex.x,
+          y: ex.y,
+          unlocked: Boolean(ex.unlocked),
+          visited: destVisited,
+          lockReason: ex.lockReason || null,
+          isCurrentZone: isCurrent,
+        });
+      }
+    }
+
+    if (isCurrent) {
+      currentZoneExitCount = exits.length;
+      currentZoneUnlockedCount = zUnlocked;
+      currentZoneChartedCount = zCharted;
+      currentZoneUnchartedCount = zUncharted;
+      currentZoneLockedCount = zLocked;
+    }
+
+    chartedRegions.push({
+      zoneId,
+      name: zone.name,
+      isCurrent,
+      totalExits: exits.length,
+      unlockedCount: zUnlocked,
+      chartedCount: zCharted,
+      unchartedCount: zUncharted,
+      lockedCount: zLocked,
+    });
+  }
+
+  const zonesTotal = ZONE_ORDER.length;
+  const chartedCount = chartedRegions.length;
+  const unchartedCount = Math.max(0, zonesTotal - chartedCount);
+
+  const regionWord = routeZoneCount === 1 ? 'region' : 'regions';
+  const currentPart = currentZoneExitCount > 0
+    ? `Current zone: ${currentZoneExitCount} outbound (${currentZoneUnlockedCount} open, ${currentZoneLockedCount} locked)`
+    : 'Current zone: none';
+  const summary = `Charted routes: ${totalRoutes} outbound across ${routeZoneCount} ${regionWord} (${chartedRouteCount} charted, ${unchartedRouteCount} open frontier, ${lockedRouteCount} locked) · ${currentPart}`;
+
+  return {
+    currentZoneId,
+    chartedCount,
+    unchartedCount,
+    zonesTotal,
+    routeZoneCount,
+    totalRoutes,
+    chartedRouteCount,
+    unchartedRouteCount,
+    lockedRouteCount,
+    currentZoneExitCount,
+    currentZoneUnlockedCount,
+    currentZoneChartedCount,
+    currentZoneUnchartedCount,
+    currentZoneLockedCount,
+    chartedRegions,
+    chartedRoutes,
+    summary,
+  };
+}
+
 const EXPEDITION_ACT_DEFS = Object.freeze([
   Object.freeze({
     id: 'act_1',
