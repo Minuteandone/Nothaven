@@ -18,6 +18,7 @@ export {
   getFrontierContactsSummary,
   getFrontierThreatsSummary,
   getFrontierStationsSummary,
+  getFrontierCachesSummary,
   getFrontierRoutesSummary,
   getExpeditionProgressSummary,
   getFastTravelBriefing,
