@@ -11,6 +11,7 @@ import { enemyIntentPreview } from '../combat/intentPreview.js';
 import { getItem, TYPES } from '../items/items.js';
 import { useConsumable } from '../items/consumables.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
+import { fieldTip } from '../data/fieldTips.js';
 
 function number(value, fallback = 0) {
   const parsed = Number(value);
@@ -253,6 +254,7 @@ function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
     ${commandButton({ action: 'defend', label: 'Defend', iconName: 'shield', className: 'command-button', shortcut: 'D' })}
     ${commandButton({ action: 'flee', label: 'Flee', iconName: 'compass', variant: 'danger', disabled: Boolean(combat.enemy.boss), className: 'command-button command-button--flee', shortcut: 'F', title: combat.enemy.boss ? 'Boss encounters cannot be fled.' : (fleePct != null ? `Escape odds: ${Math.round(fleePct*100)}%. Your SPD against the foe's SPD.` : ''), badge: fleePct != null ? `<span class="flee-chance-badge">${Math.round(fleePct*100)}%</span>` : '' })}
     <p class="command-hint">${combat.enemy.boss ? 'Boss encounters must be fought to resolution.' : 'Attack or use a skill to press the advantage. Defend halves incoming damage.'}</p>
+        ${combatFieldTip(combat)}
   </div>${shortcutGuide()}`;
 }
 
@@ -298,6 +300,15 @@ export function elementalMatchupBanner(hero, enemy) {
 
   if (!parts.length) return '';
   return '<div class="elemental-matchup-banner">' + parts.join(' · ') + '</div>';
+}
+
+/** Warden Mara's tactical advice for the current foe, shown during combat.
+ *  Returns an empty string when the foe has no tip or combat is over. */
+export function combatFieldTip(combat) {
+  if (!combat || combat.over) return '';
+  const tip = fieldTip(combat.enemy?.id);
+  if (!tip) return '';
+  return `<p class="field-tip" aria-label="Warden Mara's tactical advice"><span class="field-tip__label">Mara's journal:</span> &ldquo;${escapeHTML(tip)}&rdquo;</p>`;
 }
 
 export function renderCombat({ combat, party, inventory = [], menu = 'main', itemTargetIndex = 0 }) {
