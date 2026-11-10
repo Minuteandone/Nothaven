@@ -17,6 +17,7 @@ import {
   getFieldPackSummary,
   getFrontierWeatherSummary,
   getFrontierPatrolSummary,
+  getFrontierContactsSummary,
   getFieldServicesSummary,
   getPartyFieldReadiness,
   getInteractableBriefing,
@@ -2783,4 +2784,73 @@ test('getFrontierPatrolSummary and .frontier-atlas__patrols summarize charted ro
     'Charted patrols: 1 patrol region (1/1 fully scouted) · 4/4 patrol species identified'
   );
   assertEggFree(scoutedPatrols.summary);
+});
+
+test('getFrontierContactsSummary and .frontier-atlas__contacts summarize charted NPC contacts without spoiling unvisited regions', () => {
+  // 1. Null / empty frozen state defaults to Greyhaven (3 contacts, 1 in range at default spawn) without mutation
+  const emptyFrozen = Object.freeze({});
+  const nullContacts = getFrontierContactsSummary(null);
+  const frozenContacts = getFrontierContactsSummary(emptyFrozen);
+  assert.equal(nullContacts.currentZoneId, 'greyhaven');
+  assert.equal(nullContacts.chartedCount, 1);
+  assert.equal(nullContacts.unchartedCount, 8);
+  assert.equal(nullContacts.contactZoneCount, 1);
+  assert.equal(nullContacts.contactCount, 3);
+  assert.equal(nullContacts.currentZoneContactCount, 3);
+  assert.equal(nullContacts.inRangeCount, 0);
+  assert.equal(
+    nullContacts.summary,
+    'Charted contacts: 3 across 1 region (Greyhaven: Warden Mara, Iven, Tamsin) · Current zone: 3 (0 in range)'
+  );
+  // Standing adjacent to Warden Mara at (2, 1) reports 1 in range
+  const adjMara = getFrontierContactsSummary({ map: { zoneId: 'greyhaven', x: 2, y: 2 } });
+  assert.equal(adjMara.inRangeCount, 1);
+  assert.equal(
+    adjMara.summary,
+    'Charted contacts: 3 across 1 region (Greyhaven: Warden Mara, Iven, Tamsin) · Current zone: 3 (1 in range)'
+  );
+  assert.equal(frozenContacts.summary, nullContacts.summary);
+  assert.doesNotMatch(nullContacts.summary, /Ona Vell|Captain Rusk|Saltmere|Highwatch/i);
+  assertEggFree(nullContacts.summary);
+
+  // 2. Travel to Ridge Road (0 contacts in Ridge Road, Greyhaven contacts remain charted)
+  const game = makeMockGame();
+  installMap(game, { enableKeyboard: false });
+  const state = game.state;
+  travelToZone(state, 'ridge_road');
+  const beforeSnap = JSON.stringify(state);
+  const ridgeContacts = getFrontierContactsSummary(state);
+  assert.equal(JSON.stringify(state), beforeSnap, 'getFrontierContactsSummary must not mutate state');
+  assert.equal(ridgeContacts.currentZoneId, 'ridge_road');
+  assert.equal(ridgeContacts.chartedCount, 2);
+  assert.equal(ridgeContacts.unchartedCount, 7);
+  assert.equal(ridgeContacts.contactZoneCount, 1);
+  assert.equal(ridgeContacts.contactCount, 3);
+  assert.equal(ridgeContacts.currentZoneContactCount, 0);
+  assert.equal(ridgeContacts.inRangeCount, 0);
+  assert.equal(
+    ridgeContacts.summary,
+    'Charted contacts: 3 across 1 region (Greyhaven: Warden Mara, Iven, Tamsin) · Current zone: none'
+  );
+  assert.doesNotMatch(ridgeContacts.summary, /Ona Vell|Captain Rusk/i);
+  assertEggFree(ridgeContacts.summary);
+
+  const html = exploreScene.render(game);
+  assert.match(
+    html,
+    /<p class="frontier-atlas__contacts">Charted contacts: 3 across 1 region \(Greyhaven: Warden Mara, Iven, Tamsin\) · Current zone: none<\/p>/
+  );
+
+  // 3. Travel to Saltmere Coast (adds Ona Vell, still masks unvisited Highwatch Pass Captain Rusk)
+  travelToZone(state, 'saltmere_coast');
+  const coastContacts = getFrontierContactsSummary(state);
+  assert.equal(coastContacts.contactZoneCount, 2);
+  assert.equal(coastContacts.contactCount, 4);
+  assert.equal(coastContacts.currentZoneContactCount, 1);
+  assert.match(
+    coastContacts.summary,
+    /^Charted contacts: 4 across 2 regions \(Greyhaven: Warden Mara, Iven, Tamsin; Saltmere Coast: Ona Vell\) · Current zone: 1/
+  );
+  assert.doesNotMatch(coastContacts.summary, /Captain Rusk|Highwatch/i);
+  assertEggFree(coastContacts.summary);
 });

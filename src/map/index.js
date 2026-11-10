@@ -15,6 +15,7 @@ export {
   getFrontierAtlas,
   getFrontierWeatherSummary,
   getFrontierPatrolSummary,
+  getFrontierContactsSummary,
   getExpeditionProgressSummary,
   getFastTravelBriefing,
   getRouteBriefing,
