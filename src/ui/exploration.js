@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { getEncounterPreview, getExpeditionLogSummary, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldPackSummary, getFieldServicesSummary, getFrontierAtlas, getFrontierWeatherSummary, getFrontierPatrolSummary, getFrontierContactsSummary, getFrontierCachesSummary, getFrontierRoutesSummary, getFrontierStationsSummary, getFrontierThreatsSummary, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getPatrolBriefing, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneContactsSummary, getZoneStationsSummary, getZoneCachesSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { getEncounterPreview, getExpeditionLogSummary, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldPackSummary, getFieldServicesSummary, getFrontierAtlas, getFrontierWeatherSummary, getFrontierPatrolSummary, getFrontierContactsSummary, getFrontierCachesSummary, getFrontierRoutesSummary, getFrontierStationsSummary, getFrontierThreatsSummary, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getPatrolBriefing, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneProgress, getZoneContactsSummary, getZoneStationsSummary, getZoneCachesSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -342,6 +342,22 @@ function formatChecklistDistance(poi) {
   return `${dist} ${dist === 1 ? 'tile' : 'tiles'} ${poi?.bearing || ''}`.trim();
 }
 
+export function zoneProgressLine(state, zone, mapState) {
+  const effectiveState = state ? { ...state, map: mapState || state.map } : { map: mapState };
+  const progress = getZoneProgress(effectiveState, zone);
+  if (!progress || progress.totalObjectives === 0) return '';
+  const pct = progress.percent;
+  const parts = [];
+  if (progress.encountersTotal > 0) {
+    parts.push(`${progress.encountersCleared}/${progress.encountersTotal} ${progress.encountersTotal === 1 ? 'encounter' : 'encounters'} cleared`);
+  }
+  if (progress.cachesTotal > 0) {
+    parts.push(`${progress.cachesOpened}/${progress.cachesTotal} ${progress.cachesTotal === 1 ? 'cache' : 'caches'} opened`);
+  }
+  const partsText = parts.join(', ');
+  return `<p class="zone-progress-line"><span class="zone-progress-line__label">Zone progress:</span> ${partsText} (${pct}%).</p>`;
+}
+
 function zoneChecklistPanel(state, zone, mapState) {
   const effectiveState = state ? { ...state, map: mapState || state.map } : { map: mapState };
   const checklist = getZoneChecklist(effectiveState, zone);
@@ -497,6 +513,7 @@ export function renderExploration({ state, zone, mapState, nearbyActions, visite
           <p class="control-hint">Survey to inspect the tile beneath you, or click a passable map tile to step along a safe route (takes normal movement steps where random encounters may occur, pauses beside threats, and engages a threat if clicked directly). Movement never spends supplies.</p>
           ${explorationShortcutGuide(characterShortcuts)}
           ${frontierAtlasPanel(state, zone, mapState)}
+          ${zoneProgressLine(state, zone, mapState)}
           ${zoneChecklistPanel(state, zone, mapState)}
         </section>
         <section class="panel nearby-panel" aria-labelledby="nearby-title">
