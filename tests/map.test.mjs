@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { assertEggFree } from './helpers/eggGuard.mjs';
-import { compassRouteLine, compassTargetLine, zoneWeatherLine } from '../src/ui/exploration.js';
+import { compassRouteLine, compassTargetLine, zoneVantageLine, zoneWeatherLine } from '../src/ui/exploration.js';
 import { createInitialState } from '../src/state.js';
 import { installStory } from '../src/story/integration.js';
 import {
@@ -3243,4 +3243,80 @@ test('compassTargetLine renders visible spoiler-safe target briefings in .terrai
   assert.equal(protoCheck.totalCaches, 1);
   assert.equal(protoCheck.openedCount, 0);
   assert.equal(protoCheck.readyCount, 1);
+});
+
+test('zoneVantageLine renders .zone-checklist__vantage and getZoneProgress uses own-property and once checks', () => {
+  assert.equal(zoneVantageLine(null), '');
+  assert.equal(zoneVantageLine({}), '');
+  assert.equal(zoneVantageLine({ landmark: '' }), '');
+  assert.equal(
+    zoneVantageLine({
+      landmark: 'Harbor Lantern Pier <script>',
+      elevation: 12,
+      surveyNote: 'Lanterns warm the harbor stones.',
+      progress: { totalObjectives: 0, percent: 100 },
+    }),
+    '<p class="zone-checklist__vantage">Vantage: Harbor Lantern Pier &lt;script&gt; (12m) · Safe haven · Lanterns warm the harbor stones.</p>'
+  );
+  assert.equal(
+    zoneVantageLine({
+      landmark: 'Ridge Switchback Milestone',
+      elevation: 144,
+      surveyNote: 'Wind-scoured milestones mark the cliff trail.',
+      progress: {
+        totalObjectives: 5,
+        encountersCleared: 2,
+        encountersTotal: 4,
+        cachesOpened: 1,
+        cachesTotal: 1,
+        percent: 60,
+      },
+    }),
+    '<p class="zone-checklist__vantage">Vantage: Ridge Switchback Milestone (144m) · 60% recon (2/4 threats, 1/1 caches) · Wind-scoured milestones mark the cliff trail.</p>'
+  );
+  assertEggFree(
+    zoneVantageLine({
+      landmark: 'Ridge Switchback Milestone',
+      elevation: 144,
+      surveyNote: 'Wind-scoured milestones mark the cliff trail.',
+      progress: { totalObjectives: 5, encountersCleared: 2, encountersTotal: 4, cachesOpened: 1, cachesTotal: 1, percent: 60 },
+    })
+  );
+
+  const ridgeState = {
+    map: {
+      zoneId: 'ridge_road',
+      x: 1,
+      y: 3,
+      visitedZones: { greyhaven: true, ridge_road: true },
+      clearedEncounters: { ridge_patrol: true, ridge_hound_den: true },
+      completedInteractions: { ridge_supply_cache: true },
+    },
+    flags: {},
+  };
+  const ridgeHtml = exploreScene.render({ state: ridgeState, dispatch: () => {} });
+  assert.ok(
+    ridgeHtml.includes('<p class="zone-checklist__vantage">Vantage: Ridge Switchback Milestone (144m) · 60% recon (2/4 threats, 1/1 caches) · Wind-scoured milestones mark the cliff trail climbing toward the headland.</p>'),
+    'expected .zone-checklist__vantage line in exploreScene.render output'
+  );
+
+  const protoVisited = Object.create({ ridge_road: true });
+  const protoCleared = Object.create({ ridge_patrol: true });
+  const protoCompleted = Object.create({ ridge_supply_cache: true });
+  const customZone = {
+    ...ZONES.ridge_road,
+    interactables: [
+      ...ZONES.ridge_road.interactables,
+      { id: 'repeatable_dummy_cache', kind: 'cache', once: false, name: 'Repeatable Dummy', x: 1, y: 1, rewards: [{ id: 'herb', qty: 1 }] },
+    ],
+  };
+  const protoProgress = getZoneProgress(
+    { map: { zoneId: 'ridge_road', visitedZones: protoVisited, clearedEncounters: protoCleared, completedInteractions: protoCompleted } },
+    customZone
+  );
+  assert.equal(protoProgress.visited, false);
+  assert.equal(protoProgress.encountersCleared, 0);
+  assert.equal(protoProgress.cachesTotal, 1);
+  assert.equal(protoProgress.cachesOpened, 0);
+  assert.equal(protoProgress.percent, 0);
 });

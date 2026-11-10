@@ -193,6 +193,25 @@ export function zoneWeatherLine(weatherSummary) {
     : '';
 }
 
+export function zoneVantageLine(vantage) {
+  if (!vantage || typeof vantage !== 'object' || typeof vantage.landmark !== 'string' || !vantage.landmark) {
+    return '';
+  }
+  const prog = vantage.progress;
+  const reconText = prog && prog.totalObjectives > 0
+    ? `${prog.percent}% recon (${prog.encountersCleared}/${prog.encountersTotal} threats, ${prog.cachesOpened}/${prog.cachesTotal} caches)`
+    : 'Safe haven';
+  const elevation = Number.isFinite(Number(vantage.elevation)) ? Number(vantage.elevation) : 0;
+  const parts = [
+    `Vantage: ${vantage.landmark} (${elevation}m)`,
+    reconText,
+  ];
+  if (typeof vantage.surveyNote === 'string' && vantage.surveyNote) {
+    parts.push(vantage.surveyNote);
+  }
+  return `<p class="zone-checklist__vantage">${escapeHTML(parts.join(' · '))}</p>`;
+}
+
 function terrainCompass(zone, mapState, characterShortcuts, state = null) {
   const x = Number(mapState?.x);
   const y = Number(mapState?.y);
@@ -340,6 +359,7 @@ function zoneChecklistPanel(state, zone, mapState) {
     rows.push(`<li title="${escapeHTML(ex.summary || ex.label)}" data-poi-kind="exit" data-poi-id="${escapeHTML(ex.toZone)}" data-poi-status="${routeStatus}"><strong>${escapeHTML(ex.label)}</strong> · ${routeStatus} · (${escapeHTML(String(ex.x))}, ${escapeHTML(String(ex.y))}) · ${escapeHTML(formatChecklistDistance(ex))}</li>`);
   }
   const totalPois = rows.length;
+  const vantage = getZoneVantage(effectiveState, zone);
   const contactsSummary = getZoneContactsSummary(effectiveState, zone);
   const threatIntel = getZoneThreatIntel(effectiveState, zone);
   const patrolBriefing = getPatrolBriefing(effectiveState, zone);
@@ -347,6 +367,7 @@ function zoneChecklistPanel(state, zone, mapState) {
   const cachesSummary = getZoneCachesSummary(effectiveState, zone);
   const exitsSummary = getZoneExitsSummary(effectiveState, zone);
   const summaryLine = checklist.summary ? `<p class="zone-checklist__summary">${escapeHTML(checklist.summary)}</p>` : '';
+  const vantageLine = zoneVantageLine(vantage);
   const contactsLine = contactsSummary?.summary ? `<p class="zone-checklist__contacts">${escapeHTML(contactsSummary.summary)}</p>` : '';
   const threatLine = threatIntel?.summary ? `<p class="zone-checklist__threats">${escapeHTML(threatIntel.summary)}</p>` : '';
   const patrolLine = patrolBriefing?.summary ? `<p class="zone-checklist__patrols">${escapeHTML(patrolBriefing.summary)}</p>` : '';
@@ -356,6 +377,7 @@ function zoneChecklistPanel(state, zone, mapState) {
   return `<details class="shortcut-guide zone-checklist"><summary>Zone field checklist (${totalPois} ${totalPois === 1 ? 'landmark' : 'landmarks'})</summary>
     <ul class="zone-checklist__list" aria-label="Zone landmarks and coordinates">${rows.join('')}</ul>
     ${summaryLine}
+    ${vantageLine}
     ${contactsLine}
     ${threatLine}
     ${patrolLine}
