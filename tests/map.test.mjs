@@ -16,6 +16,7 @@ import {
   getFieldCraftPreview,
   getFieldPackSummary,
   getFrontierWeatherSummary,
+  getFrontierPatrolSummary,
   getFieldServicesSummary,
   getPartyFieldReadiness,
   getInteractableBriefing,
@@ -2713,4 +2714,73 @@ test('getFrontierWeatherSummary and .frontier-atlas__weather summarize charted w
     calmedWeather.summary,
     /Modifiers: Beacon lit \(Lantern Shelter at Beacon Tower\), Storm calmed \(Broken Skies in Upper Tempest\), Signal Relay route network \(-50% step ambush\)$/,
   );
+});
+
+test('getFrontierPatrolSummary and .frontier-atlas__patrols summarize charted roaming patrols without spoiling uncharted regions or unscouted species', () => {
+  // 1. Null / empty frozen state defaults to Greyhaven (1 safe region, 0 patrol regions) without mutation
+  const emptyFrozen = Object.freeze({});
+  const nullPatrols = getFrontierPatrolSummary(null);
+  const frozenPatrols = getFrontierPatrolSummary(emptyFrozen);
+  assert.equal(nullPatrols.currentZoneId, 'greyhaven');
+  assert.equal(nullPatrols.chartedCount, 1);
+  assert.equal(nullPatrols.unchartedCount, 8);
+  assert.equal(nullPatrols.safeZoneCount, 1);
+  assert.equal(nullPatrols.patrolZoneCount, 0);
+  assert.equal(nullPatrols.fullyScoutedZoneCount, 0);
+  assert.equal(nullPatrols.chartedSpeciesTotal, 0);
+  assert.equal(nullPatrols.scoutedSpeciesCount, 0);
+  assert.equal(nullPatrols.unscoutedSpeciesCount, 0);
+  assert.deepEqual(nullPatrols.scoutedSpeciesNames, []);
+  assert.equal(
+    nullPatrols.summary,
+    'Charted patrols: 0 patrol regions (1 safe) · No patrol hostiles in charted territory'
+  );
+  assert.equal(frozenPatrols.summary, nullPatrols.summary);
+  assertEggFree(nullPatrols.summary);
+
+  // 2. Travel to Ridge Road (4 roaming species, 0 scouted initially)
+  const game = makeMockGame();
+  installMap(game, { enableKeyboard: false });
+  const state = game.state;
+  travelToZone(state, 'ridge_road');
+  const beforeSnap = JSON.stringify(state);
+  const ridgePatrols = getFrontierPatrolSummary(state);
+  assert.equal(JSON.stringify(state), beforeSnap, 'getFrontierPatrolSummary must not mutate state');
+  assert.equal(ridgePatrols.currentZoneId, 'ridge_road');
+  assert.equal(ridgePatrols.chartedCount, 2);
+  assert.equal(ridgePatrols.unchartedCount, 7);
+  assert.equal(ridgePatrols.safeZoneCount, 1);
+  assert.equal(ridgePatrols.patrolZoneCount, 1);
+  assert.equal(ridgePatrols.fullyScoutedZoneCount, 0);
+  assert.equal(ridgePatrols.chartedSpeciesTotal, 4);
+  assert.equal(ridgePatrols.scoutedSpeciesCount, 0);
+  assert.equal(ridgePatrols.unscoutedSpeciesCount, 4);
+  assert.deepEqual(ridgePatrols.scoutedSpeciesNames, []);
+  assert.equal(
+    ridgePatrols.summary,
+    'Charted patrols: 1 patrol region (0/1 fully scouted) · 0/4 patrol species identified (4 unscouted)'
+  );
+  // Unscouted enemy names and unvisited zone names must not appear in summary or scoutedSpeciesNames
+  assert.doesNotMatch(ridgePatrols.summary, /Storm Rat|Gale Hound|Ridge Bandit|Briar Boar|Observatory|Spire/i);
+  assertEggFree(ridgePatrols.summary);
+
+  // Render exploration UI and verify .frontier-atlas__patrols
+  const html = exploreScene.render(game);
+  assert.match(
+    html,
+    /<p class="frontier-atlas__patrols">Charted patrols: 1 patrol region \(0\/1 fully scouted\) · 0\/4 patrol species identified \(4 unscouted\)<\/p>/
+  );
+
+  // 3. Scout all 4 Ridge Road roaming species and verify fully scouted counts
+  state.bestiary = { storm_rat: 1, gale_hound: 2, ridge_bandit: 1, briar_boar: 1 };
+  const scoutedPatrols = getFrontierPatrolSummary(state);
+  assert.equal(scoutedPatrols.fullyScoutedZoneCount, 1);
+  assert.equal(scoutedPatrols.scoutedSpeciesCount, 4);
+  assert.equal(scoutedPatrols.unscoutedSpeciesCount, 0);
+  assert.deepEqual(scoutedPatrols.scoutedSpeciesNames, ['Ridge Bandit', 'Gale Hound', 'Storm Rat', 'Briar Boar']);
+  assert.equal(
+    scoutedPatrols.summary,
+    'Charted patrols: 1 patrol region (1/1 fully scouted) · 4/4 patrol species identified'
+  );
+  assertEggFree(scoutedPatrols.summary);
 });
