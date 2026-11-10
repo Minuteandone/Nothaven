@@ -21,6 +21,7 @@ import {
   getFrontierRoutesSummary,
   getFrontierThreatsSummary,
   getFrontierStationsSummary,
+  getFrontierCachesSummary,
   getFieldServicesSummary,
   getPartyFieldReadiness,
   getInteractableBriefing,
@@ -3048,4 +3049,61 @@ test('getFrontierStationsSummary summarizes field stations across charted region
   };
   const html = exploreScene.render({ state: renderState, dispatch: () => {} });
   assert.match(html, /class="frontier-atlas__stations"[^>]*>Charted stations: 10 across 3 regions \(3 available, 2 guarded, 1 completed, 4 services\) · Current zone: 2 available, 2 guarded/);
+});
+
+test('getFrontierCachesSummary summarizes supply caches across charted regions without spoiling uncharted regions or item names and renders .frontier-atlas__caches', () => {
+  const nullSummary = getFrontierCachesSummary(null);
+  assert.equal(nullSummary.currentZoneId, 'greyhaven');
+  assert.equal(nullSummary.chartedCount, 1);
+  assert.equal(nullSummary.unchartedCount, 8);
+  assert.equal(nullSummary.safeZoneCount, 1);
+  assert.equal(nullSummary.cacheZoneCount, 0);
+  assert.equal(nullSummary.chartedCacheTotal, 0);
+  assert.equal(nullSummary.openedCacheCount, 0);
+  assert.equal(nullSummary.unopenedCacheCount, 0);
+  assert.equal(nullSummary.unclaimedSupplyUnits, 0);
+  assert.equal(
+    nullSummary.summary,
+    'Charted caches: None in safe haven (1 safe region charted) · Current zone: no caches'
+  );
+
+  const frozenState = Object.freeze({
+    map: Object.freeze({
+      zoneId: 'observatory_ruins',
+      visitedZones: Object.freeze(['greyhaven', 'ridge_road', 'observatory_ruins']),
+      completedInteractions: Object.freeze({ ridge_supply_cache: true }),
+      clearedEncounters: Object.freeze({}),
+    }),
+    flags: Object.freeze({}),
+  });
+  const obsCaches = getFrontierCachesSummary(frozenState);
+  assert.equal(obsCaches.currentZoneId, 'observatory_ruins');
+  assert.equal(obsCaches.chartedCount, 3);
+  assert.equal(obsCaches.safeZoneCount, 1);
+  assert.equal(obsCaches.cacheZoneCount, 2);
+  assert.equal(obsCaches.chartedCacheTotal, 2);
+  assert.equal(obsCaches.openedCacheCount, 1);
+  assert.equal(obsCaches.unopenedCacheCount, 1);
+  assert.equal(obsCaches.unclaimedSupplyUnits, 4);
+  assert.equal(obsCaches.currentZoneCacheTotal, 1);
+  assert.equal(obsCaches.currentZoneOpenedCount, 0);
+  assert.equal(obsCaches.currentZoneUnopenedCount, 1);
+  assert.equal(obsCaches.currentZoneUnclaimedUnits, 4);
+  assert.equal(
+    obsCaches.summary,
+    'Charted caches: 1/2 opened across 2 regions (1 unopened, 4 supply items unclaimed) · Current zone: 1 unopened (4 supply items)'
+  );
+  assert.equal(obsCaches.chartedCaches.some((c) => c.zoneId === 'beacon_tower'), false);
+
+  const renderState = {
+    map: {
+      zoneId: 'observatory_ruins',
+      visitedZones: ['greyhaven', 'ridge_road', 'observatory_ruins'],
+      completedInteractions: { ridge_supply_cache: true },
+      clearedEncounters: {},
+    },
+    flags: {},
+  };
+  const html = exploreScene.render({ state: renderState, dispatch: () => {} });
+  assert.match(html, /class="frontier-atlas__caches"[^>]*>Charted caches: 1\/2 opened across 2 regions \(1 unopened, 4 supply items unclaimed\) · Current zone: 1 unopened \(4 supply items\)/);
 });
