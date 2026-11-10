@@ -9,7 +9,7 @@ import { escapeHTML } from '../src/ui/components.js';
 import { assertEggFree } from './helpers/eggGuard.mjs';
 
 const fight = (id, extra = {}) => ({ enemy: { id }, ...extra });
-const SENTENCE = 'In a real battle whose victory would complete a feat, such as a field trial or the tenth foe in your field journal, a “Feat in reach:” line beneath the foe names the feats that winning it will earn.';
+const SENTENCE = 'In a real battle whose victory would complete a feat tracked by your field journal, such as a field trial, the last frontier wanderer or your tenth recorded foe, a “Feat in reach:” line beneath the foe names those feats; story, level, streak and difficulty feats are not forecast.';
 
 test('featCombatText names feats a real victory would earn', () => {
   const s = createInitialState();
@@ -33,6 +33,9 @@ test('featCombatText is null for drills and bad input, and does not mutate state
   assert.equal(featCombatText(s, fight(42)), null);
   featCombatText(s, fight('old_tusk'));
   assert.equal(JSON.stringify(s.bestiary ?? null), before);
+  s.bestiary = { gloomfin: 1, frostmane: 1, lenswarden: 1, briar_boar: 1, lens_wisp: 1, wrack_eel: 1, storm_rat: 2, gale_hound: 1, ridge_bandit: 1 };
+  assert.equal(featCombatText(s, fight('not_a_foe')), null, 'unknown ids are never recorded');
+  assert.equal(featCombatText(s, fight('__proto__')), null);
 });
 
 test('featReachNote escapes text and hides in resolved, drill or empty states', () => {

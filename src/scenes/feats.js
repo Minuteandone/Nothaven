@@ -1,6 +1,7 @@
 // Wardens' Feats: a read-only list of journey milestones computed from the
 // current save. Nothing here changes state; feats are derived, never stored.
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
+import { ENEMIES } from '../data/enemies.js';
 import { MAX_PARTY } from '../party/companions.js';
 import { DRILL_FOES, drillRecord, gauntletRecord } from './drills.js';
 import { ledgerOf, SERVICE_ROWS } from '../core/ledger.js';
@@ -145,7 +146,7 @@ export function featStatus(state) {
 export function featCombatText(state, combat) {
   if (!state || !combat || combat.drill === true) return null;
   const id = combat.enemy?.id;
-  if (typeof id !== 'string' || !id) return null;
+  if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(ENEMIES, id)) return null;
   const book = state.bestiary && typeof state.bestiary === 'object' && !Array.isArray(state.bestiary) ? state.bestiary : {};
   const prev = Object.prototype.hasOwnProperty.call(book, id) && Number.isInteger(book[id]) && book[id] > 0 ? book[id] : 0;
   const before = featStatus(state);
