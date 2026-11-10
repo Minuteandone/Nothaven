@@ -2,7 +2,7 @@
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { drillElementText, drillStatsText } from './drills.js';
 import { ENEMIES } from '../data/enemies.js';
-import { EXCHANGE_OFFERS, boardMarks, boardMarksText, exchangeCost, exchangeMarks, exchangeOfferText, exchangePerkText, exchangeOwnedText, exchangeAffordText, markValue, MASTERY_CLAIMS, abandonBounty, acceptBounty, getBounty, bountyRankText, urgentBountyText, masteryText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
+import { EXCHANGE_OFFERS, boardMarks, boardMarksText, exchangeCost, exchangeMarks, exchangeOfferText, exchangePerkText, exchangeOwnedText, exchangeAffordText, markValue, MASTERY_CLAIMS, BOUNTIES, bountyState, abandonBounty, acceptBounty, getBounty, bountyRankText, urgentBountyText, masteryText, bountyRewardText, bountyRows, claimBounty, recordBountyKill, totalBountiesClaimed } from '../core/bounties.js';
 
 function rowHTML(r, anyActive, state = {}) {
   const foeId = r.enemyId || getBounty(r.id)?.enemyId;
@@ -51,6 +51,16 @@ export function filterBountyRows(rows, region) {
 }
 
 /** Sort orders for the board; locked notices always stay last, in posting order, so nothing about them leaks. */
+/** "Notices answered: A of N." progress toward the Every Notice Answered feat; null before the first claim. */
+export function bountyAnsweredText(state) {
+  const done = bountyState(state).completed || {};
+  const answered = BOUNTIES.filter((b) => Object.prototype.hasOwnProperty.call(done, b.id) && (done[b.id] || 0) >= 1).length;
+  if (answered === 0) return null;
+  return answered >= BOUNTIES.length
+    ? `Notices answered: ${answered} of ${BOUNTIES.length} — “Every Notice Answered” earned.`
+    : `Notices answered: ${answered} of ${BOUNTIES.length} — claim the other ${BOUNTIES.length - answered} once each to earn “Every Notice Answered”.`;
+}
+
 /** "Notices posted: N of M." — how many contracts the board has opened. */
 export function bountyPostedText(rows) {
   const list = Array.isArray(rows) ? rows : [];
@@ -141,6 +151,7 @@ export const bountiesScene = {
         <p class="bounties__intro">Take one contract at a time, then defeat its foe in the wilds — roaming ambushes and patrols both count, sparring drills do not. Claim the reward here; every contract can be taken again, and each claim counts toward a board rank that raises contract gold.</p>
         <p class="bounties__total">Contracts claimed: ${escapeHTML(String(total))}</p>
         <p class="bounties__posted">${escapeHTML(bountyPostedText(rows))}</p>
+        ${bountyAnsweredText(game.state) ? `<p class="bounties__answered">${escapeHTML(bountyAnsweredText(game.state))}</p>` : ''}
         <p class="bounties__rank">${escapeHTML(bountyRankText(game.state))}</p>
         <p class="bounties__urgent">${escapeHTML(urgentBountyText(game.state))}</p>
         <p class="bounties__mastery">${escapeHTML(masteryText(game.state))}</p>
