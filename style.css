@@ -1667,3 +1667,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .performance-line__label { font-weight: 600; }
 
 .drill__where{margin:.2rem 0 0;font-size:.85rem;color:var(--muted)}
+.defeat-closeness-line,.combat-outcome p.defeat-closeness-line { margin: .25rem 0 0; font-size: .85rem; color: var(--muted); }
+.defeat-closeness-line__label { font-weight: 600; }
