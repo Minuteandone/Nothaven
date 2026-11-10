@@ -1215,7 +1215,7 @@ function thunderhoofJourney(game) {
   const before = structuredClone(game.state);
   const protectedKeys = ['story', 'flags', 'reserve', 'drillRecords', 'drillGauntlet'];
   const trialWarden = featStatus(before).find(feat => feat.id === 'trials').done;
-  const victories = [], capture = event => victories.push(structuredClone(event));
+  const victories = [], capture = event => { const { stats, ...rest } = structuredClone(event); victories.push(rest); };
   game.bus.on('combat:victory', capture);
   try {
     act(game, 'moveSouth');
@@ -1321,7 +1321,7 @@ function glacierwardJourney(game) {
   const before = structuredClone(game.state);
   const protectedKeys = ['story', 'flags', 'reserve', 'drillRecords', 'drillGauntlet'];
   const trialWarden = featStatus(before).find(feat => feat.id === 'trials').done;
-  const victories = [], capture = event => victories.push(structuredClone(event));
+  const victories = [], capture = event => { const { stats, ...rest } = structuredClone(event); victories.push(rest); };
   game.bus.on('combat:victory', capture);
   try {
     act(game, 'moveSouth');
