@@ -2616,7 +2616,7 @@ test("getFieldPackSummary summarizes empty and populated field packs by category
 
   const { GUIDE_SECTIONS } = await import("../src/scenes/guide.js");
   const exploringLines = GUIDE_SECTIONS.find((s) => s.title === "Exploring")?.lines || [];
-  assert.equal(exploringLines.length, 6);
+  assert.equal(exploringLines.length, 7);
   assert.ok(exploringLines.some((line) => line.includes("Terrain compass lists open and blocked adjacent ways")));
   assert.ok(exploringLines.some((line) => line.includes("Field Pack summarizes your carried stacks by category")));
   for (const line of exploringLines) assertEggFree(line, "guide Exploring line");

@@ -347,15 +347,7 @@ export function zoneProgressLine(state, zone, mapState) {
   const progress = getZoneProgress(effectiveState, zone);
   if (!progress || progress.totalObjectives === 0) return '';
   const pct = progress.percent;
-  const parts = [];
-  if (progress.encountersTotal > 0) {
-    parts.push(`${progress.encountersCleared}/${progress.encountersTotal} ${progress.encountersTotal === 1 ? 'encounter' : 'encounters'} cleared`);
-  }
-  if (progress.cachesTotal > 0) {
-    parts.push(`${progress.cachesOpened}/${progress.cachesTotal} ${progress.cachesTotal === 1 ? 'cache' : 'caches'} opened`);
-  }
-  const partsText = parts.join(', ');
-  return `<p class="zone-progress-line"><span class="zone-progress-line__label">Zone progress:</span> ${partsText} (${pct}%).</p>`;
+  return `<p class="zone-progress-line"><span class="zone-progress-line__label">Zone recon:</span> ${pct}% complete.</p>`;
 }
 
 function zoneChecklistPanel(state, zone, mapState) {
