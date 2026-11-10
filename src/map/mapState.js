@@ -4034,3 +4034,128 @@ export function stepAlongSafePath(gameState, targetX, targetY, options = {}) {
     triggerCombat: null,
   };
 }
+
+/**
+ * Pure read-only summary of one-time supply caches in a single zone,
+ * reporting opened/ready/guarded counts, relative compass bearing and tile distance,
+ * guardian lock status, and spoiler-safe reward totals without mutating gameState.
+ */
+export function getZoneCachesSummary(gameState = null, zoneOrId = null) {
+  const rawMap = gameState?.map && typeof gameState.map === "object" ? gameState.map : {};
+  const resolvedZone =
+    typeof zoneOrId === "string"
+      ? getZone(zoneOrId)
+      : zoneOrId && typeof zoneOrId === "object"
+        ? zoneOrId
+        : getZone(rawMap.zoneId || gameState?.location || "greyhaven");
+  const spawn = resolvedZone.spawns?.default || { x: 0, y: 0 };
+  const px = Number.isInteger(Number(rawMap.x)) ? Number(rawMap.x) : spawn.x;
+  const py = Number.isInteger(Number(rawMap.y)) ? Number(rawMap.y) : spawn.y;
+  const completedInteractions =
+    rawMap.completedInteractions && typeof rawMap.completedInteractions === "object"
+      ? rawMap.completedInteractions
+      : {};
+  const clearedEncounters =
+    rawMap.clearedEncounters && typeof rawMap.clearedEncounters === "object"
+      ? rawMap.clearedEncounters
+      : {};
+  const effectiveState = {
+    ...(gameState || {}),
+    map: {
+      ...rawMap,
+      zoneId: resolvedZone.id,
+      x: px,
+      y: py,
+      completedInteractions,
+      clearedEncounters,
+    },
+  };
+
+  const caches = (Array.isArray(resolvedZone.interactables) ? resolvedZone.interactables : [])
+    .filter((inter) => inter && inter.kind === "cache" && typeof inter.name === "string")
+    .map((inter) => {
+      const id = inter.interactionId || inter.id;
+      const opened = Boolean(completedInteractions[id]);
+      const guardianId = inter.requiresEncounterCleared || inter.requiresClearedEncounter || null;
+      const guardianCleared = guardianId ? Boolean(clearedEncounters[guardianId]) : true;
+      const guardianEnc = guardianId
+        ? (resolvedZone.encounters || []).find((e) => (e.encounterId || e.id) === guardianId)
+        : null;
+      const guardianName = guardianEnc?.name || guardianId || null;
+      const status = opened ? "Opened" : guardianCleared ? "Available" : "Guarded";
+      const nav = getCompassBearing(px, py, inter.x, inter.y);
+      const briefing = getInteractableBriefing(effectiveState, inter, resolvedZone);
+      const rewardGold = Math.max(0, Number(inter.rewardGold ?? inter.rewards?.gold) || 0);
+      const rewardItemCount = Number(briefing?.rewardCount) || 0;
+      return {
+        id,
+        name: inter.name,
+        x: inter.x,
+        y: inter.y,
+        bearing: nav.bearing,
+        directionLabel: nav.directionLabel,
+        distance: nav.distance,
+        opened,
+        guardianId,
+        guardianName,
+        guardianCleared,
+        status,
+        rewardGold,
+        rewardItemCount,
+        summary: briefing?.summary || inter.name,
+      };
+    })
+    .sort((a, b) => a.distance - b.distance);
+
+  const totalCaches = caches.length;
+  const openedCount = caches.filter((c) => c.status === "Opened").length;
+  const readyCount = caches.filter((c) => c.status === "Available").length;
+  const guardedCount = caches.filter((c) => c.status === "Guarded").length;
+  const nearestCache =
+    caches.find((c) => c.status === "Available") ||
+    caches.find((c) => c.status === "Guarded") ||
+    caches[0] ||
+    null;
+
+  let summary = `Zone caches: None in ${resolvedZone.name}.`;
+  if (totalCaches > 0) {
+    const statusParts = [];
+    if (readyCount > 0) statusParts.push(`${readyCount} ready`);
+    if (guardedCount > 0) statusParts.push(`${guardedCount} guarded`);
+    if (openedCount > 0) statusParts.push(`${openedCount} opened`);
+
+    if (openedCount === totalCaches) {
+      summary = `Zone caches (${openedCount}/${totalCaches} opened): ${statusParts.join(", ")} · All caches in ${resolvedZone.name} opened.`;
+    } else if (nearestCache) {
+      const distText =
+        nearestCache.distance === 0
+          ? "Here"
+          : `${nearestCache.bearing}, ${nearestCache.distance} ${nearestCache.distance === 1 ? "tile" : "tiles"}`;
+      const stateDetail =
+        nearestCache.status === "Available"
+          ? "Ready to open"
+          : `Guarded by ${nearestCache.guardianName || "threat"}`;
+      const rewardParts = [];
+      if (nearestCache.rewardGold > 0) rewardParts.push(`${nearestCache.rewardGold}g`);
+      if (nearestCache.rewardItemCount > 0) {
+        rewardParts.push(
+          `${nearestCache.rewardItemCount} ${nearestCache.rewardItemCount === 1 ? "item" : "items"}`
+        );
+      }
+      const rewardDetail = rewardParts.length > 0 ? ` · ${rewardParts.join(" + ")}` : "";
+      summary = `Zone caches (${openedCount}/${totalCaches} opened): ${statusParts.join(", ")} · Nearest: ${nearestCache.name} (${distText} · ${stateDetail}${rewardDetail})`;
+    }
+  }
+
+  return {
+    zoneId: resolvedZone.id,
+    zoneName: resolvedZone.name,
+    totalCaches,
+    openedCount,
+    readyCount,
+    guardedCount,
+    nearestCache,
+    caches,
+    summary,
+  };
+}
