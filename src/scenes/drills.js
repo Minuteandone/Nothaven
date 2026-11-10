@@ -145,6 +145,15 @@ export function journalYardText(state) {
   return `Training yard: ${parts.join(' · ')}.`;
 }
 
+// Bout order for the Yard Gauntlet, listing unlocked yard bosses in the
+// order they will be fought. Null until the gauntlet is open.
+export function gauntletOrderText(state) {
+  const queue = gauntletQueue(state);
+  if (queue.length < GAUNTLET_MIN) return null;
+  const names = queue.map((id, i) => `${i + 1}. ${ENEMIES[id]?.name || id}`);
+  return `Bout order: ${names.join(' · ')}.`;
+}
+
 // Yard Gauntlet target line toward the Unbroken Run feat. Null while the
 // gauntlet is still locked (the progress note covers that case).
 export function gauntletTargetText(state) {
@@ -209,6 +218,7 @@ export const drillsScene = {
         <p>Face every drill you have unlocked, one after another. Wounds and spent MP carry over between bouts, and each win still grants its drill experience.</p>
         <p class="drill__record">${escapeHTML(gauntletRecordText(grec))}</p>
         ${target ? `<p class="drills__gauntlet-target">${escapeHTML(target)}</p>` : ''}
+        ${gauntletOrderText(game.state) ? `<p class="drills__gauntlet-order">${escapeHTML(gauntletOrderText(game.state))}</p>` : ''}
         ${queue.length >= GAUNTLET_MIN ? uiButton({ action: 'startGauntlet', label: `Begin gauntlet (${queue.length} foes)`, iconName: 'sword', variant: 'ghost' }) : `<p class="drills__gauntlet-progress">${escapeHTML(`Unlock ${GAUNTLET_MIN} drills to open the gauntlet (${queue.length} of ${GAUNTLET_MIN} unlocked so far).`)}</p>`}
       </section>`;
     const nextHint = drillsNextText(game.state);
