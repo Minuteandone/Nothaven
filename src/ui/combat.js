@@ -336,6 +336,7 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main', ite
           ${windupCue(combat)}
           ${incomingDamageHint(combat, hero)}
           ${knockoutWarning(combat, hero)}
+          ${finishingBlowHint(combat, hero)}
           ${intentPreview(combat)}
         </section>
       </div>
@@ -401,6 +402,43 @@ export function knockoutWarning(combat, hero) {
     text = `Even halved, a basic hit could knock out ${left}. Heal this turn.`;
   }
   return `<p class="knockout-warning"><span class="knockout-warning__label">Knockout risk:</span> ${escapeHTML(text)}</p>`;
+}
+
+/**
+ * Finishing-blow hint: names the leader's actions whose damage estimate
+ * reaches the foe's remaining HP this turn. Uses the same damagePreview ranges
+ * as the command badges; skills the leader cannot afford, or cannot use while
+ * shocked, are left out. Only shown once the foe is at or below half health;
+ * returns '' otherwise or when no action can finish the foe.
+ */
+export function finishingBlowHint(combat, hero) {
+  if (!combat || combat.over || !combat.enemy || !hero) return '';
+  const foeHp = Number(combat.enemy.hp);
+  if (!Number.isFinite(foeHp) || foeHp <= 0) return '';
+  const foeMax = Number(combat.enemy.maxHp);
+  if (Number.isFinite(foeMax) && foeMax > 0 && foeHp * 2 > foeMax) return '';
+  if (!(Number(hero.hp) > 0)) return '';
+  const shocked = Array.isArray(hero.statuses) && hero.statuses.includes('shocked');
+  const options = [{ name: 'Attack', preview: damagePreview(null, hero, combat.enemy) }];
+  for (const skill of knownSkills(hero)) {
+    if ((hero.mp || 0) < skill.mp) continue;
+    if (shocked && skill.kind === 'magic') continue;
+    options.push({ name: skill.name, preview: damagePreview(skill, hero, combat.enemy) });
+  }
+  const sure = options.filter((o) => o.preview && o.preview.min >= foeHp).map((o) => o.name);
+  const chance = options.filter((o) => o.preview && o.preview.min < foeHp && o.preview.max >= foeHp).map((o) => o.name);
+  const list = (names) => {
+    const shown = names.slice(0, 3);
+    const extra = names.length - shown.length;
+    const joined = shown.length > 1 ? `${shown.slice(0, -1).join(', ')} or ${shown[shown.length - 1]}` : shown[0];
+    return extra > 0 ? `${joined} (or ${extra} more)` : joined;
+  };
+  const left = `${combat.enemy.name} (${foeHp} HP left)`;
+  let text = '';
+  if (sure.length) text = `${list(sure)} will defeat ${left}.`;
+  else if (chance.length) text = `${list(chance)} could defeat ${left} on a high roll.`;
+  if (!text) return '';
+  return `<p class="finishing-blow-hint"><span class="finishing-blow-hint__label">Finishing blow:</span> ${escapeHTML(text)}</p>`;
 }
 
 /** Enemy intent hint shown in the opposition panel. */
