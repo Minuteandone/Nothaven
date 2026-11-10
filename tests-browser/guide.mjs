@@ -40,6 +40,7 @@ const base = `http://127.0.0.1:${server.address().port}`;
 
 // Literal expectations are independent of the production Guide catalogue.
 const SUPPORT_SENTENCE = 'Against late bosses and field trials, trading blows alone often falls short: raise Beacon Aegis or Warding Stance before a gathered heavy blow lands, restore the party with Rallying Light or Stormhaven Vigil before health runs low, clear shock with Steady Signal, and keep Rekindle ready for a fallen companion — a party that stays standing keeps dealing damage over a long fight.';
+const KNOCKOUT_SENTENCE = 'When the foe’s next blow could knock out your leader at their current health, a “Knockout risk:” line appears beneath that estimate, naming the threat and what still helps: Defend or a ward to halve it, healing before it lands, or a stun or Stillpoint Strike to break a gathered heavy blow.';
 const rows = [
   ['Exploring', 6, 'guide-exploring'],
   ['Battle', 8, 'guide-battle'],
@@ -173,8 +174,9 @@ try {
             const text = await lines.allTextContents();
             assert.equal(text.length, 8);
             assert.equal(text[0].split(SUPPORT_SENTENCE).length - 1, 1);
-            assert.ok(text[0].endsWith(SUPPORT_SENTENCE));
-            assert.ok(text.slice(1).every((line) => !line.includes(SUPPORT_SENTENCE)));
+            assert.equal(text[0].split(KNOCKOUT_SENTENCE).length - 1, 1);
+            assert.ok(text[0].endsWith(`${SUPPORT_SENTENCE} ${KNOCKOUT_SENTENCE}`));
+            assert.ok(text.slice(1).every((line) => !line.includes(SUPPORT_SENTENCE) && !line.includes(KNOCKOUT_SENTENCE)));
             const geometry = await lines.first().evaluate((li, sentence) => {
               const node = li.firstChild;
               if (node?.nodeType !== Node.TEXT_NODE) throw new Error('Expected Guide text node');
