@@ -218,6 +218,9 @@ export const featsScene = {
     const boardRank = bountyRank(game.state).rank;
     const rankRecord = `<div><dt>Board rank</dt><dd>${escapeHTML(boardRank.title)}</dd></div>`;
     const masteryRecord = `<div><dt>Contracts mastered</dt><dd>${escapeHTML(`${masteredCount(game.state)} of ${BOUNTIES.length}`)}</dd></div>`;
+    const answeredDone = bountyState(game.state).completed;
+    const answeredCount = BOUNTIES.filter((b) => Object.prototype.hasOwnProperty.call(answeredDone, b.id) && Number(answeredDone[b.id]) >= 1).length;
+    const answeredRecord = `<div><dt>Notices answered</dt><dd>${escapeHTML(`${answeredCount} of ${BOUNTIES.length}`)}</dd></div>`;
     const filter = featFilterOf(game.featsFilter);
     const shown = filterFeatRows(rows, filter);
     const filters = FEAT_FILTERS.map(id => `<button type="button" class="action-button action-button--ghost" data-action="filterFeats" data-arg="${id}" aria-pressed="${id === filter}">${escapeHTML(`${FEAT_FILTER_LABELS[id]} (${filterFeatRows(rows, id).length})`)}</button>`).join('');
@@ -238,7 +241,7 @@ export const featsScene = {
       <section class="panel service-record" aria-labelledby="service-record-title">
         <h2 id="service-record-title">Service record</h2>
         <p class="service-record__note">Real battles only; Sparring Drills are not counted.</p>
-        <dl class="service-record__list">${record}${bountyRecord}${rankRecord}${masteryRecord}</dl>
+        <dl class="service-record__list">${record}${bountyRecord}${rankRecord}${masteryRecord}${answeredRecord}</dl>
       </section>
       <div class="title-actions">${uiButton({ action: 'closeFeats', label: game.featsReturn === 'explore' ? 'Back to expedition' : 'Back to Greyhaven', iconName: 'compass', variant: 'primary' })}</div>
     </main>`;
