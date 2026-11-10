@@ -15,6 +15,7 @@ import {
   getFieldConsumablePreview,
   getFieldCraftPreview,
   getFieldPackSummary,
+  getFrontierWeatherSummary,
   getFieldServicesSummary,
   getPartyFieldReadiness,
   getInteractableBriefing,
@@ -2655,5 +2656,61 @@ test('zoneWeatherLine, .zone-weather-summary, .zone-checklist__patrols, and getP
   assert.match(
     htmlScouted,
     /<p class="zone-checklist__patrols">Step ambush: 12% · Roaming \(1\/4 scouted\): Unscouted hostile \(33%\), Unscouted hostile \(17%\), Storm Rat \(33%, 12 HP\), Unscouted hostile \(17%\)<\/p>/,
+  );
+});
+
+test('getFrontierWeatherSummary and .frontier-atlas__weather summarize charted weather without spoiling uncharted regions or mutating state', () => {
+  const nullSummary = getFrontierWeatherSummary(null);
+  assert.equal(nullSummary.currentZoneId, 'greyhaven');
+  assert.equal(nullSummary.chartedCount, 1);
+  assert.equal(nullSummary.unchartedCount, 8);
+  assert.equal(nullSummary.zonesTotal, 9);
+  assert.equal(nullSummary.shelteredCount, 1);
+  assert.equal(nullSummary.clearCount, 0);
+  assert.equal(nullSummary.hazardousCount, 0);
+  assert.equal(nullSummary.calmedCount, 0);
+  assert.equal(nullSummary.beaconLit, false);
+  assert.equal(nullSummary.stormCalmed, false);
+  assert.equal(nullSummary.routeNetworkActive, false);
+  assert.equal(nullSummary.shelterNetworkActive, false);
+  assert.equal(nullSummary.chartedRegions.length, 1);
+  assert.equal(nullSummary.chartedRegions[0].conditionName, 'Lantern Shelter');
+  assert.equal(
+    nullSummary.summary,
+    'Charted weather (1/9): 1 sheltered, 0 clear, 0 hazardous (8 uncharted masked) · Modifiers: Standard frontier conditions',
+  );
+
+  const state = createInitialState();
+  ensureMapState(state);
+  travelToZone(state, 'ridge_road');
+  const snapBefore = JSON.stringify(state);
+
+  const ridgeWeather = getFrontierWeatherSummary(state);
+  assert.equal(JSON.stringify(state), snapBefore, 'getFrontierWeatherSummary must not mutate state');
+  assert.equal(ridgeWeather.chartedCount, 2);
+  assert.equal(ridgeWeather.unchartedCount, 7);
+  assert.equal(ridgeWeather.shelteredCount, 1);
+  assert.equal(ridgeWeather.clearCount, 0);
+  assert.equal(ridgeWeather.hazardousCount, 1);
+  assert.equal(
+    ridgeWeather.summary,
+    'Charted weather (2/9): 1 sheltered, 0 clear, 1 hazardous (7 uncharted masked) · Modifiers: Standard frontier conditions',
+  );
+  assert.doesNotMatch(ridgeWeather.summary, /Sunscar|Stormcrown|Highwatch|Saltmere/);
+
+  const html = exploreScene.render({ state });
+  assert.match(
+    html,
+    /<p class="frontier-atlas__weather">Charted weather \(2\/9\): 1 sheltered, 0 clear, 1 hazardous \(7 uncharted masked\) · Modifiers: Standard frontier conditions<\/p>/,
+  );
+
+  state.story = { flags: { beacon_lit: true, victory_storm_heart: true, relay_choice: 'route_network' } };
+  const calmedWeather = getFrontierWeatherSummary(state);
+  assert.equal(calmedWeather.beaconLit, true);
+  assert.equal(calmedWeather.stormCalmed, true);
+  assert.equal(calmedWeather.routeNetworkActive, true);
+  assert.match(
+    calmedWeather.summary,
+    /Modifiers: Beacon lit \(Lantern Shelter at Beacon Tower\), Storm calmed \(Broken Skies in Upper Tempest\), Signal Relay route network \(-50% step ambush\)$/,
   );
 });
