@@ -110,7 +110,7 @@ test('feats page shows an escaped, egg-free service record', () => {
   assert.match(html, /<h2 id="service-record-title">Service record<\/h2>/);
   assert.match(html, /<dt>Battles won<\/dt><dd>1<\/dd>/);
   assert.match(html, /<dt>Times carried home<\/dt><dd>1<\/dd>/);
-  assert.equal((html.match(/<dt>/g) || []).length, SERVICE_ROWS.length + 3);
+  assert.equal((html.match(/<dt>/g) || []).length, SERVICE_ROWS.length + 4);
   assert.match(html, /<dt>Contracts mastered<\/dt><dd>0 of 18<\/dd>/);
   assert.match(html, /<dt>Bounties claimed<\/dt><dd>0<\/dd>/);
   assert.match(html, /<dt>Board rank<\/dt><dd>Notice Runner<\/dd>/);
