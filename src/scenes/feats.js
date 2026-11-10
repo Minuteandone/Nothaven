@@ -140,6 +140,22 @@ export function featStatus(state) {
   });
 }
 
+// Feats a real victory over this foe would earn right now: replays the field-journal entry the win
+// records (bestiary count + 1) and lists unearned feats that flip to earned. Drills record nothing, so null.
+export function featCombatText(state, combat) {
+  if (!state || !combat || combat.drill === true) return null;
+  const id = combat.enemy?.id;
+  if (typeof id !== 'string' || !id) return null;
+  const book = state.bestiary && typeof state.bestiary === 'object' && !Array.isArray(state.bestiary) ? state.bestiary : {};
+  const prev = Object.prototype.hasOwnProperty.call(book, id) && Number.isInteger(book[id]) && book[id] > 0 ? book[id] : 0;
+  const before = featStatus(state);
+  const after = featStatus({ ...state, bestiary: { ...book, [id]: prev + 1 } });
+  const gained = after.filter((f, i) => f.done && !before[i].done).map(f => `“${f.title}”`);
+  if (!gained.length) return null;
+  const list = gained.length === 1 ? gained[0] : `${gained.slice(0, -1).join(', ')} and ${gained[gained.length - 1]}`;
+  return `Winning this battle earns ${list}.`;
+}
+
 export function featsEarned(state) {
   return featStatus(state).filter(f => f.done).length;
 }
