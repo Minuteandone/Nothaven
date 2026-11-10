@@ -197,7 +197,7 @@ function lockedSkillsHtml(hero, combat) {
 
 function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
   if (combat.over) {
-    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat, party) + rewardsLine(combat) + xpContextLine(combat, party[0]) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
+    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat, party) + rewardsLine(combat) + xpContextLine(combat, party[0]) + featsEarnedLine(combat) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'skills') {
     const skills = knownSkills(hero).map((skill, index) => {
@@ -515,6 +515,16 @@ export function rewardsLine(combat) {
     parts.push(`Found: ${names.join(', ')}`);
   }
   return parts.length ? `<p class="battle-rewards">${parts.join(' · ')}</p>` : '';
+}
+/** Victory-screen line naming feats this real victory completed; '' otherwise. */
+export function featsEarnedLine(combat) {
+  if (!combat || combat.over !== 'victory' || combat.drill === true) return '';
+  const titles = Array.isArray(combat.featsGained) ? combat.featsGained.filter(t => typeof t === 'string' && t) : [];
+  if (!titles.length) return '';
+  const quoted = titles.map(t => `“${escapeHTML(t)}”`);
+  const list = quoted.length === 1 ? quoted[0] : `${quoted.slice(0, -1).join(', ')} and ${quoted[quoted.length - 1]}`;
+  const label = titles.length === 1 ? 'Feat earned:' : 'Feats earned:';
+  return `<p class="feats-earned-line"><span class="feats-earned-line__label">${label}</span> ${list}.</p>`;
 }
 /** XP-to-next-level context line shown on victory. */
 export function xpContextLine(combat, hero = {}) {

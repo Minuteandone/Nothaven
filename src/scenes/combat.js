@@ -18,7 +18,7 @@ import { rewardChoicePool } from '../items/rewardChoice.js';
 import { useConsumable } from '../items/consumables.js';
 import { renderCombat } from '../ui/combat.js';
 import { bountyCombatText } from '../core/bounties.js';
-import { featCombatText } from './feats.js';
+import { featCombatText, featStatus, newlyEarnedFeats } from './feats.js';
 
 export const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
@@ -38,6 +38,7 @@ function resolveVictory(game, lines) {
       got = r.items.map((s) => { try { return `${s.qty}× ${getItem(s.id).name}`; } catch { return s.id; } });
     }
   }
+  const featsBefore = featStatus(game.state);
   c.rewards = { ...r };
   lines.push(`Victory! +${r.xp} XP, +${r.gold} gold.`);
   if (got.length) lines.push(`Found: ${got.join(', ')}.`);
@@ -45,6 +46,9 @@ function resolveVictory(game, lines) {
   lines.length = 0;
   // Progression listens to this and appends level-up lines to c.log.
   game.bus.emit('combat:victory', { enemyId: c.enemy.id, encounterId: c.encounterId, stats: battleSummary(c) });
+  // Listeners above (bestiary, story, progression, bounties) have run synchronously,
+  // so any feat they completed is visible now.
+  c.featsGained = newlyEarnedFeats(featsBefore, featStatus(game.state));
   void hero;
 }
 
