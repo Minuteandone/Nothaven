@@ -570,3 +570,33 @@ Screenshots and traces go to `browser-artifacts/finishing-blow/`. This covers
 only the early sure-hit branch, not high-roll or late-game hints, Save/Reload,
 actual screen-reader testing, cross-browser behavior, or balance. Production,
 default tests, browser smoke, and CI are unchanged.
+
+### Optional cache-summary browser regression
+
+```sh
+npm ci
+npx playwright install chromium
+npm run test:browser:cache-summary
+```
+
+This optional Chromium runner starts fresh at 320, 375, and 768px. It checks
+both the Frontier Atlas and zone-checklist cache paragraphs in Greyhaven,
+at Ridge Road's entrance, adjacent to the Wayfarer Supply Crate, after
+actually collecting it, and after Save/Reload/Continue. Literal expectations
+cover zero caches, unopened counts and supply units, two-tile and one-tile
+bearings, and the opened summaries at 115% and 130% text size.
+
+Every Display step and opening either details panel preserves the whole
+game state and raw quick save. Collection must change only the literal
+inventory (one Healing Herb and two Scrap Metal), completion flag, and
+literal log entry. Save and Reload are checked against the whole state.
+The runner checks unique ordinary non-live paragraphs, nonempty positive
+text Range bounds inside each paragraph and horizontal viewport, document
+fit, and browser errors. Screenshots and traces go to
+`browser-artifacts/cache-summary/`.
+
+RNG is fixed at 0.5; no inventory, state, coordinate, progress, or save grants
+are used. This is one early unguarded cache, not all eight caches, guardian
+battles, an actual screen-reader audit, cross-browser testing, visual review,
+or balance evidence. Production, default tests, browser smoke, and CI are
+unchanged.
