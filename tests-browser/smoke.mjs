@@ -548,7 +548,16 @@ try {
       const beforeChronicle = await state();
       assert.ok(beforeChronicle.combat.log.length > 8, 'earned fight retains more than the live-log window');
       await page.locator('.battle-chronicle summary').click();
-      assert.deepEqual(await page.locator('.battle-chronicle__list li').allTextContents(), beforeChronicle.combat.log);
+      // Storage retains typed round markers; the UI displays their text.
+      const rawChronicle = beforeChronicle.combat.log;
+      const roundLines = rawChronicle.filter(line => line.startsWith('::round::'));
+      assert.deepEqual(roundLines,
+        ['::round::Round 1', '::round::Round 2', '::round::Round 3', '::round::Round 4', '::round::Round 5'],
+        'earned five-action fight has exactly one ordered marker per action');
+      assert.deepEqual(await page.locator('.battle-chronicle__list li').allTextContents(),
+        rawChronicle.map(line => line.startsWith('::round::') ? line.slice('::round::'.length) : line));
+      assert.deepEqual(await page.locator('.battle-chronicle__list .combat-log__round-marker').allTextContents(),
+        ['Round 1', 'Round 2', 'Round 3', 'Round 4', 'Round 5']);
       assert.deepEqual(await state(), beforeChronicle, 'reading the full chronicle must not change state');
       await fit('battle-chronicle');
       await setShortcuts(false);
