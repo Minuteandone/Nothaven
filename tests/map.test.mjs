@@ -41,6 +41,7 @@ import {
   getZoneExitsSummary,
   getZoneContactsSummary,
   getZoneStationsSummary,
+  getZoneCachesSummary,
   findSafePath,
   getSafePathPreview,
   stepAlongSafePath,
@@ -3106,4 +3107,94 @@ test('getFrontierCachesSummary summarizes supply caches across charted regions w
   };
   const html = exploreScene.render({ state: renderState, dispatch: () => {} });
   assert.match(html, /class="frontier-atlas__caches"[^>]*>Charted caches: 1\/2 opened across 2 regions \(1 unopened, 4 supply items unclaimed\) · Current zone: 1 unopened \(4 supply items\)/);
+});
+
+
+test('getZoneCachesSummary summarizes current-zone supply caches and renders .zone-checklist__caches in exploration UI', () => {
+  const safe = getZoneCachesSummary(null, 'greyhaven');
+  assert.equal(safe.zoneId, 'greyhaven');
+  assert.equal(safe.totalCaches, 0);
+  assert.equal(safe.openedCount, 0);
+  assert.equal(safe.readyCount, 0);
+  assert.equal(safe.guardedCount, 0);
+  assert.equal(safe.nearestCache, null);
+  assert.equal(safe.summary, 'Zone caches: None in Greyhaven.');
+  assertEggFree(safe.summary);
+
+  const ridgeFresh = getZoneCachesSummary(
+    { map: { zoneId: 'ridge_road', x: 0, y: 3, completedInteractions: {}, clearedEncounters: {} } },
+    'ridge_road'
+  );
+  assert.equal(ridgeFresh.zoneId, 'ridge_road');
+  assert.equal(ridgeFresh.totalCaches, 1);
+  assert.equal(ridgeFresh.openedCount, 0);
+  assert.equal(ridgeFresh.readyCount, 1);
+  assert.equal(ridgeFresh.guardedCount, 0);
+  assert.equal(ridgeFresh.nearestCache?.id, 'ridge_supply_cache');
+  assert.equal(ridgeFresh.nearestCache?.rewardItemCount, 3);
+  assert.match(
+    ridgeFresh.summary,
+    /^Zone caches \(0\/1 opened\): 1 ready · Nearest: Wayfarer Supply Crate \(.* · Ready to open · 3 items\)$/
+  );
+  assertEggFree(ridgeFresh.summary);
+
+  const obsReady = getZoneCachesSummary(
+    { map: { zoneId: 'observatory_ruins', x: 1, y: 3, completedInteractions: {}, clearedEncounters: {} } },
+    'observatory_ruins'
+  );
+  assert.equal(obsReady.totalCaches, 1);
+  assert.equal(obsReady.readyCount, 1);
+  assert.equal(obsReady.guardedCount, 0);
+  assert.match(
+    obsReady.summary,
+    /^Zone caches \(0\/1 opened\): 1 ready · Nearest: Optician Instrument Chest \(.* · Ready to open · 4 items\)$/
+  );
+  assertEggFree(obsReady.summary);
+
+  const customGuardedZone = {
+    ...ZONES.observatory_ruins,
+    interactables: ZONES.observatory_ruins.interactables.map((i) =>
+      i.id === 'observatory_supply_cache'
+        ? { ...i, requiresEncounterCleared: 'observatory_sentinel' }
+        : i
+    ),
+  };
+  const obsGuarded = getZoneCachesSummary(
+    { map: { zoneId: 'observatory_ruins', x: 1, y: 3, completedInteractions: {}, clearedEncounters: {} } },
+    customGuardedZone
+  );
+  assert.equal(obsGuarded.totalCaches, 1);
+  assert.equal(obsGuarded.guardedCount, 1);
+  assert.equal(obsGuarded.readyCount, 0);
+  assert.match(
+    obsGuarded.summary,
+    /^Zone caches \(0\/1 opened\): 1 guarded · Nearest: Optician Instrument Chest \(.* · Guarded by .* · 4 items\)$/
+  );
+  assertEggFree(obsGuarded.summary);
+
+  const ridgeOpenedState = {
+    map: {
+      zoneId: 'ridge_road',
+      x: 4,
+      y: 1,
+      visitedZones: ['greyhaven', 'ridge_road'],
+      completedInteractions: { ridge_supply_cache: true },
+      clearedEncounters: {},
+    },
+    flags: {},
+  };
+  const ridgeOpened = getZoneCachesSummary(ridgeOpenedState);
+  assert.equal(ridgeOpened.openedCount, 1);
+  assert.equal(ridgeOpened.readyCount, 0);
+  assert.equal(
+    ridgeOpened.summary,
+    'Zone caches (1/1 opened): 1 opened · All caches in Ridge Road opened.'
+  );
+  assertEggFree(ridgeOpened.summary);
+
+  const html = exploreScene.render({ state: ridgeOpenedState, dispatch: () => {} });
+  assert.match(
+    html,
+    /class="zone-checklist__caches">Zone caches \(1\/1 opened\): 1 opened · All caches in Ridge Road opened\.<\/p>/
+  );
 });

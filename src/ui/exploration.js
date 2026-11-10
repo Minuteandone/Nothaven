@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { getEncounterPreview, getExpeditionLogSummary, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldPackSummary, getFieldServicesSummary, getFrontierAtlas, getFrontierWeatherSummary, getFrontierPatrolSummary, getFrontierContactsSummary, getFrontierCachesSummary, getFrontierRoutesSummary, getFrontierStationsSummary, getFrontierThreatsSummary, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getPatrolBriefing, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneContactsSummary, getZoneStationsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { getEncounterPreview, getExpeditionLogSummary, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldPackSummary, getFieldServicesSummary, getFrontierAtlas, getFrontierWeatherSummary, getFrontierPatrolSummary, getFrontierContactsSummary, getFrontierCachesSummary, getFrontierRoutesSummary, getFrontierStationsSummary, getFrontierThreatsSummary, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getPatrolBriefing, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneContactsSummary, getZoneStationsSummary, getZoneCachesSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -337,12 +337,14 @@ function zoneChecklistPanel(state, zone, mapState) {
   const threatIntel = getZoneThreatIntel(effectiveState, zone);
   const patrolBriefing = getPatrolBriefing(effectiveState, zone);
   const stationsSummary = getZoneStationsSummary(effectiveState, zone);
+  const cachesSummary = getZoneCachesSummary(effectiveState, zone);
   const exitsSummary = getZoneExitsSummary(effectiveState, zone);
   const summaryLine = checklist.summary ? `<p class="zone-checklist__summary">${escapeHTML(checklist.summary)}</p>` : '';
   const contactsLine = contactsSummary?.summary ? `<p class="zone-checklist__contacts">${escapeHTML(contactsSummary.summary)}</p>` : '';
   const threatLine = threatIntel?.summary ? `<p class="zone-checklist__threats">${escapeHTML(threatIntel.summary)}</p>` : '';
   const patrolLine = patrolBriefing?.summary ? `<p class="zone-checklist__patrols">${escapeHTML(patrolBriefing.summary)}</p>` : '';
   const stationsLine = stationsSummary?.summary ? `<p class="zone-checklist__stations">${escapeHTML(stationsSummary.summary)}</p>` : '';
+  const cachesLine = cachesSummary?.summary ? `<p class="zone-checklist__caches">${escapeHTML(cachesSummary.summary)}</p>` : '';
   const routesLine = exitsSummary?.summary ? `<p class="zone-checklist__routes">${escapeHTML(exitsSummary.summary)}</p>` : '';
   return `<details class="shortcut-guide zone-checklist"><summary>Zone field checklist (${totalPois} ${totalPois === 1 ? 'landmark' : 'landmarks'})</summary>
     <ul class="zone-checklist__list" aria-label="Zone landmarks and coordinates">${rows.join('')}</ul>
@@ -351,6 +353,7 @@ function zoneChecklistPanel(state, zone, mapState) {
     ${threatLine}
     ${patrolLine}
     ${stationsLine}
+    ${cachesLine}
     ${routesLine}
   </details>`;
 }

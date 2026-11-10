@@ -37,6 +37,7 @@ export {
   getNearbyActionsSummary,
   getZoneExitsSummary,
   getZoneStationsSummary,
+  getZoneCachesSummary,
   getZoneContactsSummary,
   findSafePath,
   getSafePathPreview,
