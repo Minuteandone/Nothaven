@@ -1654,3 +1654,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .finishing-blow-hint__label{font-weight:600}
 .bounty-target-note{margin:.25rem 0 0;font-size:.85rem;color:var(--accent)}
 .bounty-target-note__label{font-weight:600}
+.drill-record-note{margin:.25rem 0 0;font-size:.85rem;color:var(--accent)}
+.drill-record-note__label{font-weight:600}
