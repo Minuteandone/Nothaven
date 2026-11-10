@@ -1658,3 +1658,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .drill-record-note__label{font-weight:600}
 .feat-reach-note{margin:.25rem 0 0;font-size:.85rem;color:var(--accent-bright)}
 .feat-reach-note__label{font-weight:600}
+.feats-earned-line{margin:.25rem 0 0;font-size:.85rem;color:var(--good)}
+.feats-earned-line__label{font-weight:600}
