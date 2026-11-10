@@ -194,19 +194,20 @@ export function zoneWeatherLine(weatherSummary) {
 }
 
 export function zoneVantageLine(vantage) {
-  if (!vantage || typeof vantage !== 'object' || typeof vantage.landmark !== 'string' || !vantage.landmark) {
+  if (!vantage || typeof vantage !== 'object') {
     return '';
   }
   const prog = vantage.progress;
-  const reconText = prog && prog.totalObjectives > 0
-    ? `${prog.percent}% recon (${prog.encountersCleared}/${prog.encountersTotal} threats, ${prog.cachesOpened}/${prog.cachesTotal} caches)`
-    : 'Safe haven';
-  const elevation = Number.isFinite(Number(vantage.elevation)) ? Number(vantage.elevation) : 0;
-  const parts = [
-    `Vantage: ${vantage.landmark} (${elevation}m)`,
-    reconText,
-  ];
-  if (typeof vantage.surveyNote === 'string' && vantage.surveyNote) {
+  const hasProgress = Boolean(prog && typeof prog === 'object');
+  const hasSurveyNote = typeof vantage.surveyNote === 'string' && Boolean(vantage.surveyNote);
+  if (!hasProgress && !hasSurveyNote) {
+    return '';
+  }
+  const parts = [];
+  if (hasProgress) {
+    parts.push(prog.totalObjectives > 0 ? `Recon: ${prog.percent}%` : 'Recon: Safe haven');
+  }
+  if (hasSurveyNote) {
     parts.push(vantage.surveyNote);
   }
   return `<p class="zone-checklist__vantage">${escapeHTML(parts.join(' · '))}</p>`;

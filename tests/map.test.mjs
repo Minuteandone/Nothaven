@@ -3248,15 +3248,15 @@ test('compassTargetLine renders visible spoiler-safe target briefings in .terrai
 test('zoneVantageLine renders .zone-checklist__vantage and getZoneProgress uses own-property and once checks', () => {
   assert.equal(zoneVantageLine(null), '');
   assert.equal(zoneVantageLine({}), '');
-  assert.equal(zoneVantageLine({ landmark: '' }), '');
+  assert.equal(zoneVantageLine({ surveyNote: '' }), '');
   assert.equal(
     zoneVantageLine({
-      landmark: 'Harbor Lantern Pier <script>',
+      landmark: 'Harbor Lantern Pier',
       elevation: 12,
-      surveyNote: 'Lanterns warm the harbor stones.',
+      surveyNote: 'Lanterns warm the harbor stones <script>.',
       progress: { totalObjectives: 0, percent: 100 },
     }),
-    '<p class="zone-checklist__vantage">Vantage: Harbor Lantern Pier &lt;script&gt; (12m) · Safe haven · Lanterns warm the harbor stones.</p>'
+    '<p class="zone-checklist__vantage">Recon: Safe haven · Lanterns warm the harbor stones &lt;script&gt;.</p>'
   );
   assert.equal(
     zoneVantageLine({
@@ -3272,7 +3272,7 @@ test('zoneVantageLine renders .zone-checklist__vantage and getZoneProgress uses 
         percent: 60,
       },
     }),
-    '<p class="zone-checklist__vantage">Vantage: Ridge Switchback Milestone (144m) · 60% recon (2/4 threats, 1/1 caches) · Wind-scoured milestones mark the cliff trail.</p>'
+    '<p class="zone-checklist__vantage">Recon: 60% · Wind-scoured milestones mark the cliff trail.</p>'
   );
   assertEggFree(
     zoneVantageLine({
@@ -3296,7 +3296,7 @@ test('zoneVantageLine renders .zone-checklist__vantage and getZoneProgress uses 
   };
   const ridgeHtml = exploreScene.render({ state: ridgeState, dispatch: () => {} });
   assert.ok(
-    ridgeHtml.includes('<p class="zone-checklist__vantage">Vantage: Ridge Switchback Milestone (144m) · 60% recon (2/4 threats, 1/1 caches) · Wind-scoured milestones mark the cliff trail climbing toward the headland.</p>'),
+    ridgeHtml.includes('<p class="zone-checklist__vantage">Recon: 60% · Wind-scoured milestones mark the cliff trail climbing toward the headland.</p>'),
     'expected .zone-checklist__vantage line in exploreScene.render output'
   );
 
