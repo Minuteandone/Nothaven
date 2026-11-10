@@ -1,5 +1,5 @@
 import { ledgerOf } from '../core/ledger.js';
-import { FEATS, featsEarned } from './feats.js';
+import { FEATS, featsEarned, closestFeatText } from './feats.js';
 import { BOUNTIES, bountyState, bountyRecordText } from '../core/bounties.js';
 import { ENEMIES } from '../data/enemies.js';
 import { DIFFICULTIES, getDifficulty } from '../combat/difficulty.js';
@@ -163,6 +163,7 @@ export const endingScene = {
         <li class="ending-journal">${esc(journalText(s))}</li>
         ${cumulativeStatsText(s) ? cumulativeStatsText(s).map((l) => `<li class="ending-cumulative">${esc(l)}</li>`).join('') : ''}
         <li class="ending-feats">Wardens’ Feats earned: ${esc(String(featsEarned(s)))} of ${esc(String(FEATS.length))}</li>
+        ${closestFeatText(s) ? `<li class="ending-feats-next">${esc(closestFeatText(s))}</li>` : ''}
         ${drillsText(s) ? `<li class="ending-drills">${esc(drillsText(s))}</li>` : ''}
         ${bountyRecordText(s) ? `<li class="ending-bounty-record">${esc(bountyRecordText(s))}</li>` : ''}
       </ul>
