@@ -197,8 +197,7 @@ function lockedSkillsHtml(hero, combat) {
 
 function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
   if (combat.over) {
-    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat, party) + rewardsLine(combat) + xpContextLine(combat, party[0]) + featsEarnedLine(combat) + itemsUsedLine(combat) + performanceLine(combat, party[0]) : defeatClosenessLine(combat)}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
-  }
+    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat, party) + rewardsLine(combat) + xpContextLine(combat, party[0]) + featsEarnedLine(combat) + itemsUsedLine(combat) + performanceLine(combat, party[0]) : (combat.over === 'defeat' ? defeatClosenessLine(combat) : escapeContextLine(combat))}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;  }
   if (menu === 'skills') {
     const skills = knownSkills(hero).map((skill, index) => {
       const effectiveness = elementEffectivenessText(skill.element, combat.enemy?.element);
@@ -598,4 +597,13 @@ export function defeatClosenessLine(combat) {
   else if (ratio < 0.9) label = `${name} was on the brink of collapse.`;
   else label = `${name} had mere moments left.`;
   return `<p class="defeat-closeness-line"><span class="defeat-closeness-line__label">How close:</span> ${label}</p>`;
+}
+
+export function escapeContextLine(combat) {
+  if (!combat || combat.over !== 'fled' || combat.drill === true) return '';
+  const sm = battleSummary(combat);
+  const parts = [plural(sm.rounds, 'round')];
+  if (sm.itemsUsed > 0) parts.push(plural(sm.itemsUsed, 'item'));
+  if (parts.length === 0) return '';
+  return `<p class="escape-context-line"><span class="escape-context-line__label">Escaped after:</span> ${parts.join(' \u00b7 ')}.</p>`;
 }
