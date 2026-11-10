@@ -604,6 +604,5 @@ export function escapeContextLine(combat) {
   const sm = battleSummary(combat);
   const parts = [plural(sm.rounds, 'round')];
   if (sm.itemsUsed > 0) parts.push(plural(sm.itemsUsed, 'item'));
-  if (parts.length === 0) return '';
   return `<p class="escape-context-line"><span class="escape-context-line__label">Escaped after:</span> ${parts.join(' \u00b7 ')}.</p>`;
 }
