@@ -949,6 +949,109 @@ export function getFrontierPatrolSummary(gameState = null) {
   };
 }
 
+/**
+ * Pure read-only summary of NPC field contacts across all charted frontier
+ * regions. Masks unvisited regions and their contacts so spoilers never leak.
+ */
+export function getFrontierContactsSummary(gameState = null) {
+  const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
+  const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
+
+  const visitedMap = {};
+  const rawVisited = gameState?.map?.visitedZones;
+  if (Array.isArray(rawVisited)) {
+    for (const id of rawVisited) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  } else if (rawVisited && typeof rawVisited === 'object') {
+    for (const [id, flag] of Object.entries(rawVisited)) {
+      if (flag && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  if (Array.isArray(gameState?.visitedZones)) {
+    for (const id of gameState.visitedZones) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  visitedMap[currentZoneId] = true;
+
+  let contactZoneCount = 0;
+  let contactCount = 0;
+  let currentZoneContactCount = 0;
+  let inRangeCount = 0;
+  const chartedRegions = [];
+  const chartedContacts = [];
+  const regionBreakdownParts = [];
+
+  for (const zoneId of ZONE_ORDER) {
+    if (!visitedMap[zoneId]) continue;
+    const zone = ZONES[zoneId];
+    const zoneContacts = getZoneContactsSummary(gameState, zone);
+    const list = Array.isArray(zoneContacts?.contacts) ? zoneContacts.contacts : [];
+    const isCurrent = zoneId === currentZoneId;
+
+    if (list.length > 0) {
+      contactZoneCount += 1;
+      contactCount += list.length;
+      regionBreakdownParts.push(`${zone.name}: ${list.map((c) => c.name).join(', ')}`);
+      for (const c of list) {
+        chartedContacts.push({
+          ...c,
+          zoneId,
+          zoneName: zone.name,
+          isCurrent,
+        });
+      }
+    }
+
+    if (isCurrent) {
+      currentZoneContactCount = list.length;
+      inRangeCount = Number(zoneContacts?.adjacentCount) || 0;
+    }
+
+    chartedRegions.push({
+      zoneId,
+      name: zone.name,
+      isCurrent,
+      contactCount: list.length,
+      adjacentCount: isCurrent ? (Number(zoneContacts?.adjacentCount) || 0) : 0,
+      contactNames: list.map((c) => c.name),
+      summary: zoneContacts?.summary || 'Field contacts: None',
+    });
+  }
+
+  const zonesTotal = ZONE_ORDER.length;
+  const chartedCount = chartedRegions.length;
+  const unchartedCount = Math.max(0, zonesTotal - chartedCount);
+
+  const regionWord = contactZoneCount === 1 ? 'region' : 'regions';
+  const rosterPart = regionBreakdownParts.length > 0 ? ` (${regionBreakdownParts.join('; ')})` : '';
+  const currentPart = currentZoneContactCount > 0
+    ? `Current zone: ${currentZoneContactCount} (${inRangeCount} in range)`
+    : 'Current zone: none';
+  const summary = `Charted contacts: ${contactCount} across ${contactZoneCount} ${regionWord}${rosterPart} · ${currentPart}`;
+
+  return {
+    currentZoneId,
+    chartedCount,
+    unchartedCount,
+    zonesTotal,
+    contactZoneCount,
+    contactCount,
+    currentZoneContactCount,
+    inRangeCount,
+    chartedRegions,
+    chartedContacts,
+    summary,
+  };
+}
+
 const EXPEDITION_ACT_DEFS = Object.freeze([
   Object.freeze({
     id: 'act_1',
