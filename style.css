@@ -1671,3 +1671,13 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .defeat-closeness-line__label { font-weight: 600; }
 .escape-context-line,.combat-outcome p.escape-context-line{margin:.25rem 0 0;font-size:.85rem;color:var(--muted)}
 .escape-context-line__label{font-weight:600}
+.zone-progress-line {
+  font-size: 0.9rem;
+  color: var(--text);
+  margin: 0.5rem 0 0.25rem;
+  line-height: 1.45;
+}
+.zone-progress-line__label {
+  font-weight: 600;
+  color: var(--text);
+}
