@@ -397,12 +397,15 @@ export function knockoutWarning(combat, hero) {
  * Finishing-blow hint: names the leader's actions whose damage estimate
  * reaches the foe's remaining HP this turn. Uses the same damagePreview ranges
  * as the command badges; skills the leader cannot afford, or cannot use while
- * shocked, are left out. Returns '' when no action can finish the foe.
+ * shocked, are left out. Only shown once the foe is at or below half health;
+ * returns '' otherwise or when no action can finish the foe.
  */
 export function finishingBlowHint(combat, hero) {
   if (!combat || combat.over || !combat.enemy || !hero) return '';
   const foeHp = Number(combat.enemy.hp);
   if (!Number.isFinite(foeHp) || foeHp <= 0) return '';
+  const foeMax = Number(combat.enemy.maxHp);
+  if (Number.isFinite(foeMax) && foeMax > 0 && foeHp * 2 > foeMax) return '';
   if (!(Number(hero.hp) > 0)) return '';
   const shocked = Array.isArray(hero.statuses) && hero.statuses.includes('shocked');
   const options = [{ name: 'Attack', preview: damagePreview(null, hero, combat.enemy) }];
