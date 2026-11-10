@@ -831,6 +831,124 @@ export function getFrontierWeatherSummary(gameState = null) {
   };
 }
 
+/**
+ * Pure read-only summary of roaming patrol pools and Bestiary scouting progress
+ * across all charted frontier regions. Masks unvisited regions and unscouted
+ * species identities so spoilers never leak.
+ */
+export function getFrontierPatrolSummary(gameState = null) {
+  const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
+  const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
+
+  const visitedMap = {};
+  const rawVisited = gameState?.map?.visitedZones;
+  if (Array.isArray(rawVisited)) {
+    for (const id of rawVisited) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  } else if (rawVisited && typeof rawVisited === 'object') {
+    for (const [id, flag] of Object.entries(rawVisited)) {
+      if (flag && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  if (Array.isArray(gameState?.visitedZones)) {
+    for (const id of gameState.visitedZones) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  visitedMap[currentZoneId] = true;
+
+  let safeZoneCount = 0;
+  let patrolZoneCount = 0;
+  let fullyScoutedZoneCount = 0;
+  const chartedSpeciesIds = new Set();
+  const chartedRegions = [];
+
+  for (const zoneId of ZONE_ORDER) {
+    if (!visitedMap[zoneId]) continue;
+    const zone = ZONES[zoneId];
+    const briefing = getPatrolBriefing(gameState, zone);
+    const hasHostiles = Boolean(briefing?.hasHostiles);
+    const totalCount = Number(briefing?.totalCount) || 0;
+    const scoutedCount = Number(briefing?.scoutedCount) || 0;
+    const fullyScouted = hasHostiles && totalCount > 0 && scoutedCount === totalCount;
+
+    if (!hasHostiles) {
+      safeZoneCount += 1;
+    } else {
+      patrolZoneCount += 1;
+      if (fullyScouted) {
+        fullyScoutedZoneCount += 1;
+      }
+      const rawEntries = Array.isArray(zone.randomEncounters) ? zone.randomEncounters : [];
+      for (const entry of rawEntries) {
+        if (typeof entry?.enemyId === 'string' && entry.enemyId) {
+          chartedSpeciesIds.add(entry.enemyId);
+        }
+      }
+    }
+
+    chartedRegions.push({
+      zoneId,
+      name: zone.name,
+      isCurrent: zoneId === currentZoneId,
+      hasHostiles,
+      encounterPercent: Number(briefing?.encounterPercent) || 0,
+      scoutedCount,
+      totalCount,
+      fullyScouted,
+      summary: briefing?.summary || '',
+    });
+  }
+
+  let scoutedSpeciesCount = 0;
+  const scoutedSpeciesNames = [];
+  for (const enemyId of chartedSpeciesIds) {
+    const preview = getEncounterPreview(enemyId, gameState);
+    if (preview?.known) {
+      scoutedSpeciesCount += 1;
+      scoutedSpeciesNames.push(preview.name || enemyId);
+    }
+  }
+
+  const zonesTotal = ZONE_ORDER.length;
+  const chartedCount = chartedRegions.length;
+  const unchartedCount = Math.max(0, zonesTotal - chartedCount);
+  const chartedSpeciesTotal = chartedSpeciesIds.size;
+  const unscoutedSpeciesCount = Math.max(0, chartedSpeciesTotal - scoutedSpeciesCount);
+
+  let summary;
+  if (patrolZoneCount === 0) {
+    summary = `Charted patrols: 0 patrol regions (${safeZoneCount} safe) · No patrol hostiles in charted territory`;
+  } else {
+    const regionWord = patrolZoneCount === 1 ? 'region' : 'regions';
+    const unscoutedSuffix = unscoutedSpeciesCount > 0 ? ` (${unscoutedSpeciesCount} unscouted)` : '';
+    summary = `Charted patrols: ${patrolZoneCount} patrol ${regionWord} (${fullyScoutedZoneCount}/${patrolZoneCount} fully scouted) · ${scoutedSpeciesCount}/${chartedSpeciesTotal} patrol species identified${unscoutedSuffix}`;
+  }
+
+  return {
+    currentZoneId,
+    chartedCount,
+    unchartedCount,
+    zonesTotal,
+    safeZoneCount,
+    patrolZoneCount,
+    fullyScoutedZoneCount,
+    chartedSpeciesTotal,
+    scoutedSpeciesCount,
+    unscoutedSpeciesCount,
+    scoutedSpeciesNames,
+    chartedRegions,
+    summary,
+  };
+}
+
 const EXPEDITION_ACT_DEFS = Object.freeze([
   Object.freeze({
     id: 'act_1',
