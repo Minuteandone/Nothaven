@@ -172,6 +172,20 @@ function writeState(state, view) {
   return state.bounties;
 }
 
+/**
+ * In-battle note when the foe is the active contract's target and the contract
+ * still needs kills. Returns null otherwise (no contract, other foe, complete).
+ */
+export function bountyCombatText(state, enemyId) {
+  const view = bountyState(state);
+  const b = getBounty(view.active);
+  if (!b || typeof enemyId !== 'string' || b.enemyId !== enemyId || view.progress >= b.count) return null;
+  const next = view.progress + 1;
+  return next >= b.count
+    ? `“${b.title}” — ${view.progress}/${b.count} defeated; winning this battle completes the contract.`
+    : `“${b.title}” — ${view.progress}/${b.count} defeated; winning this battle makes it ${next}/${b.count}.`;
+}
+
 /** One-line status of the active contract for other screens, or null when none is active. */
 export function bountySummaryText(state) {
   const view = bountyState(state);

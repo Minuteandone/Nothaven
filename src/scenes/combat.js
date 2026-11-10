@@ -17,6 +17,7 @@ import { grantRewards } from '../items/inventory.js';
 import { rewardChoicePool } from '../items/rewardChoice.js';
 import { useConsumable } from '../items/consumables.js';
 import { renderCombat } from '../ui/combat.js';
+import { bountyCombatText } from '../core/bounties.js';
 
 export const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
@@ -185,6 +186,7 @@ export const combatScene = {
       inventory: game.state.inventory || [],
       menu: game.combatMenu || 'main',
       itemTargetIndex: game.combatItemTarget === undefined ? 0 : game.state.party.indexOf(game.combatItemTarget),
+      bountyNote: c.drill === true ? null : bountyCombatText(game.state, c.enemy?.id),
     });
   },
 

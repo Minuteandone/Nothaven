@@ -1652,3 +1652,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .knockout-warning__label{font-weight:600}
 .finishing-blow-hint{margin:.25rem 0 0;font-size:.85rem;color:var(--good)}
 .finishing-blow-hint__label{font-weight:600}
+.bounty-target-note{margin:.25rem 0 0;font-size:.85rem;color:var(--accent)}
+.bounty-target-note__label{font-weight:600}
