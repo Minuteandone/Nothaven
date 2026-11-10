@@ -157,6 +157,14 @@ export function featCombatText(state, combat) {
   return `Winning this battle earns ${list}.`;
 }
 
+// Titles of feats that are done in `after` but were not done in `before` (FEATS order).
+// Both arguments are featStatus() rows; anything malformed yields an empty list.
+export function newlyEarnedFeats(before, after) {
+  if (!Array.isArray(before) || !Array.isArray(after)) return [];
+  const had = new Set(before.filter(f => f && f.done).map(f => f.id));
+  return after.filter(f => f && f.done && !had.has(f.id)).map(f => String(f.title));
+}
+
 export function featsEarned(state) {
   return featStatus(state).filter(f => f.done).length;
 }
