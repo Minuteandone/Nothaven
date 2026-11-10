@@ -4072,12 +4072,22 @@ export function getZoneCachesSummary(gameState = null, zoneOrId = null) {
   };
 
   const caches = (Array.isArray(resolvedZone.interactables) ? resolvedZone.interactables : [])
-    .filter((inter) => inter && inter.kind === "cache" && typeof inter.name === "string")
+    .filter((inter) => inter && inter.kind === "cache" && Boolean(inter.once) && typeof inter.name === "string")
     .map((inter) => {
       const id = inter.interactionId || inter.id;
-      const opened = Boolean(completedInteractions[id]);
-      const guardianId = inter.requiresEncounterCleared || inter.requiresClearedEncounter || null;
-      const guardianCleared = guardianId ? Boolean(clearedEncounters[guardianId]) : true;
+      const opened = Boolean(
+        Object.prototype.hasOwnProperty.call(completedInteractions, id) && completedInteractions[id]
+      );
+      const guardianId =
+        typeof inter.requiresEncounterCleared === "string" && inter.requiresEncounterCleared
+          ? inter.requiresEncounterCleared
+          : null;
+      const guardianCleared = guardianId
+        ? Boolean(
+            Object.prototype.hasOwnProperty.call(clearedEncounters, guardianId) &&
+              clearedEncounters[guardianId]
+          )
+        : true;
       const guardianEnc = guardianId
         ? (resolvedZone.encounters || []).find((e) => (e.encounterId || e.id) === guardianId)
         : null;
@@ -4085,7 +4095,6 @@ export function getZoneCachesSummary(gameState = null, zoneOrId = null) {
       const status = opened ? "Opened" : guardianCleared ? "Available" : "Guarded";
       const nav = getCompassBearing(px, py, inter.x, inter.y);
       const briefing = getInteractableBriefing(effectiveState, inter, resolvedZone);
-      const rewardGold = Math.max(0, Number(inter.rewardGold ?? inter.rewards?.gold) || 0);
       const rewardItemCount = Number(briefing?.rewardCount) || 0;
       return {
         id,
@@ -4100,7 +4109,6 @@ export function getZoneCachesSummary(gameState = null, zoneOrId = null) {
         guardianName,
         guardianCleared,
         status,
-        rewardGold,
         rewardItemCount,
         summary: briefing?.summary || inter.name,
       };
@@ -4135,14 +4143,10 @@ export function getZoneCachesSummary(gameState = null, zoneOrId = null) {
         nearestCache.status === "Available"
           ? "Ready to open"
           : `Guarded by ${nearestCache.guardianName || "threat"}`;
-      const rewardParts = [];
-      if (nearestCache.rewardGold > 0) rewardParts.push(`${nearestCache.rewardGold}g`);
-      if (nearestCache.rewardItemCount > 0) {
-        rewardParts.push(
-          `${nearestCache.rewardItemCount} ${nearestCache.rewardItemCount === 1 ? "item" : "items"}`
-        );
-      }
-      const rewardDetail = rewardParts.length > 0 ? ` · ${rewardParts.join(" + ")}` : "";
+      const rewardDetail =
+        nearestCache.rewardItemCount > 0
+          ? ` · ${nearestCache.rewardItemCount} ${nearestCache.rewardItemCount === 1 ? "item" : "items"}`
+          : "";
       summary = `Zone caches (${openedCount}/${totalCaches} opened): ${statusParts.join(", ")} · Nearest: ${nearestCache.name} (${distText} · ${stateDetail}${rewardDetail})`;
     }
   }

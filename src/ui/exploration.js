@@ -175,6 +175,12 @@ function movementButton(action, label, key, arrow, className, characterShortcuts
   </button>`;
 }
 
+export function compassTargetLine(targetSummary, label = '') {
+  return typeof targetSummary === 'string' && targetSummary && targetSummary !== label
+    ? `<p class="quiet-note terrain-compass__target">Target briefing: ${escapeHTML(targetSummary)}</p>`
+    : '';
+}
+
 export function compassRouteLine(routeSummary) {
   return typeof routeSummary === 'string' && routeSummary
     ? `<p class="quiet-note terrain-compass__route">${escapeHTML(routeSummary)}</p>`
@@ -225,6 +231,7 @@ function terrainCompass(zone, mapState, characterShortcuts, state = null) {
   const bearingLine = compassHint
     ? `<p class="terrain-compass__bearing"${bearingTitle ? ` title="${escapeHTML(bearingTitle)}"` : ''}>Compass bearing: <strong>${escapeHTML(compassHint.label)}</strong> (${escapeHTML(compassHint.bearing)}, ${compassHint.distance} ${compassHint.distance === 1 ? 'tile' : 'tiles'})</p>`
     : '';
+  const targetLine = compassTargetLine(compassHint?.targetSummary, compassHint?.label);
   const routeLine = compassRouteLine(compassHint?.routeSummary);
   const waysLine = inspection?.waysSummary
     ? `<p class="quiet-note terrain-compass__ways">${escapeHTML(inspection.waysSummary)}</p>`
@@ -233,7 +240,7 @@ function terrainCompass(zone, mapState, characterShortcuts, state = null) {
     ? `<p class="terrain-compass__adjacent">Adjacent landmarks: ${inspection.adjacentLandmarks.map(a => `<strong>${escapeHTML(a.dir)}:</strong> ${escapeHTML(a.label)}`).join(' · ')}</p>`
     : '';
   return `<section class="terrain-compass" aria-labelledby="terrain-compass-title">
-    <div class="terrain-compass__heading"><h3 id="terrain-compass-title">Terrain compass</h3><p>Standing on <strong>${escapeHTML(current.name)}</strong> at ${escapeHTML(`${x}, ${y}`)}.</p>${bearingLine}${routeLine}${waysLine}${adjacentLine}</div>
+    <div class="terrain-compass__heading"><h3 id="terrain-compass-title">Terrain compass</h3><p>Standing on <strong>${escapeHTML(current.name)}</strong> at ${escapeHTML(`${x}, ${y}`)}.</p>${bearingLine}${targetLine}${routeLine}${waysLine}${adjacentLine}</div>
     <ul aria-label="Adjacent terrain and passability">${items}</ul>
   </section>`;
 }

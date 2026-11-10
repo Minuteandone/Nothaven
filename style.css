@@ -1262,7 +1262,7 @@ html[data-contrast="high"] .battle-chronicle__list li, html[data-contrast="high"
 .terrain-compass__heading h3 { margin: 0; color: var(--text); font-family: inherit; font-size: .78rem; letter-spacing: .04em; }
 .terrain-compass__heading p { margin: 0; color: var(--muted); font-size: .68rem; line-height: 1.45; }
 .terrain-compass__heading p strong { color: var(--accent-bright); font-weight: 650; }
-.terrain-compass__route { flex-basis: 100%; color: var(--text); overflow-wrap: anywhere; }
+.terrain-compass__target, .terrain-compass__route { flex-basis: 100%; color: var(--text); overflow-wrap: anywhere; }
 .terrain-compass ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem; margin: 0; padding: 0; list-style: none; }
 .terrain-compass li { display: grid; grid-template-columns: minmax(4.6rem, .65fr) minmax(0, 1.35fr); align-items: center; gap: .5rem; min-width: 0; padding: .5rem; border: 1px solid var(--line-soft); border-radius: 6px; background: rgba(20, 34, 49, .62); }
 .terrain-compass__direction { display: inline-flex; align-items: center; gap: .35rem; color: var(--accent); font-size: .66rem; font-weight: 750; }

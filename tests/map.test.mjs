@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { assertEggFree } from './helpers/eggGuard.mjs';
-import { compassRouteLine, zoneWeatherLine } from '../src/ui/exploration.js';
+import { compassRouteLine, compassTargetLine, zoneWeatherLine } from '../src/ui/exploration.js';
 import { createInitialState } from '../src/state.js';
 import { installStory } from '../src/story/integration.js';
 import {
@@ -3197,4 +3197,50 @@ test('getZoneCachesSummary summarizes current-zone supply caches and renders .zo
     html,
     /class="zone-checklist__caches">Zone caches \(1\/1 opened\): 1 opened · All caches in Ridge Road opened\.<\/p>/
   );
+});
+
+test('compassTargetLine renders visible spoiler-safe target briefings in .terrain-compass__target and getZoneCachesSummary uses own-property checks', () => {
+  assert.equal(compassTargetLine(null), '');
+  assert.equal(compassTargetLine(''), '');
+  assert.equal(compassTargetLine(42), '');
+  assert.equal(compassTargetLine('Ridge Bandit', 'Ridge Bandit'), '');
+  assert.equal(
+    compassTargetLine('Ridge Bandit · 28 HP <script>', 'Ridge Bandit'),
+    '<p class="quiet-note terrain-compass__target">Target briefing: Ridge Bandit · 28 HP &lt;script&gt;</p>'
+  );
+  assertEggFree(compassTargetLine('Ridge Bandit · 28 HP', 'Ridge Bandit'));
+
+  const greyhavenState = {
+    map: {
+      zoneId: 'greyhaven',
+      x: 2,
+      y: 3,
+      visitedZones: { greyhaven: true },
+      clearedEncounters: {},
+      completedInteractions: {},
+    },
+    flags: {},
+  };
+  const greyhavenHtml = exploreScene.render({ state: greyhavenState, dispatch: () => {} });
+  assert.match(
+    greyhavenHtml,
+    /<p class="quiet-note terrain-compass__target">Target briefing: Ridge Road · Uncharted region \(Danger 1\)<\/p>/
+  );
+
+  const protoCompleted = Object.create({ ridge_supply_cache: true });
+  const protoCleared = Object.create({ observatory_sentinel: true });
+  const customZone = {
+    ...ZONES.ridge_road,
+    interactables: [
+      ...ZONES.ridge_road.interactables,
+      { id: 'repeatable_dummy_cache', kind: 'cache', once: false, name: 'Repeatable Dummy', x: 1, y: 1, rewards: [{ id: 'herb', qty: 1 }] },
+    ],
+  };
+  const protoCheck = getZoneCachesSummary(
+    { map: { zoneId: 'ridge_road', x: 1, y: 3, completedInteractions: protoCompleted, clearedEncounters: protoCleared } },
+    customZone
+  );
+  assert.equal(protoCheck.totalCaches, 1);
+  assert.equal(protoCheck.openedCount, 0);
+  assert.equal(protoCheck.readyCount, 1);
 });
