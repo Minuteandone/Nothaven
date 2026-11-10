@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { assertEggFree } from './helpers/eggGuard.mjs';
-import { compassRouteLine } from '../src/ui/exploration.js';
+import { compassRouteLine, zoneWeatherLine } from '../src/ui/exploration.js';
 import { createInitialState } from '../src/state.js';
 import { installStory } from '../src/story/integration.js';
 import {
@@ -2612,4 +2612,48 @@ test("getFieldPackSummary summarizes empty and populated field packs by category
   assert.ok(exploringLines.some((line) => line.includes("Terrain compass lists open and blocked adjacent ways")));
   assert.ok(exploringLines.some((line) => line.includes("Field Pack summarizes your carried stacks by category")));
   for (const line of exploringLines) assertEggFree(line, "guide Exploring line");
+});
+
+test('zoneWeatherLine, .zone-weather-summary, .zone-checklist__patrols, and getPatrolBriefing scouted drop fields work without mutating state', () => {
+  assert.equal(zoneWeatherLine(''), '');
+  assert.equal(zoneWeatherLine(null), '');
+  assert.equal(
+    zoneWeatherLine('Coastal Squall: Rain <heavy> & wind'),
+    '<p class="quiet-note zone-weather-summary">Coastal Squall: Rain &lt;heavy&gt; &amp; wind</p>',
+  );
+
+  const state = createInitialState();
+  ensureMapState(state);
+  travelToZone(state, 'ridge_road');
+  const snapBefore = JSON.stringify(state);
+
+  const unscoutedPatrol = getPatrolBriefing(state, 'ridge_road');
+  assert.equal(JSON.stringify(state), snapBefore, 'getPatrolBriefing must not mutate state');
+  assert.ok(unscoutedPatrol.hostiles.every((h) => Array.isArray(h.drops) && h.drops.length === 0 && h.dropSummary === null));
+
+  const htmlUnscouted = exploreScene.render({ state });
+  assert.match(
+    htmlUnscouted,
+    /<p class="quiet-note zone-weather-summary">Coastal Squall: .* · Danger 1 · Step ambush: 12% · Modifiers: Standard frontier conditions<\/p>/,
+  );
+  assert.match(
+    htmlUnscouted,
+    /<p class="zone-checklist__patrols">Step ambush: 12% · Roaming \(0\/4 scouted\): Unscouted hostile \(33%\), Unscouted hostile \(17%\), Unscouted hostile \(33%\), Unscouted hostile \(17%\)<\/p>/,
+  );
+
+  state.bestiary = { storm_rat: 1 };
+  const scoutedPatrol = getPatrolBriefing(state, 'ridge_road');
+  const ratEntry = scoutedPatrol.hostiles.find((h) => h.enemyId === 'storm_rat');
+  assert.ok(ratEntry);
+  assert.ok(Array.isArray(ratEntry.drops) && ratEntry.drops.length > 0);
+  assert.match(ratEntry.dropSummary, /%\)/);
+  const unscoutedEntry = scoutedPatrol.hostiles.find((h) => !h.known);
+  assert.deepEqual(unscoutedEntry.drops, []);
+  assert.equal(unscoutedEntry.dropSummary, null);
+
+  const htmlScouted = exploreScene.render({ state });
+  assert.match(
+    htmlScouted,
+    /<p class="zone-checklist__patrols">Step ambush: 12% · Roaming \(1\/4 scouted\): Unscouted hostile \(33%\), Unscouted hostile \(17%\), Storm Rat \(33%, 12 HP\), Unscouted hostile \(17%\)<\/p>/,
+  );
 });
