@@ -538,19 +538,30 @@ export function xpContextLine(combat, hero = {}) {
 /** Victory-screen line listing items used this battle. */
 export function itemsUsedLine(combat) {
   if (!combat || combat.over !== 'victory' || combat.drill === true) return '';
-  const ids = Array.isArray(combat.itemIds) ? combat.itemIds : [];
+  const summary = battleSummary(combat);
+  const ids = Array.isArray(summary.itemIds) ? summary.itemIds : [];
   if (!ids.length) return '';
-  const names = [];
+  // count repeats (e.g. "Bandage ×2, Herbal Salve")
+  const tally = new Map();
+  const labelOrder = [];
   for (const id of ids) {
+    const prev = tally.get(id);
+    if (prev !== undefined) { tally.set(id, prev + 1); continue; }
+    tally.set(id, 1);
+    labelOrder.push(id);
+  }
+  const parts = [];
+  for (const id of labelOrder) {
     try {
       const item = getItem(id);
-      names.push(escapeHTML(item.name));
+      const count = tally.get(id);
+      parts.push(count > 1 ? escapeHTML(item.name) + ' ×' + count : escapeHTML(item.name));
     } catch {
       // skip unknown ids
     }
   }
-  if (!names.length) return '';
-  const label = names.length === 1 ? 'Item used:' : 'Items used:';
-  return `<p class="items-used-line"><span class="items-used-line__label">${label}</span> ${names.join(', ')}.</p>`;
+  if (!parts.length) return '';
+  const label = parts.length === 1 ? 'Item used:' : 'Items used:';
+  return `<p class="items-used-line"><span class="items-used-line__label">${label}</span> ${parts.join(', ')}.</p>`;
 }
 
