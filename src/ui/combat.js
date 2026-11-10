@@ -383,6 +383,11 @@ export function summaryLine(combat, party = []) {
   const companionDamage = sm.companionDamage || Object.create(null);
   const companionIds = Object.keys(companionDamage);
   if (companionIds.length) {
+    const companionTotal = companionIds.reduce((sum, id) => {
+      const amount = Number(companionDamage[id]);
+      return sum + (Number.isFinite(amount) && amount > 0 ? amount : 0);
+    }, 0);
+    parts.push(`Wren: ${Math.max(0, sm.dealt - companionTotal)}`);
     const nameById = Object.create(null);
     for (const m of party) {
       if (m && m.id) nameById[m.id] = m.name || m.id;
