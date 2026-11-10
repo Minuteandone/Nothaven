@@ -324,6 +324,7 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main', ite
           ${unitCard(combat.enemy, { enemy: true, enraged: Boolean(combat.enraged) })}
           ${windupCue(combat)}
           ${incomingDamageHint(combat, hero)}
+          ${knockoutWarning(combat, hero)}
           ${intentPreview(combat)}
         </section>
       </div>
@@ -364,6 +365,31 @@ export function incomingDamageHint(combat, hero) {
   const caveat = 'Estimate using current defenses, not a next-turn prediction.' +
     (windupName ? '' : ' Abilities and other targets differ.');
   return `<p class="incoming-damage-hint"><span class="incoming-damage-label">${escapeHTML(label)}:</span> ${escapeHTML(range)}${escapeHTML(note)} · ${escapeHTML(caveat)}</p>`;
+}
+
+/**
+ * Warns when the foe's estimated next blow (from incomingDamagePreview) could
+ * reach the leader's current HP, and names the support answer that applies.
+ * Returns '' when the leader is safe at the top of the estimate.
+ */
+export function knockoutWarning(combat, hero) {
+  if (!combat || combat.over) return '';
+  const preview = incomingDamagePreview(combat, hero);
+  const hp = Number(hero?.hp);
+  if (!preview || !Number.isFinite(hp) || hp <= 0 || preview.max < hp) return '';
+  const target = hero?.name || 'Wren';
+  const left = `${target} (${hp} HP left)`;
+  let text;
+  if (preview.windupName && !preview.warded) {
+    text = `Unleashed ${preview.windupName} could knock out ${left}. Defend or a ward halves it; a stun or Stillpoint Strike breaks it.`;
+  } else if (preview.windupName) {
+    text = `Even halved, ${preview.windupName} could knock out ${left}. Heal before it lands, or break it with a stun or Stillpoint Strike.`;
+  } else if (!preview.warded) {
+    text = `A basic hit could knock out ${left}. Heal or Defend this turn.`;
+  } else {
+    text = `Even halved, a basic hit could knock out ${left}. Heal this turn.`;
+  }
+  return `<p class="knockout-warning"><span class="knockout-warning__label">Knockout risk:</span> ${escapeHTML(text)}</p>`;
 }
 
 /** Enemy intent hint shown in the opposition panel. */
