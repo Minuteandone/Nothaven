@@ -122,10 +122,14 @@ function noteTaken(c, d) {
 }
 
 /** Track consumable usage per battle, for the cumulative Service Record tally. */
-export function noteItemUsed(c) {
+export function noteItemUsed(c, itemId = null) {
   if (!c || typeof c !== 'object') return;
   const st = battleStats(c);
   st.itemsUsed = (st.itemsUsed || 0) + 1;
+  if (typeof itemId === 'string' && itemId) {
+    if (!Array.isArray(st.itemsUsedIds)) st.itemsUsedIds = [];
+    st.itemsUsedIds.push(itemId);
+  }
 }
 
 function noteCompanionDamage(c, companionId, d, preHitHp) {
@@ -151,6 +155,7 @@ export function battleSummary(c) {
     taken: st.taken || 0,
     bursts: st.bursts || 0,
     itemsUsed: st.itemsUsed || 0,
+    itemIds: Array.isArray(st.itemsUsedIds) ? [...st.itemsUsedIds] : [],
     companionDamage,
   };
 }

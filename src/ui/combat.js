@@ -197,7 +197,7 @@ function lockedSkillsHtml(hero, combat) {
 
 function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
   if (combat.over) {
-    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat, party) + rewardsLine(combat) + xpContextLine(combat, party[0]) + featsEarnedLine(combat) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
+    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat, party) + rewardsLine(combat) + xpContextLine(combat, party[0]) + featsEarnedLine(combat) + itemsUsedLine(combat) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'skills') {
     const skills = knownSkills(hero).map((skill, index) => {
@@ -534,5 +534,34 @@ export function xpContextLine(combat, hero = {}) {
   if (level >= MAX_LEVEL) return '<p class="xp-context">Level 20 — maximum level reached.</p>';
   const remaining = xpToNext({ level, xp });
   return `<p class="xp-context">${remaining} XP to level ${level + 1}.</p>`;
+}
+/** Victory-screen line listing items used this battle. */
+export function itemsUsedLine(combat) {
+  if (!combat || combat.over !== 'victory' || combat.drill === true) return '';
+  const summary = battleSummary(combat);
+  const ids = Array.isArray(summary.itemIds) ? summary.itemIds : [];
+  if (!ids.length) return '';
+  // count repeats (e.g. "Bandage ×2, Herbal Salve")
+  const tally = new Map();
+  const labelOrder = [];
+  for (const id of ids) {
+    const prev = tally.get(id);
+    if (prev !== undefined) { tally.set(id, prev + 1); continue; }
+    tally.set(id, 1);
+    labelOrder.push(id);
+  }
+  const parts = [];
+  for (const id of labelOrder) {
+    try {
+      const item = getItem(id);
+      const count = tally.get(id);
+      parts.push(count > 1 ? escapeHTML(item.name) + ' ×' + count : escapeHTML(item.name));
+    } catch {
+      // skip unknown ids
+    }
+  }
+  if (!parts.length) return '';
+  const label = parts.length === 1 ? 'Item used:' : 'Items used:';
+  return `<p class="items-used-line"><span class="items-used-line__label">${label}</span> ${parts.join(', ')}.</p>`;
 }
 
