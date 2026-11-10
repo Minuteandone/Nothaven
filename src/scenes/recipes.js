@@ -4,7 +4,7 @@
 // whole book at once. Data-driven over RECIPES, so new recipes appear here
 // automatically.
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { getItem, isKnownItem } from '../items/items.js';
+import { getItem, isKnownItem, useEffectLine } from '../items/items.js';
 import { countItem } from '../items/inventory.js';
 
 const esc = (v) =>
@@ -12,6 +12,34 @@ const esc = (v) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const labelFor = (id) => (isKnownItem(id) ? getItem(id).name : id);
+
+function equipmentEffectLine(item) {
+  const stats = item?.stats;
+  if (!stats || typeof stats !== 'object') return '';
+  const parts = [];
+  if (stats.atk) parts.push(`ATK+${stats.atk}`);
+  if (stats.def) parts.push(`DEF+${stats.def}`);
+  if (stats.hp) parts.push(`HP+${stats.hp}`);
+  if (stats.mp) parts.push(`MP+${stats.mp}`);
+  if (stats.spd) parts.push(`SPD+${stats.spd}`);
+  return parts.length ? `Equip: ${parts.join(' · ')}` : '';
+}
+
+/**
+ * Pure catalog-derived effect lines for a recipe's known outputs. Unknown or
+ * effect-less outputs are omitted; recipeSummary still lists every output.
+ * @param {object|null|undefined} recipe recipe-like object
+ * @returns {string[]} fresh display strings, never mutating the recipe
+ */
+export function recipeOutputLines(recipe) {
+  if (!recipe || typeof recipe !== 'object' || !Array.isArray(recipe.outputs)) return [];
+  return recipe.outputs.flatMap((output) => {
+    if (!output || !isKnownItem(output.id)) return [];
+    const item = getItem(output.id);
+    const effect = [useEffectLine(item), equipmentEffectLine(item)].filter(Boolean).join(' · ');
+    return effect ? [`${item.name} — ${effect}`] : [];
+  });
+}
 
 /** Pure helper: one entry per recipe, with have/need counts against `inv`. */
 export function recipeBookEntries(inv) {
@@ -54,10 +82,15 @@ function entryHtml({ recipe, ready, inputs }) {
   const status = ready
     ? '<span class="recipe-status ready">Ready to craft</span>'
     : '<span class="recipe-status">Missing materials</span>';
+  const outputs = recipeOutputLines(recipe);
+  const outputList = outputs.length
+    ? `<ul class="recipe-output-effects" aria-label="Crafted item effects">${outputs.map((line) => `<li class="recipe-output-effect" data-recipe="${esc(recipe.id)}" data-ready="${ready}">${esc(line)}</li>`).join('')}</ul>`
+    : '';
   return `<li class="recipe-entry">
-    <h3>${esc(recipe.name)} ${status}</h3>
+    <h3 class="recipe-heading${ready ? ' is-ready' : ''}" data-recipe="${esc(recipe.id)}">${esc(recipe.name)} ${status}</h3>
     <p><em>${esc(recipe.description || '')}</em></p>
     <p class="recipe-line">${esc(recipeSummary(recipe))}</p>
+    ${outputList}
     <ul class="craft-checklist">${checklist}</ul>
   </li>`;
 }
