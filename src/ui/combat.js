@@ -569,8 +569,8 @@ export function performanceLine(combat, hero = {}) {
   if (!combat || combat.over !== 'victory' || combat.drill === true) return '';
   const maxHp = Number.isFinite(Number(hero?.maxHp)) ? Number(hero.maxHp) : 0;
   if (maxHp <= 0) return '';
-  const hp = Number.isFinite(Number(hero?.hp)) ? Number(hero.hp) : maxHp;
-  const damageTaken = Math.max(0, maxHp - hp);
+  const taken = Number.isFinite(Number(combat?.stats?.taken)) ? Number(combat.stats.taken) : 0;
+  const damageTaken = Math.min(taken, maxHp);
   const ratio = damageTaken / maxHp;
   let label;
   if (damageTaken === 0) label = 'Flawless \u2014 no blows landed.';

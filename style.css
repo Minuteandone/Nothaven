@@ -950,25 +950,25 @@ em.enraged {
 .character-level { position: absolute; inset: auto 1rem 1rem auto; padding: .45rem .7rem; border: 1px solid rgba(242, 207, 125, .55); border-radius: 999px; color: #ffe7a6; background: rgba(9, 20, 32, .9); font-size: .78rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .character-identity__copy { padding-inline: .25rem; }
 .character-identity__copy h2 { margin: .15rem 0 .3rem; font-size: 2rem; }
-.character-identity__copy > p:last-child { margin-top: 0; color: var(--text-muted); }
+.character-identity__copy > p:last-child { margin-top: 0; color: var(--muted); }
 .character-vitals { display: grid; gap: .8rem; margin-top: auto; padding-top: 1.25rem; }
 .character-details { min-width: 0; display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 1.25rem; }
 .character-details .panel { margin: 0; min-width: 0; }
 .character-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
 .character-section-heading h2 { margin: .15rem 0 0; font-size: 1.55rem; }
 .character-section-heading > strong { flex: none; color: var(--gold-light); }
-.character-section-note { max-width: 12rem; color: var(--text-muted); font-size: .78rem; line-height: 1.5; text-align: right; }
+.character-section-note { max-width: 12rem; color: var(--muted); font-size: .78rem; line-height: 1.5; text-align: right; }
 .character-experience { display: flex; flex-direction: column; }
 .character-experience .meter { margin-block: auto 1rem; padding-block: 1rem; }
 .character-experience .meter__fill { background: linear-gradient(90deg, #b58336, #f2cf7d); }
-.character-xp-notes { display: grid; gap: .5rem; color: var(--text-muted); font-size: .82rem; }
+.character-xp-notes { display: grid; gap: .5rem; color: var(--muted); font-size: .82rem; }
 .character-xp-notes span:first-child { color: var(--text); font-weight: 700; }
 .character-max-level { margin-block: 1rem; padding: 1rem; border: 1px solid rgba(242, 207, 125, .35); border-radius: .65rem; color: #ffe7a6; background: rgba(242, 207, 125, .07); line-height: 1.6; }
 .character-stat-table-wrap { overflow-x: auto; }
 .character-stat-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .character-stat-table th, .character-stat-table td { padding: .65rem .45rem; border-bottom: 1px solid var(--line-soft); text-align: right; white-space: nowrap; }
 .character-stat-table th:first-child { text-align: left; }
-.character-stat-table thead th { color: var(--text-muted); font-size: .7rem; letter-spacing: .04em; text-transform: uppercase; }
+.character-stat-table thead th { color: var(--muted); font-size: .7rem; letter-spacing: .04em; text-transform: uppercase; }
 .character-stat-table tbody th { font-size: .85rem; font-weight: 600; }
 .character-stat-table tbody tr:last-child th, .character-stat-table tbody tr:last-child td { border-bottom: 0; }
 .character-stat-table td:last-child strong { color: #ffe7a6; font-size: 1.05rem; }
@@ -978,19 +978,19 @@ em.enraged {
 .equipment-card { min-width: 0; display: flex; gap: .8rem; padding: 1rem; border: 1px solid var(--line-soft); border-radius: .7rem; background: rgba(8, 20, 32, .3); }
 .equipment-card__icon { flex: none; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border: 1px solid rgba(242, 207, 125, .28); border-radius: .55rem; color: var(--gold-light); background: rgba(242, 207, 125, .06); }
 .equipment-card h3 { margin: .2rem 0 .35rem; font-size: 1.05rem; overflow-wrap: anywhere; }
-.equipment-card p:last-child { margin: 0; color: var(--text-muted); font-size: .8rem; line-height: 1.5; overflow-wrap: anywhere; }
-.character-skills__intro { max-width: 48rem; margin-top: -.3rem; color: var(--text-muted); }
+.equipment-card p:last-child { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.5; overflow-wrap: anywhere; }
+.character-skills__intro { max-width: 48rem; margin-top: -.3rem; color: var(--muted); }
 .character-skill-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; margin: 0; padding: 0; list-style: none; }
 .skill-record { min-width: 0; padding: 1rem; border: 1px solid var(--line-soft); border-radius: .7rem; background: rgba(8, 20, 32, .3); }
 .skill-record--known { border-left: 3px solid #d8b45e; }
 .skill-record--locked { background: rgba(8, 20, 32, .18); }
-.skill-record--locked h3, .skill-record--locked > p { color: var(--text-muted); }
+.skill-record--locked h3, .skill-record--locked > p { color: var(--muted); }
 .skill-record__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
 .skill-record h3 { margin: 0; font-size: 1.05rem; overflow-wrap: anywhere; }
-.skill-availability { flex: none; padding: .22rem .45rem; border: 1px solid var(--line-soft); border-radius: 999px; color: var(--text-muted); font-size: .66rem; font-weight: 700; }
+.skill-availability { flex: none; padding: .22rem .45rem; border: 1px solid var(--line-soft); border-radius: 999px; color: var(--muted); font-size: .66rem; font-weight: 700; }
 .skill-record--known .skill-availability { border-color: rgba(143, 212, 180, .4); color: #a9e3c8; }
 .skill-record > p { margin: .65rem 0; font-size: .86rem; line-height: 1.6; }
-.skill-record__meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; color: var(--text-muted); font-size: .73rem; }
+.skill-record__meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; color: var(--muted); font-size: .73rem; }
 .skill-record__meta span { display: inline-flex; align-items: center; gap: .3rem; }
 .skill-record__meta .ui-icon { width: 1rem; height: 1rem; }
 .character-footer { display: flex; justify-content: flex-end; padding-top: .25rem; }
@@ -1663,5 +1663,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 
 .items-used-line,.combat-outcome p.items-used-line { color: var(--good); }
 .items-used-line__label { font-weight: 600; }
-.performance-line,.combat-outcome p.performance-line { margin: .25rem 0 0; font-size: .85rem; color: var(--text-muted); }
+.performance-line,.combat-outcome p.performance-line { margin: .25rem 0 0; font-size: .85rem; color: var(--muted); }
 .performance-line__label { font-weight: 600; }
