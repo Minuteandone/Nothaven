@@ -1639,3 +1639,7 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .bounty__hunt-total { margin: .15rem 0 0; font-size: .8rem; color: var(--muted); }
 
 .bounties__posted { margin: .25rem 0; color: var(--muted); }
+
+/* Knockout risk line beneath the incoming damage hint (src/ui/combat.js knockoutWarning). */
+.knockout-warning{margin:.25rem 0 0;font-size:.85rem;color:var(--bad)}
+.knockout-warning__label{font-weight:600}
