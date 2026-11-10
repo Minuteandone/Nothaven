@@ -373,6 +373,7 @@ export function incomingDamageHint(combat, hero) {
  * Returns '' when the leader is safe at the top of the estimate.
  */
 export function knockoutWarning(combat, hero) {
+  if (!combat || combat.over) return '';
   const preview = incomingDamagePreview(combat, hero);
   const hp = Number(hero?.hp);
   if (!preview || !Number.isFinite(hp) || hp <= 0 || preview.max < hp) return '';
