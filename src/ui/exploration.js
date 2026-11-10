@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { getEncounterPreview, getExpeditionLogSummary, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldPackSummary, getFieldServicesSummary, getFrontierAtlas, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getPatrolBriefing, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneContactsSummary, getZoneStationsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { getEncounterPreview, getExpeditionLogSummary, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldPackSummary, getFieldServicesSummary, getFrontierAtlas, getFrontierWeatherSummary, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getPatrolBriefing, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneContactsSummary, getZoneStationsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -273,15 +273,18 @@ function frontierAtlasPanel(state, zone, mapState) {
   const effectiveState = state ? { ...state, map: effectiveMap } : { map: effectiveMap };
   const services = getFieldServicesSummary(effectiveState);
   const expedition = getExpeditionProgressSummary(effectiveState);
+  const weather = getFrontierWeatherSummary(effectiveState);
   const actsTooltip = expedition.acts.map(act => act.summary).join(' | ');
   const totalsLine = `<p class="frontier-atlas__totals">Total threats cleared: ${atlas.totalEncountersCleared}/${atlas.totalEncounters} · Caches opened: ${atlas.totalCachesOpened}/${atlas.totalCaches}</p>`;
   const actsLine = `<p class="frontier-atlas__acts" title="${escapeHTML(actsTooltip)}">${escapeHTML(expedition.summary)}</p>`;
+  const weatherLine = `<p class="frontier-atlas__weather">${escapeHTML(weather.summary)}</p>`;
   const servicesLine = `<p class="frontier-atlas__services">${escapeHTML(services.summary)}</p>`;
   const packLine = `<p class="frontier-atlas__pack">${escapeHTML(services.packSummary)}</p>`;
   return `<details class="shortcut-guide frontier-atlas"><summary>Frontier atlas (${atlas.zonesVisited}/${atlas.zonesTotal} regions · ${atlas.overallPercent}% recon)</summary>
     <ul class="frontier-atlas__list" aria-label="Charted frontier regions">${items}</ul>
     ${totalsLine}
     ${actsLine}
+    ${weatherLine}
     ${servicesLine}
     ${packLine}
     ${unchartedLine}
