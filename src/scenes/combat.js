@@ -239,7 +239,7 @@ export const combatScene = {
       if (!res.ok) { commit(game, [res.message]); return; }
       Object.assign(target, res.actor);
       game.state.inventory = res.inv;
-      noteItemUsed(c);
+      noteItemUsed(c, el?.dataset?.arg);
       const cure = res.effects?.cure;
       const timers = target === hero ? c.heroTimers
         : (Object.prototype.hasOwnProperty.call(c.allyTimers || {}, target.id) ? c.allyTimers[target.id] : null);
