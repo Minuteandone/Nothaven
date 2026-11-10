@@ -52,6 +52,50 @@ try {
         assert.ok(bounds.length > 0 && bounds.every(Boolean), `${id} ${label}: controls and labels fit`);
         await page.screenshot({ path: path.join(artifacts, `${id}-${label}.png`), fullPage: true });
       };
+      const answered = async (expected, label, geometry = false) => {
+        assert.ok(expected === 0 || expected === 1, 'this earned route answers only one distinct contract');
+        const before = await state(), raw = await quick();
+        const line = page.locator('#app .bounties__answered');
+        assert.equal(await line.count(), expected, `${id} ${label}: answered notice presence`);
+        if (expected === 1) {
+          assert.equal(await line.textContent(), 'Notices answered: 1 of 18 — claim the other 17 once each to earn “Every Notice Answered”.');
+          assert.equal(await line.evaluate(n => n.tagName === 'P'
+            && !n.closest('[aria-live], [role="status"], [role="alert"]')
+            && n.previousElementSibling?.classList.contains('bounties__posted')
+            && n.nextElementSibling?.classList.contains('bounties__rank')), true,
+          'answered count is an ordinary paragraph between posted notices and rank');
+          if (geometry) {
+            await line.scrollIntoViewIfNeeded(); await page.mouse.move(0, 0); await page.waitForTimeout(250);
+            assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);
+            assert.equal(await line.evaluate(n => {
+              const box = n.getBoundingClientRect(), range = document.createRange();
+              range.selectNodeContents(n);
+              const glyphs = [...range.getClientRects()];
+              return glyphs.length > 0 && box.left >= 0 && box.right <= innerWidth + 1
+                && glyphs.every(g => g.width > 0 && g.height > 0
+                  && g.left >= box.left - 1 && g.right <= box.right + 1
+                  && g.top >= box.top - 1 && g.bottom <= box.bottom + 1);
+            }), true, `${id} ${label}: answered glyphs fit paragraph and viewport`);
+            await page.screenshot({ path: path.join(artifacts, `${id}-${label}-answered.png`), fullPage: true });
+          }
+        }
+        assert.deepEqual(await state(), before, 'answered notice observation preserves the whole journey');
+        assert.equal(await quick(), raw, 'answered notice observation never rewrites quick save');
+      };
+      const answeredView = async (expected, label) => {
+        const before = await state(), raw = await quick();
+        const unchanged = async () => {
+          assert.deepEqual(await state(), before, 'answered notice Display controls preserve the whole journey');
+          assert.equal(await quick(), raw, 'answered notice Display controls never rewrite quick save');
+        };
+        for (const scale of ['115', '130']) {
+          await page.locator('[aria-controls="display-settings"]').click(); await unchanged();
+          await page.locator('[data-display-scale]').selectOption(scale); await unchanged();
+          await page.locator('[data-display-done]').click(); await unchanged();
+          await answered(expected, `${label}-${scale}`, true);
+          await unchanged();
+        }
+      };
       const walk = async (tx, ty) => {
         // Catalog and state are observed only. Every selected step is a native click.
         const route = await page.evaluate(async ({ tx, ty }) => {
@@ -184,7 +228,7 @@ try {
         assert.deepEqual(await state(), before);
         assert.equal(await quick(), raw);
       };
-      const checkSort = async (label, boardTitles, claimTitles, locked) => {
+      const checkSort = async (label, boardTitles, claimTitles, locked, expectedAnswered = 0) => {
         const before = await state(), raw = await quick();
         const region = await page.locator('[data-action="filterBounties"][aria-pressed="true"]').getAttribute('data-arg').catch(() => null);
         assert.deepEqual(await page.locator('[data-action="sortBounties"]').evaluateAll(ns => ns.map(n => n.dataset.arg)), ['board', 'pay', 'claims', 'easiest']);
@@ -201,15 +245,22 @@ try {
           assert.equal(await page.locator('[data-action="filterBounties"][aria-pressed="true"]').getAttribute('data-arg').catch(() => null), region);
           assert.deepEqual(await state(), before, 'sorting is free and preserves the entire earned state');
           assert.equal(await quick(), raw, 'sorting never rewrites quick save');
+          await answered(expectedAnswered, `sort-${label}-${sort}`);
           await fit(`sort-${label}-${sort}`, '#app [data-action="sortBounties"]');
         }
       };
       const exchangeView = async (label, expectedText, available, earned, spent, enabledIds, dressings) => {
         const before = await state(), raw = await quick();
+        const unchanged = async () => {
+          assert.deepEqual(await state(), before, 'Exchange Display controls preserve the whole journey');
+          assert.equal(await quick(), raw, 'Exchange Display controls never rewrite quick save');
+        };
         for (const scale of ['115', '130']) {
-          await page.locator('[aria-controls="display-settings"]').click();
-          await page.locator('[data-display-scale]').selectOption(scale);
-          await page.locator('[data-display-done]').click();
+          await page.locator('[aria-controls="display-settings"]').click(); await unchanged();
+          await page.locator('[data-display-scale]').selectOption(scale); await unchanged();
+          await page.locator('[data-display-done]').click(); await unchanged();
+          // Earned is a literal fixture argument: no production helper supplies this expectation.
+          await answered(earned === 0 ? 0 : 1, `exchange-${label}-${scale}`, true);
           const line = page.locator('.exchange__afford');
           assert.equal(await line.textContent(), expectedText);
           assert.equal(await line.getAttribute('role'), null, 'static affordability is not a live status');
@@ -267,10 +318,12 @@ try {
         assert.equal((await state()).bestiary.storm_rat, 1);
         await exit('greyhaven'); await click('toTownScene'); await click('bounties');
         const unlocked = await state();
+        await answered(0, 'unlocked');
         await fit('unlocked', '#app button');
         await click('acceptBounty', 'ridge_rats');
         const active = await state();
         assert.deepEqual(active, { ...unlocked, bounties: { active: 'ridge_rats', progress: 0, completed: {}, spent: 0 } });
+        await answered(0, 'active');
         await fit('active', '#app button');
         const rawFilter = await quick();
         assert.deepEqual(await page.locator('[data-action="filterBounties"]').evaluateAll(ns => ns.map(n => n.dataset.arg)), ['', 'Ridge Road', 'Observatory Ruins', 'Highwatch Pass']);
@@ -280,6 +333,7 @@ try {
           ['Ridge Road', ['Ridge Road Rat Cull', 'Bandit Toll Road']],
         ]) {
           await click('filterBounties', region);
+          await answered(0, `filter-${region.replaceAll(' ', '-')}`);
           assert.deepEqual(await page.locator('.bounty__title').allTextContents(), titles);
           assert.equal(await page.locator('.bounty--active').count(), 1);
           const note = await page.locator('.bounties__filter-note').textContent();
@@ -324,6 +378,7 @@ try {
         await checkpoint((await state()).story.stage, 'completed-unclaimed');
         await journal(4, 'reloaded-ready');
         await exit('greyhaven'); await click('toTownScene'); await click('bounties');
+        await answered(0, 'completed-unclaimed-reloaded');
         await fit('ready', '#app button');
         const beforeClaim = await state(); await click('claimBounty'); const claimed = await state();
         const expected = structuredClone(beforeClaim);
@@ -332,16 +387,28 @@ try {
         if (scrap) scrap.qty++; else expected.inventory.push({ id: 'scrap_metal', qty: 1 });
         expected.bounties = { active: null, progress: 0, completed: { ridge_rats: 1 }, spent: 0 };
         assert.deepEqual(claimed, expected, 'only advertised reward and contract state change');
+        await answeredView(1, 'first-claim');
+        const claimedQuick = await quick();
+        for (const region of ['Ridge Road', 'Highwatch Pass', 'Observatory Ruins', '']) {
+          await click('filterBounties', region);
+          assert.equal(await control('filterBounties', region).getAttribute('aria-pressed'), 'true');
+          assert.deepEqual(await state(), claimed, 'paid region filtering preserves the whole journey');
+          assert.equal(await quick(), claimedQuick, 'paid region filtering never rewrites quick save');
+          await answered(1, `paid-filter-${region.replaceAll(' ', '-') || 'all'}`);
+        }
         assert.equal(await page.locator('[data-action="claimBounty"]').count(), 0);
         await fit('claimed', '#app button');
         await click('acceptBounty', 'ridge_rats');
         assert.deepEqual((await state()).bounties, { active: 'ridge_rats', progress: 0, completed: { ridge_rats: 1 }, spent: 0 });
+        await answered(1, 'reaccepted');
         await click('abandonBounty'); assert.deepEqual(await state(), claimed, 'abandon retains rewards and resets only fresh contract');
+        await answered(1, 'abandoned');
         await click('closeBounties'); await journal(null, 'claimed'); await click('explore');
         await checkpoint((await state()).story.stage, 'claimed-home');
         // Repeat actual patrol contracts: claims two and three pay 30; claim four pays 33.
         for (let count = 2; count <= 4; count++) {
           await click('toTownScene'); await click('bounties');
+          await answered(1, `repeat-${count}-entry`);
           await click('acceptBounty', 'ridge_rats');
           assert.deepEqual((await state()).bounties, { active: 'ridge_rats', progress: 0, completed: { ridge_rats: count - 1 }, spent: 0 });
           await click('closeBounties'); await click('rest'); await click('explore');
@@ -362,12 +429,15 @@ try {
           assert.equal((await page.locator('#app').textContent()).includes('Board rank raised to Contract Hand.'),count === 3);
           assert.match(await page.locator('.bounties__rank').textContent(),count >= 3 ? /Contract Hand \(\+10% gold\)/:/Notice Runner \(\+0% gold\)/);
           assert.equal(await control('claimBounty').count(),0);
+          await answered(1, `repeat-${count}-paid`);
+          if (count === 4) await answeredView(1, 'fourth-claim');
           await fit(`claim-${count}`, '#app button');
-          await checkSort(`paid-${count}`, ['Ridge Road Rat Cull', 'Bandit Toll Road'], ['Bandit Toll Road', 'Ridge Road Rat Cull'], 16);
+          await checkSort(`paid-${count}`, ['Ridge Road Rat Cull', 'Bandit Toll Road'], ['Bandit Toll Road', 'Ridge Road Rat Cull'], 16, 1);
           await click('closeBounties'); await serviceRank(count >= 3 ? 'Contract Hand':'Notice Runner',`claim-${count}`); await click('explore');
           await checkpoint((await state()).story.stage,`claim-${count}-saved`);
           await click('toTownScene'); await click('bounties');
           assert.match(await page.locator('.bounties__rank').textContent(),count >= 3 ? /Contract Hand/:/Notice Runner/);
+          await answered(1, `repeat-${count}-reloaded`);
           await click('closeBounties'); await click('explore');
         }
         // These four marks came from the original four complete patrol contracts above.
@@ -450,8 +520,9 @@ try {
         await click('leave'); await click('bounties');
         assert.deepEqual(await state(), initializedBoard, 'returning from Bag preserves the entire Board state including initialized empty equipment');
         assert.equal(await quick(), earnedQuick);
+        await answered(1, 'returned-from-earned-bag');
         assert.deepEqual(errors, []);
-        console.log(`PASS ${id}: earned native sorting/locked-last/non-tied claims/reset and mastery Record 0→1; earned regional filters/active-outside count/reset; Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33 plus a mastery Scrap Metal, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained; Exchange 4 earned marks, 2 spent, +2 Dressings and whole Save/Reload, literal hints and 115/130% geometry; earned Dressing Details literal shop/Exchange sources, Enter/focus/expanded/reset/whole-state checks; errors []`);
+        console.log(`PASS ${id}: native Notices answered absent→1 and stays 1 through four real Rat claims, sorting, Exchange spending and Save/Reload; first/fourth claim and Exchange 115/130% non-live paragraph/glyph geometry with whole-state/raw-save checks (not all 18 contracts); earned native sorting/locked-last/non-tied claims/reset and mastery Record 0→1; earned regional filters/active-outside count/reset; Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33 plus a mastery Scrap Metal, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained; Exchange 4 earned marks, 2 spent, +2 Dressings and whole Save/Reload, literal hints and 115/130% geometry; earned Dressing Details literal shop/Exchange sources, Enter/focus/expanded/reset/whole-state checks; errors []`);
       } catch (error) {
         await page.screenshot({ path: path.join(artifacts, `${id}-failure.png`), fullPage: true }).catch(() => {});
         console.error(`FAIL ${id}; browser errors: ${JSON.stringify(errors)}`);
