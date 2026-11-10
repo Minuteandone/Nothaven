@@ -197,7 +197,7 @@ function lockedSkillsHtml(hero, combat) {
 
 function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
   if (combat.over) {
-    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat, party) + rewardsLine(combat) + xpContextLine(combat, party[0]) + featsEarnedLine(combat) + itemsUsedLine(combat) + performanceLine(combat, party[0]) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
+    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat, party) + rewardsLine(combat) + xpContextLine(combat, party[0]) + featsEarnedLine(combat) + itemsUsedLine(combat) + performanceLine(combat, party[0]) : defeatClosenessLine(combat)}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'skills') {
     const skills = knownSkills(hero).map((skill, index) => {
@@ -580,4 +580,22 @@ export function performanceLine(combat, hero = {}) {
   else label = 'Victory by a thread.';
   return `<p class="performance-line"><span class="performance-line__label">Performance:</span> ${label}</p>`;
 }
-
+export function defeatClosenessLine(combat) {
+  if (!combat || combat.over !== 'defeat' || combat.drill === true) return '';
+  const enemy = combat.enemy;
+  if (!enemy) return '';
+  const maxHp = Number.isFinite(Number(enemy.maxHp)) ? Number(enemy.maxHp) : 0;
+  if (maxHp <= 0) return '';
+  const dealt = battleSummary(combat).dealt;
+  const ratio = dealt / maxHp;
+  const rawName = enemy.name || 'the enemy';
+  const name = escapeHTML(rawName);
+  let label;
+  if (dealt === 0) label = `You never landed a blow on ${name}.`;
+  else if (ratio < 0.25) label = `${name} barely felt your attacks.`;
+  else if (ratio < 0.5) label = `${name} was bloodied but far from beaten.`;
+  else if (ratio < 0.75) label = `${name} was heavily wounded.`;
+  else if (ratio < 0.9) label = `${name} was on the brink of collapse.`;
+  else label = `${name} had mere moments left.`;
+  return `<p class="defeat-closeness-line"><span class="defeat-closeness-line__label">How close:</span> ${label}</p>`;
+}
