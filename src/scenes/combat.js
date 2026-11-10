@@ -9,6 +9,7 @@ import { recordDrillWin, recordGauntlet, validGauntlet } from './drills.js';
 // Greyhaven (half max HP, lose half gold) via recoverFromDefeat.
 import {
   createCombat, heroAction, afterHeroAction, beginRound, enemyTurn, heroStats, victoryRewards, battleSummary,
+  noteItemUsed,
 } from '../combat/rules.js';
 import { rollLoot } from '../items/loot.js';
 import { ZONES } from '../map/zones.js';
@@ -41,7 +42,7 @@ function resolveVictory(game, lines) {
   c.log.push(...lines);
   lines.length = 0;
   // Progression listens to this and appends level-up lines to c.log.
-  game.bus.emit('combat:victory', { enemyId: c.enemy.id, encounterId: c.encounterId });
+  game.bus.emit('combat:victory', { enemyId: c.enemy.id, encounterId: c.encounterId, stats: battleSummary(c) });
   void hero;
 }
 
@@ -229,6 +230,7 @@ export const combatScene = {
       if (!res.ok) { commit(game, [res.message]); return; }
       Object.assign(target, res.actor);
       game.state.inventory = res.inv;
+      noteItemUsed(c);
       const cure = res.effects?.cure;
       const timers = target === hero ? c.heroTimers
         : (Object.prototype.hasOwnProperty.call(c.allyTimers || {}, target.id) ? c.allyTimers[target.id] : null);

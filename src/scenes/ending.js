@@ -84,6 +84,18 @@ export function journalText(state) {
   return `Field Journal: ${seen} of ${ids.length} foes recorded`;
 }
 
+/** Cumulative lifetime battle stats from the Service Record. Returns null when all counters are zero. */
+export function cumulativeStatsText(state) {
+  const l = ledgerOf(state);
+  const parts = [];
+  if (l.totalRounds > 0) parts.push(`Rounds fought: ${l.totalRounds}`);
+  if (l.totalDealt > 0) parts.push(`Damage dealt: ${l.totalDealt}`);
+  if (l.totalTaken > 0) parts.push(`Damage taken: ${l.totalTaken}`);
+  if (l.totalBursts > 0) parts.push(`Beacon Bursts fired: ${l.totalBursts}`);
+  if (l.totalItemsUsed > 0) parts.push(`Items used in battle: ${l.totalItemsUsed}`);
+  return parts.length > 0 ? parts : null;
+}
+
 /** "Current difficulty: Label" — the preset selected now, not a run history. */
 // Sparring drills won across every restaged boss, plus the best Yard Gauntlet
 // run. Null until the party has won a drill or run the gauntlet.
@@ -149,6 +161,7 @@ export const endingScene = {
         ${companionsText(s) ? `<li class="ending-companions">${esc(companionsText(s))}</li>` : ''}
         <li class="ending-battles">${esc(battlesText(s))}</li>
         <li class="ending-journal">${esc(journalText(s))}</li>
+        ${cumulativeStatsText(s) ? cumulativeStatsText(s).map((l) => `<li class="ending-cumulative">${esc(l)}</li>`).join('') : ''}
         <li class="ending-feats">Wardens’ Feats earned: ${esc(String(featsEarned(s)))} of ${esc(String(FEATS.length))}</li>
         ${drillsText(s) ? `<li class="ending-drills">${esc(drillsText(s))}</li>` : ''}
         ${bountyRecordText(s) ? `<li class="ending-bounty-record">${esc(bountyRecordText(s))}</li>` : ''}
