@@ -39,6 +39,7 @@ await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
 
 // Literal expectations are independent of the production Guide catalogue.
+const SUPPORT_SENTENCE = 'Against late bosses and field trials, trading blows alone often falls short: raise Beacon Aegis or Warding Stance before a gathered heavy blow lands, restore the party with Rallying Light or Stormhaven Vigil before health runs low, clear shock with Steady Signal, and keep Rekindle ready for a fallen companion — a party that stays standing keeps dealing damage over a long fight.';
 const rows = [
   ['Exploring', 6, 'guide-exploring'],
   ['Battle', 8, 'guide-battle'],
@@ -167,6 +168,43 @@ try {
             boxes.heading.top >= boxes.dock.bottom + 1,
             `${width}/${scale}/${id} clears dock: ${JSON.stringify(boxes)}`,
           );
+          if (title === 'Battle') {
+            const lines = page.locator('#guide-battle > ul > li');
+            const text = await lines.allTextContents();
+            assert.equal(text.length, 8);
+            assert.equal(text[0].split(SUPPORT_SENTENCE).length - 1, 1);
+            assert.ok(text[0].endsWith(SUPPORT_SENTENCE));
+            assert.ok(text.slice(1).every((line) => !line.includes(SUPPORT_SENTENCE)));
+            const geometry = await lines.first().evaluate((li, sentence) => {
+              const node = li.firstChild;
+              if (node?.nodeType !== Node.TEXT_NODE) throw new Error('Expected Guide text node');
+              const start = node.textContent.indexOf(sentence);
+              if (start < 0) throw new Error('Missing literal support sentence');
+              const range = document.createRange();
+              range.setStart(node, start);
+              range.setEnd(node, start + sentence.length);
+              const b = li.getBoundingClientRect();
+              const rects = [...range.getClientRects()].map((r) => ({
+                left: r.left, right: r.right, top: r.top, bottom: r.bottom,
+              }));
+              return { text: range.toString(), rects,
+                box: { left: b.left, right: b.right, top: b.top, bottom: b.bottom } };
+            }, SUPPORT_SENTENCE);
+            assert.equal(geometry.text, SUPPORT_SENTENCE);
+            assert.ok(geometry.rects.length > 0);
+            for (const r of geometry.rects) {
+              assert.ok(r.left >= geometry.box.left - 1 && r.right <= geometry.box.right + 1);
+              assert.ok(r.left >= -1 && r.right <= width + 1);
+              assert.ok(r.top >= geometry.box.top - 1 && r.bottom <= geometry.box.bottom + 1);
+            }
+            // Scroll only: put the start of the new prose below the measured dock.
+            await page.evaluate((top) => {
+              const dock = document.querySelector('.audio-dock').getBoundingClientRect();
+              window.scrollBy(0, top - dock.bottom - 12);
+            }, geometry.rects[0].top);
+            await page.screenshot({ path: `${artifacts}/${width}-support-${scale}-viewport.png` });
+            assert.deepEqual(await snapshot(), before);
+          }
           if (title === 'Elements')
             await page.screenshot({
               path: `${artifacts}/${width}-elements-${scale}-viewport.png`,
@@ -264,12 +302,37 @@ try {
       await contentsClear();
       assert.deepEqual(await snapshot(), before);
       await control('closeGuide').click();
+      await control('guide').click();
+      assert.deepEqual(await snapshot(), before);
+      let battleFound = false;
+      for (let n = 0; n < 30; n++) {
+        await page.keyboard.press('Tab');
+        if (await page.evaluate(() => document.activeElement?.getAttribute('href') === '#guide-battle')) {
+          battleFound = true;
+          break;
+        }
+      }
+      assert.ok(battleFound, 'Battle reachable by native Tab');
+      await page.keyboard.press('Enter');
+      assert.equal(new URL(page.url()).hash, '#guide-battle');
+      await inView('guide-battle');
+      assert.deepEqual(await snapshot(), before);
+      await page.keyboard.press('Tab');
+      assert.ok(await page.evaluate(() =>
+        document.activeElement?.closest('section')?.id === 'guide-battle' &&
+        document.activeElement?.getAttribute('href') === '#guide-contents'),
+        'Battle back link is next native Tab stop');
+      await page.keyboard.press('Enter');
+      assert.equal(new URL(page.url()).hash, '#guide-contents');
+      await contentsClear();
+      assert.deepEqual(await snapshot(), before);
+      await control('closeGuide').click();
       await control('newGame').click();
       assert.equal((await snapshot()).state.scene, 'town');
       assert.equal((await snapshot()).quick, null);
       assert.deepEqual(errors, []);
       console.log(
-        `PASS ${width}: seven literal links and native destinations at115/130, link/text/document bounds, every clicked section and Contents heading clears measured dock, seven bounded 44px back links, Tab/Enter roadmap and return, Back/reopen/New journey, whole state and quicksave stable; errors []`,
+        `PASS ${width}: seven literal links and native destinations at115/130, link/text/document bounds, every clicked section and Contents heading clears measured dock, seven bounded 44px back links, literal support-sentence glyph bounds, Tab/Enter roadmap and Battle returns, Back/reopen/New journey, whole state and quicksave stable; errors []`,
       );
     } catch (e) {
       await page

@@ -62,6 +62,54 @@ function activeMember(game) {
   return { member, index, party };
 }
 
+/** Copies of an item currently worn by active party or reserve members. */
+function countWornCopies(state, id) {
+  const members = [
+    ...(Array.isArray(state?.party) ? state.party.filter(Boolean) : []),
+    ...(state?.reserve && typeof state.reserve === 'object' ? Object.values(state.reserve).filter(Boolean) : []),
+  ];
+  let worn = 0;
+  for (const member of members) {
+    const eq = member.equipment;
+    if (!eq || typeof eq !== 'object') continue;
+    for (const slot of ['weapon', 'armor', 'trinket']) {
+      if (eq[slot] === id) worn += 1;
+    }
+  }
+  return worn;
+}
+
+/** Selling this quantity would remove the last owned copies (packed or worn) of an item no shop stocks. */
+function isLastOfKindSell(state, id, qty) {
+  if (!isKnownItem(id)) return false;
+  const total = countItem(state.inventory, id) + countWornCopies(state, id);
+  return shopsStocking(id).length === 0 && total - qty <= 0;
+}
+
+/**
+ * Two-step confirm for sells that are hard to undo: scarce rare-drop items,
+ * or the final owned copies of an item no shop stocks. The first press only
+ * arms the guard; pressing the same button again performs the sale.
+ * @param {object} game game object carrying the sellConfirm scratch flag
+ * @param {string} id catalog item id
+ * @param {number} qty units the guarded press would sell
+ * @param {'scarce'|'last'} reason which guard fired
+ * @returns {boolean} true when the guard armed and the caller must not sell yet
+ */
+function armSellConfirm(game, id, qty, reason) {
+  const key = `${id}:${qty}`;
+  if (game.sellConfirm === key) {
+    game.sellConfirm = null;
+    return false;
+  }
+  game.sellConfirm = key;
+  const name = getItem(id).name;
+  game.shopMessage = reason === 'scarce'
+    ? `Confirm: ${name} is a rare drop that is hard to replace. Use the same button again to sell it.`
+    : `Confirm: that would sell your last ${name}, and no shop stocks it. Use the same button again to sell it.`;
+  return true;
+}
+
 export const shopScene = {
   onEnter(game, data) {
     game.shopMode = ['sell', 'craft', 'trade'].includes(data?.mode) ? data.mode : 'buy';
@@ -70,6 +118,7 @@ export const shopScene = {
     game.shopMemberIndex = 0;
     game.shopQty = 1;
     game.shopId = data?.shopId && getShop(data.shopId) ? data.shopId : 'greyhaven_shop';
+    game.sellConfirm = null;
   },
 
   render(game) {
@@ -133,14 +182,17 @@ export const shopScene = {
         const stock = shopsStocking(item.id);
         const stockHint = stock.length ? `<small class="sell-stock">at ${esc(stock.join(' · '))} (${item.price}g)</small>` : '';
         const useLine = useEffectLine(item);
+        const armedOne = game.sellConfirm === `${item.id}:1`;
+        const armedQty = stack.qty > 1 && !scarce && buyQty > 1 && game.sellConfirm === `${item.id}:${Math.min(buyQty, stack.qty)}`;
+        const armedAll = stack.qty > 1 && !scarce && game.sellConfirm === `${item.id}:${stack.qty}`;
         return `<tr>
           <td><strong>${esc(item.name)}</strong> ×${stack.qty}${scarce ? ' <small class="sell-scarce">rare drop</small>' : ''}
             ${item.stats ? `<br><small>${esc(statSummary(item.stats))}</small>` : ''}${useLine ? `<br><span class="bag-use">${esc(useLine)}</span>` : ''}</td>
           <td style="white-space:nowrap;">${unit}g each${stockHint}</td>
           <td>
-            <button data-action="sell" data-arg="${esc(item.id)}"${scarce ? ' aria-label="Sell 1 ' + esc(item.name) + ' (rare drop, hard to replace)"' : ''}>Sell 1</button>
-            ${stack.qty > 1 && !scarce && buyQty > 1 ? `<button data-action="sellQty" data-arg="${esc(item.id)}" aria-label="Sell ${Math.min(buyQty, stack.qty)} ${esc(item.name)}"${buyQty >= stack.qty ? ' disabled' : ''}>Sell ${buyQty} (${unit * Math.min(buyQty, stack.qty)}g)</button>` : ''}
-            ${stack.qty > 1 && !scarce ? `<button data-action="sellAll" data-arg="${esc(item.id)}">Sell all (${unit * stack.qty}g)</button>` : ''}
+            <button data-action="sell" data-arg="${esc(item.id)}"${scarce ? ` aria-label="${armedOne ? 'Confirm sell 1 ' : 'Sell 1 '}${esc(item.name)} (rare drop, hard to replace)"` : ''} aria-pressed="${armedOne ? 'true' : 'false'}"${armedOne ? ' class="shop-confirm-armed"' : ''}>${armedOne ? 'Confirm sell 1?' : 'Sell 1'}</button>
+            ${stack.qty > 1 && !scarce && buyQty > 1 ? `<button data-action="sellQty" data-arg="${esc(item.id)}" aria-label="${armedQty ? 'Confirm sell' : 'Sell'} ${Math.min(buyQty, stack.qty)} ${esc(item.name)}"${armedQty ? ' aria-pressed="true" class="shop-confirm-armed"' : ''}${buyQty >= stack.qty ? ' disabled' : ''}>${armedQty ? `Confirm sell ${Math.min(buyQty, stack.qty)}?` : `Sell ${buyQty} (${unit * Math.min(buyQty, stack.qty)}g)`}</button>` : ''}
+            ${stack.qty > 1 && !scarce ? `<button data-action="sellAll" data-arg="${esc(item.id)}"${armedAll ? ` aria-label="Confirm sell all ${esc(item.name)} (${unit * stack.qty}g)" aria-pressed="true" class="shop-confirm-armed"` : ''}>${armedAll ? 'Confirm sell all?' : `Sell all (${unit * stack.qty}g)`}</button>` : ''}
           </td>
         </tr>`;
       })
@@ -288,6 +340,7 @@ export const shopScene = {
     setMode(game, el) {
       const arg = el?.dataset?.arg;
       game.shopMode = ['sell', 'craft', 'trade'].includes(arg) ? arg : 'buy';
+      game.sellConfirm = null;
     },
     trade(game, el) {
       const id = el?.dataset?.arg;
@@ -299,7 +352,10 @@ export const shopScene = {
       }
       const res = performTrade(game.state.inventory, id);
       game.shopMessage = res.message;
-      if (res.ok) game.state.inventory = res.inv;
+      if (res.ok) {
+        game.state.inventory = res.inv;
+        game.sellConfirm = null;
+      }
     },
     tradeAll(game, el) {
       const id = el?.dataset?.arg;
@@ -325,6 +381,7 @@ export const shopScene = {
       }
       game.state.inventory = inv;
       game.shopMessage = `${shop.name} — traded ${trade.name} x${n}.`;
+      game.sellConfirm = null;
     },
     shopQty(game, el) {
       const arg = el?.dataset?.arg;
@@ -342,6 +399,7 @@ export const shopScene = {
       if (res.ok) {
         game.state.gold = res.state.gold;
         game.state.inventory = res.state.inventory;
+        game.sellConfirm = null;
       }
     },
     buy5(game, el) {
@@ -353,6 +411,7 @@ export const shopScene = {
       if (res.ok) {
         game.state.gold = res.state.gold;
         game.state.inventory = res.state.inventory;
+        game.sellConfirm = null;
       }
     },
     buyMax(game, el) {
@@ -364,6 +423,7 @@ export const shopScene = {
       if (res.ok) {
         game.state.gold = res.state.gold;
         game.state.inventory = res.state.inventory;
+        game.sellConfirm = null;
       }
     },
     buyEquip(game, el) {
@@ -387,6 +447,7 @@ export const shopScene = {
       if (!buyRes.ok) return;
       s.gold = buyRes.state.gold;
       s.inventory = buyRes.state.inventory;
+      game.sellConfirm = null;
       const eqRes = equipItem(member, s.inventory, id);
       if (!eqRes.ok) {
         game.shopMessage = `Bought ${item.name}, but could not equip it: ${eqRes.message}`;
@@ -399,11 +460,17 @@ export const shopScene = {
     sell(game, el) {
       const id = el?.dataset?.arg;
       if (!id) return;
+      if (isScarceItem(id)) {
+        if (armSellConfirm(game, id, 1, 'scarce')) return;
+      } else if (isLastOfKindSell(game.state, id, 1)) {
+        if (armSellConfirm(game, id, 1, 'last')) return;
+      }
       const res = sellItem(game.state, id, 1);
       game.shopMessage = res.message;
       if (res.ok) {
         game.state.gold = res.state.gold;
         game.state.inventory = res.state.inventory;
+        game.sellConfirm = null;
       }
     },
     sellQty(game, el) {
@@ -420,11 +487,13 @@ export const shopScene = {
         game.shopMessage = 'Nothing left to sell.';
         return;
       }
+      if (isLastOfKindSell(game.state, id, qty) && armSellConfirm(game, id, qty, 'last')) return;
       const res = sellItem(game.state, id, qty);
       game.shopMessage = res.message;
       if (res.ok) {
         game.state.gold = res.state.gold;
         game.state.inventory = res.state.inventory;
+        game.sellConfirm = null;
       }
     },
     sellAll(game, el) {
@@ -435,11 +504,13 @@ export const shopScene = {
         game.shopMessage = 'Nothing left to sell.';
         return;
       }
+      if (!isScarceItem(id) && isLastOfKindSell(game.state, id, qty) && armSellConfirm(game, id, qty, 'last')) return;
       const res = sellItem(game.state, id, qty);
       game.shopMessage = res.message;
       if (res.ok) {
         game.state.gold = res.state.gold;
         game.state.inventory = res.state.inventory;
+        game.sellConfirm = null;
       }
     },
     selectMember(game, el) {
@@ -457,6 +528,7 @@ export const shopScene = {
       if (res.ok) {
         game.state.party[index] = res.actor;
         game.state.inventory = res.inv;
+        game.sellConfirm = null;
       }
     },
     unequip(game, el) {
@@ -469,6 +541,7 @@ export const shopScene = {
       if (res.ok) {
         game.state.party[index] = res.actor;
         game.state.inventory = res.inv;
+        game.sellConfirm = null;
       }
     },
     craft(game, el) {
@@ -479,6 +552,7 @@ export const shopScene = {
       const res = craft(game.state.inventory, recipeId);
       if (res.ok) {
         game.state.inventory = res.inv;
+        game.sellConfirm = null;
         const made = recipe
           ? recipe.outputs.map(({ id, qty }) => `${qty} ${(isKnownItem(id) ? getItem(id).name : id)}`).join(', ')
           : 'something';
@@ -511,8 +585,10 @@ export const shopScene = {
       }
       game.state.inventory = inv;
       game.shopMessage = `${shop.name} — crafted ${recipe ? recipe.name : recipeId} x${n}.`;
+      game.sellConfirm = null;
     },
     leave(game) {
+      game.sellConfirm = null;
       game.setScene(game.shopReturnScene || 'town');
     },
   },

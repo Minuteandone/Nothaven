@@ -1269,6 +1269,11 @@ export function getPatrolBriefing(gameState, zoneOrId = null) {
       percent,
       hp: known ? (preview?.hp ?? null) : null,
       tier: known ? (preview?.tier ?? null) : null,
+      drops: known && Array.isArray(preview?.drops) ? preview.drops : [],
+      dropSummary:
+        known && Array.isArray(preview?.drops) && preview.drops.length > 0
+          ? preview.drops.map((d) => `${d.name} (${d.percent}%)`).join(', ')
+          : null,
     };
   });
 

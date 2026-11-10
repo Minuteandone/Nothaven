@@ -775,6 +775,13 @@ em.enraged {
 .shop-qty { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin: 0 0 .6rem; }
 .shop-qty span[aria-live] { color: var(--muted); font-size: .8rem; }
 .shop-qty button { min-width: 2.2rem; justify-content: center; }
+/* Armed two-step sell confirm (src/scenes/shop.js sell guard). */
+.shop-confirm-armed {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #09111d;
+  font-weight: 600;
+}
 /* Trade-tab offers (src/scenes/shop.js trade mode). */
 .trade-value { color: var(--muted); font-size: 0.85em; }
 .trade-shortfall { color: var(--bad); font-size: 0.85em; }
