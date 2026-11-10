@@ -717,6 +717,120 @@ export function getFrontierAtlas(gameState = null) {
   };
 }
 
+/**
+ * Pure read-only summary of weather conditions and active field modifiers
+ * across all charted frontier regions. Masks unvisited regions so unvisited
+ * zone names and weather states never leak.
+ */
+export function getFrontierWeatherSummary(gameState = null) {
+  const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
+  const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
+
+  const visitedMap = {};
+  const rawVisited = gameState?.map?.visitedZones;
+  if (Array.isArray(rawVisited)) {
+    for (const id of rawVisited) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  } else if (rawVisited && typeof rawVisited === 'object') {
+    for (const [id, flag] of Object.entries(rawVisited)) {
+      if (flag && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  if (Array.isArray(gameState?.visitedZones)) {
+    for (const id of gameState.visitedZones) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  visitedMap[currentZoneId] = true;
+
+  const story = gameState?.story;
+  const flags = story?.flags || {};
+  const beaconLit = Boolean(
+    story?.stage === 'complete' ||
+      story?.ending === 'protect_town' ||
+      story?.ending === 'share_signal' ||
+      Boolean(story?.ending) ||
+      Boolean(flags.beacon_lit)
+  );
+  const stormCalmed = Boolean(flags.victory_storm_heart);
+  const routeNetworkActive = flags.relay_choice === 'route_network';
+  const shelterNetworkActive = flags.relay_choice === 'shelter_network';
+
+  const activeModifiers = [];
+  if (beaconLit) activeModifiers.push('Beacon lit (Lantern Shelter at Beacon Tower)');
+  if (stormCalmed) activeModifiers.push('Storm calmed (Broken Skies in Upper Tempest)');
+  if (routeNetworkActive) activeModifiers.push('Signal Relay route network (-50% step ambush)');
+  if (shelterNetworkActive) activeModifiers.push('Shelter network (2g inn rest)');
+
+  let shelteredCount = 0;
+  let clearCount = 0;
+  let hazardousCount = 0;
+  let calmedCount = 0;
+  const chartedRegions = [];
+
+  for (const zoneId of ZONE_ORDER) {
+    if (!visitedMap[zoneId]) continue;
+    const zone = ZONES[zoneId];
+    const briefing = getZoneWeatherBriefing(gameState, zone);
+    const condId = briefing.condition?.id || 'sheltered';
+    if (condId === 'sheltered') {
+      shelteredCount += 1;
+    } else if (condId === 'clear') {
+      clearCount += 1;
+    } else {
+      hazardousCount += 1;
+    }
+    if (briefing.beaconLit || briefing.stormCalmed) {
+      calmedCount += 1;
+    }
+    chartedRegions.push({
+      zoneId,
+      name: zone.name,
+      isCurrent: zoneId === currentZoneId,
+      conditionId: condId,
+      conditionName: briefing.condition?.name || 'Harbor Calm',
+      conditionSummary: briefing.condition?.summary || '',
+      dangerLevel: briefing.dangerLevel,
+      effectiveEncounterPercent: briefing.effectiveEncounterPercent,
+    });
+  }
+
+  const zonesTotal = ZONE_ORDER.length;
+  const chartedCount = chartedRegions.length;
+  const unchartedCount = Math.max(0, zonesTotal - chartedCount);
+  const breakdown = `${shelteredCount} sheltered, ${clearCount} clear, ${hazardousCount} hazardous`;
+  const unchartedText = unchartedCount > 0 ? ` (${unchartedCount} uncharted masked)` : '';
+  const modifierText = activeModifiers.length > 0
+    ? activeModifiers.join(', ')
+    : 'Standard frontier conditions';
+  const summary = `Charted weather (${chartedCount}/${zonesTotal}): ${breakdown}${unchartedText} · Modifiers: ${modifierText}`;
+
+  return {
+    currentZoneId,
+    chartedCount,
+    unchartedCount,
+    zonesTotal,
+    shelteredCount,
+    clearCount,
+    hazardousCount,
+    calmedCount,
+    beaconLit,
+    stormCalmed,
+    routeNetworkActive,
+    shelterNetworkActive,
+    activeModifiers,
+    chartedRegions,
+    summary,
+  };
+}
+
 const EXPEDITION_ACT_DEFS = Object.freeze([
   Object.freeze({
     id: 'act_1',

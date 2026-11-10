@@ -13,6 +13,7 @@ export {
   getFieldServicesSummary,
   getPartyFieldReadiness,
   getFrontierAtlas,
+  getFrontierWeatherSummary,
   getExpeditionProgressSummary,
   getFastTravelBriefing,
   getRouteBriefing,
