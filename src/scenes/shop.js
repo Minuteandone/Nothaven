@@ -5,6 +5,7 @@
 
 import { GREYHAVEN_SHOP, getShop, shopCatalog, buyItem, buyUpTo, sellItem, isScarceItem, shopsStocking } from '../items/shop.js';
 import { getItem, isKnownItem, canEquip, useEffectLine } from '../items/items.js';
+import { previewText } from '../items/items.js';
 import { countItem } from '../items/inventory.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
 import { listRecipes, recipeInputsMet, recipeSummary, craft, recipesUsingItem } from '../items/crafting.js';
@@ -227,7 +228,8 @@ export const shopScene = {
       .map((trade) => {
         const { ok: met, missing } = tradeInputsMet(s.inventory, trade);
         const giveText = trade.give.map((stack) => `${stack.qty} ${esc(getItem(stack.id)?.name || stack.id)}`).join(', ');
-        const receiveText = `${trade.receive.qty} ${esc(getItem(trade.receive.id)?.name || trade.receive.id)}`;
+        const receiveItem = isKnownItem(trade.receive.id) ? getItem(trade.receive.id) : null;
+        const receiveText = `${trade.receive.qty} <span class="preview-chip" tabindex="0" data-preview="${esc(previewText(receiveItem))}">${esc(receiveItem?.name || trade.receive.id)}</span>`;
         const giveValue = trade.give.reduce((sum, stack) => sum + (getItem(stack.id)?.price || 0) * stack.qty, 0);
         const receiveValue = (getItem(trade.receive.id)?.price || 0) * trade.receive.qty;
         const shortfall = met
@@ -258,7 +260,7 @@ export const shopScene = {
             const it = isKnownItem(id) ? getItem(id) : null;
             const label = it ? it.name : id;
             const stats = it?.stats ? ` <small>(${esc(statSummary(it.stats))})</small>` : '';
-            return `${esc(label)} ×${qty}${stats}`;
+            return `<span class="preview-chip" tabindex="0" data-preview="${esc(previewText(it))}">${esc(label)}</span> ×${qty}${stats}`;
           })
           .join(', ');
         return `<tr>

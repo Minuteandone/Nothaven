@@ -782,6 +782,35 @@ em.enraged {
   color: #09111d;
   font-weight: 600;
 }
+/* Craft and trade output preview chips: hover or keyboard focus reveals a stat note. */
+.preview-chip {
+  display: inline-block;
+  position: relative;
+  border-bottom: 1px dotted #7fb2e5;
+  cursor: help;
+}
+.preview-chip::after {
+  content: attr(data-preview);
+  display: none;
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  z-index: 40;
+  width: max-content;
+  max-width: 16rem;
+  background: #0e1a29;
+  border: 1px solid #2c4a6e;
+  border-radius: 6px;
+  color: #dbe7f5;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  padding: 0.35rem 0.55rem;
+  white-space: normal;
+  text-align: left;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+.preview-chip:hover::after,
+.preview-chip:focus-visible::after { display: block; }
 /* Trade-tab offers (src/scenes/shop.js trade mode). */
 .trade-value { color: var(--muted); font-size: 0.85em; }
 .trade-shortfall { color: var(--bad); font-size: 0.85em; }
