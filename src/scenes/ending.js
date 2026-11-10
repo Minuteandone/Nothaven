@@ -5,6 +5,7 @@ import { ENEMIES } from '../data/enemies.js';
 import { DIFFICULTIES, getDifficulty } from '../combat/difficulty.js';
 import { COMPANIONS, isUnlocked } from '../party/companions.js';
 import { DRILL_FOES, drillRecord, gauntletRecord } from './drills.js';
+import { bountyAnsweredText } from './bounties.js';
 // Ending / credits scene. Shown once when the story reaches stage 'complete',
 // and again as a finale with epilogue after the Stormcrown Spire report.
 const ENDINGS = {
@@ -166,6 +167,7 @@ export const endingScene = {
         ${closestFeatText(s) ? `<li class="ending-feats-next">${esc(closestFeatText(s))}</li>` : ''}
         ${drillsText(s) ? `<li class="ending-drills">${esc(drillsText(s))}</li>` : ''}
         ${bountyRecordText(s) ? `<li class="ending-bounty-record">${esc(bountyRecordText(s))}</li>` : ''}
+        ${bountyAnsweredText(s) ? `<li class="ending-bounty-answered">${esc(bountyAnsweredText(s))}</li>` : ''}
       </ul>
       <h3>Credits</h3>
       <ul class="credits">${rows}</ul>
