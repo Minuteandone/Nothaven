@@ -1353,6 +1353,165 @@ export function getFrontierRoutesSummary(gameState = null) {
   };
 }
 
+/**
+ * Pure read-only summary of interactable field stations (caches, dispatches,
+ * relics, beacons, quest stations, and services) across all charted regions.
+ * Masks unvisited regions so uncharted landmarks are never spoiled.
+ */
+export function getFrontierStationsSummary(gameState = null) {
+  const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
+  const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
+
+  const visitedMap = {};
+  const rawVisited = gameState?.map?.visitedZones;
+  if (Array.isArray(rawVisited)) {
+    for (const id of rawVisited) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  } else if (rawVisited && typeof rawVisited === 'object') {
+    for (const [id, flag] of Object.entries(rawVisited)) {
+      if (flag && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  if (Array.isArray(gameState?.visitedZones)) {
+    for (const id of gameState.visitedZones) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  visitedMap[currentZoneId] = true;
+
+  const rawMap = gameState?.map && typeof gameState.map === 'object' ? gameState.map : {};
+  const effectiveState = {
+    ...(gameState || {}),
+    map: {
+      ...rawMap,
+      zoneId: currentZoneId,
+      visitedZones: visitedMap,
+    },
+  };
+
+  let stationZoneCount = 0;
+  let chartedStationTotal = 0;
+  let availableCount = 0;
+  let guardedCount = 0;
+  let completedCount = 0;
+  let serviceCount = 0;
+  let currentZoneStationTotal = 0;
+  let currentZoneAvailableCount = 0;
+  let currentZoneGuardedCount = 0;
+  let currentZoneCompletedCount = 0;
+  let currentZoneServiceCount = 0;
+  const chartedRegions = [];
+  const chartedStations = [];
+
+  for (const zoneId of ZONE_ORDER) {
+    if (!visitedMap[zoneId]) continue;
+    const zone = ZONES[zoneId];
+    const zoneStations = getZoneStationsSummary(effectiveState, zone);
+    const isCurrent = zoneId === currentZoneId;
+
+    const total = Number(zoneStations?.totalStations) || 0;
+    const avail = Number(zoneStations?.availableCount) || 0;
+    const guard = Number(zoneStations?.guardedCount) || 0;
+    const comp = Number(zoneStations?.completedCount) || 0;
+    const serv = Number(zoneStations?.serviceCount) || 0;
+
+    if (total > 0) {
+      stationZoneCount += 1;
+      chartedStationTotal += total;
+      availableCount += avail;
+      guardedCount += guard;
+      completedCount += comp;
+      serviceCount += serv;
+    }
+
+    if (isCurrent) {
+      currentZoneStationTotal = total;
+      currentZoneAvailableCount = avail;
+      currentZoneGuardedCount = guard;
+      currentZoneCompletedCount = comp;
+      currentZoneServiceCount = serv;
+    }
+
+    const list = Array.isArray(zoneStations?.stations) ? zoneStations.stations : [];
+    for (const st of list) {
+      chartedStations.push({
+        ...st,
+        zoneId,
+        zoneName: zone.name,
+        isCurrent,
+      });
+    }
+
+    chartedRegions.push({
+      zoneId,
+      name: zone.name,
+      isCurrent,
+      totalStations: total,
+      availableCount: avail,
+      guardedCount: guard,
+      completedCount: comp,
+      serviceCount: serv,
+      summary: zoneStations?.summary || 'Field stations: None',
+    });
+  }
+
+  const zonesTotal = ZONE_ORDER.length;
+  const chartedCount = chartedRegions.length;
+  const unchartedCount = Math.max(0, zonesTotal - chartedCount);
+
+  const formatBreakdown = (avail, guard, comp, serv) => {
+    const parts = [];
+    if (avail > 0) parts.push(`${avail} available`);
+    if (guard > 0) parts.push(`${guard} guarded`);
+    if (comp > 0) parts.push(`${comp} completed`);
+    if (serv > 0) parts.push(`${serv} ${serv === 1 ? 'service' : 'services'}`);
+    return parts.join(', ');
+  };
+
+  const regionWord = stationZoneCount === 1 ? 'region' : 'regions';
+  const totalBreakdown = formatBreakdown(availableCount, guardedCount, completedCount, serviceCount);
+  const currentBreakdown = currentZoneStationTotal > 0
+    ? `Current zone: ${formatBreakdown(
+        currentZoneAvailableCount,
+        currentZoneGuardedCount,
+        currentZoneCompletedCount,
+        currentZoneServiceCount
+      )}`
+    : 'Current zone: none';
+
+  const summary = chartedStationTotal === 0
+    ? `Charted stations: None · ${currentBreakdown}`
+    : `Charted stations: ${chartedStationTotal} across ${stationZoneCount} ${regionWord} (${totalBreakdown}) · ${currentBreakdown}`;
+
+  return {
+    currentZoneId,
+    chartedCount,
+    unchartedCount,
+    zonesTotal,
+    stationZoneCount,
+    chartedStationTotal,
+    availableCount,
+    guardedCount,
+    completedCount,
+    serviceCount,
+    currentZoneStationTotal,
+    currentZoneAvailableCount,
+    currentZoneGuardedCount,
+    currentZoneCompletedCount,
+    currentZoneServiceCount,
+    chartedRegions,
+    chartedStations,
+    summary,
+  };
+}
+
 const EXPEDITION_ACT_DEFS = Object.freeze([
   Object.freeze({
     id: 'act_1',
@@ -2384,7 +2543,7 @@ function encounterLockReason(mapState, encounter, gameState) {
   if (encounter?.requiresStoryFlag && gameState?.story?.flags?.[encounter.requiresStoryFlag] !== true) {
     return encounter.requirementMessage || 'Complete the required expedition before engaging.';
   }
-  return encounter?.requiresInteractions?.some(id => mapState.completedInteractions[id] !== true)
+  return encounter?.requiresInteractions?.some(id => mapState?.completedInteractions?.[id] !== true)
     ? encounter.requirementMessage || 'Complete the required inspections before engaging.' : null;
 }
 function lockedResult(gameState, message) {
