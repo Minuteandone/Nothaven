@@ -504,3 +504,29 @@ unchanged through display/toggle operations; Town → Explore resets the
 transient expansion. The scrollable history need not all fit vertically.
 Screenshots and traces go to `browser-artifacts/expedition-log/`. This is not
 actual screen-reader, cross-browser, or combat-balance validation.
+
+
+### Field Pack manifest browser regression (optional)
+
+```sh
+npm ci
+npx playwright install chromium
+npm run test:browser:field-pack
+```
+
+This optional Chromium runner uses fresh journeys at 320, 375, and 768px.
+It checks an empty Field Pack, buys two Linen Bandages with the starting 20g,
+crafts one Field Dressing through the native field action, then saves and
+reloads through Continue. No state, inventory, coordinate, save, or RNG
+injection is used. Literal manifest text and the craft-ready button are
+checked before and after crafting.
+
+At native Display 115% and 130%, each display action must preserve the whole
+journey and raw quicksave. Text Range bounds must fit horizontally and
+vertically, with no document overflow. Crafting may change only inventory
+and its literal log entry; Save must serialize the whole pre-save journey
+and add only its log entry; Continue must restore that whole journey.
+Full-page and viewport screenshots, failure screenshots when possible, and
+traces go to `browser-artifacts/field-pack/`. Default tests, smoke, CI, and
+production code are unchanged. This is not all-recipes native coverage,
+actual screen-reader, cross-browser, visual-review, or balance evidence.
