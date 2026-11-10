@@ -67,3 +67,24 @@ test('combat render shows the warning only when at risk, and copy is egg-free', 
     assertEggFree(knockoutWarning(s.combat, s.hero), 'knockout warning');
   }
 });
+
+test('no knockout warning once the battle is resolved', () => {
+  for (const over of ['victory', 'defeat', 'fled']) {
+    const { hero, combat } = setup({ hp: 4 });
+    assert.notEqual(knockoutWarning(combat, hero), '', 'warns while active');
+    combat.over = over;
+    assert.equal(knockoutWarning(combat, hero), '', over);
+    const html = renderCombat({ combat, party: [hero], inventory: [], menu: 'main' });
+    assert.ok(!html.includes('knockout-warning'), `rendered ${over}`);
+  }
+});
+
+test('a successful flee at low health clears the knockout warning', async () => {
+  const { heroAction } = await import('../src/combat/rules.js');
+  const hero = { id: 'hero', name: 'Wren', level: 2, hp: 4, maxHp: 100, mp: 30, maxMp: 30, atk: 8, def: 3, spd: 6, statuses: [] };
+  const combat = createCombat({ enemyId: 'ridge_bandit' });
+  assert.notEqual(knockoutWarning(combat, hero), '');
+  heroAction(combat, hero, { type: 'flee' }, () => 0, [hero]);
+  assert.equal(combat.over, 'fled');
+  assert.ok(!renderCombat({ combat, party: [hero], inventory: [], menu: 'main' }).includes('knockout-warning'));
+});
