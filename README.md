@@ -600,3 +600,30 @@ are used. This is one early unguarded cache, not all eight caches, guardian
 battles, an actual screen-reader audit, cross-browser testing, visual review,
 or balance evidence. Production, default tests, browser smoke, and CI are
 unchanged.
+
+### Optional compass-target browser regression
+
+```sh
+npm ci
+npx playwright install chromium
+npm run test:browser:compass-target
+```
+
+This optional Chromium runner starts fresh at 320, 375, and 768px. It checks
+Greyhaven's Ridge Road route briefing, then walks six tiles east to check the
+Gale Hound encounter briefing at Ridge Road's entrance. Independent literal
+expectations include the uncharted route and the encounter's name, Standard
+18 HP, and unscouted loot weights at 115% and 130% text size. Encounter names
+and stats are visible before discovery; only the loot names are masked here.
+
+Every Display open, scale change, and Done action preserves the whole game
+state and raw quick save. Checks include a unique ordinary non-live paragraph
+between the bearing and route, nonempty positive text Range bounds within the
+paragraph and horizontal viewport, document fit, and browser errors.
+Screenshots and traces go to `browser-artifacts/compass-target/`.
+
+RNG is fixed at 0.5; no inventory, state, coordinate, progress, or save grants
+are used. This covers two early targets, not known-loot visibility, locked
+transitions, all targets, Save/Reload, an actual screen-reader audit,
+cross-browser behavior, visual review, or balance. Production, default tests,
+browser smoke, and CI are unchanged.
