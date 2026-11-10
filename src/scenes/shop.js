@@ -132,9 +132,10 @@ export const shopScene = {
         const scarce = isScarceItem(item.id);
         const stock = shopsStocking(item.id);
         const stockHint = stock.length ? `<small class="sell-stock">at ${esc(stock.join(' · '))} (${item.price}g)</small>` : '';
+        const useLine = useEffectLine(item);
         return `<tr>
           <td><strong>${esc(item.name)}</strong> ×${stack.qty}${scarce ? ' <small class="sell-scarce">rare drop</small>' : ''}
-            ${item.stats ? `<br><small>${esc(statSummary(item.stats))}</small>` : ''}</td>
+            ${item.stats ? `<br><small>${esc(statSummary(item.stats))}</small>` : ''}${useLine ? `<br><span class="bag-use">${esc(useLine)}</span>` : ''}</td>
           <td style="white-space:nowrap;">${unit}g each${stockHint}</td>
           <td>
             <button data-action="sell" data-arg="${esc(item.id)}"${scarce ? ' aria-label="Sell 1 ' + esc(item.name) + ' (rare drop, hard to replace)"' : ''}>Sell 1</button>
