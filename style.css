@@ -1665,3 +1665,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .items-used-line__label { font-weight: 600; }
 .performance-line,.combat-outcome p.performance-line { margin: .25rem 0 0; font-size: .85rem; color: var(--muted); }
 .performance-line__label { font-weight: 600; }
+
+.drill__where{margin:.2rem 0 0;font-size:.85rem;color:var(--muted)}
