@@ -439,6 +439,105 @@ export function getPartyFieldReadiness(gameState = null) {
 }
 
 /**
+ * Pure read-only summary of the party's Field Pack inventory stacks, category totals,
+ * and currently craftable field recipes without mutating gameState.
+ */
+export function getFieldPackSummary(gameState = null) {
+  const stacks = Array.isArray(gameState?.inventory)
+    ? gameState.inventory.filter((s) => s && Number.isFinite(Number(s.qty)) && Math.floor(Number(s.qty)) > 0)
+    : [];
+
+  let totalStacks = 0;
+  let totalUnits = 0;
+  let consumableStacks = 0;
+  let consumableUnits = 0;
+  let materialStacks = 0;
+  let materialUnits = 0;
+  let equipmentStacks = 0;
+  let equipmentUnits = 0;
+  let keyStacks = 0;
+  let keyUnits = 0;
+
+  for (const stack of stacks) {
+    const qty = Math.max(0, Math.floor(Number(stack.qty) || 0));
+    if (qty <= 0) continue;
+    totalStacks += 1;
+    totalUnits += qty;
+    const item = isKnownItem(stack.id) ? getItem(stack.id) : null;
+    if (item?.type === TYPES.CONSUMABLE) {
+      consumableStacks += 1;
+      consumableUnits += qty;
+    } else if (item?.type === TYPES.MATERIAL) {
+      materialStacks += 1;
+      materialUnits += qty;
+    } else if (item?.type === TYPES.EQUIPMENT) {
+      equipmentStacks += 1;
+      equipmentUnits += qty;
+    } else if (item?.type === TYPES.KEY) {
+      keyStacks += 1;
+      keyUnits += qty;
+    }
+  }
+
+  const craftableNames = listRecipes()
+    .filter((recipe) => recipeInputsMet(stacks, recipe).ok)
+    .map((recipe) => recipe.name);
+  const craftableCount = craftableNames.length;
+  const craftPart = `Craft ready: ${craftableCount}${craftableNames.length > 0 ? ` (${craftableNames.join(', ')})` : ''}`;
+
+  if (totalStacks === 0) {
+    return {
+      totalStacks: 0,
+      totalUnits: 0,
+      consumableStacks: 0,
+      consumableUnits: 0,
+      materialStacks: 0,
+      materialUnits: 0,
+      equipmentStacks: 0,
+      equipmentUnits: 0,
+      keyStacks: 0,
+      keyUnits: 0,
+      craftableCount,
+      craftableNames,
+      summary: `Pack manifest: Empty · ${craftPart}`,
+    };
+  }
+
+  const parts = [
+    `Pack manifest: ${totalStacks} ${totalStacks === 1 ? 'stack' : 'stacks'} (${totalUnits} ${totalUnits === 1 ? 'item' : 'items'})`,
+  ];
+  if (consumableUnits > 0) {
+    parts.push(`${consumableUnits} ${consumableUnits === 1 ? 'consumable' : 'consumables'}`);
+  }
+  if (materialUnits > 0) {
+    parts.push(`${materialUnits} ${materialUnits === 1 ? 'material' : 'materials'}`);
+  }
+  if (equipmentUnits > 0) {
+    parts.push(`${equipmentUnits} equipment`);
+  }
+  if (keyUnits > 0) {
+    parts.push(`${keyUnits} ${keyUnits === 1 ? 'key item' : 'key items'}`);
+  }
+  parts.push(craftPart);
+
+  return {
+    totalStacks,
+    totalUnits,
+    consumableStacks,
+    consumableUnits,
+    materialStacks,
+    materialUnits,
+    equipmentStacks,
+    equipmentUnits,
+    keyStacks,
+    keyUnits,
+    craftableCount,
+    craftableNames,
+    summary: parts.join(' · '),
+  };
+}
+
+/**
  * Pure read-only summary of repeatable field services (inn, shop, muster)
  * across charted zones, plus live inn rest cost and active network status.
  */
