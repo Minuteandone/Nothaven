@@ -20,6 +20,7 @@ import {
   getFrontierContactsSummary,
   getFrontierRoutesSummary,
   getFrontierThreatsSummary,
+  getFrontierStationsSummary,
   getFieldServicesSummary,
   getPartyFieldReadiness,
   getInteractableBriefing,
@@ -2984,4 +2985,67 @@ test('getFrontierThreatsSummary and .frontier-atlas__threats summarize charted f
   };
   const html = exploreScene.render({ state: renderState, dispatch: () => {} });
   assert.match(html, /class="frontier-atlas__threats"[^>]*>Charted threats: 1\/4 fixed cleared across 1 region/);
+});
+
+test('getFrontierStationsSummary summarizes field stations across charted regions without spoiling uncharted ones and renders .frontier-atlas__stations', () => {
+  const nullSummary = getFrontierStationsSummary(null);
+  assert.equal(nullSummary.currentZoneId, 'greyhaven');
+  assert.equal(nullSummary.chartedCount, 1);
+  assert.equal(nullSummary.unchartedCount, 8);
+  assert.equal(nullSummary.stationZoneCount, 1);
+  assert.equal(nullSummary.chartedStationTotal, 4);
+  assert.equal(nullSummary.availableCount, 0);
+  assert.equal(nullSummary.guardedCount, 0);
+  assert.equal(nullSummary.completedCount, 0);
+  assert.equal(nullSummary.serviceCount, 4);
+  assert.equal(
+    nullSummary.summary,
+    'Charted stations: 4 across 1 region (4 services) · Current zone: 4 services'
+  );
+
+  // Also verify bare map object without completedInteractions in getFrontierThreatsSummary does not throw
+  const bareStormsEye = getFrontierThreatsSummary({ map: { zoneId: 'storms_eye' } });
+  assert.equal(bareStormsEye.currentZoneId, 'storms_eye');
+  assert.equal(bareStormsEye.currentZoneLockedCount, 2);
+
+  const frozenState = Object.freeze({
+    map: Object.freeze({
+      zoneId: 'observatory_ruins',
+      visitedZones: Object.freeze(['greyhaven', 'ridge_road', 'observatory_ruins']),
+      completedInteractions: Object.freeze({ dispatch_ridge: true }),
+      clearedEncounters: Object.freeze({}),
+    }),
+    flags: Object.freeze({}),
+  });
+  const obsSummary = getFrontierStationsSummary(frozenState);
+  assert.equal(obsSummary.currentZoneId, 'observatory_ruins');
+  assert.equal(obsSummary.chartedCount, 3);
+  assert.equal(obsSummary.stationZoneCount, 3);
+  assert.equal(obsSummary.chartedStationTotal, 10);
+  assert.equal(obsSummary.availableCount, 3);
+  assert.equal(obsSummary.guardedCount, 2);
+  assert.equal(obsSummary.completedCount, 1);
+  assert.equal(obsSummary.serviceCount, 4);
+  assert.equal(obsSummary.currentZoneStationTotal, 4);
+  assert.equal(obsSummary.currentZoneAvailableCount, 2);
+  assert.equal(obsSummary.currentZoneGuardedCount, 2);
+  assert.equal(obsSummary.currentZoneCompletedCount, 0);
+  assert.equal(obsSummary.currentZoneServiceCount, 0);
+  assert.equal(
+    obsSummary.summary,
+    'Charted stations: 10 across 3 regions (3 available, 2 guarded, 1 completed, 4 services) · Current zone: 2 available, 2 guarded'
+  );
+  assert.equal(obsSummary.chartedStations.some((s) => s.zoneId === 'beacon_tower'), false);
+
+  const renderState = {
+    map: {
+      zoneId: 'observatory_ruins',
+      visitedZones: ['greyhaven', 'ridge_road', 'observatory_ruins'],
+      completedInteractions: { dispatch_ridge: true },
+      clearedEncounters: {},
+    },
+    flags: {},
+  };
+  const html = exploreScene.render({ state: renderState, dispatch: () => {} });
+  assert.match(html, /class="frontier-atlas__stations"[^>]*>Charted stations: 10 across 3 regions \(3 available, 2 guarded, 1 completed, 4 services\) · Current zone: 2 available, 2 guarded/);
 });
