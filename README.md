@@ -547,3 +547,26 @@ and browser errors. RNG is fixed at 0.5 until switching to 0.49 for Flee; no
 state, inventory, coordinate, or save grants are used. Screenshots and traces
 go in `browser-artifacts/knockout-warning/`. This is not a boss-balance,
 victory/defeat browser, or screen-reader audit, and does not change default CI.
+
+### Optional finishing-blow browser regression
+
+```sh
+npm ci
+npx playwright install chromium
+npm run test:browser:finishing-blow
+```
+
+This optional Chromium runner starts fresh at 320, 375, and 768px. Three
+native Attacks against the fixed Ridge Bandit leave it at 5 HP; the runner
+checks the exact Power Strike finishing-blow hint at 115% and 130% text size.
+Each Display action and opening Skills preserve the whole game state and
+raw quicksave. A real Power Strike wins the fight, spends 3 MP, and removes
+the hint; resolved Display interactions also preserve whole state and save.
+
+Checks include unique non-live text, nonempty text Range bounds within the
+paragraph and horizontal viewport, document fit, and browser errors. RNG
+is fixed at 0.5; no state, inventory, coordinate, or save grants are used.
+Screenshots and traces go to `browser-artifacts/finishing-blow/`. This covers
+only the early sure-hit branch, not high-roll or late-game hints, Save/Reload,
+actual screen-reader testing, cross-browser behavior, or balance. Production,
+default tests, browser smoke, and CI are unchanged.
