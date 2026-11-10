@@ -4,6 +4,7 @@
 // through the pure helpers, and results are written back to state.
 
 import { getItem, isKnownItem, canEquip, TYPES, SLOTS, useEffectLine } from '../items/items.js';
+import { previewText } from '../items/items.js';
 import { equipItem, unequipItem, effectiveStats, createEquipment, statDeltaSummary } from '../items/equipment.js';
 import { useConsumable } from '../items/consumables.js';
 import { recipesUsingItem, listRecipes, recipeInputsMet, recipeSummary, craft as craftRecipe } from '../items/crafting.js';
@@ -217,7 +218,7 @@ function craftSection(inv, query = '') {
     const outputs = (recipe.outputs || []).map((out) => {
       const item = isKnownItem(out.id) ? getItem(out.id) : null;
       const sum = item ? statSummary(item.stats) : '';
-      return `${esc(item?.name ?? out.id)} ×${out.qty}${sum ? ` <small>(${esc(sum)})</small>` : ''}`;
+      return `<span class="preview-chip" tabindex="0" data-preview="${esc(previewText(item))}">${esc(item?.name ?? out.id)}</span> ×${out.qty}${sum ? ` <small>(${esc(sum)})</small>` : ''}`;
     }).join(', ');
     return (
       `<tr>` +

@@ -360,3 +360,26 @@ export function useEffectLine(item) {
   }
   return parts.length ? `Use: ${parts.join(' · ')}` : '';
 }
+
+/** One-line hover preview for an output chip: type, stat line, use effect, sell value. */
+export function previewText(item) {
+  if (!item || typeof item !== 'object') return '';
+  const parts = [];
+  parts.push(
+    { consumable: 'Consumable', equipment: 'Gear', key: 'Key item', material: 'Material' }[item.type] || 'Goods'
+  );
+  if (item.stats && typeof item.stats === 'object') {
+    const bits = [];
+    if (item.stats.atk) bits.push(`ATK+${item.stats.atk}`);
+    if (item.stats.def) bits.push(`DEF+${item.stats.def}`);
+    if (item.stats.hp) bits.push(`HP+${item.stats.hp}`);
+    if (item.stats.mp) bits.push(`MP+${item.stats.mp}`);
+    if (item.stats.spd) bits.push(`SPD+${item.stats.spd}`);
+    if (bits.length) parts.push(bits.join(' · '));
+  }
+  const use = useEffectLine(item);
+  if (use) parts.push(use);
+  const sell = item.sellPrice ?? Math.floor((item.price || 0) / 2);
+  if (item.type !== 'key' && sell > 0) parts.push(`Sell ${sell}g each`);
+  return parts.join(' · ');
+}
