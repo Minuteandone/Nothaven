@@ -1656,3 +1656,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 .bounty-target-note__label{font-weight:600}
 .drill-record-note{margin:.25rem 0 0;font-size:.85rem;color:var(--accent)}
 .drill-record-note__label{font-weight:600}
+.feat-reach-note{margin:.25rem 0 0;font-size:.85rem;color:var(--accent-bright)}
+.feat-reach-note__label{font-weight:600}

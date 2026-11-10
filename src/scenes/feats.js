@@ -1,6 +1,7 @@
 // Wardens' Feats: a read-only list of journey milestones computed from the
 // current save. Nothing here changes state; feats are derived, never stored.
 import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
+import { ENEMIES } from '../data/enemies.js';
 import { MAX_PARTY } from '../party/companions.js';
 import { DRILL_FOES, drillRecord, gauntletRecord } from './drills.js';
 import { ledgerOf, SERVICE_ROWS } from '../core/ledger.js';
@@ -138,6 +139,22 @@ export function featStatus(state) {
     try { done = Boolean(feat.check(state)); } catch { done = false; }
     return { id: feat.id, title: feat.title, detail: feat.detail, done };
   });
+}
+
+// Feats a real victory over this foe would earn right now: replays the field-journal entry the win
+// records (bestiary count + 1) and lists unearned feats that flip to earned. Drills record nothing, so null.
+export function featCombatText(state, combat) {
+  if (!state || !combat || combat.drill === true) return null;
+  const id = combat.enemy?.id;
+  if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(ENEMIES, id)) return null;
+  const book = state.bestiary && typeof state.bestiary === 'object' && !Array.isArray(state.bestiary) ? state.bestiary : {};
+  const prev = Object.prototype.hasOwnProperty.call(book, id) && Number.isInteger(book[id]) && book[id] > 0 ? book[id] : 0;
+  const before = featStatus(state);
+  const after = featStatus({ ...state, bestiary: { ...book, [id]: prev + 1 } });
+  const gained = after.filter((f, i) => f.done && !before[i].done).map(f => `“${f.title}”`);
+  if (!gained.length) return null;
+  const list = gained.length === 1 ? gained[0] : `${gained.slice(0, -1).join(', ')} and ${gained[gained.length - 1]}`;
+  return `Winning this battle earns ${list}.`;
 }
 
 export function featsEarned(state) {
