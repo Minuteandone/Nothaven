@@ -14,6 +14,7 @@ export {
   getPartyFieldReadiness,
   getFrontierAtlas,
   getFrontierWeatherSummary,
+  getFrontierPatrolSummary,
   getExpeditionProgressSummary,
   getFastTravelBriefing,
   getRouteBriefing,
