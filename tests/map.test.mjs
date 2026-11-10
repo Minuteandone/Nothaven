@@ -19,6 +19,7 @@ import {
   getFrontierPatrolSummary,
   getFrontierContactsSummary,
   getFrontierRoutesSummary,
+  getFrontierThreatsSummary,
   getFieldServicesSummary,
   getPartyFieldReadiness,
   getInteractableBriefing,
@@ -2924,4 +2925,63 @@ test('getFrontierRoutesSummary and .frontier-atlas__routes summarize charted out
   assert.equal(spireRoutes.currentZoneLockedCount, 1);
   assert.doesNotMatch(spireRoutes.summary, /Storm's Eye|Observatory|Highwatch|Saltmere/i);
   assertEggFree(spireRoutes.summary);
+
+});
+
+test('getFrontierThreatsSummary and .frontier-atlas__threats summarize charted fixed threats without spoiling uncharted or locked threats', () => {
+  const nullResult = getFrontierThreatsSummary(null);
+  assert.equal(nullResult.currentZoneId, 'greyhaven');
+  assert.equal(nullResult.chartedCount, 1);
+  assert.equal(nullResult.unchartedCount, 8);
+  assert.equal(nullResult.safeZoneCount, 1);
+  assert.equal(nullResult.threatZoneCount, 0);
+  assert.equal(nullResult.chartedThreatTotal, 0);
+  assert.equal(
+    nullResult.summary,
+    'Charted threats: None in safe haven (1 safe region charted) · Current zone: safe haven'
+  );
+
+  const ridgeEncId = ZONES.ridge_road.encounters[0].encounterId || ZONES.ridge_road.encounters[0].id;
+  const frozenState = Object.freeze({
+    map: Object.freeze({
+      zoneId: 'ridge_road',
+      visitedZones: Object.freeze(['greyhaven', 'ridge_road']),
+      clearedEncounters: Object.freeze({ [ridgeEncId]: true }),
+    }),
+    flags: Object.freeze({}),
+  });
+  const r = getFrontierThreatsSummary(frozenState);
+  assert.equal(r.currentZoneId, 'ridge_road');
+  assert.equal(r.chartedCount, 2);
+  assert.equal(r.safeZoneCount, 1);
+  assert.equal(r.threatZoneCount, 1);
+  assert.equal(r.chartedThreatTotal, 4);
+  assert.equal(r.clearedThreatCount, 1);
+  assert.equal(r.activeThreatCount, 1);
+  assert.equal(r.lockedThreatCount, 2);
+  assert.equal(r.fullyClearedZoneCount, 0);
+  assert.equal(r.currentZoneThreatTotal, 4);
+  assert.equal(r.currentZoneClearedCount, 1);
+  assert.equal(r.currentZoneActiveCount, 1);
+  assert.equal(r.currentZoneLockedCount, 2);
+  assert.equal(
+    r.summary,
+    'Charted threats: 1/4 fixed cleared across 1 region (1 active, 2 locked, 0/1 secured) · Current zone: 1 active, 1/4 cleared, 2 locked'
+  );
+  const lockedEntries = r.chartedThreats.filter((t) => t.locked);
+  assert.equal(lockedEntries.length, 2);
+  assert.equal(lockedEntries[0].id, 'sealed_challenge');
+  assert.equal(lockedEntries[0].name, 'Sealed challenge');
+  assert.equal(r.chartedThreats.some((t) => t.zoneId === 'observatory_ruins'), false);
+
+  const renderState = {
+    map: {
+      zoneId: 'ridge_road',
+      visitedZones: ['greyhaven', 'ridge_road'],
+      clearedEncounters: { [ridgeEncId]: true },
+    },
+    flags: {},
+  };
+  const html = exploreScene.render({ state: renderState, dispatch: () => {} });
+  assert.match(html, /class="frontier-atlas__threats"[^>]*>Charted threats: 1\/4 fixed cleared across 1 region/);
 });
