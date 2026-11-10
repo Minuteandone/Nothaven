@@ -154,6 +154,31 @@ export function gauntletOrderText(state) {
   return `Bout order: ${names.join(' · ')}.`;
 }
 
+// Element planning line for the Yard Gauntlet: for each skill element, how
+// many of the unlocked bouts it hits harder or is resisted by. Null until the
+// gauntlet is open.
+const GAUNTLET_SKILL_ELEMENTS = Object.freeze(['fire', 'ice', 'lightning', 'water']);
+export function gauntletElementsText(state) {
+  const queue = gauntletQueue(state);
+  if (queue.length < GAUNTLET_MIN) return null;
+  const n = queue.length;
+  const strong = [];
+  const resist = [];
+  for (const el of GAUNTLET_SKILL_ELEMENTS) {
+    let s = 0;
+    let r = 0;
+    for (const id of queue) {
+      const m = elementMatchups(ENEMIES[id]?.element);
+      if (m.strong.includes(el)) s += 1;
+      if (m.resist.includes(el)) r += 1;
+    }
+    if (s) strong.push(`${elementLabel(el)} skills hit ${s} of ${n} bouts harder`);
+    if (r) resist.push(`${elementLabel(el)} skills are resisted in ${r} of ${n}`);
+  }
+  if (!strong.length && !resist.length) return `Bout elements: every skill hits all ${n} bouts at normal strength.`;
+  return `Bout elements: ${[...strong, ...resist].join(' · ')}.`;
+}
+
 // Yard Gauntlet target line toward the Unbroken Run feat. Null while the
 // gauntlet is still locked (the progress note covers that case).
 export function gauntletTargetText(state) {
@@ -219,6 +244,7 @@ export const drillsScene = {
         <p class="drill__record">${escapeHTML(gauntletRecordText(grec))}</p>
         ${target ? `<p class="drills__gauntlet-target">${escapeHTML(target)}</p>` : ''}
         ${gauntletOrderText(game.state) ? `<p class="drills__gauntlet-order">${escapeHTML(gauntletOrderText(game.state))}</p>` : ''}
+        ${gauntletElementsText(game.state) ? `<p class="drills__gauntlet-elements">${escapeHTML(gauntletElementsText(game.state))}</p>` : ''}
         ${queue.length >= GAUNTLET_MIN ? uiButton({ action: 'startGauntlet', label: `Begin gauntlet (${queue.length} foes)`, iconName: 'sword', variant: 'ghost' }) : `<p class="drills__gauntlet-progress">${escapeHTML(`Unlock ${GAUNTLET_MIN} drills to open the gauntlet (${queue.length} of ${GAUNTLET_MIN} unlocked so far).`)}</p>`}
       </section>`;
     const nextHint = drillsNextText(game.state);
