@@ -18,6 +18,7 @@ import {
   getFrontierWeatherSummary,
   getFrontierPatrolSummary,
   getFrontierContactsSummary,
+  getFrontierRoutesSummary,
   getFieldServicesSummary,
   getPartyFieldReadiness,
   getInteractableBriefing,
@@ -2853,4 +2854,74 @@ test('getFrontierContactsSummary and .frontier-atlas__contacts summarize charted
   );
   assert.doesNotMatch(coastContacts.summary, /Captain Rusk|Highwatch/i);
   assertEggFree(coastContacts.summary);
+});
+
+test('getFrontierRoutesSummary and .frontier-atlas__routes summarize charted outbound routes without spoiling unvisited destination names', () => {
+  // 1. Null / empty frozen state defaults to Greyhaven (2 outbound: 0 charted, 2 open frontier, 0 locked) without mutation
+  const emptyFrozen = Object.freeze({});
+  const nullRoutes = getFrontierRoutesSummary(null);
+  const frozenRoutes = getFrontierRoutesSummary(emptyFrozen);
+  assert.equal(nullRoutes.currentZoneId, 'greyhaven');
+  assert.equal(nullRoutes.chartedCount, 1);
+  assert.equal(nullRoutes.unchartedCount, 8);
+  assert.equal(nullRoutes.zonesTotal, 9);
+  assert.equal(nullRoutes.routeZoneCount, 1);
+  assert.equal(nullRoutes.totalRoutes, 2);
+  assert.equal(nullRoutes.chartedRouteCount, 0);
+  assert.equal(nullRoutes.unchartedRouteCount, 2);
+  assert.equal(nullRoutes.lockedRouteCount, 0);
+  assert.equal(nullRoutes.currentZoneExitCount, 2);
+  assert.equal(nullRoutes.currentZoneUnlockedCount, 2);
+  assert.equal(nullRoutes.currentZoneLockedCount, 0);
+  assert.equal(
+    nullRoutes.summary,
+    'Charted routes: 2 outbound across 1 region (0 charted, 2 open frontier, 0 locked) · Current zone: 2 outbound (2 open, 0 locked)'
+  );
+  assert.deepEqual(frozenRoutes, nullRoutes);
+  for (const r of nullRoutes.chartedRoutes) {
+    assert.equal(r.toZoneName, 'Uncharted Region');
+    assert.doesNotMatch(r.label, /Ridge Road|Saltmere/i);
+  }
+  assert.doesNotMatch(nullRoutes.summary, /Ridge Road|Saltmere|Highwatch|Observatory|Spire/i);
+  assertEggFree(nullRoutes.summary);
+
+  // 2. Travel to Ridge Road (Greyhaven<->Ridge Road become 2 charted routes; Saltmere, Observatory, Highwatch are 3 open frontier routes)
+  const game = makeMockGame();
+  const state = game.state;
+  travelToZone(state, 'ridge_road');
+  const snapBefore = JSON.stringify(state);
+  const ridgeRoutes = getFrontierRoutesSummary(state);
+  assert.equal(JSON.stringify(state), snapBefore);
+  assert.equal(ridgeRoutes.currentZoneId, 'ridge_road');
+  assert.equal(ridgeRoutes.chartedCount, 2);
+  assert.equal(ridgeRoutes.unchartedCount, 7);
+  assert.equal(ridgeRoutes.routeZoneCount, 2);
+  assert.equal(ridgeRoutes.totalRoutes, 5);
+  assert.equal(ridgeRoutes.chartedRouteCount, 2);
+  assert.equal(ridgeRoutes.unchartedRouteCount, 3);
+  assert.equal(ridgeRoutes.lockedRouteCount, 0);
+  assert.equal(ridgeRoutes.currentZoneExitCount, 3);
+  assert.equal(ridgeRoutes.currentZoneUnlockedCount, 3);
+  assert.equal(ridgeRoutes.currentZoneLockedCount, 0);
+  assert.equal(
+    ridgeRoutes.summary,
+    'Charted routes: 5 outbound across 2 regions (2 charted, 3 open frontier, 0 locked) · Current zone: 3 outbound (3 open, 0 locked)'
+  );
+  assert.doesNotMatch(ridgeRoutes.summary, /Observatory|Highwatch|Saltmere|Sunscar|Spire/i);
+  assertEggFree(ridgeRoutes.summary);
+
+  const html = exploreScene.render(game);
+  assert.match(
+    html,
+    /<p class="frontier-atlas__routes">Charted routes: 5 outbound across 2 regions \(2 charted, 3 open frontier, 0 locked\) · Current zone: 3 outbound \(3 open, 0 locked\)<\/p>/
+  );
+
+  // 3. Travel to Stormcrown Spire before spire_reward is set (verifies locked route to Storm's Eye is counted and masked)
+  travelToZone(state, 'stormcrown_spire');
+  const spireRoutes = getFrontierRoutesSummary(state);
+  assert.equal(spireRoutes.currentZoneId, 'stormcrown_spire');
+  assert.equal(spireRoutes.lockedRouteCount, 1);
+  assert.equal(spireRoutes.currentZoneLockedCount, 1);
+  assert.doesNotMatch(spireRoutes.summary, /Storm's Eye|Observatory|Highwatch|Saltmere/i);
+  assertEggFree(spireRoutes.summary);
 });
