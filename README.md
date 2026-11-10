@@ -530,3 +530,20 @@ Full-page and viewport screenshots, failure screenshots when possible, and
 traces go to `browser-artifacts/field-pack/`. Default tests, smoke, CI, and
 production code are unchanged. This is not all-recipes native coverage,
 actual screen-reader, cross-browser, visual-review, or balance evidence.
+
+### Optional knockout-warning browser regression
+
+```sh
+npm run test:browser:knockout-warning
+```
+
+This optional Chromium runner starts fresh at 320, 375, and 768px, reaches
+the fixed Ridge Bandit, and uses Defend to reach 4 HP. It checks the literal
+basic-hit warning at 115% and 130% text size, uses Mend to clear the warning,
+then reaches 4 HP again and flees to check that resolved combat has no warning.
+Display interactions preserve the whole game state and raw quick save; the
+runner also checks warning text geometry, uniqueness, non-live semantics,
+and browser errors. RNG is fixed at 0.5 until switching to 0.49 for Flee; no
+state, inventory, coordinate, or save grants are used. Screenshots and traces
+go in `browser-artifacts/knockout-warning/`. This is not a boss-balance,
+victory/defeat browser, or screen-reader audit, and does not change default CI.
