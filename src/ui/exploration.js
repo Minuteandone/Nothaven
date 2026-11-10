@@ -1,7 +1,7 @@
 import { renderPinnedQuest } from './pinnedQuest.js';
 import { getItem, isKnownItem, TYPES } from '../items/items.js';
 import { listRecipes, recipeInputsMet, recipeSummary } from '../items/crafting.js';
-import { getEncounterPreview, getExpeditionLogSummary, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldPackSummary, getFieldServicesSummary, getFrontierAtlas, getFrontierWeatherSummary, getFrontierPatrolSummary, getFrontierContactsSummary, getFrontierRoutesSummary, getFrontierStationsSummary, getFrontierThreatsSummary, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getPatrolBriefing, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneContactsSummary, getZoneStationsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
+import { getEncounterPreview, getExpeditionLogSummary, getEntityAt, getExpeditionProgressSummary, getFieldConsumablePreview, getFieldCraftPreview, getFieldPackSummary, getFieldServicesSummary, getFrontierAtlas, getFrontierWeatherSummary, getFrontierPatrolSummary, getFrontierContactsSummary, getFrontierCachesSummary, getFrontierRoutesSummary, getFrontierStationsSummary, getFrontierThreatsSummary, getInteractableBriefing, getNearbyActionsSummary, getNpcBriefing, getPartyFieldReadiness, getPatrolBriefing, getFastTravelBriefing, getRouteBriefing, getSafePathPreview, getTileInfo, getTileInspection, getZoneChecklist, getZoneCompassHint, getZoneExitsSummary, getZoneContactsSummary, getZoneStationsSummary, getZoneThreatIntel, getZoneVantage, getZoneWeatherBriefing } from '../map/mapState.js';
 import { ZONES } from '../map/zones.js';
 import { escapeHTML, icon, partyStatus, resourceChip, sceneHeader, uiButton } from './components.js';
 import { zoneVista } from './zoneArt.js';
@@ -278,6 +278,7 @@ function frontierAtlasPanel(state, zone, mapState) {
   const patrols = getFrontierPatrolSummary(effectiveState);
   const contacts = getFrontierContactsSummary(effectiveState);
   const stationsSummary = getFrontierStationsSummary(effectiveState);
+  const cachesSummary = getFrontierCachesSummary(effectiveState);
   const routesSummary = getFrontierRoutesSummary(effectiveState);
   const actsTooltip = expedition.acts.map(act => act.summary).join(' | ');
   const totalsLine = `<p class="frontier-atlas__totals">Total threats cleared: ${atlas.totalEncountersCleared}/${atlas.totalEncounters} · Caches opened: ${atlas.totalCachesOpened}/${atlas.totalCaches}</p>`;
@@ -287,6 +288,7 @@ function frontierAtlasPanel(state, zone, mapState) {
   const patrolsLine = `<p class="frontier-atlas__patrols">${escapeHTML(patrols.summary)}</p>`;
   const contactsLine = `<p class="frontier-atlas__contacts">${escapeHTML(contacts.summary)}</p>`;
   const stationsLine = `<p class="frontier-atlas__stations">${escapeHTML(stationsSummary.summary)}</p>`;
+  const cachesLine = `<p class="frontier-atlas__caches">${escapeHTML(cachesSummary.summary)}</p>`;
   const routesLine = `<p class="frontier-atlas__routes">${escapeHTML(routesSummary.summary)}</p>`;
   const servicesLine = `<p class="frontier-atlas__services">${escapeHTML(services.summary)}</p>`;
   const packLine = `<p class="frontier-atlas__pack">${escapeHTML(services.packSummary)}</p>`;
@@ -299,6 +301,7 @@ function frontierAtlasPanel(state, zone, mapState) {
     ${patrolsLine}
     ${contactsLine}
     ${stationsLine}
+    ${cachesLine}
     ${routesLine}
     ${servicesLine}
     ${packLine}

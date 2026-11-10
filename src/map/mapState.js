@@ -1512,6 +1512,183 @@ export function getFrontierStationsSummary(gameState = null) {
   };
 }
 
+/**
+ * Pure read-only summary of frontier supply caches across all charted regions,
+ * including opened/unopened cache counts and spoiler-safe unclaimed supply item
+ * totals without revealing unvisited regions or specific item names.
+ */
+export function getFrontierCachesSummary(gameState = null) {
+  const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
+  const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
+
+  const visitedMap = {};
+  const rawVisited = gameState?.map?.visitedZones;
+  if (Array.isArray(rawVisited)) {
+    for (const id of rawVisited) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  } else if (rawVisited && typeof rawVisited === 'object') {
+    for (const [id, flag] of Object.entries(rawVisited)) {
+      if (flag && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  if (Array.isArray(gameState?.visitedZones)) {
+    for (const id of gameState.visitedZones) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  visitedMap[currentZoneId] = true;
+
+  const rawMap = gameState?.map && typeof gameState.map === 'object' ? gameState.map : {};
+  const completedInteractions = rawMap.completedInteractions && typeof rawMap.completedInteractions === 'object'
+    ? rawMap.completedInteractions
+    : {};
+  const effectiveState = {
+    ...(gameState || {}),
+    map: {
+      ...rawMap,
+      zoneId: currentZoneId,
+      visitedZones: visitedMap,
+      completedInteractions,
+    },
+  };
+
+  let safeZoneCount = 0;
+  let cacheZoneCount = 0;
+  let chartedCacheTotal = 0;
+  let openedCacheCount = 0;
+  let unopenedCacheCount = 0;
+  let unclaimedSupplyUnits = 0;
+  let currentZoneCacheTotal = 0;
+  let currentZoneOpenedCount = 0;
+  let currentZoneUnopenedCount = 0;
+  let currentZoneUnclaimedUnits = 0;
+  const chartedRegions = [];
+  const chartedCaches = [];
+
+  for (const zoneId of ZONE_ORDER) {
+    if (!visitedMap[zoneId]) continue;
+    const zone = ZONES[zoneId];
+    const isCurrent = zoneId === currentZoneId;
+    const rawCaches = (Array.isArray(zone.interactables) ? zone.interactables : [])
+      .filter((inter) => inter && inter.kind === 'cache');
+
+    let zOpened = 0;
+    let zUnopened = 0;
+    let zUnclaimedUnits = 0;
+    const zoneCaches = [];
+
+    for (const cache of rawCaches) {
+      const briefing = getInteractableBriefing(effectiveState, cache, zone);
+      const id = cache.interactionId || cache.id;
+      const opened = Boolean(briefing?.completed);
+      const rewardCount = Number(briefing?.rewardCount) || 0;
+      if (opened) {
+        zOpened += 1;
+      } else {
+        zUnopened += 1;
+        zUnclaimedUnits += rewardCount;
+      }
+      const entry = {
+        id,
+        name: cache.name,
+        x: cache.x,
+        y: cache.y,
+        opened,
+        rewardCount,
+        status: opened ? 'Completed' : 'Available',
+        summary: briefing?.summary || cache.name,
+        zoneId,
+        zoneName: zone.name,
+        isCurrent,
+      };
+      zoneCaches.push(entry);
+      chartedCaches.push(entry);
+    }
+
+    const zTotal = zoneCaches.length;
+    if (zTotal === 0) {
+      safeZoneCount += 1;
+    } else {
+      cacheZoneCount += 1;
+      chartedCacheTotal += zTotal;
+      openedCacheCount += zOpened;
+      unopenedCacheCount += zUnopened;
+      unclaimedSupplyUnits += zUnclaimedUnits;
+    }
+
+    if (isCurrent) {
+      currentZoneCacheTotal = zTotal;
+      currentZoneOpenedCount = zOpened;
+      currentZoneUnopenedCount = zUnopened;
+      currentZoneUnclaimedUnits = zUnclaimedUnits;
+    }
+
+    chartedRegions.push({
+      zoneId,
+      name: zone.name,
+      isCurrent,
+      totalCaches: zTotal,
+      openedCount: zOpened,
+      unopenedCount: zUnopened,
+      unclaimedSupplyUnits: zUnclaimedUnits,
+      caches: zoneCaches,
+    });
+  }
+
+  const zonesTotal = ZONE_ORDER.length;
+  const chartedCount = chartedRegions.length;
+  const unchartedCount = Math.max(0, zonesTotal - chartedCount);
+
+  let currentPart = 'Current zone: no caches';
+  if (currentZoneCacheTotal > 0) {
+    if (currentZoneUnopenedCount > 0) {
+      const unitWord = currentZoneUnclaimedUnits === 1 ? 'supply item' : 'supply items';
+      currentPart = `Current zone: ${currentZoneUnopenedCount} unopened (${currentZoneUnclaimedUnits} ${unitWord})`;
+    } else {
+      currentPart = `Current zone: ${currentZoneOpenedCount}/${currentZoneCacheTotal} opened`;
+    }
+  }
+
+  let summary;
+  if (chartedCacheTotal === 0) {
+    const safeWord = safeZoneCount === 1 ? 'safe region' : 'safe regions';
+    summary = `Charted caches: None in safe haven (${safeZoneCount} ${safeWord} charted) · ${currentPart}`;
+  } else {
+    const regionWord = cacheZoneCount === 1 ? 'region' : 'regions';
+    const detailText = unopenedCacheCount > 0
+      ? `${unopenedCacheCount} unopened, ${unclaimedSupplyUnits} ${unclaimedSupplyUnits === 1 ? 'supply item' : 'supply items'} unclaimed`
+      : 'all recovered';
+    summary = `Charted caches: ${openedCacheCount}/${chartedCacheTotal} opened across ${cacheZoneCount} ${regionWord} (${detailText}) · ${currentPart}`;
+  }
+
+  return {
+    currentZoneId,
+    chartedCount,
+    unchartedCount,
+    zonesTotal,
+    safeZoneCount,
+    cacheZoneCount,
+    chartedCacheTotal,
+    openedCacheCount,
+    unopenedCacheCount,
+    unclaimedSupplyUnits,
+    currentZoneCacheTotal,
+    currentZoneOpenedCount,
+    currentZoneUnopenedCount,
+    currentZoneUnclaimedUnits,
+    chartedRegions,
+    chartedCaches,
+    summary,
+  };
+}
+
 const EXPEDITION_ACT_DEFS = Object.freeze([
   Object.freeze({
     id: 'act_1',
