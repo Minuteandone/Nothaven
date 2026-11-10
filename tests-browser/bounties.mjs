@@ -81,6 +81,31 @@ try {
             await page.screenshot({ path: path.join(artifacts, `${id}-${label}-answered.png`), fullPage: true });
           }
         }
+        // This route discovers Rat and Bandit but claims only Rat, independently of view filters.
+        const unclaimed = page.locator('#app .bounties__unclaimed');
+        assert.equal(await unclaimed.count(), expected, `${id} ${label}: unclaimed notice presence`);
+        if (expected === 1) {
+          assert.equal(await unclaimed.textContent(), 'Still unclaimed: “Bandit Toll Road”.');
+          assert.equal(await unclaimed.evaluate(n => n.tagName === 'P'
+            && !n.closest('[aria-live], [role="status"], [role="alert"]')
+            && n.previousElementSibling?.classList.contains('bounties__answered')
+            && n.nextElementSibling?.classList.contains('bounties__rank')), true,
+          'unclaimed notice is an ordinary paragraph immediately after answered and before rank');
+          if (geometry) {
+            await unclaimed.scrollIntoViewIfNeeded(); await page.mouse.move(0, 0); await page.waitForTimeout(250);
+            assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);
+            assert.equal(await unclaimed.evaluate(n => {
+              const box = n.getBoundingClientRect(), range = document.createRange();
+              range.selectNodeContents(n);
+              const glyphs = [...range.getClientRects()];
+              return glyphs.length > 0 && box.left >= 0 && box.right <= innerWidth + 1
+                && glyphs.every(g => g.width > 0 && g.height > 0
+                  && g.left >= box.left - 1 && g.right <= box.right + 1
+                  && g.top >= box.top - 1 && g.bottom <= box.bottom + 1);
+            }), true, `${id} ${label}: unclaimed glyphs fit paragraph and viewport`);
+            await page.screenshot({ path: path.join(artifacts, `${id}-${label}-unclaimed.png`), fullPage: true });
+          }
+        }
         assert.deepEqual(await state(), before, 'answered notice observation preserves the whole journey');
         assert.equal(await quick(), raw, 'answered notice observation never rewrites quick save');
       };
@@ -524,7 +549,7 @@ try {
         assert.equal(await quick(), earnedQuick);
         await answered(1, 'returned-from-earned-bag');
         assert.deepEqual(errors, []);
-        console.log(`PASS ${id}: native Notices answered absent→1 and stays 1 through four real Rat claims, sorting, Exchange spending and Save/Reload; first/fourth claim and Exchange 115/130% non-live paragraph/glyph geometry with whole-state/raw-save checks (not all 18 contracts); earned native sorting/locked-last/non-tied claims/reset and mastery Record 0→1; earned regional filters/active-outside count/reset; Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33 plus a mastery Scrap Metal, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained; Exchange 4 earned marks, 2 spent, +2 Dressings and whole Save/Reload, literal hints and 115/130% geometry; earned Dressing Details literal shop/Exchange sources, Enter/focus/expanded/reset/whole-state checks; errors []`);
+        console.log(`PASS ${id}: native Notices answered absent→1 and stays 1 through four real Rat claims, sorting, Exchange spending and Save/Reload; first/fourth claim and Exchange 115/130% non-live paragraph/glyph geometry with whole-state/raw-save checks (not all 18 contracts); earned native sorting/locked-last/non-tied claims/reset and mastery Record 0→1; earned regional filters/active-outside count/reset; Service Record rank across all filters/fresh and claims 2–4; four earned claims, promotion on third, fourth pays 33 plus a mastery Scrap Metal, whole exact payment states, rank survives whole save/reload, original bounty/Journal assertions retained; Exchange 4 earned marks, 2 spent, +2 Dressings and whole Save/Reload, literal hints and 115/130% geometry; earned Dressing Details literal shop/Exchange sources, Enter/focus/expanded/reset/whole-state checks; literal Still unclaimed absent→Bandit across earned filters/sorts/repeats/spending/reloads, first/fourth claim and Exchange115/130 positive glyph geometry (not all18, none-posted fallback or SR); errors []`);
       } catch (error) {
         await page.screenshot({ path: path.join(artifacts, `${id}-failure.png`), fullPage: true }).catch(() => {});
         console.error(`FAIL ${id}; browser errors: ${JSON.stringify(errors)}`);
