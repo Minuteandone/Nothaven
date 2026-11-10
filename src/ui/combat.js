@@ -12,6 +12,7 @@ import { getItem, TYPES } from '../items/items.js';
 import { useConsumable } from '../items/consumables.js';
 import { escapeHTML, icon, meter, sceneHeader, uiButton } from './components.js';
 import { fieldTip } from '../data/fieldTips.js';
+import { xpToNext, MAX_LEVEL } from '../core/progression.js';
 
 function number(value, fallback = 0) {
   const parsed = Number(value);
@@ -196,7 +197,7 @@ function lockedSkillsHtml(hero, combat) {
 
 function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
   if (combat.over) {
-    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat, party) + rewardsLine(combat) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
+    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat, party) + rewardsLine(combat) + xpContextLine(combat, party[0]) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'skills') {
     const skills = knownSkills(hero).map((skill, index) => {
@@ -507,5 +508,14 @@ export function rewardsLine(combat) {
     parts.push(`Found: ${names.join(', ')}`);
   }
   return parts.length ? `<p class="battle-rewards">${parts.join(' · ')}</p>` : '';
+}
+/** XP-to-next-level context line shown on victory. */
+export function xpContextLine(combat, hero = {}) {
+  if (!combat || combat.over !== 'victory' || combat.drill === true) return '';
+  const level = Math.max(1, Number.isFinite(hero?.level) ? hero.level : 1);
+  const xp = Math.max(0, Number.isFinite(hero?.xp) ? hero.xp : 0);
+  if (level >= MAX_LEVEL) return '<p class="xp-context">Level 20 — maximum level reached.</p>';
+  const remaining = xpToNext({ level, xp });
+  return `<p class="xp-context">${remaining} XP to level ${level + 1}.</p>`;
 }
 
