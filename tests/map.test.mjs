@@ -2557,7 +2557,7 @@ test("getTileInspection reports passable and blocked cardinal directions and ren
 });
 
 
-test("getFieldPackSummary summarizes empty and populated field packs by category and renders .field-pack__summary without mutating state", () => {
+test("getFieldPackSummary summarizes empty and populated field packs by category and renders .field-pack__summary without mutating state", async () => {
   const emptyState = { inventory: [] };
   const emptySnap = JSON.stringify(emptyState);
   const emptyPack = getFieldPackSummary(emptyState);
@@ -2605,4 +2605,11 @@ test("getFieldPackSummary summarizes empty and populated field packs by category
     /<p class="quiet-note field-pack__summary">Pack manifest: 5 stacks \(7 items\) · 3 consumables · 2 materials · 1 equipment · 1 key item · Craft ready: 1 \(Pack a Field Dressing\)<\/p>/,
   );
   assert.equal(JSON.stringify(state), populatedSnap);
+
+  const { GUIDE_SECTIONS } = await import("../src/scenes/guide.js");
+  const exploringLines = GUIDE_SECTIONS.find((s) => s.title === "Exploring")?.lines || [];
+  assert.equal(exploringLines.length, 6);
+  assert.ok(exploringLines.some((line) => line.includes("Terrain compass lists open and blocked adjacent ways")));
+  assert.ok(exploringLines.some((line) => line.includes("Field Pack summarizes your carried stacks by category")));
+  for (const line of exploringLines) assertEggFree(line, "guide Exploring line");
 });
