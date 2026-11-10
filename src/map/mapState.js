@@ -105,15 +105,24 @@ export function getZoneProgress(gameState, zoneOrId = null) {
         : getZone(gameState?.map?.zoneId || gameState?.location || 'greyhaven');
   const cleared = gameState?.map?.clearedEncounters || {};
   const completed = gameState?.map?.completedInteractions || {};
-  const visited = Boolean(gameState?.map?.visitedZones?.[resolvedZone.id]);
+  const visitedZones = gameState?.map?.visitedZones || {};
+  const visited = Boolean(
+    visitedZones &&
+    Object.prototype.hasOwnProperty.call(visitedZones, resolvedZone.id) &&
+    visitedZones[resolvedZone.id]
+  );
   const encounters = Array.isArray(resolvedZone.encounters) ? resolvedZone.encounters : [];
   const caches = (Array.isArray(resolvedZone.interactables) ? resolvedZone.interactables : []).filter(
-    (inter) => inter && (inter.kind === 'cache' || inter.type === 'cache')
+    (inter) => inter && (inter.kind === 'cache' || inter.type === 'cache') && Boolean(inter.once)
   );
   const encountersTotal = encounters.length;
-  const encountersCleared = encounters.filter((enc) => Boolean(cleared[enc.id])).length;
+  const encountersCleared = encounters.filter(
+    (enc) => Boolean(cleared && Object.prototype.hasOwnProperty.call(cleared, enc.id) && cleared[enc.id])
+  ).length;
   const cachesTotal = caches.length;
-  const cachesOpened = caches.filter((inter) => Boolean(completed[inter.id])).length;
+  const cachesOpened = caches.filter(
+    (inter) => Boolean(completed && Object.prototype.hasOwnProperty.call(completed, inter.id) && completed[inter.id])
+  ).length;
   const totalObjectives = encountersTotal + cachesTotal;
   const completedObjectives = encountersCleared + cachesOpened;
   const percent =
