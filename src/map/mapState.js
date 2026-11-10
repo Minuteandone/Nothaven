@@ -1056,6 +1056,161 @@ export function getFrontierContactsSummary(gameState = null) {
  * Pure read-only summary of outbound frontier routes across all charted
  * regions. Masks unvisited destination names so uncharted regions are never spoiled.
  */
+/**
+ * Pure read-only summary of fixed frontier threats across all charted regions.
+ * Masks unvisited regions and locked ("Sealed challenge") encounters so spoilers never leak.
+ */
+export function getFrontierThreatsSummary(gameState = null) {
+  const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
+  const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
+
+  const visitedMap = {};
+  const rawVisited = gameState?.map?.visitedZones;
+  if (Array.isArray(rawVisited)) {
+    for (const id of rawVisited) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  } else if (rawVisited && typeof rawVisited === 'object') {
+    for (const [id, flag] of Object.entries(rawVisited)) {
+      if (flag && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  if (Array.isArray(gameState?.visitedZones)) {
+    for (const id of gameState.visitedZones) {
+      if (typeof id === 'string' && Object.prototype.hasOwnProperty.call(ZONES, id)) {
+        visitedMap[id] = true;
+      }
+    }
+  }
+  visitedMap[currentZoneId] = true;
+
+  const rawMap = gameState?.map && typeof gameState.map === 'object' ? gameState.map : {};
+  const effectiveState = {
+    ...(gameState || {}),
+    map: {
+      ...rawMap,
+      zoneId: currentZoneId,
+      visitedZones: visitedMap,
+    },
+  };
+
+  let safeZoneCount = 0;
+  let threatZoneCount = 0;
+  let fullyClearedZoneCount = 0;
+  let chartedThreatTotal = 0;
+  let clearedThreatCount = 0;
+  let activeThreatCount = 0;
+  let lockedThreatCount = 0;
+  let currentZoneThreatTotal = 0;
+  let currentZoneClearedCount = 0;
+  let currentZoneActiveCount = 0;
+  let currentZoneLockedCount = 0;
+  const chartedRegions = [];
+  const chartedThreats = [];
+
+  for (const zoneId of ZONE_ORDER) {
+    if (!visitedMap[zoneId]) continue;
+    const zone = ZONES[zoneId];
+    const threatIntel = getZoneThreatIntel(effectiveState, zone);
+    const isCurrent = zoneId === currentZoneId;
+
+    const fixedTotal = Number(threatIntel?.fixedTotalCount) || 0;
+    const fixedCleared = Number(threatIntel?.fixedClearedCount) || 0;
+    const fixedActive = Number(threatIntel?.fixedActiveCount) || 0;
+    const fixedLocked = Number(threatIntel?.fixedLockedCount) || 0;
+    const fixedEncounters = Array.isArray(threatIntel?.fixedEncounters) ? threatIntel.fixedEncounters : [];
+
+    if (fixedTotal === 0) {
+      safeZoneCount += 1;
+    } else {
+      threatZoneCount += 1;
+      chartedThreatTotal += fixedTotal;
+      clearedThreatCount += fixedCleared;
+      activeThreatCount += fixedActive;
+      lockedThreatCount += fixedLocked;
+      if (fixedCleared === fixedTotal) {
+        fullyClearedZoneCount += 1;
+      }
+      for (const enc of fixedEncounters) {
+        chartedThreats.push({
+          id: enc.id,
+          name: enc.name,
+          enemyId: enc.enemyId,
+          zoneId,
+          zoneName: zone.name,
+          isCurrent,
+          x: enc.x,
+          y: enc.y,
+          cleared: Boolean(enc.cleared),
+          locked: Boolean(enc.locked),
+          summary: enc.summary,
+        });
+      }
+    }
+
+    if (isCurrent) {
+      currentZoneThreatTotal = fixedTotal;
+      currentZoneClearedCount = fixedCleared;
+      currentZoneActiveCount = fixedActive;
+      currentZoneLockedCount = fixedLocked;
+    }
+
+    chartedRegions.push({
+      zoneId,
+      name: zone.name,
+      isCurrent,
+      dangerLevel: Number(threatIntel?.dangerLevel) || 0,
+      fixedTotalCount: fixedTotal,
+      fixedClearedCount: fixedCleared,
+      fixedActiveCount: fixedActive,
+      fixedLockedCount: fixedLocked,
+      isSafeZone: fixedTotal === 0,
+      isFullyCleared: fixedTotal > 0 && fixedCleared === fixedTotal,
+    });
+  }
+
+  const zonesTotal = ZONE_ORDER.length;
+  const chartedCount = chartedRegions.length;
+  const unchartedCount = Math.max(0, zonesTotal - chartedCount);
+
+  let summary;
+  if (threatZoneCount === 0) {
+    const safeWord = safeZoneCount === 1 ? 'safe region' : 'safe regions';
+    summary = `Charted threats: None in safe haven (${safeZoneCount} ${safeWord} charted) · Current zone: safe haven`;
+  } else {
+    const regionWord = threatZoneCount === 1 ? 'region' : 'regions';
+    const currentPart = currentZoneThreatTotal > 0
+      ? `Current zone: ${currentZoneActiveCount} active, ${currentZoneClearedCount}/${currentZoneThreatTotal} cleared${currentZoneLockedCount > 0 ? `, ${currentZoneLockedCount} locked` : ''}`
+      : 'Current zone: safe haven';
+    summary = `Charted threats: ${clearedThreatCount}/${chartedThreatTotal} fixed cleared across ${threatZoneCount} ${regionWord} (${activeThreatCount} active, ${lockedThreatCount} locked, ${fullyClearedZoneCount}/${threatZoneCount} secured) · ${currentPart}`;
+  }
+
+  return {
+    currentZoneId,
+    chartedCount,
+    unchartedCount,
+    zonesTotal,
+    safeZoneCount,
+    threatZoneCount,
+    fullyClearedZoneCount,
+    chartedThreatTotal,
+    clearedThreatCount,
+    activeThreatCount,
+    lockedThreatCount,
+    currentZoneThreatTotal,
+    currentZoneClearedCount,
+    currentZoneActiveCount,
+    currentZoneLockedCount,
+    chartedRegions,
+    chartedThreats,
+    summary,
+  };
+}
+
 export function getFrontierRoutesSummary(gameState = null) {
   const rawZoneId = gameState?.map?.zoneId || gameState?.location || 'greyhaven';
   const currentZoneId = Object.prototype.hasOwnProperty.call(ZONES, rawZoneId) ? rawZoneId : 'greyhaven';
