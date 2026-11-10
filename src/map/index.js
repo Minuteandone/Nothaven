@@ -9,6 +9,7 @@ export {
   getZoneWeatherBriefing,
   getFieldConsumablePreview,
   getFieldCraftPreview,
+  getFieldPackSummary,
   getFieldServicesSummary,
   getPartyFieldReadiness,
   getFrontierAtlas,

@@ -14,6 +14,7 @@ import {
   getZoneWeatherBriefing,
   getFieldConsumablePreview,
   getFieldCraftPreview,
+  getFieldPackSummary,
   getFieldServicesSummary,
   getPartyFieldReadiness,
   getInteractableBriefing,
@@ -2519,7 +2520,7 @@ test("getTileInspection reports passable and blocked cardinal directions and ren
   state.map.y = 3;
   const snap0 = JSON.stringify(state);
 
-  // Default Greyhaven spawn (3, 3): surrounded by walkable tiles on all 4 cardinal sides
+  // Greyhaven center tile (3, 3): surrounded by walkable tiles on all 4 cardinal sides
   const openInfo = getTileInspection(state);
   assert.equal(JSON.stringify(state), snap0);
   assert.equal(openInfo.passableCount, 4);
@@ -2553,4 +2554,55 @@ test("getTileInspection reports passable and blocked cardinal directions and ren
   assert.equal(isolatedInfo.waysSummary, "Open ways (0/4): None · Blocked: North, West, East, South");
   assertEggFree(isolatedInfo.waysSummary, "isolated waysSummary");
   assert.equal(JSON.stringify(state), snap0);
+});
+
+
+test("getFieldPackSummary summarizes empty and populated field packs by category and renders .field-pack__summary without mutating state", () => {
+  const emptyState = { inventory: [] };
+  const emptySnap = JSON.stringify(emptyState);
+  const emptyPack = getFieldPackSummary(emptyState);
+  assert.equal(JSON.stringify(emptyState), emptySnap);
+  assert.equal(emptyPack.totalStacks, 0);
+  assert.equal(emptyPack.totalUnits, 0);
+  assert.equal(emptyPack.craftableCount, 0);
+  assert.equal(emptyPack.summary, "Pack manifest: Empty · Craft ready: 0");
+  assertEggFree(emptyPack.summary, "empty field pack summary");
+
+  const game = makeMockGame();
+  const state = game.state;
+  ensureMapState(state);
+  state.inventory = [
+    { id: "healing_herb", qty: 1 },
+    { id: "bandage", qty: 2 },
+    { id: "scrap_metal", qty: 2 },
+    { id: "iron_sword", qty: 1 },
+    { id: "observatory_lens", qty: 1 },
+  ];
+  const populatedSnap = JSON.stringify(state);
+  const pack = getFieldPackSummary(state);
+  assert.equal(JSON.stringify(state), populatedSnap);
+  assert.equal(pack.totalStacks, 5);
+  assert.equal(pack.totalUnits, 7);
+  assert.equal(pack.consumableStacks, 2);
+  assert.equal(pack.consumableUnits, 3);
+  assert.equal(pack.materialStacks, 1);
+  assert.equal(pack.materialUnits, 2);
+  assert.equal(pack.equipmentStacks, 1);
+  assert.equal(pack.equipmentUnits, 1);
+  assert.equal(pack.keyStacks, 1);
+  assert.equal(pack.keyUnits, 1);
+  assert.equal(pack.craftableCount, 1);
+  assert.deepEqual(pack.craftableNames, ["Pack a Field Dressing"]);
+  assert.equal(
+    pack.summary,
+    "Pack manifest: 5 stacks (7 items) · 3 consumables · 2 materials · 1 equipment · 1 key item · Craft ready: 1 (Pack a Field Dressing)",
+  );
+  assertEggFree(pack.summary, "populated field pack summary");
+
+  const html = exploreScene.render(game);
+  assert.match(
+    html,
+    /<p class="quiet-note field-pack__summary">Pack manifest: 5 stacks \(7 items\) · 3 consumables · 2 materials · 1 equipment · 1 key item · Craft ready: 1 \(Pack a Field Dressing\)<\/p>/,
+  );
+  assert.equal(JSON.stringify(state), populatedSnap);
 });
