@@ -6,8 +6,8 @@ export const GUIDE_SECTIONS = Object.freeze([
   Object.freeze({ title: 'Exploring', lines: [
     'Move with the arrow buttons or the W, A, S and D keys. Each step in the wilds can stir up a random encounter. A fight that is not yet open, because it awaits a story step or landmark inspections, appears on the map as a “Sealed challenge” and keeps its foe’s name hidden until it unlocks.',
     'The Expedition log groups consecutive repeats and shows six recent entries. When older entries are retained, Show earlier entries reveals them; Show recent entries only restores the shorter view. This viewing choice is not saved and never spends a turn.',
-    'Stand next to people to talk, and next to landmarks or foes to interact or fight. Exits lead to new regions once you reach them.',
-    'Your bag and journal are available in the field, and ready crafting recipes appear right on the exploration screen. Recipes that use rare drops can only be crafted one at a time.',
+    'Stand next to people to talk, and next to landmarks or foes to interact or fight. Exits lead to new regions once you reach them. Beneath the map, the Terrain compass lists open and blocked adjacent ways based on terrain walkability.',
+    'Your bag and journal are available in the field, and the Field Pack summarizes your carried stacks by category alongside any ready crafting recipes. Recipes that use rare drops can only be crafted one at a time.',
     'In the Field Journal, choose All, Bosses, or Regular to filter the catalogue. Enter a recorded foe’s name and choose Search; unknown names cannot be searched. Clear search restores unknown placeholders within the chosen category. Progress totals and the comparison tray stay unfiltered. Search and category choices reset when you reopen the journal and never unlock entries or change your save.',
     'Foes marked as optional are never required to finish the story. After the Storm’s Heart, a far greater trial waits in the Storm’s Eye for seasoned wardens of level 15 or higher.',
   ] }),
