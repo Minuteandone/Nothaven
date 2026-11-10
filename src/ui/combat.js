@@ -197,7 +197,7 @@ function lockedSkillsHtml(hero, combat) {
 
 function commands({ combat, hero, party, inventory, menu, itemTargetIndex }) {
   if (combat.over) {
-    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat, party) + rewardsLine(combat) + xpContextLine(combat, party[0]) + featsEarnedLine(combat) + itemsUsedLine(combat) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
+    return `<div class="actions command-grid"><div class="combat-outcome" role="status">${icon(combat.over === 'victory' ? 'beacon' : combat.over === 'defeat' ? 'heart' : 'compass')}<div><strong>${combat.over === 'victory' ? 'Victory' : combat.over === 'defeat' ? 'Party defeated' : 'Escaped'}</strong><p>${combat.over === 'victory' ? 'Rewards have been gathered. The road ahead is clear.' : combat.over === 'defeat' ? 'Warden Mara’s patrol will carry you back to Greyhaven.' : 'You withdrew from the encounter.'}</p>${combat.over === 'victory' ? summaryLine(combat, party) + rewardsLine(combat) + xpContextLine(combat, party[0]) + featsEarnedLine(combat) + itemsUsedLine(combat) + performanceLine(combat, party[0]) : ''}</div></div>${commandButton({ action: 'finish', label: 'Continue', iconName: 'compass', variant: 'primary', className: 'command-continue', shortcut: 'C' })}</div>${shortcutGuide()}`;
   }
   if (menu === 'skills') {
     const skills = knownSkills(hero).map((skill, index) => {
@@ -563,5 +563,21 @@ export function itemsUsedLine(combat) {
   if (!parts.length) return '';
   const label = parts.length === 1 ? 'Item used:' : 'Items used:';
   return `<p class="items-used-line"><span class="items-used-line__label">${label}</span> ${parts.join(', ')}.</p>`;
+}
+
+export function performanceLine(combat, hero = {}) {
+  if (!combat || combat.over !== 'victory' || combat.drill === true) return '';
+  const maxHp = Number.isFinite(Number(hero?.maxHp)) ? Number(hero.maxHp) : 0;
+  if (maxHp <= 0) return '';
+  const hp = Number.isFinite(Number(hero?.hp)) ? Number(hero.hp) : maxHp;
+  const damageTaken = Math.max(0, maxHp - hp);
+  const ratio = damageTaken / maxHp;
+  let label;
+  if (damageTaken === 0) label = 'Flawless \u2014 no blows landed.';
+  else if (ratio < 0.25) label = 'Clean win.';
+  else if (ratio < 0.5) label = 'Hard-fought.';
+  else if (ratio < 0.75) label = 'Costly victory.';
+  else label = 'Victory by a thread.';
+  return `<p class="performance-line"><span class="performance-line__label">Performance:</span> ${label}</p>`;
 }
 

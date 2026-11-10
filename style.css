@@ -1663,3 +1663,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 
 .items-used-line,.combat-outcome p.items-used-line { color: var(--good); }
 .items-used-line__label { font-weight: 600; }
+.performance-line,.combat-outcome p.performance-line { margin: .25rem 0 0; font-size: .85rem; color: var(--text-muted); }
+.performance-line__label { font-weight: 600; }
