@@ -13,7 +13,8 @@
     "test:browser:flee": "node tests-browser/flee-preview.mjs",
     "test:browser:guide": "node tests-browser/guide.mjs",
     "test:browser:bag-details": "node tests-browser/bag-details.mjs",
-    "test:browser:expedition-log": "node tests-browser/expedition-log.mjs"
+    "test:browser:expedition-log": "node tests-browser/expedition-log.mjs",
+    "test:browser:field-pack": "node tests-browser/field-pack.mjs"
   },
   "devDependencies": {
     "playwright": "1.64.1"
