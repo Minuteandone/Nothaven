@@ -5,6 +5,7 @@ import { escapeHTML, sceneHeader, uiButton } from '../ui/components.js';
 import { ENEMIES } from '../data/enemies.js';
 import { elementLabel, elementMatchups } from '../combat/elements.js';
 import { DIFFICULTIES, getDifficulty, scaleEnemy } from '../combat/difficulty.js';
+import { ZONES } from '../map/zones.js';
 
 export const DRILL_FOES = Object.freeze(Object.keys(ENEMIES).filter((id) => ENEMIES[id]?.boss === true && ENEMIES[id]?.drill !== false));
 
@@ -97,6 +98,18 @@ export function validGauntlet(g, enemyId) {
   if (!g || !Array.isArray(g.queue) || !g.queue.length) return false;
   if (!g.queue.every((id) => DRILL_FOES.includes(id))) return false;
   return Number.isInteger(g.index) && g.index >= 0 && g.index < g.queue.length && g.queue[g.index] === enemyId;
+}
+
+// Locked-drill hint: names the region(s) whose fixed encounters field this
+// boss, in zone-table order. Null for non-drill foes or when no zone lists it.
+export function drillLocationText(id) {
+  if (!DRILL_FOES.includes(id)) return null;
+  const names = [];
+  for (const zone of Object.values(ZONES)) {
+    const list = Array.isArray(zone?.encounters) ? zone.encounters : [];
+    if (list.some((e) => e?.enemyId === id) && !names.includes(zone.name)) names.push(zone.name);
+  }
+  return names.length ? `Found in: ${names.join(' · ')}.` : null;
 }
 
 export function drillEntries(state) {
@@ -233,7 +246,7 @@ export const drillsScene = {
   },
   render(game) {
     const rows = drillEntries(game.state).map((r) => `<li class="drill${r.unlocked ? '' : ' drill--locked'}">
-        <div><h2>${escapeHTML(r.name)}</h2><p>${escapeHTML(r.unlocked ? `+${r.xp} XP per drill` : 'Defeat this foe in the field first.')}</p>${r.unlocked ? `<p class="drill__record">${escapeHTML(recordText(r.record))}</p><p class="drill__element">${escapeHTML(drillElementText(r.id))}</p><p class="drill__stats">${escapeHTML(drillStatsText(game.state, r.id))}</p>` : ''}</div>
+        <div><h2>${escapeHTML(r.name)}</h2><p>${escapeHTML(r.unlocked ? `+${r.xp} XP per drill` : 'Defeat this foe in the field first.')}</p>${!r.unlocked && drillLocationText(r.id) ? `<p class="drill__where">${escapeHTML(drillLocationText(r.id))}</p>` : ''}${r.unlocked ? `<p class="drill__record">${escapeHTML(recordText(r.record))}</p><p class="drill__element">${escapeHTML(drillElementText(r.id))}</p><p class="drill__stats">${escapeHTML(drillStatsText(game.state, r.id))}</p>` : ''}</div>
         ${r.unlocked ? uiButton({ action: 'startDrill', arg: r.id, label: 'Begin drill', iconName: 'sword', variant: 'ghost' }) : ''}
       </li>`).join('');
     const queue = gauntletQueue(game.state), grec = gauntletRecord(game.state);
