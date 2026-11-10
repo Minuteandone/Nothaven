@@ -67,6 +67,32 @@ export function recordGauntlet(state, beaten) {
   return { ...next, newBest: n > prev.best };
 }
 
+// In-battle record line for drills: what the current bout is competing for.
+// Gauntlet bouts report the run so far against the best run; single drills
+// report the foe's drill record. Null outside drills or for malformed input.
+export function drillCombatText(state, combat) {
+  if (!combat || combat.drill !== true) return null;
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const g = combat.gauntlet;
+  if (g && Array.isArray(g.queue) && g.queue.length && Number.isInteger(g.index) && g.index >= 0 && g.index < g.queue.length) {
+    const bout = g.index + 1;
+    const best = gauntletRecord(state).best;
+    const head = `Yard Gauntlet bout ${bout} of ${g.queue.length} · best run: ${plural(best, 'foe', 'foes')} beaten.`;
+    if (bout > best) return `${head} Winning this bout sets a new best run.`;
+    if (best >= g.queue.length) return `${head} Your best run already clears every bout.`;
+    const need = best - bout + 2;
+    return `${head} Win ${plural(need, 'more bout', 'more bouts')} to set a new best run.`;
+  }
+  const id = combat.enemy?.id;
+  if (typeof id !== 'string' || !DRILL_FOES.includes(id)) return null;
+  const rec = drillRecord(state, id);
+  if (!rec.wins) return 'No drill win yet against this foe — winning sets your first record.';
+  const wins = plural(rec.wins, 'win', 'wins');
+  if (!rec.best) return `${wins}, no best time yet — winning records one.`;
+  if (rec.best === 1) return `Best: 1 round over ${wins} — the fastest possible.`;
+  return `Best: ${plural(rec.best, 'round', 'rounds')} over ${wins} — win in fewer than ${rec.best} rounds to set a new record.`;
+}
+
 export function validGauntlet(g, enemyId) {
   if (!g || !Array.isArray(g.queue) || !g.queue.length) return false;
   if (!g.queue.every((id) => DRILL_FOES.includes(id))) return false;

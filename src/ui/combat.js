@@ -312,7 +312,7 @@ export function combatFieldTip(combat) {
   return `<p class="field-tip" aria-label="Warden Mara's tactical advice"><span class="field-tip__label">Mara's journal:</span> &ldquo;${escapeHTML(tip)}&rdquo;</p>`;
 }
 
-export function renderCombat({ combat, party, inventory = [], menu = 'main', itemTargetIndex = 0, bountyNote = null }) {
+export function renderCombat({ combat, party, inventory = [], menu = 'main', itemTargetIndex = 0, bountyNote = null, drillNote = null }) {
   const hero = party[0];
   const round = Math.max(1, number(combat.turn, 1));
   const phase = combat.over ? 'Resolved' : menu === 'skills' ? 'Choose a skill' : menu === 'items' ? 'Choose an item' : menu === 'tactics' ? 'Set companion tactics' : 'Your command';
@@ -339,6 +339,7 @@ export function renderCombat({ combat, party, inventory = [], menu = 'main', ite
           ${knockoutWarning(combat, hero)}
           ${finishingBlowHint(combat, hero)}
           ${bountyTargetNote(combat, bountyNote)}
+          ${drillRecordNote(combat, drillNote)}
           ${intentPreview(combat)}
         </section>
       </div>
@@ -447,6 +448,12 @@ export function finishingBlowHint(combat, hero) {
 export function bountyTargetNote(combat, text) {
   if (!combat || combat.over || combat.drill === true || typeof text !== 'string' || !text) return '';
   return `<p class="bounty-target-note"><span class="bounty-target-note__label">Bounty target:</span> ${escapeHTML(text)}</p>`;
+}
+
+/** Drill record line during sparring drills and Yard Gauntlet bouts. */
+export function drillRecordNote(combat, text) {
+  if (!combat || combat.over || combat.drill !== true || typeof text !== 'string' || !text) return '';
+  return `<p class="drill-record-note"><span class="drill-record-note__label">Drill record:</span> ${escapeHTML(text)}</p>`;
 }
 
 /** Enemy intent hint shown in the opposition panel. */

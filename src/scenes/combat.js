@@ -2,7 +2,7 @@ import { setCompanionTactic } from '../party/tactics.js';
 import { getDifficulty } from '../combat/difficulty.js';
 import { applyLevelUps } from '../core/progression.js';
 import { getItem } from '../items/items.js';
-import { recordDrillWin, recordGauntlet, validGauntlet } from './drills.js';
+import { recordDrillWin, recordGauntlet, validGauntlet, drillCombatText } from './drills.js';
 // Combat scene: Attack / Skills / Items / Defend / Flee against one enemy.
 // setScene('combat', {enemyId, encounterId, returnScene}) — finishing returns to
 // returnScene with {message, combatResult, encounterId}; defeat wakes the party in
@@ -187,6 +187,7 @@ export const combatScene = {
       menu: game.combatMenu || 'main',
       itemTargetIndex: game.combatItemTarget === undefined ? 0 : game.state.party.indexOf(game.combatItemTarget),
       bountyNote: c.drill === true ? null : bountyCombatText(game.state, c.enemy?.id),
+      drillNote: c.drill === true ? drillCombatText(game.state, c) : null,
     });
   },
 
