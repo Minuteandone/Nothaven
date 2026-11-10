@@ -121,6 +121,13 @@ function noteTaken(c, d) {
   st.taken = (st.taken || 0) + Math.max(0, Math.floor(Number(d) || 0));
 }
 
+/** Track consumable usage per battle, for the cumulative Service Record tally. */
+export function noteItemUsed(c) {
+  if (!c || typeof c !== 'object') return;
+  const st = battleStats(c);
+  st.itemsUsed = (st.itemsUsed || 0) + 1;
+}
+
 function noteCompanionDamage(c, companionId, d, preHitHp) {
   if (!companionId || d <= 0) return;
   // Cap at remaining HP before the hit — overkill on a nearly-dead foe should only count actual HP removed
@@ -143,6 +150,7 @@ export function battleSummary(c) {
     dealt: Math.max(0, max - (e.hp || 0)),
     taken: st.taken || 0,
     bursts: st.bursts || 0,
+    itemsUsed: st.itemsUsed || 0,
     companionDamage,
   };
 }

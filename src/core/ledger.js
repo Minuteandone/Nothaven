@@ -6,6 +6,9 @@ import { getDifficulty } from '../combat/difficulty.js';
 
 const COUNTERS = ['victories', 'bossVictories', 'defeats', 'escapes', 'comebacks', 'streak', 'bestStreak', 'stormbornBossVictories'];
 
+// Cumulative lifetime stats accumulated across every real (non-drill) victory.
+const TOTAL_STATS = ['totalRounds', 'totalDealt', 'totalTaken', 'totalBursts', 'totalItemsUsed'];
+
 const count = v => (Number.isSafeInteger(v) && v > 0 ? v : 0);
 
 // Read-only normalised view; never mutates the save.
@@ -13,6 +16,7 @@ export function ledgerOf(state) {
   const raw = state && typeof state.ledger === 'object' && state.ledger !== null ? state.ledger : {};
   const out = {};
   for (const key of COUNTERS) out[key] = count(raw[key]);
+  for (const key of TOTAL_STATS) out[key] = count(raw[key]);
   out.bestStreak = Math.max(out.bestStreak, out.streak);
   out.pendingComeback = raw.pendingComeback === true;
   return out;
@@ -24,7 +28,7 @@ function writable(state) {
   return next;
 }
 
-export function recordVictory(state, enemyId) {
+export function recordVictory(state, enemyId, stats) {
   if (!state) return null;
   const l = writable(state);
   l.victories += 1;
@@ -35,6 +39,14 @@ export function recordVictory(state, enemyId) {
   l.streak += 1;
   l.bestStreak = Math.max(l.bestStreak, l.streak);
   if (l.pendingComeback) { l.comebacks += 1; l.pendingComeback = false; }
+  // Accumulate cumulative battle stats from the payload (maps battleSummary keys to ledger keys)
+  if (stats && typeof stats === 'object') {
+    const statMap = { rounds: 'totalRounds', dealt: 'totalDealt', taken: 'totalTaken', bursts: 'totalBursts', itemsUsed: 'totalItemsUsed' };
+    for (const [srcKey, ledgerKey] of Object.entries(statMap)) {
+      const v = Number(stats[srcKey]) || 0;
+      if (v > 0) l[ledgerKey] = count(l[ledgerKey]) + Math.floor(v);
+    }
+  }
   return l;
 }
 
@@ -64,11 +76,16 @@ export const SERVICE_ROWS = Object.freeze([
   Object.freeze({ key: 'streak', label: 'Current winning run' }),
   Object.freeze({ key: 'bestStreak', label: 'Longest winning run' }),
   Object.freeze({ key: 'stormbornBossVictories', label: 'Bosses overcome on Stormborn' }),
+  Object.freeze({ key: 'totalRounds', label: 'Rounds fought' }),
+  Object.freeze({ key: 'totalDealt', label: 'Damage dealt' }),
+  Object.freeze({ key: 'totalTaken', label: 'Damage taken' }),
+  Object.freeze({ key: 'totalBursts', label: 'Beacon Bursts fired' }),
+  Object.freeze({ key: 'totalItemsUsed', label: 'Items used in battle' }),
 ]);
 
 export function installLedger(game) {
   if (!game?.bus) return;
-  game.bus.on('combat:victory', p => recordVictory(game.state, p?.enemyId));
+  game.bus.on('combat:victory', p => recordVictory(game.state, p?.enemyId, p?.stats));
   game.bus.on('combat:defeat', () => recordDefeat(game.state));
   game.bus.on('combat:escape', () => recordEscape(game.state));
 }

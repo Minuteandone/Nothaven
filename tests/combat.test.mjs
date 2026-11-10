@@ -108,7 +108,11 @@ test('scene victory grants xp, gold, loot and emits combat:victory with encounte
   assert.equal(g.state.gold, gold + 3);
   assert.equal(g.state.party[0].xp, 5);
   assert.ok(g.state.inventory.some((s) => s.id === 'scrap_metal'));
-  assert.deepEqual(g.events.find(([k]) => k === 'combat:victory')[1], { enemyId: 'storm_rat', encounterId: 'ridge_patrol' });
+  const victoryEvent = g.events.find(([k]) => k === 'combat:victory')[1];
+  assert.equal(victoryEvent.enemyId, 'storm_rat');
+  assert.equal(victoryEvent.encounterId, 'ridge_patrol');
+  assert.ok(victoryEvent.stats && typeof victoryEvent.stats === 'object', 'stats payload present');
+  assert.ok(victoryEvent.stats.rounds >= 1);
   combatScene.actions.finish(g);
   assert.equal(g.last.name, 'explore');
   assert.equal(g.last.data.combatResult, 'victory');
