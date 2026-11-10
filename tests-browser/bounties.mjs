@@ -62,8 +62,10 @@ try {
           assert.equal(await line.evaluate(n => n.tagName === 'P'
             && !n.closest('[aria-live], [role="status"], [role="alert"]')
             && n.previousElementSibling?.classList.contains('bounties__posted')
-            && n.nextElementSibling?.classList.contains('bounties__rank')), true,
-          'answered count is an ordinary paragraph between posted notices and rank');
+            && (n.nextElementSibling?.classList.contains('bounties__rank')
+              || (n.nextElementSibling?.classList.contains('bounties__unclaimed')
+                && n.nextElementSibling?.nextElementSibling?.classList.contains('bounties__rank')))), true,
+          'answered count is an ordinary paragraph between posted notices and rank (optionally followed by the unclaimed line)');
           if (geometry) {
             await line.scrollIntoViewIfNeeded(); await page.mouse.move(0, 0); await page.waitForTimeout(250);
             assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);

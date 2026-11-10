@@ -61,6 +61,25 @@ export function bountyAnsweredText(state) {
     : `Notices answered: ${answered} of ${BOUNTIES.length} — claim the other ${BOUNTIES.length - answered} once each to earn “Every Notice Answered”.`;
 }
 
+/**
+ * "Still unclaimed: A, B and C (and N more)." — posted contracts never claimed,
+ * shown alongside the answered count once the first contract has been claimed.
+ */
+export function bountyUnclaimedText(rows) {
+  const list = (Array.isArray(rows) ? rows : []).filter(Boolean);
+  if (!list.some((r) => Number(r.claimed) >= 1)) return null;
+  const open = list.filter((r) => !(Number(r.claimed) >= 1));
+  if (open.length === 0) return null;
+  const posted = open.filter((r) => r.unlocked);
+  if (posted.length === 0) {
+    return `Still unclaimed: none posted — defeat new foes to open the remaining ${open.length} notice${open.length === 1 ? '' : 's'}.`;
+  }
+  const names = posted.slice(0, 3).map((r) => `“${r.title}”`);
+  const more = posted.length - names.length;
+  const joined = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  return `Still unclaimed: ${joined}${more > 0 ? ` (and ${more} more)` : ''}.`;
+}
+
 /** "Notices posted: N of M." — how many contracts the board has opened. */
 export function bountyPostedText(rows) {
   const list = Array.isArray(rows) ? rows : [];
@@ -152,6 +171,7 @@ export const bountiesScene = {
         <p class="bounties__total">Contracts claimed: ${escapeHTML(String(total))}</p>
         <p class="bounties__posted">${escapeHTML(bountyPostedText(rows))}</p>
         ${bountyAnsweredText(game.state) ? `<p class="bounties__answered">${escapeHTML(bountyAnsweredText(game.state))}</p>` : ''}
+        ${bountyUnclaimedText(rows) ? `<p class="bounties__unclaimed">${escapeHTML(bountyUnclaimedText(rows))}</p>` : ''}
         <p class="bounties__rank">${escapeHTML(bountyRankText(game.state))}</p>
         <p class="bounties__urgent">${escapeHTML(urgentBountyText(game.state))}</p>
         <p class="bounties__mastery">${escapeHTML(masteryText(game.state))}</p>
