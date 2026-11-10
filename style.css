@@ -1650,3 +1650,5 @@ html[data-motion="reduced"] .windup-cue { animation: none; }
 /* Knockout risk line beneath the incoming damage hint (src/ui/combat.js knockoutWarning). */
 .knockout-warning{margin:.25rem 0 0;font-size:.85rem;color:var(--bad)}
 .knockout-warning__label{font-weight:600}
+.finishing-blow-hint{margin:.25rem 0 0;font-size:.85rem;color:var(--good)}
+.finishing-blow-hint__label{font-weight:600}
