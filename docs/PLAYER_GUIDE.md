@@ -256,7 +256,7 @@ Return to Greyhaven and explicitly claim the payment. This repeatable contract s
 
 ### Planning with the Recipe Book
 
-Use **All**, **Ready**, or **Missing** to narrow the Field Recipe Book, and type a recipe, ingredient, or output name before choosing **Search**. Search ignores letter case; **Clear search** keeps your availability filter. Filters use the last applied search, not unfinished typing. Reopening the book resets both choices. These controls only change the reference view: crafting still happens in the Bag or at a trader, and your journey save is unchanged.
+Use **All**, **Ready**, or **Missing** to narrow the Field Recipe Book, and type a recipe, ingredient, or output name before choosing **Search**. Search ignores letter case; **Clear search** keeps your availability filter. Filters use the last applied search, not unfinished typing. Reopening the book resets both choices. These controls only change the reference view: crafting still happens in the Bag or at a trader, and your journey save is unchanged. Each output also lists its actual Use or Equip effect, using the same item catalog as the Bag and Shop.
 
 ### Supply Lines: choose a survey route
 
