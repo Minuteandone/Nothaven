@@ -15,7 +15,8 @@
     "test:browser:bag-details": "node tests-browser/bag-details.mjs",
     "test:browser:expedition-log": "node tests-browser/expedition-log.mjs",
     "test:browser:field-pack": "node tests-browser/field-pack.mjs",
-    "test:browser:knockout-warning": "node tests-browser/knockout-warning.mjs"
+    "test:browser:knockout-warning": "node tests-browser/knockout-warning.mjs",
+    "test:browser:finishing-blow": "node tests-browser/finishing-blow.mjs"
   },
   "devDependencies": {
     "playwright": "1.64.1"
